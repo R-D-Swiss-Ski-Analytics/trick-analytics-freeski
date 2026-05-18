@@ -1865,8 +1865,8 @@ async function toggleSessionAthlete(name) {
     if (card) card.style.borderColor = '#39c3d4';
     const {data} = await db.from('standort').select('trick_label,disziplin,status')
       .eq('athlet', name).in('status', ['mastered','goal']).order('trick_label');
-    sessAthleteData[name] = { tricks: data || [], currentTrick: data?.[0]?.trick_label || '', stats: {attempts:0,landed:0,perfect:0} };
-    sessActiveTricks[name] = (data || []).map(t => t.trick_label);
+    sessAthleteData[name] = { tricks: data || [], currentTrick: '', stats: {attempts:0,landed:0,perfect:0} };
+    sessActiveTricks[name] = [];
   }
   renderSessionTrickSelection();
 }
@@ -1886,13 +1886,13 @@ function renderSessionTrickSelection() {
         ${mastered.length ? `<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">✓ Mastered</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
             ${mastered.map(t=>`<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(45,138,78,0.15);border:1px solid #2d8a4e;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text);">
-              <input type="checkbox" checked onchange="toggleSessTrick('${name}','${t.trick_label}',this.checked)" style="accent-color:#2d8a4e;">${t.trick_label}
+              <input type="checkbox" onchange="toggleSessTrick('${name}','${t.trick_label}',this.checked)" style="accent-color:#2d8a4e;">${t.trick_label}
             </label>`).join('')}
           </div>` : ''}
         ${goals.length ? `<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">🎯 Goals</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;">
             ${goals.map(t=>`<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(245,158,11,0.12);border:1px solid #f59e0b;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text);">
-              <input type="checkbox" checked onchange="toggleSessTrick('${name}','${t.trick_label}',this.checked)" style="accent-color:#f59e0b;">${t.trick_label}
+              <input type="checkbox" onchange="toggleSessTrick('${name}','${t.trick_label}',this.checked)" style="accent-color:#f59e0b;">${t.trick_label}
             </label>`).join('')}
           </div>` : ''}
         ${!mastered.length && !goals.length ? '<div style="color:var(--muted);font-size:12px;">No assessment entries — any trick name can be entered during session.</div>' : ''}
