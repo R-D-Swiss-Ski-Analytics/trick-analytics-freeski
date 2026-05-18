@@ -2901,9 +2901,10 @@ async function loadEntwicklung() {
       const byTrick = {};
       sessionTricks.forEach(t => {
         const key = t.trickaufbau;
-        if (!byTrick[key]) byTrick[key] = { total: 0, landed: 0, dates: new Set() };
+        if (!byTrick[key]) byTrick[key] = { total: 0, landed: 0, perfect: 0, dates: new Set() };
         byTrick[key].total++;
         if (t.gelandet === 'Yes') byTrick[key].landed++;
+        if (t.gesamt >= 10) byTrick[key].perfect++;
         if (t.datum) byTrick[key].dates.add(t.datum);
       });
 
@@ -2932,7 +2933,10 @@ async function loadEntwicklung() {
                 ${parts[1] ? `<div style="font-size:11px;color:#39c3d4;margin-top:2px;">Grab: ${parts[1]}</div>` : ''}
               </td>
               <td style="padding:10px 12px;text-align:center;color:var(--muted);font-size:12px;">${dates}</td>
-              <td style="padding:10px 12px;text-align:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:15px;color:var(--text);">${s.landed}/${s.total}</td>
+              <td style="padding:10px 12px;text-align:center;">
+                <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:15px;color:var(--text);">${s.landed}/${s.total}</div>
+                ${s.perfect > 0 ? `<div style="font-size:10px;color:#39c3d4;margin-top:2px;">⭐ ${s.perfect}× perfect</div>` : ''}
+              </td>
               <td style="padding:10px 12px;min-width:120px;">
                 <div style="display:flex;align-items:center;gap:8px;">
                   <div style="flex:1;background:var(--surface2);border-radius:4px;height:8px;overflow:hidden;">
