@@ -436,263 +436,51 @@
 
 <!-- ══════════════════════════════════════════ ERFASSEN -->
 <div class="page" id="page-erfassen">
-  <div class="card">
-    <div class="card-title">Log Trick</div>
-    <div class="form-grid">
 
-      <div class="form-group">
-        <label>Athlete</label>
-        <select id="f-athlet">
-          <option value="">— select —</option>
-          <optgroup label="Nationalkader (NM)">
-              <option>Mathilde Gremaud</option>
-              <option>Kim Gubser</option>
-              <option>Sarah Höfflin</option>
-              <option>Andri Ragettli</option>
-              <option>Giulia Tanno</option>
-            </optgroup>
-            <optgroup label="A-Kader">
-              <option>Anouk Andraska</option>
-              <option>Gian Andri Bolinger</option>
-              <option>Fadri Rhyner</option>
-              <option>Nils Rhyner</option>
-              <option>Adrien Vaudaux</option>
-            </optgroup>
-            <optgroup label="B-Kader">
-              <option>Lou Annen</option>
-              <option>Nicola Bolinger</option>
-              <option>Tim Egger</option>
-              <option>Viktor Maksyagin</option>
-            </optgroup>
-            <optgroup label="C-Kader">
-              <option>Alan Bornet</option>
-              <option>Maxence Petzoldt</option>
-              <option>Lars Ruchti</option>
-              <option>Jason Zacharopoulos</option>
-            </optgroup>
-            </select>
-      </div>
-
-      <div class="form-group">
-        <label>Date</label>
-        <input type="date" id="f-datum">
-      </div>
-
-      <div class="form-group">
-        <label>Type</label>
-        <select id="f-typ">
-          <option value="">— select —</option>
-          <option>Training</option>
-          <option>Competition</option>
-        </select>
-      </div>
-      <div class="form-group full">
-        <label>Discipline</label>
-        <select id="f-disziplin" onchange="toggleDisziplin('f')">
-          <option value="">— select —</option>
-          <option>Jump</option><option>Rail</option><option>Halfpipe</option><option>Landing Bag</option>
-        </select>
-      </div>
-
-      <div class="section-divider kicker-field-f hidden">Jump / Halfpipe</div>
-      <div class="form-group kicker-field-f hidden"><label>Direction</label>
-        <select id="f-drehrichtung"><option value="">–</option>
-          <option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option>
-        </select></div>
-      <div class="form-group kicker-field-f hidden"><label>Flips</label>
-        <select id="f-flips"><option value="">–</option>
-          <option>None</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
-        </select></div>
-      <div class="form-group kicker-field-f hidden"><label>Axis</label>
-        <select id="f-achse"><option value="">–</option>
-          <optgroup label="Off-Axis">
-            <option>Cork</option><option>Bio/Misty</option><option>Flat</option><option>Rodeo</option>
-          </optgroup>
-          <optgroup label="Flache Achsen">
-            <option>Flat Axis</option>
-          </optgroup>
-          <optgroup label="Klassische Akrobatische Achsen">
-            <option>Frontflip</option><option>Backflip</option>
-          </optgroup>
-        </select></div>
-      <div class="form-group kicker-field-f hidden"><label>Rotation</label>
-        <select id="f-rotation"><option value="">–</option>
-          <option>180</option>
-          <option>360</option>
-          <option>540</option>
-          <option>720</option>
-          <option>900</option>
-          <option>1080</option>
-          <option>1260</option>
-          <option>1440</option>
-          <option>1620</option>
-          <option>1800</option>
-          <option>1980</option>
-          <option>2160</option>
-          <option>2340</option>
-          <option>2520</option>
-        </select></div>
-      <div class="form-group kicker-field-f hidden"><label>Take-off</label>
-        <select id="f-absprung"><option value="">–</option>
-          <option>Carved</option><option>Inside Edge</option><option>Nose-Butter</option><option>Tail-Butter</option>
-        </select></div>
-      <div class="form-group kicker-field-f hidden"><label>Grab</label>
-        <select id="f-grab"><option value="">–</option>
-          <option>Safety</option><option>Mute</option><option>Tail</option><option>Blunt</option>
-          <option>Japan</option><option>Critical</option><option>Esco</option><option>In and out</option><option>Nose</option>
-          <option>Octo</option><option>Truckdriver</option><option>Stale</option><option>Cuban</option><option>Seatbelt</option><option>Bow and Arrow</option>
-        </select></div>
-      <div class="form-group kicker-field-f hidden"><label>Bring Back</label>
-        <select id="f-bringback"><option value="">–</option>
-          <option>180</option><option>360</option><option>540</option>
-        </select></div>
-      <div class="form-group kicker-field-f hidden"><label>Style Element</label>
-        <select id="f-style"><option value="">–</option>
-          <option>Tweak</option><option>Poke</option><option>Screamin' Seamen</option>
-        </select></div>
-
-      <div class="section-divider rail-field-f hidden">Rail</div>
-      <div class="form-group rail-field-f hidden"><label>Rail Type</label>
-        <select id="f-railart"><option value="">–</option>
-          <option>Box</option><option>Tube</option><option>Rail</option><option>Down Tube</option>
-          <option>Down Rail</option><option>DFD</option><option>Waterfall</option><option>Ellbow</option>
-          <option>Flat-Down</option><option>S-Rail</option><option>C-Rail</option><option>Pole-Jam</option>
-        </select></div>
-      <div class="form-group rail-field-f hidden"><label>Slide Form</label>
-        <select id="f-slideform"><option value="">–</option>
-          <option>50-50</option><option>Switch 50-50</option><option>Slide</option>
-          <option>Lip On</option><option>Switch Tails On</option><option>Switch Lip On</option>
-        </select></div>
-      <div class="form-group rail-field-f hidden"><label>Slide Variant</label>
-        <select id="f-slidevar"><option value="">–</option>
-          <option>Back Slide</option><option>Front Slide</option>
-        </select></div>
-      <div class="form-group rail-field-f hidden"><label>In-Spin</label>
-        <select id="f-inspin"><option value="">–</option>
-          <option>L 270</option><option>R 270</option><option>L 450</option><option>R 450</option>
-          <option>L 630</option><option>R 630</option><option>L 810</option><option>R 810</option>
-          <option>L 180</option><option>R 180</option><option>L 360</option><option>R 360</option>
-        </select></div>
-      <div class="form-group rail-field-f hidden"><label>Swap</label>
-        <select id="f-swap"><option value="">–</option>
-          <option>Front Swap</option><option>Back Swap</option><option>BS 360 Swap</option>
-          <option>FS 360 Swap</option><option>BS 540 Swap</option><option>FS 540</option>
-          <option>Front Swap - Front Swap</option><option>Front Swap - Back Swap</option>
-          <option>Back Swap - Front Swap</option><option>Back Swap - Back Swap</option>
-        </select></div>
-      <div class="form-group rail-field-f hidden"><label>Out-Spin</label>
-        <select id="f-outspin"><option value="">–</option>
-          <option>L 270</option><option>R 270</option><option>L 450</option><option>R 450</option>
-          <option>L 630</option><option>R 630</option><option>L 810</option><option>R 810</option>
-          <option>L 180</option><option>R 180</option><option>L 360</option><option>R 360</option>
-        </select></div>
-    </div>
-
-    <!-- TRAINER SECTION SESSION -->
-    <div style="margin-top:20px;border:2px solid #f59e0b;border-radius:12px;padding:16px;background:rgba(245,158,11,0.06);">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-        <span style="font-size:18px;">🎓</span>
-        <div>
-          <div style="font-family:'Poppins',sans-serif;font-size:16px;letter-spacing:0.5px;color:#f59e0b;">COACH ASSESSMENT</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:1px;">For coaches only — not to be filled in by athletes</div>
-        </div>
-      </div>
-
-      <div class="section-divider" style="margin-top:0;margin-bottom:12px;">Quality Rating</div>
-      <div class="rating-grid">
-        <div>
-          <label>Setup</label>
-          <input type="number" id="f-setup" min="1" max="10" placeholder="1–10" oninput="updateGesamt()">
-          <div class="rating-num" id="d-setup">–</div>
-          <div class="rating-sub">Approach & Take-off</div>
-        </div>
-        <div>
-          <label>Execution</label>
-          <input type="number" id="f-aus" min="1" max="10" placeholder="1–10" oninput="updateGesamt()">
-          <div class="rating-num" id="d-aus">–</div>
-          <div class="rating-sub">Air, Grab, Style</div>
-        </div>
-        <div>
-          <label>Landing</label>
-          <input type="number" id="f-land" min="1" max="10" placeholder="1–10" oninput="updateGesamt()">
-          <div class="rating-num" id="d-land">–</div>
-          <div class="rating-sub">Cleanliness, Ride-out</div>
-        </div>
-      </div>
-      <div class="gesamt-box">
-        <div class="gesamt-num" id="d-gesamt">–</div>
-        <div class="gesamt-label">Overall Rating</div>
-      </div>
-
-      <div class="form-grid" style="margin-top:16px;">
-        <div class="form-group full">
-          <label>Landed?</label>
-          <select id="f-gelandet" style="border-color:#f59e0b44;">
-            <option value="">— select —</option>
-            <option value="Yes">✅ Yes</option>
-            <option value="No">❌ No</option>
-          </select>
-        </div>
-        <div class="form-group full">
-          <label>Comment</label>
-          <textarea id="f-kommentar" placeholder="Feedback, observations..." style="border-color:#f59e0b44;"></textarea>
-        </div>
-        <div class="form-group full">
-          <label>Trick Setup</label>
-          <input type="text" id="f-trickaufbau" placeholder="e.g. 7 on 7, 5 on 7, 10 on 7" style="border-color:#f59e0b44;">
-        </div>
-        <div class="form-group full">
-          <label>Video Link</label>
-          <input type="text" id="f-videolink" placeholder="https://..." style="border-color:#f59e0b44;">
-        </div>
+  <!-- ── SETUP VIEW ──────────────────────────────────── -->
+  <div id="sess-setup">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:'Poppins',sans-serif;font-size:26px;font-weight:800;color:var(--text);">New Session</div>
+        <div style="color:var(--muted);font-size:13px;" id="sess-date-label"></div>
       </div>
     </div>
 
-    <button class="btn-primary" id="btn-save" onclick="saveTrick()" style="margin-top:16px;">SAVE TRICK</button>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Step 1 — Select Athletes (max. 3)</div>
+      <div id="sess-athlete-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;"></div>
+    </div>
+
+    <div id="sess-trick-selection" style="display:none;margin-bottom:16px;"></div>
+
+    <button id="sess-start-btn" onclick="startSession()" style="display:none;width:100%;padding:18px;background:#39c3d4;color:#060f1a;border:none;border-radius:12px;font-family:'Poppins',sans-serif;font-size:18px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">
+      ▶ START SESSION
+    </button>
   </div>
 
-  <!-- SESSION TRICK LIST -->
-  <div class="card" style="margin-top:16px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-      <div class="card-title" style="margin:0;">Session Tricks</div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <label style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Filter:</label>
-        <select id="sl-filter-athlet" onchange="renderSessionList()" style="max-width:160px;">
-          <option value="">All Athletes</option>
-          <optgroup label="Nationalkader (NM)">
-              <option>Mathilde Gremaud</option>
-              <option>Kim Gubser</option>
-              <option>Sarah Höfflin</option>
-              <option>Andri Ragettli</option>
-              <option>Giulia Tanno</option>
-            </optgroup>
-            <optgroup label="A-Kader">
-              <option>Anouk Andraska</option>
-              <option>Gian Andri Bolinger</option>
-              <option>Fadri Rhyner</option>
-              <option>Nils Rhyner</option>
-              <option>Adrien Vaudaux</option>
-            </optgroup>
-            <optgroup label="B-Kader">
-              <option>Lou Annen</option>
-              <option>Nicola Bolinger</option>
-              <option>Tim Egger</option>
-              <option>Viktor Maksyagin</option>
-            </optgroup>
-            <optgroup label="C-Kader">
-              <option>Alan Bornet</option>
-              <option>Maxence Petzoldt</option>
-              <option>Lars Ruchti</option>
-              <option>Jason Zacharopoulos</option>
-            </optgroup>
-            </select>
-        <span id="sl-count" style="color:var(--muted);font-size:13px;"></span>
+  <!-- ── LIVE VIEW ────────────────────────────────────── -->
+  <div id="sess-live" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:'Poppins',sans-serif;font-size:22px;font-weight:800;color:var(--text);">Live Session</div>
+        <div style="color:var(--muted);font-size:12px;" id="sess-live-date"></div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="resetSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">← Setup</button>
+        <button onclick="endSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✓ End Session</button>
       </div>
     </div>
-    <div id="session-list-body">
-      <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No tricks logged in this session yet.</div>
+
+    <div id="sess-athlete-cols" style="display:grid;gap:16px;margin-bottom:20px;"></div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px;">Session Log</div>
+      <div id="sess-log" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
+        <div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;">No attempts logged yet.</div>
+      </div>
     </div>
   </div>
+
 </div>
 
 <!-- ════════════════════════════════════════════ COCKPIT -->
@@ -1282,6 +1070,7 @@ function showPage(id, btn) {
   if (id === 'cockpit') renderCockpit();
   if (id === 'datenbank') loadDB();
   if (id === 'entwicklung') loadEntwicklung();
+  if (id === 'erfassen') initSessionSetup();
   if (id === 'erfassen') loadSessionTricks();
 }
 
@@ -2019,6 +1808,216 @@ function downloadExcel() {
   a.click();
   URL.revokeObjectURL(url);
   showToast('\u2713 Export erfolgreich!', 'success');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ── NEW SESSION ───────────────────────────────────────────────────
+
+const SESS_ALL_ATHLETES = [
+  {name:'Mathilde Gremaud',squad:'NM'},{name:'Kim Gubser',squad:'NM'},
+  {name:'Sarah Höfflin',squad:'NM'},{name:'Andri Ragettli',squad:'NM'},{name:'Giulia Tanno',squad:'NM'},
+  {name:'Anouk Andraska',squad:'A'},{name:'Gian Andri Bolinger',squad:'A'},
+  {name:'Fadri Rhyner',squad:'A'},{name:'Nils Rhyner',squad:'A'},{name:'Adrien Vaudaux',squad:'A'},
+  {name:'Lou Annen',squad:'B'},{name:'Nicola Bolinger',squad:'B'},
+  {name:'Tim Egger',squad:'B'},{name:'Viktor Maksyagin',squad:'B'},
+  {name:'Alan Bornet',squad:'C'},{name:'Maxence Petzoldt',squad:'C'},
+  {name:'Lars Ruchti',squad:'C'},{name:'Jason Zacharopoulos',squad:'C'},
+];
+
+let sessSelectedAthletes = [];
+let sessAthleteData = {};
+let sessActiveTricks = {};
+let sessLog = [];
+
+function initSessionSetup() {
+  document.getElementById('sess-date-label').textContent =
+    new Date().toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const grid = document.getElementById('sess-athlete-grid');
+  grid.innerHTML = SESS_ALL_ATHLETES.map(a => `
+    <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s;" id="sess-ath-card-${a.name.replace(/\s/g,'_')}">
+      <input type="checkbox" value="${a.name}" onchange="toggleSessionAthlete('${a.name}')" style="width:18px;height:18px;accent-color:#39c3d4;cursor:pointer;flex-shrink:0;">
+      <div>
+        <div style="font-weight:600;font-size:13px;color:var(--text);">${shortName(a.name)}</div>
+        <div style="font-size:10px;color:var(--muted);">${a.squad}-Squad</div>
+      </div>
+    </label>`).join('');
+}
+
+async function toggleSessionAthlete(name) {
+  const cb = document.querySelector(`#sess-athlete-grid input[value="${CSS.escape(name)}"]`);
+  if (sessSelectedAthletes.includes(name)) {
+    sessSelectedAthletes = sessSelectedAthletes.filter(a => a !== name);
+    delete sessAthleteData[name];
+    delete sessActiveTricks[name];
+    const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
+    if (card) card.style.borderColor = 'var(--border)';
+  } else {
+    if (sessSelectedAthletes.length >= 3) {
+      showToast('Max. 3 athletes per session', 'error');
+      if (cb) cb.checked = false;
+      return;
+    }
+    sessSelectedAthletes.push(name);
+    const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
+    if (card) card.style.borderColor = '#39c3d4';
+    const {data} = await db.from('standort').select('trick_label,disziplin,status')
+      .eq('athlet', name).in('status', ['mastered','goal']).order('trick_label');
+    sessAthleteData[name] = { tricks: data || [], currentTrick: data?.[0]?.trick_label || '', stats: {attempts:0,landed:0,perfect:0} };
+    sessActiveTricks[name] = (data || []).map(t => t.trick_label);
+  }
+  renderSessionTrickSelection();
+}
+
+function renderSessionTrickSelection() {
+  const container = document.getElementById('sess-trick-selection');
+  const startBtn = document.getElementById('sess-start-btn');
+  if (sessSelectedAthletes.length === 0) { container.style.display='none'; startBtn.style.display='none'; return; }
+  container.style.display = 'block';
+  container.innerHTML = '<div class="card"><div class="card-title">Step 2 — Select tricks to work on</div>'
+    + sessSelectedAthletes.map(name => {
+      const d = sessAthleteData[name];
+      const mastered = d.tricks.filter(t => t.status==='mastered');
+      const goals    = d.tricks.filter(t => t.status==='goal');
+      return `<div style="margin-bottom:18px;">
+        <div style="font-weight:700;font-size:14px;color:#39c3d4;margin-bottom:10px;">${shortName(name)}</div>
+        ${mastered.length ? `<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">✓ Mastered</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+            ${mastered.map(t=>`<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(45,138,78,0.15);border:1px solid #2d8a4e;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text);">
+              <input type="checkbox" checked onchange="toggleSessTrick('${name}','${t.trick_label}',this.checked)" style="accent-color:#2d8a4e;">${t.trick_label}
+            </label>`).join('')}
+          </div>` : ''}
+        ${goals.length ? `<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">🎯 Goals</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${goals.map(t=>`<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(245,158,11,0.12);border:1px solid #f59e0b;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text);">
+              <input type="checkbox" checked onchange="toggleSessTrick('${name}','${t.trick_label}',this.checked)" style="accent-color:#f59e0b;">${t.trick_label}
+            </label>`).join('')}
+          </div>` : ''}
+        ${!mastered.length && !goals.length ? '<div style="color:var(--muted);font-size:12px;">No assessment entries — any trick name can be entered during session.</div>' : ''}
+      </div>`;
+    }).join('') + '</div>';
+  startBtn.style.display = 'block';
+}
+
+function toggleSessTrick(name, trick, checked) {
+  if (checked) { if (!sessActiveTricks[name].includes(trick)) sessActiveTricks[name].push(trick); }
+  else { sessActiveTricks[name] = sessActiveTricks[name].filter(t => t !== trick); }
+}
+
+function startSession() {
+  if (sessSelectedAthletes.length === 0) return;
+  sessSelectedAthletes.forEach(name => {
+    const tricks = sessActiveTricks[name] || [];
+    sessAthleteData[name].currentTrick = tricks[0] || '';
+    sessAthleteData[name].stats = {attempts:0,landed:0,perfect:0};
+  });
+  sessLog = [];
+  document.getElementById('sess-setup').style.display = 'none';
+  document.getElementById('sess-live').style.display = 'block';
+  document.getElementById('sess-live-date').textContent =
+    new Date().toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  renderLiveSession();
+}
+
+function renderLiveSession() {
+  const cols = document.getElementById('sess-athlete-cols');
+  const n = sessSelectedAthletes.length;
+  cols.style.gridTemplateColumns = n===1 ? '1fr' : n===2 ? '1fr 1fr' : 'repeat(3,1fr)';
+  cols.innerHTML = sessSelectedAthletes.map(name => {
+    const d = sessAthleteData[name];
+    const tricks = sessActiveTricks[name] || [];
+    const s = d.stats;
+    const pct = s.attempts ? Math.round((s.landed+s.perfect)/s.attempts*100) : 0;
+    return `<div class="card" style="padding:20px;text-align:center;" id="sess-col-${name.replace(/\s/g,'_')}">
+      <div style="font-size:20px;font-weight:800;color:#39c3d4;margin-bottom:2px;">${shortName(name)}</div>
+      <div style="margin:14px 0;">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Working on</div>
+        ${tricks.length > 0
+          ? `<select onchange="sessSetTrick('${name}',this.value)" style="text-align:center;font-weight:600;font-size:13px;">
+              ${tricks.map(t=>`<option value="${t}"${t===d.currentTrick?' selected':''}>${t}</option>`).join('')}
+            </select>`
+          : `<input type="text" placeholder="Enter trick..." value="${d.currentTrick}" oninput="sessSetTrick('${name}',this.value)" style="text-align:center;font-weight:600;font-size:13px;">`
+        }
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;">
+        <div style="background:var(--surface2);border-radius:8px;padding:10px 4px;">
+          <div style="font-size:26px;font-weight:800;color:var(--text);">${s.attempts}</div>
+          <div style="font-size:10px;color:var(--muted);">Attempts</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px 4px;">
+          <div style="font-size:26px;font-weight:800;color:#2d8a4e;">${s.landed+s.perfect}</div>
+          <div style="font-size:10px;color:var(--muted);">Landed</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px 4px;">
+          <div style="font-size:26px;font-weight:800;color:#39c3d4;">${pct}%</div>
+          <div style="font-size:10px;color:var(--muted);">Rate</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <button onclick="logAttempt('${name}','miss')" style="padding:24px 4px;background:rgba(226,0,26,0.1);border:2px solid #e2001a;color:#e2001a;border-radius:12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;line-height:1.5;-webkit-tap-highlight-color:transparent;">✗<br>MISS</button>
+        <button onclick="logAttempt('${name}','landed')" style="padding:24px 4px;background:rgba(45,138,78,0.1);border:2px solid #2d8a4e;color:#2d8a4e;border-radius:12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;line-height:1.5;-webkit-tap-highlight-color:transparent;">✓<br>LANDED</button>
+        <button onclick="logAttempt('${name}','perfect')" style="padding:24px 4px;background:rgba(57,195,212,0.1);border:2px solid #39c3d4;color:#39c3d4;border-radius:12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;line-height:1.5;-webkit-tap-highlight-color:transparent;">⭐<br>PERFECT</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function sessSetTrick(name, trick) { sessAthleteData[name].currentTrick = trick; }
+
+async function logAttempt(name, result) {
+  const d = sessAthleteData[name];
+  d.stats.attempts++;
+  if (result==='landed') d.stats.landed++;
+  if (result==='perfect') d.stats.perfect++;
+
+  // Flash feedback
+  const col = document.getElementById('sess-col-'+name.replace(/\s/g,'_'));
+  const flashColor = result==='miss'?'rgba(226,0,26,0.2)':result==='landed'?'rgba(45,138,78,0.2)':'rgba(57,195,212,0.2)';
+  col.style.background = flashColor;
+  setTimeout(()=>{ col.style.background=''; }, 250);
+
+  sessLog.unshift({name, trick:d.currentTrick, result,
+    time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})});
+  renderLiveSession();
+  renderSessionLog();
+
+  // Save to DB (non-blocking)
+  const gesamt = result==='miss'?3:result==='landed'?7:10;
+  const trickInfo = sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
+  db.from('tricks').insert({
+    athlet:name, datum:new Date().toISOString().split('T')[0],
+    typ:'Training', disziplin:trickInfo.disziplin||null,
+    trickaufbau:d.currentTrick, gelandet:result==='miss'?'No':'Yes',
+    gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
+  }).then(({error})=>{ if(error) console.error('Save error:',error); });
+}
+
+function renderSessionLog() {
+  const el = document.getElementById('sess-log');
+  if (!sessLog.length) return;
+  el.innerHTML = sessLog.slice(0,30).map(e=>{
+    const icon = e.result==='miss'?'✗':e.result==='landed'?'✓':'⭐';
+    const c = e.result==='miss'?'#e2001a':e.result==='landed'?'#2d8a4e':'#39c3d4';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;">
+      <span style="color:${c};font-weight:800;font-size:15px;min-width:16px;">${icon}</span>
+      <span style="color:#39c3d4;font-weight:600;min-width:65px;">${shortName(e.name)}</span>
+      <span style="flex:1;color:var(--text);">${e.trick||'—'}</span>
+      <span style="color:var(--muted);font-size:11px;">${e.time}</span>
+    </div>`;
+  }).join('');
+}
+
+function resetSession() {
+  sessSelectedAthletes=[]; sessAthleteData={}; sessActiveTricks={}; sessLog=[];
+  document.getElementById('sess-setup').style.display='block';
+  document.getElementById('sess-live').style.display='none';
+  initSessionSetup();
+}
+
+function endSession() {
+  const total=sessLog.length;
+  const landed=sessLog.filter(e=>e.result!=='miss').length;
+  showToast(`Session done! ${total} attempts, ${landed} landed.`,'success');
+  resetSession();
 }
 
 // ══════════════════════════════════════════════════════════════════
