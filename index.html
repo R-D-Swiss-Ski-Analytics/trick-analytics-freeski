@@ -10,7 +10,7 @@
 <style>
   :root {
     --bg: #060f1a; --surface: #0c1a2b; --surface2: #112236;
-    --border: #1a3450; --accent: #e2001a; --accent2: #39c3d4;
+    --border: #1a3450; --accent: #ffffff; --accent2: #39c3d4;
     --text: #e8edf2; --muted: #6b8299; --success: #2d8a4e; --danger: #e2001a;
     --warn: #f59e0b;
   }
@@ -33,7 +33,7 @@
     font-size: 13px; color: var(--muted); border: none; background: none;
     font-family: 'Poppins', sans-serif; transition: all .2s;
   }
-  .nav-tab.active { background: #e2001a; color: white; }
+  .nav-tab.active { background: #ffffff; color: white; }
   .nav-tab:hover:not(.active) { color: var(--text); background: var(--surface2); }
 
   .page { display: none; padding: 24px; max-width: 960px; margin: 0 auto; }
@@ -71,12 +71,12 @@
   }
   .gesamt-num {
     font-family: 'Poppins', sans-serif; font-size: 48px;
-    color: #e2001a; line-height: 1;
+    color: #ffffff; line-height: 1;
   }
   .gesamt-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
 
   .btn-primary {
-    background: #e2001a; color: white; border: none;
+    background: #ffffff; color: white; border: none;
     border-radius: 8px; padding: 13px 28px; font-family: 'Poppins', sans-serif;
     font-size: 20px; letter-spacing: 0.5px; cursor: pointer; width: 100%; margin-top: 16px; transition: opacity .2s;
   }
@@ -96,7 +96,7 @@
   .stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
   .stat-value {
     font-family: 'Poppins', sans-serif; font-size: 34px;
-    color: #e2001a; line-height: 1;
+    color: #ffffff; line-height: 1;
   }
   .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
 
@@ -112,7 +112,7 @@
   tr:hover td { background: var(--surface2); }
 
   .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-  .badge-kicker { background: #1a3450; color: #e2001a; }
+  .badge-kicker { background: #1a3450; color: #ffffff; }
   .badge-rail { background: #1a3a2a; color: #34d399; }
   .badge-halfpipe { background: #3a1a3a; color: #c084fc; }
 
@@ -167,7 +167,7 @@
   }
   .sb-status-auto {
     font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 12px;
-    background: #0f1f38; color: #e2001a; text-transform: uppercase; letter-spacing: .5px; flex-shrink: 0;
+    background: #0f1f38; color: #ffffff; text-transform: uppercase; letter-spacing: .5px; flex-shrink: 0;
   }
 
   /* Overview numbers */
@@ -185,7 +185,7 @@
   }
   .btn-mastered:hover { opacity: .9; }
   .btn-goal {
-    background: linear-gradient(135deg, #b5000f, #e2001a); color: white; border: none;
+    background: #39c3d4; color: white; border: none;
     border-radius: 8px; padding: 13px; font-family: 'Poppins', sans-serif;
     font-size: 18px; letter-spacing: 0.5px; cursor: pointer; transition: opacity .2s;
   }
@@ -226,7 +226,7 @@
   .radar-wrap { position: relative; max-width: 280px; margin: 0 auto; }
 
   .ev-selector { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
-  .ev-selector label { color: var(--muted); font-size: 12px; white-space: nowrap; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; } .ev-selector label[style] { all: unset; font-size:16px; background:linear-gradient(90deg,#e2001a,#39c3d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent; font-family:'Poppins',sans-serif; letter-spacing:0.5px; white-space:nowrap; }
+  .ev-selector label { color: var(--muted); font-size: 12px; white-space: nowrap; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; } .ev-selector label[style] { all: unset; font-size:16px; background:linear-gradient(90deg,#ffffff,#39c3d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent; font-family:'Poppins',sans-serif; letter-spacing:0.5px; white-space:nowrap; }
   .ev-selector select { max-width: 200px; }
 
   @media (max-width: 640px) { .chart-grid { grid-template-columns: 1fr; } }
@@ -259,11 +259,11 @@
 <!-- APP PASSWORD OVERLAY -->
 <div id="app-overlay" style="position:fixed;inset:0;background:linear-gradient(135deg,#001a2e 0%,#004877 100%);z-index:9999;display:flex;align-items:center;justify-content:center;">
   <div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:40px;max-width:360px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
-    <div style="font-family:'Poppins',sans-serif;font-size:32px;letter-spacing:1px;color:#e2001a;">TRICK COLLECTOR FREESKI</div>
+    <div style="font-family:'Poppins',sans-serif;font-size:32px;letter-spacing:1px;color:#ffffff;">TRICK COLLECTOR FREESKI</div>
     <div style="font-size:12px;color:#6b8299;margin-bottom:28px;letter-spacing:1px;">Swiss-Ski</div>
     <input id="app-pw-input" type="password" placeholder="Enter password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;">
     <div id="app-pw-error" style="color:#ef4444;font-size:12px;margin-bottom:10px;display:none;">Incorrect password.</div>
-    <button onclick="checkAppPassword()" style="width:100%;padding:12px;background:#e2001a;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">Sign In</button>
+    <button onclick="checkAppPassword()" style="width:100%;padding:12px;background:#ffffff;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">Sign In</button>
   </div>
 </div>
 
@@ -287,7 +287,7 @@
     <input id="pw-modal-input" type="password" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:14px;outline:none;font-family:'Poppins',sans-serif;margin-bottom:16px;">
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button onclick="closePwModal()" style="padding:9px 18px;background:#112236;color:#6b8299;border:1px solid #1a3450;border-radius:8px;font-size:14px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button>
-      <button onclick="confirmPwModal()" style="padding:9px 18px;background:#e2001a;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-family:'Poppins',sans-serif;">Confirm</button>
+      <button onclick="confirmPwModal()" style="padding:9px 18px;background:#ffffff;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-family:'Poppins',sans-serif;">Confirm</button>
     </div>
   </div>
 </div>
@@ -754,8 +754,8 @@
 
   <!-- Athlete + top controls -->
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
-    <label style="font-size:16px;color:#e2001a;font-family:'Poppins',sans-serif;letter-spacing:0.5px;">ATHLETE</label>
-    <select id="sb-athlet" style="max-width:200px;border:2px solid #e2001a;border-radius:8px;" onchange="loadStandort()">
+    <label style="font-size:16px;color:#ffffff;font-family:'Poppins',sans-serif;letter-spacing:0.5px;">ATHLETE</label>
+    <select id="sb-athlet" style="max-width:200px;border:2px solid #39c3d4;border-radius:8px;" onchange="loadStandort()">
           <option value="">— select —</option>
           <optgroup label="Nationalkader (NM)">
               <option>Mathilde Gremaud</option>
@@ -990,8 +990,8 @@
 <div class="page" id="page-entwicklung">
 
   <div class="ev-selector">
-    <label style="font-size:16px;color:#e2001a;font-family:'Poppins',sans-serif;letter-spacing:0.5px;">ATHLETE</label>
-    <select id="ev-athlet" style="border:2px solid #e2001a;border-radius:8px;" onchange="loadEntwicklung()">
+    <label style="font-size:16px;color:#ffffff;font-family:'Poppins',sans-serif;letter-spacing:0.5px;">ATHLETE</label>
+    <select id="ev-athlet" style="border:2px solid #39c3d4;border-radius:8px;" onchange="loadEntwicklung()">
           <option value="">— select —</option>
           <optgroup label="Nationalkader (NM)">
               <option>Mathilde Gremaud</option>
@@ -1160,7 +1160,7 @@
       </div>
     </div>
     <div class="form-group" style="margin-bottom:16px;"><label>Note</label><textarea id="tu-notiz" rows="2" placeholder="Additional remarks..."></textarea></div>
-    <button onclick="saveTU()" style="width:100%;padding:18px;border:none;border-radius:12px;background:linear-gradient(135deg,#b5000f,#e2001a);color:#000;font-family:'Poppins',sans-serif;font-size:24px;letter-spacing:1px;cursor:pointer;box-shadow:0 4px 20px rgba(245,158,11,.35);">📋 SAVE REVIEW</button>
+    <button onclick="saveTU()" style="width:100%;padding:18px;border:none;border-radius:12px;background:#39c3d4;color:#000;font-family:'Poppins',sans-serif;font-size:24px;letter-spacing:1px;cursor:pointer;box-shadow:0 4px 20px rgba(245,158,11,.35);">📋 SAVE REVIEW</button>
   </div>
 
   <div class="tu-history">
@@ -1631,10 +1631,10 @@ async function renderCockpit() {
   }
 
   const quelleTag = (q) => {
-    if (q === 'training') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#1e3a5f;color:#e2001a;text-transform:uppercase;letter-spacing:.5px;">Training</span>';
+    if (q === 'training') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#1e3a5f;color:#ffffff;text-transform:uppercase;letter-spacing:.5px;">Training</span>';
     if (q === 'mastered') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#052e1a;color:#10b981;text-transform:uppercase;letter-spacing:.5px;">Assessment ✓</span>';
     if (q === 'goal') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#1a1a05;color:#f59e0b;text-transform:uppercase;letter-spacing:.5px;">Assessment 🎯</span>';
-    if (q === 'erreicht') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#0f1f38;color:#e2001a;text-transform:uppercase;letter-spacing:.5px;">Assessment ★</span>';
+    if (q === 'erreicht') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#0f1f38;color:#ffffff;text-transform:uppercase;letter-spacing:.5px;">Assessment ★</span>';
     return '–';
   };
 
@@ -1762,7 +1762,7 @@ function renderDBRankings() {
       + '<div style="background:#a78bfa;width:' + swPct + '%;transition:width .4s;" title="Switch ' + swPct + '%"></div>'
       + '</div>'
       + '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px;">'
-      + '<span style="color:#e2001a;">Fwd ' + fwdPct + '%</span>'
+      + '<span style="color:#ffffff;">Fwd ' + fwdPct + '%</span>'
       + '<span style="color:#a78bfa;">Sw ' + swPct + '%</span></div></div>';
   }).join('') : '<div style="color:var(--muted);font-size:13px;">No session tricks logged yet.</div>';
 }
@@ -1787,7 +1787,7 @@ function renderDBTable() {
   tbody.innerHTML = all.map(t => {
     const isStandort = t._quelle === 'standort';
     const quelleBadge = isStandort
-      ? '<span style="font-size:10px;background:#1e3a5f;color:#e2001a;border-radius:4px;padding:2px 6px;font-weight:600;">ASSESSMENT</span>'
+      ? '<span style="font-size:10px;background:#1e3a5f;color:#ffffff;border-radius:4px;padding:2px 6px;font-weight:600;">ASSESSMENT</span>'
       : '<span style="font-size:10px;background:#1a3320;color:#34d399;border-radius:4px;padding:2px 6px;font-weight:600;">SESSION</span>';
     const statusBadge = isStandort && t.status
       ? (t.status === 'mastered'
@@ -2528,7 +2528,7 @@ async function loadEntwicklung() {
         const borderTop = i > 0 ? 'border-top:1px solid var(--border);' : '';
         return `<div style="padding:12px 0;${borderTop}">
           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
-            <span style="font-family:'Poppins',sans-serif;font-size:15px;letter-spacing:1px;color:#e2001a;">${dateStr}</span>
+            <span style="font-family:'Poppins',sans-serif;font-size:15px;letter-spacing:1px;color:#ffffff;">${dateStr}</span>
             <span style="font-size:13px;color:var(--text);font-weight:600;">${r.total} Tricks mastered</span>
             ${newBadge}
           </div>
@@ -2949,7 +2949,7 @@ document.getElementById('f-datum').valueAsDate = new Date();
 
 <div id="sb-edit-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:20px;">
   <div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:14px;padding:24px;width:100%;max-width:500px;max-height:88vh;overflow-y:auto;">
-    <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:#e2001a;margin-bottom:16px;">✏️ TRICK BEARBEITEN</div>
+    <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:#ffffff;margin-bottom:16px;">✏️ TRICK BEARBEITEN</div>
     <input type="hidden" id="sbe-id">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
       <div class="form-group"><label>Date</label><input type="date" id="sbe-datum"></div>
@@ -3051,7 +3051,7 @@ document.getElementById('f-datum').valueAsDate = new Date();
         <input type="number" id="edit-landung" min="1" max="10" oninput="updateEditGesamt()" style="border-color:#3b82f644;">
       </div>
       <div class="form-group" style="display:flex;align-items:flex-end;">
-        <div id="edit-gesamt-preview" style="font-family:'Poppins',sans-serif;font-size:18px;color:#e2001a;padding-bottom:6px;"></div>
+        <div id="edit-gesamt-preview" style="font-family:'Poppins',sans-serif;font-size:18px;color:#ffffff;padding-bottom:6px;"></div>
       </div>
       <div class="form-group">
         <label>Landed?</label>
