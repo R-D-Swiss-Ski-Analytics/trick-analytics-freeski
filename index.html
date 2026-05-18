@@ -2501,11 +2501,17 @@ async function loadEntwicklung() {
       </div>
     </div>
     <div class="chart-grid">
-      <div class="chart-card"><div class="chart-title">🔄 Drehrichtungen</div><div class="radar-wrap"><canvas id="cv-radar" width="360" height="360"></canvas></div></div>
-      <div class="chart-card"><div class="chart-title">🔢 Rotationen</div><div id="bars-rotation"></div></div>
+      <div class="chart-card"><div class="chart-title">🔄 Directions</div><div class="radar-wrap"><canvas id="cv-radar" width="360" height="360"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">🔢 Rotations</div><div id="bars-rotation"></div></div>
+    </div>
+    <div class="chart-grid single">
+      <div class="chart-card">
+        <div class="chart-title">🎯 Session Stats — Trick &amp; Grab</div>
+        <div id="ev-trick-stats"></div>
+      </div>
     </div>
     <div class="chart-grid">
-      <div class="chart-card"><div class="chart-title">⚙️ Achsen</div><div id="bars-achse"></div></div>
+      <div class="chart-card"><div class="chart-title">⚙️ Axes</div><div id="bars-achse"></div></div>
       <div class="chart-card"><div class="chart-title">✋ Grabs</div><div id="bars-grab"></div></div>
     </div>
     <div class="chart-grid single">
@@ -2521,12 +2527,6 @@ async function loadEntwicklung() {
       <div class="chart-card">
         <div class="chart-title">📅 Repertoire Development Over Time <span style="font-size:11px;color:var(--muted);font-family:'Poppins',sans-serif;letter-spacing:0;">(Assessment — mastered tricks only)</span></div>
         <div id="ev-verlauf"></div>
-      </div>
-    </div>
-    <div class="chart-grid single">
-      <div class="chart-card">
-        <div class="chart-title">🎯 Session Stats — Trick &amp; Grab</div>
-        <div id="ev-trick-stats"></div>
       </div>
     </div>`;
 
