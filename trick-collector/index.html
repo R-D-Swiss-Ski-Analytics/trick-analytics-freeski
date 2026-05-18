@@ -132,6 +132,17 @@
     font-size: 13px; cursor: pointer; transition: border-color .2s;
   }
   .btn-secondary:hover { border-color: var(--accent); }
+  .nb-cat-btn { padding:7px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s; }
+  .nb-cat-btn.active { background:rgba(57,195,212,0.15);border-color:#39c3d4;color:#39c3d4; }
+  .nb-entry { background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px; }
+  .nb-entry-header { display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap; }
+  .nb-cat-badge { font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;text-transform:uppercase;letter-spacing:.5px; }
+  .nb-cat-Technique   { background:rgba(57,195,212,0.15);color:#39c3d4;border:1px solid #39c3d4; }
+  .nb-cat-Attitude    { background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid #f59e0b; }
+  .nb-cat-Behaviour   { background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid #a78bfa; }
+  .nb-cat-Physical    { background:rgba(45,138,78,0.15);color:#2d8a4e;border:1px solid #2d8a4e; }
+  .nb-cat-Competition { background:rgba(226,0,26,0.12);color:#e2001a;border:1px solid #e2001a; }
+  .nb-cat-General     { background:rgba(107,130,153,0.15);color:#6b8299;border:1px solid #6b8299; }
   .sess-type-btn { padding:10px 18px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s; }
   .sess-type-btn.active { background:rgba(57,195,212,0.15);border-color:#39c3d4;color:#39c3d4; }
   .sess-trick-btn { padding:8px 14px;background:var(--surface2);border:2px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap; }
@@ -279,6 +290,7 @@
     <button class="nav-tab" onclick="showPage('erfassen', this)">Session</button>
     <button class="nav-tab" onclick="showPage('entwicklung', this)">Development</button>
     <button class="nav-tab" onclick="checkDBPassword(this, 'trainerurteil')">Coach Review</button>
+    <button class="nav-tab" onclick="checkDBPassword(this, 'notebook')">Notebook</button>
     <button class="nav-tab" onclick="checkDBPassword(this)">Database</button>
   </nav>
 </header>
@@ -969,6 +981,72 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════ COACHES NOTEBOOK -->
+<div class="page" id="page-notebook">
+  <div style="display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start;">
+
+    <!-- LEFT: New Entry Form -->
+    <div class="card">
+      <div class="card-title">New Entry</div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Athlete</label>
+        <select id="nb-athlet" onchange="loadNotebook()">
+          <option value="">— select athlete —</option>
+          <optgroup label="National Team (NM)">
+            <option>Mathilde Gremaud</option><option>Kim Gubser</option><option>Sarah Höfflin</option><option>Andri Ragettli</option><option>Giulia Tanno</option>
+          </optgroup>
+          <optgroup label="A-Squad">
+            <option>Anouk Andraska</option><option>Gian Andri Bolinger</option><option>Fadri Rhyner</option><option>Nils Rhyner</option><option>Adrien Vaudaux</option>
+          </optgroup>
+          <optgroup label="B-Squad">
+            <option>Lou Annen</option><option>Nicola Bolinger</option><option>Tim Egger</option><option>Viktor Maksyagin</option>
+          </optgroup>
+          <optgroup label="C-Squad">
+            <option>Alan Bornet</option><option>Maxence Petzoldt</option><option>Lars Ruchti</option><option>Jason Zacharopoulos</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Coach</label>
+        <input type="text" id="nb-coach" placeholder="Your name">
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Category</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;" id="nb-cat-btns">
+          <button onclick="selectNbCat(this,'Technique')"    class="nb-cat-btn">Technique</button>
+          <button onclick="selectNbCat(this,'Attitude')"     class="nb-cat-btn">Attitude</button>
+          <button onclick="selectNbCat(this,'Behaviour')"    class="nb-cat-btn">Behaviour</button>
+          <button onclick="selectNbCat(this,'Physical')"     class="nb-cat-btn">Physical</button>
+          <button onclick="selectNbCat(this,'Competition')"  class="nb-cat-btn">Competition</button>
+          <button onclick="selectNbCat(this,'General')"      class="nb-cat-btn">General</button>
+        </div>
+        <input type="hidden" id="nb-kategorie">
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Entry</label>
+        <textarea id="nb-kommentar" rows="5" placeholder="Write your observations, notes or feedback..."></textarea>
+      </div>
+
+      <button class="btn-primary" onclick="saveNotebook()" style="font-size:16px;letter-spacing:1px;margin-top:4px;">SAVE ENTRY</button>
+      <div id="nb-save-msg" style="display:none;color:var(--success);font-size:13px;text-align:center;margin-top:10px;">✓ Entry saved!</div>
+    </div>
+
+    <!-- RIGHT: Entries List -->
+    <div>
+      <div class="card" id="nb-list-wrap">
+        <div class="card-title" style="margin-bottom:16px;">Entries</div>
+        <div id="nb-list">
+          <div style="color:var(--muted);font-size:13px;text-align:center;padding:32px;">Select an athlete to view entries.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="page" id="page-datenbank">
 
   <!-- TEAM RANKING -->
@@ -1081,6 +1159,7 @@ function showPage(id, btn) {
   if (id === 'datenbank') loadDB();
   if (id === 'entwicklung') loadEntwicklung();
   if (id === 'erfassen') initSessionSetup();
+  if (id === 'notebook') loadNotebook();
   if (id === 'erfassen') loadSessionTricks();
 }
 
@@ -3145,6 +3224,85 @@ function drawLine(canvasId, labels, values) {
   });
 }
 
+
+// ── COACHES NOTEBOOK ─────────────────────────────────────────────
+let nbSelectedCat = '';
+
+function selectNbCat(btn, cat) {
+  document.querySelectorAll('.nb-cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  nbSelectedCat = cat;
+  document.getElementById('nb-kategorie').value = cat;
+}
+
+async function saveNotebook() {
+  const athlet = document.getElementById('nb-athlet').value;
+  const coach  = document.getElementById('nb-coach').value.trim();
+  const text   = document.getElementById('nb-kommentar').value.trim();
+  const kat    = document.getElementById('nb-kategorie').value;
+  if (!athlet) { showToast('Please select an athlete', 'error'); return; }
+  if (!coach)  { showToast('Please enter your name', 'error'); return; }
+  if (!text)   { showToast('Please write an entry', 'error'); return; }
+  if (!kat)    { showToast('Please select a category', 'error'); return; }
+
+  const btn = document.querySelector('#page-notebook .btn-primary');
+  btn.disabled = true; btn.textContent = 'Saving...';
+
+  const { error } = await db.from('notebook').insert({
+    athlet, coach, kat,
+    datum: new Date().toISOString().split('T')[0],
+    kommentar: text,
+  });
+
+  btn.disabled = false; btn.textContent = 'SAVE ENTRY';
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+
+  const msg = document.getElementById('nb-save-msg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
+
+  document.getElementById('nb-kommentar').value = '';
+  document.querySelectorAll('.nb-cat-btn').forEach(b => b.classList.remove('active'));
+  nbSelectedCat = '';
+  document.getElementById('nb-kategorie').value = '';
+  loadNotebook();
+}
+
+async function loadNotebook() {
+  const athlet = document.getElementById('nb-athlet').value;
+  const el = document.getElementById('nb-list');
+  if (!athlet) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:32px;">Select an athlete to view entries.</div>';
+    return;
+  }
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+
+  const { data, error } = await db.from('notebook').select('*')
+    .eq('athlet', athlet).order('datum', { ascending: false }).order('id', { ascending: false });
+
+  if (error) { el.innerHTML = '<div style="color:var(--danger);">Error: ' + error.message + '</div>'; return; }
+  if (!data || !data.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:32px;">No entries yet for ' + athlet + '.</div>';
+    return;
+  }
+
+  el.innerHTML = data.map(e => `
+    <div class="nb-entry">
+      <div class="nb-entry-header">
+        <span class="nb-cat-badge nb-cat-${e.kat||'General'}">${e.kat||'General'}</span>
+        <span style="color:var(--muted);font-size:12px;">📅 ${e.datum}</span>
+        <span style="color:#39c3d4;font-size:12px;font-weight:600;">${e.coach||''}</span>
+        <button onclick="deleteNotebook(${e.id})" style="margin-left:auto;background:none;border:none;color:var(--danger);cursor:pointer;font-size:13px;opacity:.6;" title="Delete">✕</button>
+      </div>
+      <div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap;">${e.kommentar}</div>
+    </div>`).join('');
+}
+
+async function deleteNotebook(id) {
+  if (!confirm('Delete this entry?')) return;
+  await db.from('notebook').delete().eq('id', id);
+  loadNotebook();
+}
 
 // ── TRAINER:INNENURTEIL ──────────────────────────────────
 function updateTUVal(id) {
