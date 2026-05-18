@@ -118,7 +118,7 @@
   .badge-halfpipe { background: #3a1a3a; color: #c084fc; }
 
   .rating-pill { display: inline-block; padding: 2px 10px; border-radius: 20px; font-family: 'Poppins', sans-serif; font-size: 15px; }
-  .rating-high { background: #052e1a; color: #10b981; }
+  .rating-high { background: rgba(45,138,78,0.15); color: #2d8a4e; }
   .rating-mid  { background: #1c2a05; color: #84cc16; }
   .rating-low  { background: #2a1505; color: #f59e0b; }
 
@@ -159,13 +159,13 @@
     font-family: 'Poppins', sans-serif; font-size: 15px; letter-spacing: 0.5px;
     padding: 10px 14px; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 8px;
   }
-  .sb-col-header.mastered { background: #052e1a; color: #10b981; border: 1px solid #10b981; border-bottom: none; }
+  .sb-col-header.mastered { background: rgba(45,138,78,0.15); color: #2d8a4e; border: 1px solid #2d8a4e; border-bottom: none; }
   .sb-col-header.goal       { background: #1a1a05; color: #f59e0b; border: 1px solid #f59e0b; border-bottom: none; }
   .sb-col-body {
     border-radius: 0 0 8px 8px; min-height: 80px;
     border: 1px solid var(--border); background: var(--surface2);
   }
-  .sb-col-body.mastered { border-color: #10b981; }
+  .sb-col-body.mastered { border-color: #2d8a4e; }
   .sb-col-body.goal       { border-color: #f59e0b; }
 
   .sb-trick-row {
@@ -201,7 +201,7 @@
   }
   .btn-mastered:hover { opacity: .9; }
   .btn-goal {
-    background: #39c3d4; color: white; border: none;
+    background: linear-gradient(135deg, #b45309, #f59e0b); color: white; border: none;
     border-radius: 8px; padding: 13px; font-family: 'Poppins', sans-serif;
     font-size: 18px; letter-spacing: 0.5px; cursor: pointer; transition: opacity .2s;
   }
@@ -756,11 +756,11 @@
       </div>
 
       <!-- COACH SECTION -->
-      <div style="margin-top:20px;border:2px solid #f59e0b;border-radius:12px;padding:16px;background:rgba(245,158,11,0.06);">
+      <div style="margin-top:20px;border:2px solid #3b82f6;border-radius:12px;padding:16px;background:rgba(59,130,246,0.06);">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
           <span style="font-size:18px;">🎓</span>
           <div>
-            <div style="font-family:'Poppins',sans-serif;font-size:16px;letter-spacing:0.5px;color:#f59e0b;">COACH ASSESSMENT</div>
+            <div style="font-family:'Poppins',sans-serif;font-size:16px;letter-spacing:0.5px;color:#3b82f6;">COACH ASSESSMENT</div>
             <div style="font-size:11px;color:var(--muted);margin-top:1px;">For coaches only — not to be filled in by athletes</div>
           </div>
         </div>
@@ -1510,7 +1510,7 @@ async function renderCockpit() {
 
   const quelleTag = (q) => {
     if (q === 'training') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#1e3a5f;color:#ffffff;text-transform:uppercase;letter-spacing:.5px;">Training</span>';
-    if (q === 'mastered') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#052e1a;color:#10b981;text-transform:uppercase;letter-spacing:.5px;">Assessment ✓</span>';
+    if (q === 'mastered') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:rgba(45,138,78,0.15);color:#2d8a4e;text-transform:uppercase;letter-spacing:.5px;">Assessment ✓</span>';
     if (q === 'goal') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#1a1a05;color:#f59e0b;text-transform:uppercase;letter-spacing:.5px;">Assessment 🎯</span>';
     if (q === 'erreicht') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#0f1f38;color:#ffffff;text-transform:uppercase;letter-spacing:.5px;">Assessment ★</span>';
     return '–';
@@ -1696,7 +1696,7 @@ function renderDBTable() {
       : '<span style="font-size:10px;background:#1a3320;color:#34d399;border-radius:4px;padding:2px 6px;font-weight:600;">SESSION</span>';
     const statusBadge = isStandort && t.status
       ? (t.status === 'mastered'
-          ? ' <span style="font-size:10px;background:#14532d;color:#4ade80;border-radius:4px;padding:1px 5px;">✓</span>'
+          ? ' <span style="font-size:10px;background:rgba(45,138,78,0.15);color:#2d8a4e;border-radius:4px;padding:1px 5px;">✓</span>'
           : ' <span style="font-size:10px;background:#431407;color:#fb923c;border-radius:4px;padding:1px 5px;">🎯</span>')
       : '';
     const desc = isStandort
@@ -2869,11 +2869,11 @@ async function loadEntwicklung() {
       verlaufEl.innerHTML = rows.map((r, i) => {
         const dateStr = new Date(r.date).toLocaleDateString('de-CH', { day:'2-digit', month:'2-digit', year:'numeric' });
         const newBadge = r.newTricks.length > 0
-          ? `<span style="background:#10b98122;color:#10b981;border:1px solid #10b98144;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:8px;">+${r.newTricks.length} neu</span>`
+          ? `<span style="background:rgba(45,138,78,0.15);color:#2d8a4e;border:1px solid #2d8a4e;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:8px;">+${r.newTricks.length} neu</span>`
           : '';
         const newList = r.newTricks.length > 0
-          ? `<div style="margin-top:6px;padding-left:12px;border-left:2px solid #10b98144;">${r.newTricks.map(t =>
-              `<span style="display:inline-block;background:#10b98111;color:#10b981;border-radius:10px;padding:2px 8px;font-size:11px;margin:2px;">${t}</span>`
+          ? `<div style="margin-top:6px;padding-left:12px;border-left:2px solid #2d8a4e;">${r.newTricks.map(t =>
+              `<span style="display:inline-block;background:rgba(45,138,78,0.12);color:#2d8a4e;border-radius:10px;padding:2px 8px;font-size:11px;margin:2px;">${t}</span>`
             ).join('')}</div>`
           : '';
         const borderTop = i > 0 ? 'border-top:1px solid var(--border);' : '';
