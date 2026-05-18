@@ -1919,17 +1919,15 @@ function tricksForDir(tricks, dir) {
   });
 }
 
-const SESS_TAKE_OFFS = ['Carved','Inside Edge','Innenkanten','Nose-Butter','Tail-Butter',' X'];
+const SESS_STRIP = [...SESS_GRABS, 'Carved','Inside Edge','Innenkanten','x','X','Nose-Butter','Tail-Butter'];
 
 function baseLabel(label) {
-  let result = label;
-  [...SESS_GRABS, ...SESS_TAKE_OFFS].forEach(term => {
-    result = result.replace(
-      new RegExp('(,\\s*|\\s+)' + term.replace(/[-.*+?^${}()|[\]\\]/g,'\\$&') + '(,|\\s|$)', 'gi'),
-      '$2'
-    );
+  let result = ' ' + label + ' ';
+  SESS_STRIP.sort((a,b) => b.length - a.length).forEach(t => {
+    const esc = t.trim().replace(/[-.*+?^${}()|[\]\\]/g,'\\$&');
+    result = result.replace(new RegExp('[, ]+' + esc + '(?=[, ]|$)', 'gi'), '');
   });
-  return result.replace(/,\s*$/, '').replace(/\s{2,}/g, ' ').trim();
+  return result.trim().replace(/\s{2,}/g,' ').replace(/[,\s]+$/, '');
 }
 
 function parseGrabsFromLabel(label) {
