@@ -2209,17 +2209,18 @@ function renderLiveSession() {
   const cols = document.getElementById('sess-athlete-cols');
   const n = sessSelectedAthletes.length;
   cols.style.gridTemplateColumns = n<=2 ? `repeat(${n},1fr)` : n<=4 ? 'repeat(4,1fr)' : 'repeat(4,1fr)';
+  cols.style.alignItems = 'stretch';
   cols.innerHTML = sessSelectedAthletes.map(name => {
     const d = sessAthleteData[name];
     const tricks = sessActiveTricks[name] || [];
     const s = d.stats;
     const pct = s.attempts ? Math.round((s.landed+s.perfect)/s.attempts*100) : 0;
-    return `<div class="card" style="padding:20px;text-align:center;" id="sess-col-${name.replace(/\s/g,'_')}">
+    return `<div class="card" style="padding:20px;text-align:center;display:flex;flex-direction:column;" id="sess-col-${name.replace(/\s/g,'_')}">
       <div style="font-size:20px;font-weight:800;color:#39c3d4;margin-bottom:2px;">${shortName(name)}</div>
-      <div style="margin:14px 0;">
+      <div style="margin:14px 0;flex:1;">
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Working on</div>
         ${tricks.length > 0
-          ? `<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
+          ? `<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-height:140px;overflow-y:auto;">
               ${tricks.map(t=>`<button class="sess-trick-btn${t===d.currentTrick?' active':''}" onclick="sessPickTrick('${name}','${t.replace(/'/g,"\\'")}',this)">${t}</button>`).join('')}
             </div>`
           : `<input type="text" placeholder="Enter trick..." value="${d.currentTrick}" oninput="sessSetTrick('${name}',this.value)" style="text-align:center;font-weight:600;font-size:13px;">`
