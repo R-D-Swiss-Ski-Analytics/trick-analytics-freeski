@@ -447,7 +447,7 @@
     </div>
 
     <div class="card" style="margin-bottom:16px;">
-      <div class="card-title">Step 1 — Select Athletes (max. 3)</div>
+      <div class="card-title">Step 1 — Select Athletes (max. 8)</div>
       <div id="sess-athlete-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;"></div>
     </div>
 
@@ -1852,8 +1852,8 @@ async function toggleSessionAthlete(name) {
     const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
     if (card) card.style.borderColor = 'var(--border)';
   } else {
-    if (sessSelectedAthletes.length >= 3) {
-      showToast('Max. 3 athletes per session', 'error');
+    if (sessSelectedAthletes.length >= 8) {
+      showToast('Max. 8 athletes per session', 'error');
       if (cb) cb.checked = false;
       return;
     }
@@ -1921,7 +1921,7 @@ function startSession() {
 function renderLiveSession() {
   const cols = document.getElementById('sess-athlete-cols');
   const n = sessSelectedAthletes.length;
-  cols.style.gridTemplateColumns = n===1 ? '1fr' : n===2 ? '1fr 1fr' : 'repeat(3,1fr)';
+  cols.style.gridTemplateColumns = n<=2 ? `repeat(${n},1fr)` : n<=4 ? 'repeat(4,1fr)' : 'repeat(4,1fr)';
   cols.innerHTML = sessSelectedAthletes.map(name => {
     const d = sessAthleteData[name];
     const tricks = sessActiveTricks[name] || [];
