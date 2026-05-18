@@ -1919,6 +1919,62 @@ function tricksForDir(tricks, dir) {
   });
 }
 
+function parseGrabsFromLabel(label) {
+  const found = SESS_GRABS.filter(g => {
+    const re = new RegExp('(^|[,\\s])' + g.replace(/[-.*+?^${}()|[\]\\]/g,'\\$&') + '($|[,\\s])', 'i');
+    return re.test(label);
+  });
+  return found.length ? found : SESS_GRABS;
+}
+
+function showGrabPicker(name, trickLabel, status) {
+  // Remove any existing picker for this athlete
+  document.querySelectorAll('.grab-picker-' + name.replace(/\s/g,'_')).forEach(el => el.remove());
+  document.querySelectorAll('.trick-selecting-' + name.replace(/\s/g,'_')).forEach(el => {
+    el.style.borderColor = status === 'mastered' ? '#2d8a4e' : '#f59e0b';
+    el.style.background = status === 'mastered' ? 'rgba(45,138,78,0.12)' : 'rgba(245,158,11,0.12)';
+  });
+
+  const grabs = parseGrabsFromLabel(trickLabel);
+  const picker = document.createElement('div');
+  picker.className = 'grab-picker-' + name.replace(/\s/g,'_');
+  picker.style.cssText = 'margin:8px 0 12px 0;padding:10px 14px;background:var(--surface);border:1px solid var(--border2,#39c3d4);border-radius:10px;';
+  picker.innerHTML = `<div style="font-size:10px;color:#39c3d4;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">
+      Select grab for: <span style="color:var(--text);font-weight:600;">${trickLabel}</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      ${grabs.map(g => `<button onclick="addTrickWithGrab('${name}','${trickLabel.replace(/'/g,"\\'")}','${g}',this)"
+        style="padding:6px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${g}</button>`).join('')}
+    </div>`;
+
+  // Insert after the clicked button's parent direction section
+  const dirSections = document.querySelectorAll('.sess-dir-section-' + name.replace(/\s/g,'_'));
+  let inserted = false;
+  dirSections.forEach(sec => {
+    if (sec.querySelector(`[data-trick="${CSS.escape(trickLabel)}"]`) && !inserted) {
+      sec.appendChild(picker);
+      inserted = true;
+    }
+  });
+  if (!inserted) {
+    const safeId = name.replace(/\s/g,'_');
+    const selDiv = document.getElementById('sess-selected-' + safeId);
+    if (selDiv && selDiv.parentNode) selDiv.parentNode.insertBefore(picker, selDiv);
+  }
+}
+
+function addTrickWithGrab(name, trickLabel, grab, btn) {
+  if (!sessActiveTricks[name]) sessActiveTricks[name] = [];
+  const label = trickLabel + ' — ' + grab;
+  if (!sessActiveTricks[name].includes(label)) {
+    sessActiveTricks[name].push(label);
+    btn.style.background = 'rgba(57,195,212,0.18)';
+    btn.style.borderColor = '#39c3d4';
+    btn.style.color = '#39c3d4';
+  }
+  renderSessSelected(name);
+}
+
 function renderSessionTrickSelection() {
   const container = document.getElementById('sess-trick-selection');
   const startBtn = document.getElementById('sess-start-btn');
@@ -1935,13 +1991,19 @@ function renderSessionTrickSelection() {
           const mastered = tricksForDir(allTricks.filter(t=>t.status==='mastered'), dir);
           const goals    = tricksForDir(allTricks.filter(t=>t.status==='goal'), dir);
           return `<div style="margin-bottom:14px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent2);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);">${dir}</div>
+            <div class="sess-dir-section-${safeId}" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent2);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);">${dir}</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;">
-              ${mastered.map(t => `<button onclick="toggleSessAssessmentTrick('${name}','${t.trick_label.replace(/'/g,"\\'")}',this)"
-                style="padding:6px 12px;background:rgba(45,138,78,0.12);border:1.5px solid #2d8a4e;border-radius:7px;color:#2d8a4e;font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;" title="Mastered">${t.trick_label}</button>`).join('')}
-              ${goals.map(t => `<button onclick="toggleSessAssessmentTrick('${name}','${t.trick_label.replace(/'/g,"\\'")}',this)"
-                style="padding:6px 12px;background:rgba(245,158,11,0.12);border:1.5px solid #f59e0b;border-radius:7px;color:#f59e0b;font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;" title="Goal">${t.trick_label}</button>`).join('')}
-              ${mastered.length === 0 && goals.length === 0 ? `<span style="color:var(--border);font-size:12px;font-style:italic;">—</span>` : ''}
+              ${mastered.map(t => `<button
+                class="trick-selecting-${safeId}"
+                data-trick="${t.trick_label.replace(/"/g,'&quot;')}"
+                onclick="showGrabPicker('${name}','${t.trick_label.replace(/'/g,"\\'")}','mastered')"
+                style="padding:6px 12px;background:rgba(45,138,78,0.12);border:1.5px solid #2d8a4e;border-radius:7px;color:#2d8a4e;font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${t.trick_label}</button>`).join('')}
+              ${goals.map(t => `<button
+                class="trick-selecting-${safeId}"
+                data-trick="${t.trick_label.replace(/"/g,'&quot;')}"
+                onclick="showGrabPicker('${name}','${t.trick_label.replace(/'/g,"\\'")}','goal')"
+                style="padding:6px 12px;background:rgba(245,158,11,0.12);border:1.5px solid #f59e0b;border-radius:7px;color:#f59e0b;font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${t.trick_label}</button>`).join('')}
+              ${mastered.length === 0 && goals.length === 0 ? `<span style="color:var(--muted);font-size:11px;font-style:italic;">No assessment entry</span>` : ''}
             </div>
           </div>`;
         }).join('')}
