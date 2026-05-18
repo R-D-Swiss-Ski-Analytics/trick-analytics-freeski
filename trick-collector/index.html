@@ -411,21 +411,126 @@
         <div class="page-title">Assessment</div>
         <div class="page-sub">Mastered tricks & goals per athlete</div>
       </div>
-      <div class="panel-card">
-        <div class="panel-body">
-          <div class="form-row" style="max-width:280px">
-            <label>Select Athlete</label>
-            <select class="form-select" id="assessment-athlete" onchange="loadAssessment()">
-              <option value="">— select —</option>
-              <optgroup label="National Team (NM)"><option>Mathilde Gremaud</option><option>Kim Gubser</option><option>Sarah Höfflin</option><option>Andri Ragettli</option><option>Giulia Tanno</option></optgroup>
-              <optgroup label="A-Squad"><option>Anouk Andraska</option><option>Gian Andri Bolinger</option><option>Fadri Rhyner</option><option>Nils Rhyner</option><option>Adrien Vaudaux</option></optgroup>
-              <optgroup label="B-Squad"><option>Lou Annen</option><option>Nicola Bolinger</option><option>Tim Egger</option><option>Viktor Maksyagin</option></optgroup>
-              <optgroup label="C-Squad"><option>Alan Bornet</option><option>Maxence Petzoldt</option><option>Lars Ruchti</option><option>Jason Zacharopoulos</option></optgroup>
-            </select>
+      <div class="session-layout">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">Add Entry</div>
+            <i class="ti ti-plus-circle" style="color:var(--accent);font-size:18px" aria-hidden="true"></i>
           </div>
-          <div id="assessment-content" style="text-align:center;padding:40px;color:var(--muted)">
-            <i class="ti ti-target" style="font-size:36px;display:block;margin-bottom:10px;color:var(--border2)" aria-hidden="true"></i>
-            Select an athlete to view their overview.
+          <div class="panel-body">
+            <div class="form-row">
+              <label>Athlete</label>
+              <select class="form-select" id="as-athlete" onchange="loadAssessment()">
+                <option value="">— select —</option>
+                <optgroup label="National Team (NM)">
+                  <option>Mathilde Gremaud</option><option>Kim Gubser</option><option>Sarah Höfflin</option><option>Andri Ragettli</option><option>Giulia Tanno</option>
+                </optgroup>
+                <optgroup label="A-Squad">
+                  <option>Anouk Andraska</option><option>Gian Andri Bolinger</option><option>Fadri Rhyner</option><option>Nils Rhyner</option><option>Adrien Vaudaux</option>
+                </optgroup>
+                <optgroup label="B-Squad">
+                  <option>Lou Annen</option><option>Nicola Bolinger</option><option>Tim Egger</option><option>Viktor Maksyagin</option>
+                </optgroup>
+                <optgroup label="C-Squad">
+                  <option>Alan Bornet</option><option>Maxence Petzoldt</option><option>Lars Ruchti</option><option>Jason Zacharopoulos</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Status</label>
+              <select class="form-select" id="as-status">
+                <option value="">— select —</option>
+                <option value="mastered">✓ Mastered</option>
+                <option value="goal">🎯 Goal / In Progress</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Discipline</label>
+              <select class="form-select" id="as-disc" onchange="updateAssessmentFields()">
+                <option value="">— select —</option>
+                <option>Kicker</option><option>Rail</option><option>Halfpipe</option><option>Landing Bag</option>
+              </select>
+            </div>
+
+            <div id="as-kicker-fields" style="display:none">
+              <div class="section-divider">Kicker / Halfpipe</div>
+              <div class="row2">
+                <div class="form-row"><label>Direction</label>
+                  <select class="form-select" id="as-direction">
+                    <option value="">—</option><option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option>
+                  </select>
+                </div>
+                <div class="form-row"><label>Rotation</label>
+                  <select class="form-select" id="as-rotation">
+                    <option value="">—</option><option>180</option><option>360</option><option>540</option><option>720</option><option>900</option><option>1080</option><option>1260</option><option>1440</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row2">
+                <div class="form-row"><label>Axis</label>
+                  <select class="form-select" id="as-axis">
+                    <option value="">—</option><option>Cork</option><option>Bio/Misty</option><option>Flat</option><option>Rodeo</option><option>Frontflip</option><option>Backflip</option>
+                  </select>
+                </div>
+                <div class="form-row"><label>Flips</label>
+                  <select class="form-select" id="as-flips">
+                    <option value="">—</option><option>None</option><option>Single</option><option>Double</option><option>Triple</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row"><label>Grab</label>
+                <select class="form-select" id="as-grab">
+                  <option value="">—</option><option>Safety</option><option>Mute</option><option>Tail</option><option>Blunt</option><option>Japan</option><option>Critical</option><option>Esco</option><option>In and out</option><option>Nose</option><option>Octo</option><option>Truckdriver</option><option>Stale</option><option>Cuban</option><option>Seatbelt</option><option>Bow and Arrow</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="as-rail-fields" style="display:none">
+              <div class="section-divider">Rail</div>
+              <div class="row2">
+                <div class="form-row"><label>Rail Type</label>
+                  <select class="form-select" id="as-railtype">
+                    <option value="">—</option><option>Box</option><option>Tube</option><option>Rail</option><option>Down Tube</option><option>Down Rail</option><option>DFD</option><option>Waterfall</option><option>Elbow</option><option>Flat-Down</option><option>S-Rail</option><option>C-Rail</option><option>Pole-Jam</option>
+                  </select>
+                </div>
+                <div class="form-row"><label>Slide Form</label>
+                  <select class="form-select" id="as-slideform">
+                    <option value="">—</option><option>50-50</option><option>Switch 50-50</option><option>Slide</option><option>Lip On</option><option>Switch Tails On</option><option>Switch Lip On</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row2">
+                <div class="form-row"><label>In-Spin</label>
+                  <select class="form-select" id="as-inspin">
+                    <option value="">—</option><option>L 180</option><option>R 180</option><option>L 270</option><option>R 270</option><option>L 360</option><option>R 360</option><option>L 450</option><option>R 450</option><option>L 630</option><option>R 630</option>
+                  </select>
+                </div>
+                <div class="form-row"><label>Out-Spin</label>
+                  <select class="form-select" id="as-outspin">
+                    <option value="">—</option><option>L 180</option><option>R 180</option><option>L 270</option><option>R 270</option><option>L 360</option><option>R 360</option><option>L 450</option><option>R 450</option><option>L 630</option><option>R 630</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-top:8px">
+              <label>Trick Name (optional override)</label>
+              <input type="text" class="form-input" id="as-trickname" placeholder="e.g. Dub Cork 1080 Mute">
+            </div>
+
+            <button class="btn-save" id="as-save-btn" onclick="saveAssessment()"><i class="ti ti-clipboard-check"></i> SAVE ENTRY</button>
+            <div class="success-msg" id="as-save-msg" style="display:none">✓ Entry saved!</div>
+            <button class="btn-cancel" onclick="clearAssessmentForm()">Cancel</button>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header"><div class="panel-title">Athlete Overview</div></div>
+          <div class="panel-body">
+            <div id="assessment-content" style="text-align:center;padding:40px;color:var(--muted)">
+              <i class="ti ti-target" style="font-size:36px;display:block;margin-bottom:10px;color:var(--border2)" aria-hidden="true"></i>
+              Select an athlete to view their overview.
+            </div>
           </div>
         </div>
       </div>
@@ -778,8 +883,76 @@ function clearForm() {
 // ============================================
 // ASSESSMENT
 // ============================================
+function updateAssessmentFields() {
+  const disc = document.getElementById('as-disc').value;
+  document.getElementById('as-kicker-fields').style.display = ['Kicker','Halfpipe','Landing Bag'].includes(disc) ? 'block' : 'none';
+  document.getElementById('as-rail-fields').style.display = disc === 'Rail' ? 'block' : 'none';
+}
+
+async function saveAssessment() {
+  const athlete = document.getElementById('as-athlete').value;
+  const status  = document.getElementById('as-status').value;
+  const disc    = document.getElementById('as-disc').value;
+  if (!athlete || !status || !disc) { alert('Please select athlete, status and discipline.'); return; }
+
+  const squadMap = {
+    'Mathilde Gremaud':'NM','Kim Gubser':'NM','Sarah Höfflin':'NM','Andri Ragettli':'NM','Giulia Tanno':'NM',
+    'Anouk Andraska':'A','Gian Andri Bolinger':'A','Fadri Rhyner':'A','Nils Rhyner':'A','Adrien Vaudaux':'A',
+    'Lou Annen':'B','Nicola Bolinger':'B','Tim Egger':'B','Viktor Maksyagin':'B',
+    'Alan Bornet':'C','Maxence Petzoldt':'C','Lars Ruchti':'C','Jason Zacharopoulos':'C'
+  };
+
+  const fields = {
+    direction: document.getElementById('as-direction')?.value || null,
+    rotation:  document.getElementById('as-rotation')?.value  || null,
+    axis:      document.getElementById('as-axis')?.value      || null,
+    flips:     document.getElementById('as-flips')?.value     || null,
+    grab:      document.getElementById('as-grab')?.value      || null,
+    rail_type:    document.getElementById('as-railtype')?.value  || null,
+    slide_form:   document.getElementById('as-slideform')?.value || null,
+    in_spin:      document.getElementById('as-inspin')?.value    || null,
+    out_spin:     document.getElementById('as-outspin')?.value   || null,
+  };
+
+  const trickName = document.getElementById('as-trickname').value.trim() || buildTrickName(disc, fields);
+
+  const record = {
+    athlete, squad: squadMap[athlete] || '—',
+    date: today,
+    discipline: disc,
+    source: 'assessment',
+    status,
+    trick_name: trickName,
+    ...fields,
+  };
+
+  const btn = document.getElementById('as-save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  const { error } = await db.from('tricks').insert([record]);
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-clipboard-check"></i> SAVE ENTRY';
+
+  if (error) { alert('Error: ' + error.message); return; }
+
+  const msg = document.getElementById('as-save-msg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
+
+  clearAssessmentForm();
+  loadAssessment();
+}
+
+function clearAssessmentForm() {
+  document.getElementById('as-status').value = '';
+  document.getElementById('as-disc').value = '';
+  document.getElementById('as-trickname').value = '';
+  updateAssessmentFields();
+}
+
 async function loadAssessment() {
-  const athlete = document.getElementById('assessment-athlete').value;
+  const athlete = document.getElementById('as-athlete').value;
   if (!athlete) return;
   const content = document.getElementById('assessment-content');
   content.innerHTML = '<div class="loading-bar">Loading...</div>';
