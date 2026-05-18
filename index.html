@@ -2331,23 +2331,52 @@ function renderStandort() {
   const bList = sbData.filter(e => e.status === 'mastered');
   const zList = sbData.filter(e => e.status === 'goal');
 
+  const DIR_ORDER = ['Left','Right','Switch Left','Switch Right'];
+  const DIR_COLORS = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
+
+  function normDir4(d) {
+    if (!d) return null;
+    const s = d.trim();
+    if (s === 'Left' || s === 'Forward Left') return 'Left';
+    if (s === 'Right' || s === 'Forward Right') return 'Right';
+    if (s === 'Switch Left') return 'Switch Left';
+    if (s === 'Switch Right') return 'Switch Right';
+    return null;
+  }
+
+  function renderTrickRow(e) {
+    return `<div class="sb-trick-row">
+      <span class="sb-trick-name">
+        <span style="font-weight:500;">${e.trick_label}</span>
+        <span style="display:flex;gap:8px;align-items:center;margin-top:2px;">
+          ${e.datum ? `<span style="font-size:10px;color:var(--muted);">📅 ${e.datum}</span>` : ''}
+          ${e.notiz ? `<span style="font-size:10px;color:var(--muted);">${e.notiz}</span>` : ''}
+          ${e.coach_kommentar ? `<div style="font-size:10px;color:#f59e0b;margin-top:3px;">🎓 ${e.coach_rating ? e.coach_rating+'/10 · ' : ''}${e.coach_kommentar}</div>` : ''}
+          ${e.coach_video ? `<div style="font-size:10px;"><a href="${e.coach_video}" target="_blank" style="color:#f59e0b;">▶ Video</a></div>` : ''}
+        </span>
+      </span>
+      <button style="background:none;border:1px solid #1a3450;border-radius:5px;color:#6b8299;cursor:pointer;padding:2px 7px;font-size:11px;margin-right:2px;" onclick="openSbEdit(${e.id})" title="Edit">✏️</button>
+      <button class="btn-del" onclick="deleteSbEntry(${e.id})" title="Remove">✕</button>
+    </div>`;
+  }
+
   function renderList(items, emptyMsg) {
     if (!items.length) return `<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center;">${emptyMsg}</div>`;
-    return items.map(e => `
-      <div class="sb-trick-row">
-        <span class="sb-trick-disziplin">${badge(e.disziplin)}</span>
-        <span class="sb-trick-name">
-          <span style="font-weight:500;">${e.trick_label}</span>
-          <span style="display:flex;gap:8px;align-items:center;margin-top:2px;">
-            ${e.datum ? `<span style="font-size:10px;color:var(--muted);">📅 ${e.datum}</span>` : ''}
-            ${e.notiz ? `<span style="font-size:10px;color:var(--muted);">${e.notiz}</span>` : ''}
-            ${e.coach_kommentar ? `<div style="font-size:10px;color:#f59e0b;margin-top:3px;">🎓 ${e.coach_rating ? e.coach_rating+'/10 · ' : ''}${e.coach_kommentar}</div>` : ''}
-            ${e.coach_video ? `<div style="font-size:10px;"><a href="${e.coach_video}" target="_blank" style="color:#f59e0b;">▶ Video</a></div>` : ''}
-          </span>
-        </span>
-        <button style="background:none;border:1px solid #1a3450;border-radius:5px;color:#6b8299;cursor:pointer;padding:2px 7px;font-size:11px;margin-right:2px;" onclick="openSbEdit(${e.id})" title="Bearbeiten">✏️</button>
-        <button class="btn-del" onclick="deleteSbEntry(${e.id})" title="Entfernen">✕</button>
-      </div>`).join('');
+    // Group by direction
+    const groups = {};
+    items.forEach(e => {
+      const dir = normDir4(e.drehrichtung) || 'Other';
+      if (!groups[dir]) groups[dir] = [];
+      groups[dir].push(e);
+    });
+    const orderedKeys = [...DIR_ORDER.filter(d => groups[d]), ...(groups['Other'] ? ['Other'] : [])];
+    return orderedKeys.map(dir => {
+      const col = DIR_COLORS[dir] || 'var(--muted)';
+      return `<div style="border-bottom:1px solid var(--border);">
+        <div style="padding:6px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${col};background:var(--surface2);">${dir}</div>
+        ${groups[dir].map(e => renderTrickRow(e)).join('')}
+      </div>`;
+    }).join('');
   }
 
   document.getElementById('sb-columns').innerHTML = `
