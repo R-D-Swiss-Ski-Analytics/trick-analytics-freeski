@@ -999,7 +999,7 @@
 
     <!-- Forward vs Switch Balance -->
     <div>
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Forward vs. Switch Balance (Session + Assessment)</div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Direction Balance — All 4 Directions (Session + Assessment)</div>
       <div id="rank-balance" style="display:flex;flex-wrap:wrap;gap:10px;">
         <div class="loading"><span class="spinner"></span></div>
       </div>
@@ -1547,31 +1547,42 @@ function renderDBRankings() {
       + '</div>';
   }).join('');
 
-  // ── 3. Forward vs Switch Balance per Athlete ──
+  // ── 3. Direction Balance per Athlete (all 4 directions) ──
+  const DIRS4 = ['Left','Right','Switch Left','Switch Right'];
+  const DIR4_COLORS = { 'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b' };
   const balMap = {};
-  allForRot.filter(t => t.drehrichtung && t.athlet && (t._quelle === 'session' || t.status === 'mastered')).forEach(t => {
-    if (!balMap[t.athlet]) balMap[t.athlet] = { fwd: 0, sw: 0 };
-    const nd = normalizeDir(t.drehrichtung);
-    if (nd && nd.startsWith('Forward')) balMap[t.athlet].fwd++;
-    else if (nd) balMap[t.athlet].sw++;
+
+  // From session/assessment with drehrichtung field
+  allForRot.filter(t => t.athlet && (t._quelle === 'session' || t.status === 'mastered')).forEach(t => {
+    if (!balMap[t.athlet]) balMap[t.athlet] = {'Left':0,'Right':0,'Switch Left':0,'Switch Right':0};
+    const nd = t.drehrichtung ? normalizeDir(t.drehrichtung) : null;
+    // Also parse from trickaufbau for new session entries
+    const dirFromTb = t.trickaufbau ? (['Switch Right','Switch Left','Right','Left'].find(d => t.trickaufbau.startsWith(d+' ') || t.trickaufbau.startsWith(d+' —')) || null) : null;
+    const dir = nd || dirFromTb;
+    if (dir && balMap[t.athlet][dir] !== undefined) balMap[t.athlet][dir]++;
   });
-  const balEntries = Object.entries(balMap).sort((a,b) => (b[1].fwd+b[1].sw)-(a[1].fwd+a[1].sw));
+
+  const balEntries = Object.entries(balMap)
+    .filter(([,v]) => DIRS4.some(d => v[d] > 0))
+    .sort((a,b) => DIRS4.reduce((s,d)=>s+b[1][d]-a[1][d],0));
+
   document.getElementById('rank-balance').innerHTML = balEntries.length ? balEntries.map(([athlet, v]) => {
-    const total = v.fwd + v.sw || 1;
-    const fwdPct = Math.round(v.fwd/total*100);
-    const swPct  = 100 - fwdPct;
-    return '<div style="flex:1;min-width:160px;max-width:220px;">'
-      + '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">'
-      + '<span style="font-weight:700;color:var(--text);">' + shortName(athlet) + '</span>'
-      + '<span style="color:var(--muted);font-size:11px;">F:' + v.fwd + ' S:' + v.sw + '</span></div>'
-      + '<div style="display:flex;border-radius:4px;overflow:hidden;height:8px;">'
-      + '<div style="background:#3b82f6;width:' + fwdPct + '%;transition:width .4s;" title="Forward ' + fwdPct + '%"></div>'
-      + '<div style="background:#a78bfa;width:' + swPct + '%;transition:width .4s;" title="Switch ' + swPct + '%"></div>'
-      + '</div>'
-      + '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px;">'
-      + '<span style="color:#ffffff;">Fwd ' + fwdPct + '%</span>'
-      + '<span style="color:#a78bfa;">Sw ' + swPct + '%</span></div></div>';
-  }).join('') : '<div style="color:var(--muted);font-size:13px;">No session tricks logged yet.</div>';
+    const total = DIRS4.reduce((s,d) => s + v[d], 0) || 1;
+    return '<div style="flex:1;min-width:180px;max-width:260px;">'
+      + '<div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:8px;">' + shortName(athlet) + '</div>'
+      + DIRS4.map(dir => {
+          const pct = Math.round(v[dir] / total * 100);
+          const col = DIR4_COLORS[dir];
+          return '<div style="margin-bottom:6px;">'
+            + '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;">'
+            + '<span style="color:var(--muted);">' + dir + '</span>'
+            + '<span style="color:' + col + ';font-weight:600;">' + pct + '%</span></div>'
+            + '<div style="background:var(--surface2);border-radius:4px;height:6px;overflow:hidden;">'
+            + '<div style="background:' + col + ';width:' + pct + '%;height:6px;border-radius:4px;transition:width .4s;"></div>'
+            + '</div></div>';
+        }).join('')
+      + '</div>';
+  }).join('') : '<div style="color:var(--muted);font-size:13px;">No data yet.</div>';
 }
 
 function renderDBTable() {
