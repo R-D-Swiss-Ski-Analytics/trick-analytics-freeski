@@ -2045,7 +2045,8 @@ async function loadStandort() {
   ]);
 
   if (sbRes.error || tricksRes.error) {
-    document.getElementById('sb-columns').innerHTML = '<div style="color:var(--danger);padding:20px;grid-column:1/-1">Fehler beim Laden. Bitte SQL-Setup prüfen.</div>';
+    const errMsg = (sbRes.error || tricksRes.error)?.message || 'Unbekannt';
+    document.getElementById('sb-columns').innerHTML = '<div style="color:var(--danger);padding:20px;grid-column:1/-1">Fehler: ' + errMsg + '</div>';
     return;
   }
 
