@@ -401,7 +401,7 @@
         <input id="edit-landung" type="number" min="1" max="10" placeholder="1–10" oninput="updateEditGesamt()" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;"></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Landed</label>
         <select id="edit-gelandet" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
-          <option value="">— auswählen —</option><option value="Yes">✅ Yes</option><option value="No">❌ No</option>
+          <option value="">— select —</option><option value="Yes">✅ Yes</option><option value="No">❌ No</option>
         </select></div>
     </div>
     <div style="margin-top:10px;">
@@ -618,18 +618,18 @@
         <div class="form-group full">
           <label>Landed?</label>
           <select id="f-gelandet" style="border-color:#f59e0b44;">
-            <option value="">— auswählen —</option>
+            <option value="">— select —</option>
             <option value="Yes">✅ Yes</option>
             <option value="No">❌ No</option>
           </select>
         </div>
         <div class="form-group full">
           <label>Comment</label>
-          <textarea id="f-kommentar" placeholder="Feedback, Beobachtungen..." style="border-color:#f59e0b44;"></textarea>
+          <textarea id="f-kommentar" placeholder="Feedback, observations..." style="border-color:#f59e0b44;"></textarea>
         </div>
         <div class="form-group full">
           <label>Trick Setup</label>
-          <input type="text" id="f-trickaufbau" placeholder="z.B. 7 auf 7, 5 auf 7, 10 auf 7" style="border-color:#f59e0b44;">
+          <input type="text" id="f-trickaufbau" placeholder="e.g. 7 on 7, 5 on 7, 10 on 7" style="border-color:#f59e0b44;">
         </div>
         <div class="form-group full">
           <label>Video Link</label>
@@ -733,7 +733,7 @@
       <table>
         <thead><tr><th>Date</th><th>Discipline</th><th>Trick</th><th>Quelle</th><th>Rating</th><th>Comment</th></tr></thead>
         <tbody id="cp-tbody">
-          <tr><td colspan="6"><div class="empty-state"><div class="icon">🏔</div>Athlete auswählen</div></td></tr>
+          <tr><td colspan="6"><div class="empty-state"><div class="icon">🏔</div>Select athlete</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -782,7 +782,7 @@
   <div id="sb-empty" style="text-align:center;padding:60px;color:var(--muted);">
     <div style="font-size:40px;margin-bottom:16px;">🎯</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:8px;">Assessment</div>
-    <div style="font-size:13px;">Athlete auswählen um die Übersicht zu sehen.</div>
+    <div style="font-size:13px;">Select an athlete to view the overview.</div>
   </div>
 
   <!-- Main content (hidden until athlete selected) -->
@@ -932,7 +932,7 @@
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
           <span style="font-size:18px;">🎓</span>
           <div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:#f59e0b;">TRAINER:INNENBEURTEILUNG</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:#f59e0b;">COACH ASSESSMENT</div>
             <div style="font-size:11px;color:var(--muted);margin-top:1px;">For coaches only — not to be filled in by athletes</div>
           </div>
         </div>
@@ -946,7 +946,7 @@
               <span id="sb-coach-rating-val" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#f59e0b;min-width:28px;">5</span>
             </div>
             <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px;">
-              <span>Nicht sauber</span><span>Wettkampfbereit</span>
+              <span>Not clean</span><span>Competition ready</span>
             </div>
           </div>
           <div class="form-group">
@@ -956,7 +956,7 @@
           <div class="form-group full">
             <label>Coach-Kommentar zur Ausführung</label>
             <textarea id="sb-coach-kommentar" rows="2"
-              placeholder="z.B. Technik-Hinweis, Fokuspunkt, Feedback zur Ausführung..."
+              placeholder="e.g. technical tip, focus point, feedback on execution..."
               style="border-color:#f59e0b44;"></textarea>
           </div>
         </div>
@@ -1016,7 +1016,7 @@
   <div id="ev-empty" style="text-align:center;padding:60px;color:var(--muted);">
     <div style="font-size:40px;margin-bottom:16px;">📊</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:8px;">Development</div>
-    <div style="font-size:13px;">Athlete auswählen um die Auswertung zu sehen.</div>
+    <div style="font-size:13px;">Select an athlete to view the analysis.</div>
   </div>
 
   <div id="ev-main" style="display:none;">
@@ -1047,18 +1047,18 @@
       </div>
     </div>
 
-    <!-- Row 3: Ausführungsqualität über Zeit (volle Breite) -->
+    <!-- Row 3: Execution Quality Over Time (volle Breite) -->
     <div class="chart-grid single">
       <div class="chart-card">
-        <div class="chart-title">📈 Ausführungsqualität über Zeit</div>
+        <div class="chart-title">📈 Execution Quality Over Time</div>
         <canvas id="cv-line" width="800" height="220"></canvas>
       </div>
     </div>
 
-    <!-- Row 4: Qualität pro Drehrichtung -->
+    <!-- Row 4: Quality per Direction -->
     <div class="chart-grid single">
       <div class="chart-card">
-        <div class="chart-title">⭐ Ø Qualität pro Drehrichtung</div>
+        <div class="chart-title">⭐ Ø Quality per Direction</div>
         <div id="bars-qualitaet"></div>
       </div>
     </div>
@@ -1081,7 +1081,7 @@
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
       <label style="font-size:16px;color:#f59e0b;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;">ATHLETE</label>
       <select id="tu-athlet" style="max-width:220px;" onchange="loadTU()">
-        <option value="">– Athlete wählen –</option>
+        <option value="">— select athlete —</option>
         <optgroup label="Nationalkader (NM)">
               <option>Mathilde Gremaud</option>
               <option>Kim Gubser</option>
@@ -1113,7 +1113,7 @@
   </div>
 
   <div class="card" style="margin-bottom:20px;">
-    <div class="card-title" style="color:#f59e0b;font-size:22px;letter-spacing:3px;">NEUES TRAINER:INNENURTEIL</div>
+    <div class="card-title" style="color:#f59e0b;font-size:22px;letter-spacing:3px;">NEW COACH REVIEW</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
       <div class="form-group"><label>Coach</label><input type="text" id="tu-coach" placeholder="Name Coach"></div>
       <div class="form-group"><label>Date</label><input type="date" id="tu-datum"></div>
@@ -1121,31 +1121,31 @@
     <div class="tu-grid">
       <div class="tu-card">
         <div class="tu-cat">Learning Curve</div>
-        <div class="tu-desc">Lerngeschwindigkeit, Aufnahmefähigkeit neuer Tricks und Korrekturen.</div>
+        <div class="tu-desc">Learning speed, ability to absorb new tricks and corrections.</div>
         <div class="tu-slider-wrap"><input type="range" class="tu-slider" id="tu-lernkurve" min="0" max="10" step="0.5" value="5" oninput="updateTUVal('lernkurve')"><div class="tu-val" id="tuv-lernkurve">5</div></div>
         <div class="tu-scale"><span>0</span><span>5</span><span>10</span></div>
       </div>
       <div class="tu-card">
-        <div class="tu-cat">Technikniveau Rail</div>
-        <div class="tu-desc">Technisches Niveau auf Rails im internationalen Vergleich.</div>
+        <div class="tu-cat">Technical Level Rail</div>
+        <div class="tu-desc">Technical level on rails in international comparison.</div>
         <div class="tu-slider-wrap"><input type="range" class="tu-slider" id="tu-rail" min="0" max="10" step="0.5" value="5" oninput="updateTUVal('rail')"><div class="tu-val" id="tuv-rail">5</div></div>
         <div class="tu-scale"><span>0</span><span>5</span><span>10</span></div>
       </div>
       <div class="tu-card">
-        <div class="tu-cat">Technikniveau Jump</div>
-        <div class="tu-desc">Technisches Niveau auf dem Jump im internationalen Vergleich.</div>
+        <div class="tu-cat">Technical Level Jump</div>
+        <div class="tu-desc">Technical level on the jump in international comparison.</div>
         <div class="tu-slider-wrap"><input type="range" class="tu-slider" id="tu-kicker" min="0" max="10" step="0.5" value="5" oninput="updateTUVal('kicker')"><div class="tu-val" id="tuv-kicker">5</div></div>
         <div class="tu-scale"><span>0</span><span>5</span><span>10</span></div>
       </div>
       <div class="tu-card">
-        <div class="tu-cat">Technikniveau Halfpipe</div>
-        <div class="tu-desc">Technisches Niveau in der Halfpipe im internationalen Vergleich.</div>
+        <div class="tu-cat">Technical Level Halfpipe</div>
+        <div class="tu-desc">Technical level in the halfpipe in international comparison.</div>
         <div class="tu-slider-wrap"><input type="range" class="tu-slider" id="tu-halfpipe" min="0" max="10" step="0.5" value="5" oninput="updateTUVal('halfpipe')"><div class="tu-val" id="tuv-halfpipe">5</div></div>
         <div class="tu-scale"><span>0</span><span>5</span><span>10</span></div>
       </div>
       <div class="tu-card" style="grid-column:1/-1;">
-        <div class="tu-cat">Mentale Einstellung</div>
-        <div class="tu-desc">Wettkampfmentalität, Umgang mit Druck, Motivation und Teamverhalten.</div>
+        <div class="tu-cat">Mental Attitude</div>
+        <div class="tu-desc">Competition mindset, handling pressure, motivation and team behavior.</div>
         <div class="tu-slider-wrap"><input type="range" class="tu-slider" id="tu-mental" min="0" max="10" step="0.5" value="5" oninput="updateTUVal('mental')"><div class="tu-val" id="tuv-mental">5</div></div>
         <div class="tu-scale"><span>0</span><span>5</span><span>10</span></div>
       </div>
@@ -1157,7 +1157,7 @@
   <div class="tu-history">
     <div class="tu-history-title">BISHERIGE URTEILE</div>
     <div class="tu-avg-wrap" id="tu-avgs"></div>
-    <div id="tu-list"><div style="color:#64748b;font-size:13px;">Athlete auswählen.</div></div>
+    <div id="tu-list"><div style="color:#64748b;font-size:13px;">Select an athlete.</div></div>
   </div>
 </div>
 
@@ -1349,7 +1349,7 @@ async function saveTrick() {
   const athlet    = val('f-athlet');
   const datum     = val('f-datum');
   const disziplin = val('f-disziplin');
-  if (!athlet || !datum || !disziplin) { showToast('Bitte Athlete, Datum und Disziplin auswählen!', 'error'); return; }
+  if (!athlet || !datum || !disziplin) { showToast('Please select athlete, date and discipline!', 'error'); return; }
 
   const btn = document.getElementById('btn-save');
   btn.disabled = true; btn.textContent = 'SAVE...';
@@ -1565,7 +1565,7 @@ async function renderCockpit() {
   const athlet = document.getElementById('cp-athlet').value;
   const tbody = document.getElementById('cp-tbody');
   if (!athlet) {
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">🏔</div>Athlete auswählen</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">🏔</div>Select athlete</div></td></tr>';
     ['s-total','s-gesamt','s-setup','s-aus','s-land','s-best'].forEach(id => document.getElementById(id).textContent = '–');
     return;
   }
@@ -2145,7 +2145,7 @@ function renderStandort() {
 
 async function sbSave(status) {
   const fields = readFields('sb');
-  if (!fields.disziplin) { showToast('Bitte Disziplin auswählen', 'error'); return; }
+  if (!fields.disziplin) { showToast('Please select a discipline', 'error'); return; }
 
   const trickLabel = trickDesc(null, 'sb');
   if (!trickLabel || trickLabel === '–') { showToast('Please fill in at least one trick field', 'error'); return; }
@@ -2219,7 +2219,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function checkDBPassword(btn, page) {
   page = page || 'datenbank';
   if (dbUnlocked) { showPage(page, btn); return; }
-  const pw = prompt('Nur für Trainer:innen — Enter password:');
+  const pw = prompt('For coaches only — Enter password:');
   if (pw === null) return;
   if (pw === 'Coach') {
     dbUnlocked = true;
@@ -2270,32 +2270,32 @@ async function loadEntwicklung() {
       <div class="chart-card"><div class="chart-title">✋ Grabs</div><div id="bars-grab"></div></div>
     </div>
     <div class="chart-grid single">
-      <div class="chart-card"><div class="chart-title">🎿 Cork — nach Drehrichtung</div>
+      <div class="chart-card"><div class="chart-title">🎿 Cork — by direction</div>
         <div id="bars-cork"></div>
       </div>
-      <div class="chart-card"><div class="chart-title">🌊 Bio/Misty — nach Drehrichtung</div>
+      <div class="chart-card"><div class="chart-title">🌊 Bio/Misty — by direction</div>
         <div id="bars-bio"></div>
       </div>
     </div>
     <div class="chart-grid single">
       <div class="chart-card">
-        <div class="chart-title">📈 Ausführungsqualität über Zeit <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(gleicher Trick)</span></div>
+        <div class="chart-title">📈 Execution Quality Over Time <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(same trick)</span></div>
         <div style="margin-bottom:12px;">
-          <label style="font-size:12px;color:var(--muted);margin-right:8px;">Trick auswählen:</label>
+          <label style="font-size:12px;color:var(--muted);margin-right:8px;">Select trick:</label>
           <select id="ev-trick-filter" onchange="updateQualityChart()" style="font-size:13px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);">
-            <option value="">— Trick wählen —</option>
+            <option value="">— select trick —</option>
           </select>
         </div>
         <canvas id="cv-line" width="800" height="220"></canvas>
-        <div id="cv-line-empty" style="display:none;color:var(--muted);font-size:13px;text-align:center;padding:20px;">Bitte einen Trick auswählen.</div>
+        <div id="cv-line-empty" style="display:none;color:var(--muted);font-size:13px;text-align:center;padding:20px;">Please select a trick.</div>
       </div>
     </div>
     <div class="chart-grid single">
-      <div class="chart-card"><div class="chart-title">⭐ Ø Qualität pro Drehrichtung <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(nur Session)</span></div><div id="bars-qualitaet"></div></div>
+      <div class="chart-card"><div class="chart-title">⭐ Ø Quality per Direction <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(Session only)</span></div><div id="bars-qualitaet"></div></div>
     </div>
     <div class="chart-grid single">
       <div class="chart-card">
-        <div class="chart-title">🎯 Landungsquote pro Trick <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(nur Session)</span></div>
+        <div class="chart-title">🎯 Landing Rate per Trick <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(Session only)</span></div>
         <div id="bars-landing"></div>
       </div>
     </div>
@@ -2348,7 +2348,7 @@ async function loadEntwicklung() {
     directions.map(d => dirT[d]||0),
     directions.map(d => dirS[d]||0));
 
-  // ── 1b. RADAR: Achsen nach Drehrichtung (Cork & Bio/Misty × Richtung)
+  // ── 1b. RADAR: Achsen by direction (Cork & Bio/Misty × Richtung)
   const corkCounts = {}, bioMistyCounts = {}, swCorkCounts = {}, swBioCounts = {};
   tTagged.concat(sTagged).forEach(t => {
     const d = t.drehrichtung, a = t.achse;
@@ -2358,9 +2358,9 @@ async function loadEntwicklung() {
   });
   const allDirs = ['Left','Right','Switch Left','Switch Right'];
   const corkE = allDirs.map(d=>[d,(corkCounts[d]||0)+(swCorkCounts[d]||0),0]).filter(e=>e[1]>0);
-  drawBarsSplit('bars-cork', corkE.length ? corkE : [['– keine Daten –',0,0]]);
+  drawBarsSplit('bars-cork', corkE.length ? corkE : [['– no data –',0,0]]);
   const bioE = allDirs.map(d=>[d,(bioMistyCounts[d]||0)+(swBioCounts[d]||0),0]).filter(e=>e[1]>0);
-  drawBarsSplit('bars-bio', bioE.length ? bioE : [['– keine Daten –',0,0]]);
+  drawBarsSplit('bars-bio', bioE.length ? bioE : [['– no data –',0,0]]);
 
   // ── 2. Rotationen
   const { train: rotT, stand: rotS, keys: rotKeys } = countBySplit('rotation');
@@ -2406,7 +2406,7 @@ async function loadEntwicklung() {
 
   const sel = document.getElementById('ev-trick-filter');
   if (sel) {
-    sel.innerHTML = '<option value="">— Trick wählen —</option>'
+    sel.innerHTML = '<option value="">— select trick —</option>'
       + trickOptions.map(l => `<option value="${l}">${l}</option>`).join('');
   }
   // Clear chart until trick selected
@@ -2415,12 +2415,12 @@ async function loadEntwicklung() {
   if (cvLine) cvLine.style.display = 'none';
   if (cvEmpty) cvEmpty.style.display = 'block';
 
-  // ── 6. Qualität pro Drehrichtung (training only)
+  // ── 6. Quality per Direction (training only)
   const qualByDir = avgByField('drehrichtung','gesamt');
   const qualSorted = Object.entries(qualByDir).sort((a,b)=>b[1]-a[1]);
   drawBarsRating('bars-qualitaet', qualSorted);
 
-  // ── 7. Landungsquote pro Trick
+  // ── 7. Landing Rate per Trick
   const landMap = {};
   tTagged.forEach(t => {
     const label = [t.drehrichtung, t.rotation, t.achse, t.grab].filter(Boolean).join(' · ');
@@ -2514,7 +2514,7 @@ function updateQualityChart() {
   const chosen = sel.value;
   if (!chosen) {
     if (cvLine) cvLine.style.display = 'none';
-    if (cvEmpty) { cvEmpty.style.display = 'block'; cvEmpty.textContent = 'Bitte einen Trick auswählen.'; }
+    if (cvEmpty) { cvEmpty.style.display = 'block'; cvEmpty.textContent = 'Please select a trick.'; }
     return;
   }
   const filtered = window._evTricksWithRating.filter(t => window._evTrickLabel(t) === chosen);
@@ -2698,7 +2698,7 @@ function drawBarsSplit(containerId, entries) {
 // ── BAR CHART (rating avg, 0–10) ──────────────────────────────────
 function drawBarsRating(containerId, entries) {
   const el = document.getElementById(containerId);
-  if (!el || !entries.length) { if(el) el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px;">Keine Bewertungsdaten</div>'; return; }
+  if (!el || !entries.length) { if(el) el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px;">No rating data</div>'; return; }
   el.innerHTML = entries.map(([label, avg], i) => {
     const pct = Math.round(avg/10*100);
     const col = avg>=8?'#10b981':avg>=6?'#84cc16':'#f59e0b';
@@ -2791,9 +2791,9 @@ async function saveTU() {
   const athlet=document.getElementById('tu-athlet').value;
   const coach=document.getElementById('tu-coach').value;
   const datum=document.getElementById('tu-datum').value;
-  if(!athlet){showToast('Bitte Athlete auswählen','error');return;}
+  if(!athlet){showToast('Bitte Select athlete','error');return;}
   if(!coach){showToast('Bitte Coach-Name eingeben','error');return;}
-  if(!datum){showToast('Bitte Datum wählen','error');return;}
+  if(!datum){showToast('Please select a date','error');return;}
   const {error}=await db.from('trainerurteil').insert({
     athlet,coach,datum,
     lernkurve:parseFloat(document.getElementById('tu-lernkurve').value),
@@ -2817,7 +2817,7 @@ async function loadTU() {
   const athlet=document.getElementById('tu-athlet').value;
   const listEl=document.getElementById('tu-list');
   const avgEl=document.getElementById('tu-avgs');
-  if(!athlet){listEl.innerHTML='<div style="color:#64748b;font-size:13px;">Athlete auswählen.</div>';return;}
+  if(!athlet){listEl.innerHTML='<div style="color:#64748b;font-size:13px;">Select an athlete.</div>';return;}
   const {data,error}=await db.from('trainerurteil').select('*').eq('athlet',athlet).order('datum',{ascending:false});
   if(error||!data.length){listEl.innerHTML='<div style="color:#64748b;font-size:13px;">No reviews yet.</div>';avgEl.innerHTML='';return;}
   const avg=key=>(data.reduce((s,r)=>s+(parseFloat(r[key])||0),0)/data.length).toFixed(1);
@@ -2836,7 +2836,7 @@ async function loadTU() {
       <div class="tu-bar-row"><span class="tu-bar-label">Technik Rail</span>${bar(r.rail)}<span class="tu-bar-num">${r.rail}</span></div>
       <div class="tu-bar-row"><span class="tu-bar-label">Technik Jump</span>${bar(r.kicker)}<span class="tu-bar-num">${r.kicker}</span></div>
       <div class="tu-bar-row"><span class="tu-bar-label">Technik Halfpipe</span>${bar(r.halfpipe||0)}<span class="tu-bar-num">${r.halfpipe||0}</span></div>
-      <div class="tu-bar-row"><span class="tu-bar-label">Mentale Einstellung</span>${bar(r.mental)}<span class="tu-bar-num">${r.mental}</span></div>
+      <div class="tu-bar-row"><span class="tu-bar-label">Mental Attitude</span>${bar(r.mental)}<span class="tu-bar-num">${r.mental}</span></div>
       ${r.notiz?`<div style="margin-top:8px;font-size:12px;color:#64748b;border-top:1px solid #1e2d45;padding-top:8px;">💬 ${r.notiz}</div>`:''}
     </div>`).join('');
 }
@@ -3023,7 +3023,7 @@ document.getElementById('f-datum').valueAsDate = new Date();
       <div class="form-group">
         <label>Landed?</label>
         <select id="edit-gelandet">
-          <option value="">— auswählen —</option>
+          <option value="">— select —</option>
           <option value="Yes">✅ Yes</option>
           <option value="No">❌ No</option>
         </select>
