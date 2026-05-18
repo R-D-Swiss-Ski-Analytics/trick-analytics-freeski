@@ -1961,7 +1961,7 @@ function showGrabPicker(name, trickLabel, status, btn) {
 
 function addTrickWithGrab(name, trickLabel, grab, btn) {
   if (!sessActiveTricks[name]) sessActiveTricks[name] = [];
-  const label = trickLabel + ' — ' + grab;
+  const label = baseLabel(trickLabel) + ' — ' + grab;
   const idx = sessActiveTricks[name].indexOf(label);
   if (idx === -1) {
     sessActiveTricks[name].push(label);
