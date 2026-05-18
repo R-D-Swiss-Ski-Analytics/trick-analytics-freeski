@@ -1054,10 +1054,10 @@
       <table>
         <thead><tr>
           <th>Athlete</th><th>Source</th><th>Date</th><th>Session Type</th><th>Trick</th>
-          <th>Result</th><th>Total</th><th>Comment</th><th></th>
+          <th>Result</th><th>Comment</th><th></th>
         </tr></thead>
         <tbody id="db-tbody">
-          <tr><td colspan="9"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr>
+          <tr><td colspan="8"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -1458,7 +1458,7 @@ async function loadDB() {
   ['rank-mastered','rank-rotation','rank-balance'].forEach(id => {
     document.getElementById(id).innerHTML = '<div class="loading"><span class="spinner"></span></div>';
   });
-  document.getElementById('db-tbody').innerHTML = '<tr><td colspan="9"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr>';
+  document.getElementById('db-tbody').innerHTML = '<tr><td colspan="8"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr>';
 
   const [{ data: tricks, error: e1 }, { data: standort, error: e2 }] = await Promise.all([
     db.from('tricks').select('*').order('datum', { ascending: false }),
@@ -1466,7 +1466,7 @@ async function loadDB() {
   ]);
 
   if (e1 || e2) {
-    document.getElementById('db-tbody').innerHTML = '<tr><td colspan="9" style="color:var(--danger);padding:20px;">Error loading data</td></tr>';
+    document.getElementById('db-tbody').innerHTML = '<tr><td colspan="8" style="color:var(--danger);padding:20px;">Error loading data</td></tr>';
     return;
   }
 
@@ -1587,7 +1587,7 @@ function renderDBTable() {
   document.getElementById('db-count').textContent = all.length ? '(' + all.length + ')' : '';
   const tbody = document.getElementById('db-tbody');
   if (!all.length) {
-    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="icon">📋</div>No entries</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">📋</div>No entries</div></td></tr>';
     return;
   }
 
@@ -1620,7 +1620,6 @@ function renderDBTable() {
       + '<td style="font-size:12px;">' + sessionType + '</td>'
       + '<td>' + trickDisplay + '</td>'
       + '<td style="text-align:center">' + resultBadge + '</td>'
-      + '<td style="text-align:center">' + ratingPill(t.gesamt) + '</td>'
       + '<td style="max-width:160px;white-space:normal;color:var(--muted);font-size:12px">' + (t.kommentar||'–') + '</td>'
       + '<td><button class="btn-del" onclick="' + delFn + '">✕</button></td>'
       + '</tr>';
