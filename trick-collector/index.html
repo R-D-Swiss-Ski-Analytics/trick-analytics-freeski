@@ -863,22 +863,6 @@
       </div>
     </div>
 
-    <!-- Row 3: Execution Quality Over Time (volle Breite) -->
-    <div class="chart-grid single">
-      <div class="chart-card">
-        <div class="chart-title">📈 Execution Quality Over Time</div>
-        <canvas id="cv-line" width="800" height="220"></canvas>
-      </div>
-    </div>
-
-    <!-- Row 4: Quality per Direction -->
-    <div class="chart-grid single">
-      <div class="chart-card">
-        <div class="chart-title">⭐ Ø Quality per Direction</div>
-        <div id="bars-qualitaet"></div>
-      </div>
-    </div>
-
     <!-- Row 5: Repertoire Development Over Time -->
     <div class="chart-grid single">
       <div class="chart-card">
@@ -2532,27 +2516,6 @@ async function loadEntwicklung() {
         <div id="bars-bio"></div>
       </div>
     </div>
-    <div class="chart-grid single">
-      <div class="chart-card">
-        <div class="chart-title">📈 Execution Quality Over Time <span style="font-size:11px;color:var(--muted);font-family:'Poppins',sans-serif;letter-spacing:0;">(same trick)</span></div>
-        <div style="margin-bottom:12px;">
-          <label style="font-size:12px;color:var(--muted);margin-right:8px;">Select trick:</label>
-          <select id="ev-trick-filter" onchange="updateQualityChart()" style="font-size:13px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);">
-            <option value="">— select trick —</option>
-          </select>
-        </div>
-        <canvas id="cv-line" width="800" height="220"></canvas>
-        <div id="cv-line-empty" style="display:none;color:var(--muted);font-size:13px;text-align:center;padding:20px;">Please select a trick.</div>
-      </div>
-    </div>
-    <div class="chart-grid single">
-      <div class="chart-card"><div class="chart-title">⭐ Ø Quality per Direction <span style="font-size:11px;color:var(--muted);font-family:'Poppins',sans-serif;letter-spacing:0;">(Session only)</span></div><div id="bars-qualitaet"></div></div>
-    </div>
-    <div class="chart-grid single">
-      <div class="chart-card">
-        <div class="chart-title">🎯 Landing Rate per Trick <span style="font-size:11px;color:var(--muted);font-family:'Poppins',sans-serif;letter-spacing:0;">(Session only)</span></div>
-        <div id="bars-landing"></div>
-      </div>
     </div>
     <div class="chart-grid single">
       <div class="chart-card">
