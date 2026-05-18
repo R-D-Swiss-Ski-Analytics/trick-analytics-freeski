@@ -1552,14 +1552,23 @@ function renderDBRankings() {
   const DIR4_COLORS = { 'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b' };
   const balMap = {};
 
-  // From session/assessment with drehrichtung field
+  function dirTo4(t) {
+    // Parse from trickaufbau first (new session format)
+    const tb = t.trickaufbau || '';
+    const fromTb = ['Switch Right','Switch Left','Right','Left'].find(d => tb.startsWith(d+' ') || tb.startsWith(d+' —')) || null;
+    const raw = fromTb || t.drehrichtung || '';
+    const s = raw.trim();
+    if (s === 'Left' || s === 'Forward Left') return 'Left';
+    if (s === 'Right' || s === 'Forward Right') return 'Right';
+    if (s === 'Switch Left') return 'Switch Left';
+    if (s === 'Switch Right') return 'Switch Right';
+    return null;
+  }
+
   allForRot.filter(t => t.athlet && (t._quelle === 'session' || t.status === 'mastered')).forEach(t => {
     if (!balMap[t.athlet]) balMap[t.athlet] = {'Left':0,'Right':0,'Switch Left':0,'Switch Right':0};
-    const nd = t.drehrichtung ? normalizeDir(t.drehrichtung) : null;
-    // Also parse from trickaufbau for new session entries
-    const dirFromTb = t.trickaufbau ? (['Switch Right','Switch Left','Right','Left'].find(d => t.trickaufbau.startsWith(d+' ') || t.trickaufbau.startsWith(d+' —')) || null) : null;
-    const dir = nd || dirFromTb;
-    if (dir && balMap[t.athlet][dir] !== undefined) balMap[t.athlet][dir]++;
+    const dir = dirTo4(t);
+    if (dir) balMap[t.athlet][dir]++;
   });
 
   const balEntries = Object.entries(balMap)
