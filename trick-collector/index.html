@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trick Collector — Swiss-Ski Freeski</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111317;
+    --surface2: #181b20;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f2f5;
+    --muted: #6b7280;
+    --accent: #c8ff00;
+    --accent2: #00e5ff;
+    --accent3: #ff6b35;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-mono); font-size: 13px; line-height: 1.6; min-height: 100vh; }
+  .app { display: flex; flex-direction: column; min-height: 100vh; }
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; background: rgba(10,12,15,0.95); backdrop-filter: blur(12px); }
+  .logo { font-family: var(--font-head); font-size: 18px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+  .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  .logo span { color: var(--muted); font-weight: 400; font-size: 13px; font-family: var(--font-mono); margin-left: 4px; }
+  nav { display: flex; gap: 4px; }
+  .nav-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius-sm); border: 1px solid transparent; background: none; color: var(--muted); font-family: var(--font-mono); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .nav-btn:hover { color: var(--text); background: var(--surface2); }
+  .nav-btn.active { background: var(--surface2); border-color: var(--border2); color: var(--accent); }
+  .nav-btn i { font-size: 15px; }
+  .login-screen { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; background: radial-gradient(ellipse at 60% 40%, rgba(200,255,0,0.04) 0%, transparent 60%); }
+  .login-card { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 40px; }
+  .login-title { font-family: var(--font-head); font-size: 28px; font-weight: 800; margin-bottom: 6px; letter-spacing: -1px; }
+  .login-sub { color: var(--muted); margin-bottom: 32px; font-size: 12px; }
+  .form-input { width: 100%; padding: 11px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font-mono); font-size: 13px; outline: none; transition: border 0.15s; margin-bottom: 16px; }
+  .form-input:focus { border-color: var(--accent); }
+  .form-select { width: 100%; padding: 11px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font-mono); font-size: 13px; outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; margin-bottom: 16px; }
+  .form-select:focus { border-color: var(--accent); }
+  .btn-primary { width: 100%; padding: 12px; background: var(--accent); color: #0a0c0f; border: none; border-radius: var(--radius-sm); font-family: var(--font-head); font-size: 14px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px; transition: opacity 0.15s, transform 0.1s; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:active { transform: scale(0.98); }
+  .error-msg { color: var(--accent3); font-size: 12px; margin-top: -10px; margin-bottom: 12px; }
+  .success-msg { color: var(--accent); font-size: 12px; margin-top: 8px; text-align: center; }
+  .content { flex: 1; padding: 24px; max-width: 1100px; margin: 0 auto; width: 100%; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .session-layout { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
+  .panel-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .panel-title { font-family: var(--font-head); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); }
+  .panel-body { padding: 20px; }
+  .form-row { margin-bottom: 14px; }
+  .form-row label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.8px; }
+  .form-row .form-input, .form-row .form-select { margin-bottom: 0; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .section-divider { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent2); padding: 10px 0 6px; border-top: 1px solid var(--border); margin: 14px 0 10px; }
+  .btn-save { width: 100%; padding: 12px; background: var(--accent); color: #000; border: none; border-radius: var(--radius-sm); font-family: var(--font-head); font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 16px; letter-spacing: 0.5px; transition: opacity 0.15s; }
+  .btn-save:hover { opacity: 0.88; }
+  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-cancel { width: 100%; padding: 10px; background: none; color: var(--muted); border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 12px; cursor: pointer; margin-top: 8px; }
+  .btn-cancel:hover { color: var(--text); border-color: var(--border2); }
+  .trick-list { display: flex; flex-direction: column; gap: 8px; }
+  .trick-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; align-items: center; gap: 12px; transition: border-color 0.15s; }
+  .trick-item:hover { border-color: var(--border2); }
+  .trick-athlete { font-size: 11px; color: var(--accent2); font-weight: 500; min-width: 90px; }
+  .trick-squad { font-size: 10px; padding: 2px 6px; border-radius: 4px; min-width: 28px; text-align: center; }
+  .squad-NM { background: rgba(200,255,0,0.12); color: var(--accent); }
+  .squad-A  { background: rgba(0,229,255,0.12); color: var(--accent2); }
+  .squad-B  { background: rgba(255,107,53,0.12); color: var(--accent3); }
+  .squad-C  { background: rgba(255,255,255,0.08); color: var(--muted); }
+  .trick-name { flex: 1; font-size: 13px; color: var(--text); }
+  .trick-disc { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); background: var(--surface); padding: 3px 8px; border-radius: 4px; }
+  .trick-rating { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--accent); min-width: 28px; text-align: right; }
+  .trick-landed { color: #4ade80; font-size: 14px; }
+  .trick-miss { color: var(--muted); font-size: 14px; }
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
+  .empty-icon { font-size: 36px; margin-bottom: 10px; color: var(--border2); }
+  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 4px; }
+  .stat-val { font-family: var(--font-head); font-size: 22px; font-weight: 800; color: var(--text); }
+  .stat-val.accent { color: var(--accent); }
+  .slider-row { margin-bottom: 16px; }
+  .slider-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .slider-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .slider-val { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--accent); }
+  input[type=range] { width: 100%; accent-color: var(--accent); height: 4px; background: var(--surface2); border-radius: 2px; appearance: none; cursor: pointer; outline: none; }
+  input[type=range]::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: var(--accent); border-radius: 50%; }
+  .db-table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border2); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 500; }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text); }
+  tr:hover td { background: var(--surface2); }
+  tr:last-child td { border-bottom: none; }
+  .chart-container { background: var(--surface2); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px; height: 120px; display: flex; align-items: flex-end; gap: 6px; }
+  .bar { flex: 1; border-radius: 4px 4px 0 0; background: var(--accent); opacity: 0.7; transition: opacity 0.2s; }
+  .bar:hover { opacity: 1; }
+  .page-header { margin-bottom: 24px; }
+  .page-title { font-family: var(--font-head); font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .page-sub { color: var(--muted); font-size: 12px; }
+  .trainer-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; background: rgba(200,255,0,0.08); border: 1px solid rgba(200,255,0,0.2); color: var(--accent); font-size: 11px; margin-bottom: 16px; }
+  .loading-bar { text-align: center; padding: 32px; color: var(--muted); font-size: 12px; }
+  @media (max-width: 780px) { .session-layout { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(3, 1fr); } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="header">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      TRICK COLLECTOR <span>/ Swiss-Ski Freeski</span>
+    </div>
+    <nav id="nav" style="display:none">
+      <button class="nav-btn active" data-tab="session" onclick="switchTab('session')"><i class="ti ti-bolt"></i> Session</button>
+      <button class="nav-btn" data-tab="standort" onclick="switchTab('standort')"><i class="ti ti-target"></i> Assessment</button>
+      <button class="nav-btn" data-tab="entwicklung" onclick="switchTab('entwicklung')"><i class="ti ti-chart-line"></i> Progress</button>
+      <button class="nav-btn" data-tab="trainer" onclick="switchTab('trainer')"><i class="ti ti-school"></i> Coach Review</button>
+      <button class="nav-btn" data-tab="datenbank" onclick="switchTab('datenbank')"><i class="ti ti-database"></i> Database</button>
+    </nav>
+    <button class="nav-btn" id="logout-btn" style="display:none" onclick="logout()"><i class="ti ti-logout"></i></button>
+  </header>
+
+  <!-- LOGIN -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-card">
+      <div class="login-title">TRICK<br>COLLECTOR</div>
+      <div class="login-sub">Swiss-Ski Freeski — Season 2026/27</div>
+      <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block">Password</label>
+      <input type="password" id="pw-input" class="form-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="error-msg" id="pw-error" style="display:none">Incorrect password.</div>
+      <button class="btn-primary" onclick="doLogin()">SIGN IN</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="content" id="main-content" style="display:none">
+
+    <!-- SESSION -->
+    <div class="tab-panel active" id="tab-session">
+      <div class="page-header">
+        <div class="page-title">Session</div>
+        <div class="page-sub">Log a trick & view session overview</div>
+      </div>
+      <div class="session-layout">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">Log Trick</div>
+            <i class="ti ti-plus-circle" style="color:var(--accent);font-size:18px" aria-hidden="true"></i>
+          </div>
+          <div class="panel-body">
+            <div class="form-row">
+              <label>Athlete</label>
+              <select class="form-select" id="s-athlete">
+                <option value="">— select —</option>
+                <optgroup label="National Team (NM)">
+                  <option value="Mathilde Gremaud|NM">Mathilde Gremaud</option>
+                  <option value="Kim Gubser|NM">Kim Gubser</option>
+                  <option value="Sarah Höfflin|NM">Sarah Höfflin</option>
+                  <option value="Andri Ragettli|NM">Andri Ragettli</option>
+                  <option value="Giulia Tanno|NM">Giulia Tanno</option>
+                </optgroup>
+                <optgroup label="A-Squad">
+                  <option value="Anouk Andraska|A">Anouk Andraska</option>
+                  <option value="Gian Andri Bolinger|A">Gian Andri Bolinger</option>
+                  <option value="Fadri Rhyner|A">Fadri Rhyner</option>
+                  <option value="Nils Rhyner|A">Nils Rhyner</option>
+                  <option value="Adrien Vaudaux|A">Adrien Vaudaux</option>
+                </optgroup>
+                <optgroup label="B-Squad">
+                  <option value="Lou Annen|B">Lou Annen</option>
+                  <option value="Nicola Bolinger|B">Nicola Bolinger</option>
+                  <option value="Tim Egger|B">Tim Egger</option>
+                  <option value="Viktor Maksyagin|B">Viktor Maksyagin</option>
+                </optgroup>
+                <optgroup label="C-Squad">
+                  <option value="Alan Bornet|C">Alan Bornet</option>
+                  <option value="Maxence Petzoldt|C">Maxence Petzoldt</option>
+                  <option value="Lars Ruchti|C">Lars Ruchti</option>
+                  <option value="Jason Zacharopoulos|C">Jason Zacharopoulos</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="row2">
+              <div class="form-row">
+                <label>Date</label>
+                <input type="date" class="form-input" id="s-date">
+              </div>
+              <div class="form-row">
+                <label>Type</label>
+                <select class="form-select" id="s-typ">
+                  <option value="">—</option>
+                  <option>Training</option>
+                  <option>Competition</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <label>Discipline</label>
+              <select class="form-select" id="s-disc" onchange="updateDisciplineFields()">
+                <option value="">— select —</option>
+                <option>Kicker</option>
+                <option>Rail</option>
+                <option>Halfpipe</option>
+                <option>Landing Bag</option>
+              </select>
+            </div>
+
+            <div id="kicker-fields" style="display:none">
+              <div class="section-divider">Kicker / Halfpipe</div>
+              <div class="row2">
+                <div class="form-row">
+                  <label>Direction</label>
+                  <select class="form-select" id="s-direction">
+                    <option value="">—</option><option>Right</option><option>Left</option>
+                    <option>Switch Left</option><option>Switch Right</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label>Rotation</label>
+                  <select class="form-select" id="s-rotation">
+                    <option value="">—</option><option>180</option><option>360</option><option>540</option>
+                    <option>720</option><option>900</option><option>1080</option>
+                    <option>1260</option><option>1440</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row2">
+                <div class="form-row">
+                  <label>Axis</label>
+                  <select class="form-select" id="s-axis">
+                    <option value="">—</option><option>Cork</option><option>Bio/Misty</option>
+                    <option>Flat</option><option>Rodeo</option><option>Frontflip</option><option>Backflip</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label>Flips</label>
+                  <select class="form-select" id="s-flips">
+                    <option value="">—</option><option>None</option><option>Single</option>
+                    <option>Double</option><option>Triple</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <label>Grab</label>
+                <select class="form-select" id="s-grab">
+                  <option value="">—</option><option>Safety</option><option>Mute</option><option>Tail</option>
+                  <option>Blunt</option><option>Japan</option><option>Critical</option>
+                  <option>Esco</option><option>In and out</option><option>Nose</option>
+                  <option>Octo</option><option>Truckdriver</option><option>Stale</option>
+                  <option>Cuban</option><option>Seatbelt</option><option>Bow and Arrow</option>
+                </select>
+              </div>
+              <div class="row2">
+                <div class="form-row">
+                  <label>Take-off</label>
+                  <select class="form-select" id="s-takeoff">
+                    <option value="">—</option><option>Carved</option><option>Inside Edge</option>
+                    <option>Nose-Butter</option><option>Tail-Butter</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label>Bring Back</label>
+                  <select class="form-select" id="s-bringback">
+                    <option value="">—</option><option>180</option><option>360</option><option>540</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <label>Style Element</label>
+                <select class="form-select" id="s-style">
+                  <option value="">—</option><option>Tweak</option><option>Poke</option><option>Screamin' Seamen</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="rail-fields" style="display:none">
+              <div class="section-divider">Rail</div>
+              <div class="row2">
+                <div class="form-row">
+                  <label>Rail Type</label>
+                  <select class="form-select" id="s-railtype">
+                    <option value="">—</option><option>Box</option><option>Tube</option><option>Rail</option>
+                    <option>Down Tube</option><option>Down Rail</option><option>DFD</option>
+                    <option>Waterfall</option><option>Elbow</option><option>Flat-Down</option>
+                    <option>S-Rail</option><option>C-Rail</option><option>Pole-Jam</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label>Slide Form</label>
+                  <select class="form-select" id="s-slideform">
+                    <option value="">—</option><option>50-50</option><option>Switch 50-50</option>
+                    <option>Slide</option><option>Lip On</option>
+                    <option>Switch Tails On</option><option>Switch Lip On</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row2">
+                <div class="form-row">
+                  <label>Slide Variant</label>
+                  <select class="form-select" id="s-slidevariant">
+                    <option value="">—</option><option>Back Slide</option><option>Front Slide</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label>Swap</label>
+                  <select class="form-select" id="s-swap">
+                    <option value="">—</option><option>Front Swap</option><option>Back Swap</option>
+                    <option>BS 360 Swap</option><option>FS 360 Swap</option>
+                    <option>BS 540 Swap</option><option>FS 540</option>
+                    <option>Front Swap - Front Swap</option><option>Front Swap - Back Swap</option>
+                    <option>Back Swap - Front Swap</option><option>Back Swap - Back Swap</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row2">
+                <div class="form-row">
+                  <label>In-Spin</label>
+                  <select class="form-select" id="s-inspin">
+                    <option value="">—</option><option>L 180</option><option>R 180</option>
+                    <option>L 270</option><option>R 270</option><option>L 360</option><option>R 360</option>
+                    <option>L 450</option><option>R 450</option><option>L 630</option><option>R 630</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label>Out-Spin</label>
+                  <select class="form-select" id="s-outspin">
+                    <option value="">—</option><option>L 180</option><option>R 180</option>
+                    <option>L 270</option><option>R 270</option><option>L 360</option><option>R 360</option>
+                    <option>L 450</option><option>R 450</option><option>L 630</option><option>R 630</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-divider" style="color:var(--accent)">Coach Rating</div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Setup</span><span class="slider-val" id="r-setup-val">5</span></div>
+              <input type="range" min="1" max="10" value="5" id="r-setup" oninput="document.getElementById('r-setup-val').textContent=this.value">
+            </div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Execution</span><span class="slider-val" id="r-exec-val">5</span></div>
+              <input type="range" min="1" max="10" value="5" id="r-exec" oninput="document.getElementById('r-exec-val').textContent=this.value">
+            </div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Landing</span><span class="slider-val" id="r-land-val">5</span></div>
+              <input type="range" min="1" max="10" value="5" id="r-land" oninput="document.getElementById('r-land-val').textContent=this.value">
+            </div>
+            <div class="form-row">
+              <label>Landed?</label>
+              <select class="form-select" id="s-landed">
+                <option value="">— select —</option>
+                <option value="yes">✅ Yes</option>
+                <option value="no">❌ No</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Comment</label>
+              <input type="text" class="form-input" id="s-comment" placeholder="Notes on the trick...">
+            </div>
+            <div class="form-row">
+              <label>Video Link</label>
+              <input type="text" class="form-input" id="s-video" placeholder="https://...">
+            </div>
+            <button class="btn-save" id="save-btn" onclick="saveTrick()"><i class="ti ti-device-floppy"></i> SAVE TRICK</button>
+            <div class="success-msg" id="save-msg" style="display:none">✓ Trick saved successfully!</div>
+            <button class="btn-cancel" onclick="clearForm()">Cancel</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-label">Tricks</div><div class="stat-val accent" id="stat-total">0</div></div>
+            <div class="stat-card"><div class="stat-label">Landed</div><div class="stat-val" id="stat-landed">0</div></div>
+            <div class="stat-card"><div class="stat-label">Ø Setup</div><div class="stat-val" id="stat-setup">—</div></div>
+            <div class="stat-card"><div class="stat-label">Ø Execution</div><div class="stat-val" id="stat-exec">—</div></div>
+            <div class="stat-card"><div class="stat-label">Ø Landing</div><div class="stat-val" id="stat-land">—</div></div>
+          </div>
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title">Session Tricks</div>
+              <select class="form-select" id="filter-athlete" style="width:auto;padding:5px 10px;margin:0;font-size:11px;" onchange="renderTrickList()">
+                <option value="">All Athletes</option>
+                <optgroup label="National Team"><option>Mathilde Gremaud</option><option>Kim Gubser</option><option>Sarah Höfflin</option><option>Andri Ragettli</option><option>Giulia Tanno</option></optgroup>
+                <optgroup label="A-Squad"><option>Anouk Andraska</option><option>Gian Andri Bolinger</option><option>Fadri Rhyner</option><option>Nils Rhyner</option><option>Adrien Vaudaux</option></optgroup>
+                <optgroup label="B-Squad"><option>Lou Annen</option><option>Nicola Bolinger</option><option>Tim Egger</option><option>Viktor Maksyagin</option></optgroup>
+                <optgroup label="C-Squad"><option>Alan Bornet</option><option>Maxence Petzoldt</option><option>Lars Ruchti</option><option>Jason Zacharopoulos</option></optgroup>
+              </select>
+            </div>
+            <div class="panel-body">
+              <div class="trick-list" id="trick-list">
+                <div class="loading-bar"><i class="ti ti-loader" style="font-size:18px;display:block;margin-bottom:8px" aria-hidden="true"></i>Loading...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ASSESSMENT -->
+    <div class="tab-panel" id="tab-standort">
+      <div class="page-header">
+        <div class="page-title">Assessment</div>
+        <div class="page-sub">Mastered tricks & goals per athlete</div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-body">
+          <div class="form-row" style="max-width:280px">
+            <label>Select Athlete</label>
+            <select class="form-select" id="assessment-athlete" onchange="loadAssessment()">
+              <option value="">— select —</option>
+              <optgroup label="National Team (NM)"><option>Mathilde Gremaud</option><option>Kim Gubser</option><option>Sarah Höfflin</option><option>Andri Ragettli</option><option>Giulia Tanno</option></optgroup>
+              <optgroup label="A-Squad"><option>Anouk Andraska</option><option>Gian Andri Bolinger</option><option>Fadri Rhyner</option><option>Nils Rhyner</option><option>Adrien Vaudaux</option></optgroup>
+              <optgroup label="B-Squad"><option>Lou Annen</option><option>Nicola Bolinger</option><option>Tim Egger</option><option>Viktor Maksyagin</option></optgroup>
+              <optgroup label="C-Squad"><option>Alan Bornet</option><option>Maxence Petzoldt</option><option>Lars Ruchti</option><option>Jason Zacharopoulos</option></optgroup>
+            </select>
+          </div>
+          <div id="assessment-content" style="text-align:center;padding:40px;color:var(--muted)">
+            <i class="ti ti-target" style="font-size:36px;display:block;margin-bottom:10px;color:var(--border2)" aria-hidden="true"></i>
+            Select an athlete to view their overview.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="tab-panel" id="tab-entwicklung">
+      <div class="page-header">
+        <div class="page-title">Progress</div>
+        <div class="page-sub">Analysis & development over time</div>
+      </div>
+      <div class="form-row" style="max-width:280px;margin-bottom:20px">
+        <label>Athlete</label>
+        <select class="form-select" id="progress-athlete" onchange="loadProgress()">
+          <option value="">— select —</option>
+          <optgroup label="National Team (NM)"><option>Mathilde Gremaud</option><option>Kim Gubser</option><option>Sarah Höfflin</option><option>Andri Ragettli</option><option>Giulia Tanno</option></optgroup>
+          <optgroup label="A-Squad"><option>Anouk Andraska</option><option>Gian Andri Bolinger</option><option>Fadri Rhyner</option><option>Nils Rhyner</option><option>Adrien Vaudaux</option></optgroup>
+          <optgroup label="B-Squad"><option>Lou Annen</option><option>Nicola Bolinger</option><option>Tim Egger</option><option>Viktor Maksyagin</option></optgroup>
+          <optgroup label="C-Squad"><option>Alan Bornet</option><option>Maxence Petzoldt</option><option>Lars Ruchti</option><option>Jason Zacharopoulos</option></optgroup>
+        </select>
+      </div>
+      <div id="progress-content" style="text-align:center;padding:40px;color:var(--muted)">
+        <i class="ti ti-chart-line" style="font-size:36px;display:block;margin-bottom:10px;color:var(--border2)" aria-hidden="true"></i>
+        Select an athlete to view their progress.
+      </div>
+    </div>
+
+    <!-- COACH REVIEW -->
+    <div class="tab-panel" id="tab-trainer">
+      <div class="page-header">
+        <div class="page-title">Coach Review</div>
+        <div class="page-sub">Seasonal assessment of athletes</div>
+      </div>
+      <div class="session-layout">
+        <div class="panel-card">
+          <div class="panel-header"><div class="panel-title">New Review</div></div>
+          <div class="panel-body">
+            <div class="trainer-badge"><i class="ti ti-school" style="font-size:13px" aria-hidden="true"></i> Coaches only</div>
+            <div class="form-row">
+              <label>Athlete</label>
+              <select class="form-select" id="cr-athlete">
+                <option value="">— select —</option>
+                <optgroup label="National Team (NM)"><option>Mathilde Gremaud</option><option>Kim Gubser</option><option>Sarah Höfflin</option><option>Andri Ragettli</option><option>Giulia Tanno</option></optgroup>
+                <optgroup label="A-Squad"><option>Anouk Andraska</option><option>Gian Andri Bolinger</option><option>Fadri Rhyner</option><option>Nils Rhyner</option><option>Adrien Vaudaux</option></optgroup>
+                <optgroup label="B-Squad"><option>Lou Annen</option><option>Nicola Bolinger</option><option>Tim Egger</option><option>Viktor Maksyagin</option></optgroup>
+                <optgroup label="C-Squad"><option>Alan Bornet</option><option>Maxence Petzoldt</option><option>Lars Ruchti</option><option>Jason Zacharopoulos</option></optgroup>
+              </select>
+            </div>
+            <div class="form-row"><label>Coach</label><input type="text" class="form-input" id="cr-coach" placeholder="Name"></div>
+            <div class="form-row"><label>Date</label><input type="date" class="form-input" id="cr-date"></div>
+            <div class="section-divider">Ratings (0–10)</div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Learning Curve</span><span class="slider-val" id="t-learn-val">5</span></div>
+              <input type="range" min="0" max="10" value="5" id="cr-learning" oninput="document.getElementById('t-learn-val').textContent=this.value">
+            </div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Rail Technical Level</span><span class="slider-val" id="t-rail-val">5</span></div>
+              <input type="range" min="0" max="10" value="5" id="cr-rail" oninput="document.getElementById('t-rail-val').textContent=this.value">
+            </div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Kicker Technical Level</span><span class="slider-val" id="t-kick-val">5</span></div>
+              <input type="range" min="0" max="10" value="5" id="cr-kicker" oninput="document.getElementById('t-kick-val').textContent=this.value">
+            </div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Halfpipe Technical Level</span><span class="slider-val" id="t-half-val">5</span></div>
+              <input type="range" min="0" max="10" value="5" id="cr-halfpipe" oninput="document.getElementById('t-half-val').textContent=this.value">
+            </div>
+            <div class="slider-row">
+              <div class="slider-header"><span class="slider-label">Mental Attitude</span><span class="slider-val" id="t-mental-val">5</span></div>
+              <input type="range" min="0" max="10" value="5" id="cr-mental" oninput="document.getElementById('t-mental-val').textContent=this.value">
+            </div>
+            <div class="form-row"><label>Notes</label><textarea class="form-input" id="cr-notes" style="height:72px;resize:vertical" placeholder="Remarks..."></textarea></div>
+            <button class="btn-save" id="cr-save-btn" onclick="saveCoachReview()"><i class="ti ti-clipboard-check"></i> SAVE REVIEW</button>
+            <div class="success-msg" id="cr-save-msg" style="display:none">✓ Review saved!</div>
+          </div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-header"><div class="panel-title">Previous Reviews</div></div>
+          <div class="panel-body" id="cr-list">
+            <div style="text-align:center;padding:40px;color:var(--muted)">
+              <i class="ti ti-clipboard" style="font-size:36px;display:block;margin-bottom:10px;color:var(--border2)" aria-hidden="true"></i>
+              Save a review to see it here.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATABASE -->
+    <div class="tab-panel" id="tab-datenbank">
+      <div class="page-header">
+        <div class="page-title">Database</div>
+        <div class="page-sub">All logged tricks</div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-header" style="flex-wrap:wrap;gap:8px">
+          <div class="panel-title">All Entries</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select class="form-select" id="db-filter-athlete" style="width:auto;padding:5px 10px;margin:0;font-size:11px" onchange="loadDatabase()">
+              <option value="">All Athletes</option>
+              <optgroup label="National Team"><option>Mathilde Gremaud</option><option>Kim Gubser</option><option>Sarah Höfflin</option><option>Andri Ragettli</option><option>Giulia Tanno</option></optgroup>
+              <optgroup label="A-Squad"><option>Anouk Andraska</option><option>Gian Andri Bolinger</option><option>Fadri Rhyner</option><option>Nils Rhyner</option><option>Adrien Vaudaux</option></optgroup>
+              <optgroup label="B-Squad"><option>Lou Annen</option><option>Nicola Bolinger</option><option>Tim Egger</option><option>Viktor Maksyagin</option></optgroup>
+              <optgroup label="C-Squad"><option>Alan Bornet</option><option>Maxence Petzoldt</option><option>Lars Ruchti</option><option>Jason Zacharopoulos</option></optgroup>
+            </select>
+            <select class="form-select" id="db-filter-source" style="width:auto;padding:5px 10px;margin:0;font-size:11px" onchange="loadDatabase()">
+              <option value="">Session + Assessment</option>
+              <option value="session">Session only</option>
+              <option value="assessment">Assessment only</option>
+            </select>
+            <button class="nav-btn" onclick="exportCSV()" style="padding:5px 12px;font-size:11px">
+              <i class="ti ti-download" style="font-size:13px" aria-hidden="true"></i> Export CSV
+            </button>
+          </div>
+        </div>
+        <div class="panel-body db-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Athlete</th><th>Squad</th><th>Date</th><th>Type</th><th>Discipline</th><th>Trick</th>
+                <th>Setup</th><th>Exec.</th><th>Landing</th><th>Overall</th><th>Landed</th><th>Comment</th>
+              </tr>
+            </thead>
+            <tbody id="db-tbody">
+              <tr><td colspan="12" class="loading-bar">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ============================================
+// CONFIGURATION — replace with your Supabase credentials
+// ============================================
+const SUPABASE_URL = 'https://nvibrxtqknkmsiccauzs.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_8RRRG5c_PhJ8Cc1rC03zJw_1W5UYkS7';
+const APP_PASSWORD = 'swissski';
+
+// ============================================
+// INIT
+// ============================================
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let sessionTricks = [];
+let today = new Date().toISOString().split('T')[0];
+
+// ============================================
+// AUTH
+// ============================================
+function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  if (pw === APP_PASSWORD) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    document.getElementById('nav').style.display = 'flex';
+    document.getElementById('logout-btn').style.display = '';
+    loadTodaySession();
+    loadDatabase();
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+    document.getElementById('pw-input').style.borderColor = 'var(--accent3)';
+  }
+}
+
+function logout() {
+  sessionTricks = [];
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('nav').style.display = 'none';
+  document.getElementById('logout-btn').style.display = 'none';
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').style.display = 'none';
+  document.getElementById('pw-input').style.borderColor = '';
+}
+
+// ============================================
+// NAVIGATION
+// ============================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn[data-tab]').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector('.nav-btn[data-tab="' + tab + '"]').classList.add('active');
+  if (tab === 'datenbank') loadDatabase();
+}
+
+function updateDisciplineFields() {
+  const disc = document.getElementById('s-disc').value;
+  document.getElementById('kicker-fields').style.display = ['Kicker','Halfpipe','Landing Bag'].includes(disc) ? 'block' : 'none';
+  document.getElementById('rail-fields').style.display = disc === 'Rail' ? 'block' : 'none';
+}
+
+// ============================================
+// TRICK NAME BUILDER
+// ============================================
+function buildTrickName(disc, fields) {
+  if (disc === 'Rail') {
+    const parts = [fields.in_spin, fields.slide_form, fields.rail_type, fields.swap, fields.out_spin].filter(Boolean).filter(v => v !== '—');
+    return parts.length ? parts.join(' ') : 'Rail Trick';
+  }
+  const parts = [fields.direction, fields.rotation, fields.axis, fields.flips !== 'None' ? fields.flips : null, fields.grab].filter(Boolean).filter(v => v && v !== '—');
+  return parts.length ? parts.join(' ') : disc + ' Trick';
+}
+
+// ============================================
+// SAVE TRICK → SUPABASE
+// ============================================
+async function saveTrick() {
+  const raw = document.getElementById('s-athlete').value;
+  const disc = document.getElementById('s-disc').value;
+  if (!raw || !disc) { alert('Please select an athlete and discipline.'); return; }
+
+  const [athlete, squad] = raw.split('|');
+  const setup = parseInt(document.getElementById('r-setup').value);
+  const exec  = parseInt(document.getElementById('r-exec').value);
+  const land  = parseInt(document.getElementById('r-land').value);
+  const total = Math.round((setup + exec + land) / 3 * 10) / 10;
+
+  const fields = {
+    direction: document.getElementById('s-direction')?.value || null,
+    rotation: document.getElementById('s-rotation')?.value || null,
+    axis: document.getElementById('s-axis')?.value || null,
+    flips: document.getElementById('s-flips')?.value || null,
+    grab: document.getElementById('s-grab')?.value || null,
+    takeoff: document.getElementById('s-takeoff')?.value || null,
+    bring_back: document.getElementById('s-bringback')?.value || null,
+    style_element: document.getElementById('s-style')?.value || null,
+    rail_type: document.getElementById('s-railtype')?.value || null,
+    slide_form: document.getElementById('s-slideform')?.value || null,
+    slide_variant: document.getElementById('s-slidevariant')?.value || null,
+    swap: document.getElementById('s-swap')?.value || null,
+    in_spin: document.getElementById('s-inspin')?.value || null,
+    out_spin: document.getElementById('s-outspin')?.value || null,
+  };
+
+  const trickName = buildTrickName(disc, fields);
+
+  const record = {
+    athlete, squad,
+    date: document.getElementById('s-date').value || today,
+    type: document.getElementById('s-typ').value || null,
+    discipline: disc,
+    source: 'session',
+    ...fields,
+    rating_setup: setup,
+    rating_exec: exec,
+    rating_land: land,
+    rating_total: total,
+    landed: document.getElementById('s-landed').value === 'yes',
+    comment: document.getElementById('s-comment').value || null,
+    video_url: document.getElementById('s-video').value || null,
+    trick_name: trickName
+  };
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  const { data, error } = await db.from('tricks').insert([record]).select();
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-device-floppy"></i> SAVE TRICK';
+
+  if (error) {
+    alert('Error saving trick: ' + error.message);
+    return;
+  }
+
+  sessionTricks.unshift({ ...record, id: data[0].id, name: trickName });
+  renderTrickList();
+  updateStats();
+
+  const msg = document.getElementById('save-msg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
+
+  clearForm();
+}
+
+// ============================================
+// LOAD TODAY'S SESSION
+// ============================================
+async function loadTodaySession() {
+  const { data, error } = await db
+    .from('tricks')
+    .select('*')
+    .eq('source', 'session')
+    .eq('date', today)
+    .order('created_at', { ascending: false });
+
+  if (error) { console.error(error); return; }
+
+  sessionTricks = (data || []).map(t => ({ ...t, name: t.trick_name || t.discipline + ' Trick' }));
+  renderTrickList();
+  updateStats();
+}
+
+// ============================================
+// RENDER SESSION LIST
+// ============================================
+function renderTrickList() {
+  const filter = document.getElementById('filter-athlete').value;
+  const filtered = filter ? sessionTricks.filter(t => t.athlete === filter) : sessionTricks;
+  const el = document.getElementById('trick-list');
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon"><i class="ti ti-snowflake" aria-hidden="true"></i></div>No tricks logged yet today.</div>';
+    return;
+  }
+  el.innerHTML = filtered.map(t => `
+    <div class="trick-item">
+      <div class="trick-athlete">${t.athlete.split(' ').pop()}</div>
+      <span class="trick-squad squad-${t.squad}">${t.squad}</span>
+      <div class="trick-name">${t.name}</div>
+      <div class="trick-disc">${t.discipline}</div>
+      <div class="trick-rating">${t.rating_total}</div>
+      <div class="${t.landed ? 'trick-landed' : 'trick-miss'}">${t.landed ? '✓' : '✗'}</div>
+    </div>
+  `).join('');
+}
+
+function updateStats() {
+  const n = sessionTricks.length;
+  document.getElementById('stat-total').textContent = n;
+  document.getElementById('stat-landed').textContent = sessionTricks.filter(t => t.landed).length;
+  if (n > 0) {
+    const avg = arr => Math.round(arr.reduce((a,b)=>a+b,0)/arr.length * 10)/10;
+    document.getElementById('stat-setup').textContent = avg(sessionTricks.map(t=>t.rating_setup));
+    document.getElementById('stat-exec').textContent  = avg(sessionTricks.map(t=>t.rating_exec));
+    document.getElementById('stat-land').textContent  = avg(sessionTricks.map(t=>t.rating_land));
+  }
+}
+
+function clearForm() {
+  document.getElementById('s-athlete').value = '';
+  document.getElementById('s-disc').value = '';
+  document.getElementById('s-landed').value = '';
+  document.getElementById('s-comment').value = '';
+  document.getElementById('s-video').value = '';
+  ['r-setup','r-exec','r-land'].forEach(id => { document.getElementById(id).value = 5; });
+  ['r-setup-val','r-exec-val','r-land-val'].forEach(id => { document.getElementById(id).textContent = '5'; });
+  updateDisciplineFields();
+}
+
+// ============================================
+// ASSESSMENT
+// ============================================
+async function loadAssessment() {
+  const athlete = document.getElementById('assessment-athlete').value;
+  if (!athlete) return;
+  const content = document.getElementById('assessment-content');
+  content.innerHTML = '<div class="loading-bar">Loading...</div>';
+
+  const { data, error } = await db.from('tricks').select('*').eq('athlete', athlete).eq('source', 'assessment').order('date', { ascending: false });
+  if (error) { content.innerHTML = '<p style="color:var(--accent3)">Error loading data.</p>'; return; }
+
+  if (!data || data.length === 0) {
+    content.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted)">No assessment entries yet for ' + athlete + '.</div>';
+    return;
+  }
+
+  const mastered = data.filter(t => t.status === 'mastered');
+  const goals = data.filter(t => t.status === 'goal');
+
+  content.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px">
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:12px">✓ Mastered (${mastered.length})</div>
+        ${mastered.map(t => `<div class="trick-item" style="margin-bottom:6px"><div class="trick-name">${t.trick_name || t.discipline}</div><span class="trick-disc">${t.discipline}</span></div>`).join('') || '<div style="color:var(--muted);font-size:12px">None yet.</div>'}
+      </div>
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--accent2);margin-bottom:12px">🎯 Goals / In Progress (${goals.length})</div>
+        ${goals.map(t => `<div class="trick-item" style="margin-bottom:6px"><div class="trick-name">${t.trick_name || t.discipline}</div><span class="trick-disc">${t.discipline}</span></div>`).join('') || '<div style="color:var(--muted);font-size:12px">None yet.</div>'}
+      </div>
+    </div>`;
+}
+
+// ============================================
+// PROGRESS
+// ============================================
+async function loadProgress() {
+  const athlete = document.getElementById('progress-athlete').value;
+  if (!athlete) return;
+  const content = document.getElementById('progress-content');
+  content.innerHTML = '<div class="loading-bar">Loading...</div>';
+
+  const { data, error } = await db.from('tricks').select('*').eq('athlete', athlete).order('date', { ascending: true });
+  if (error || !data || data.length === 0) {
+    content.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted)">No data yet for ' + athlete + '.</div>';
+    return;
+  }
+
+  const rotCounts = {};
+  const dirCounts = {};
+  data.forEach(t => {
+    if (t.rotation) rotCounts[t.rotation] = (rotCounts[t.rotation] || 0) + 1;
+    if (t.direction) dirCounts[t.direction] = (dirCounts[t.direction] || 0) + 1;
+  });
+
+  const maxRot = Math.max(...Object.values(rotCounts), 1);
+  const totalDir = Object.values(dirCounts).reduce((a,b)=>a+b,0) || 1;
+
+  const rotBars = Object.entries(rotCounts).sort((a,b)=>parseInt(a[0])-parseInt(b[0])).map(([rot, cnt]) =>
+    `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:4px">
+      <div style="width:100%;height:${Math.round(cnt/maxRot*90)}px;background:var(--accent);border-radius:4px 4px 0 0;opacity:0.8;min-height:4px"></div>
+      <div style="font-size:10px;color:var(--muted)">${rot}</div>
+    </div>`
+  ).join('');
+
+  const dirItems = Object.entries(dirCounts).map(([dir, cnt]) =>
+    `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--muted);font-size:12px">${dir}</span>
+      <span style="font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--accent)">${Math.round(cnt/totalDir*100)}%</span>
+    </div>`
+  ).join('');
+
+  const execOverTime = data.filter(t=>t.rating_exec).slice(-8).map(t =>
+    `<div style="flex:1;background:var(--accent2);border-radius:4px 4px 0 0;height:${Math.round(t.rating_exec/10*100)}%;opacity:0.8;min-height:4px" title="${t.date}: ${t.rating_exec}"></div>`
+  ).join('');
+
+  content.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="panel-card">
+        <div class="panel-header"><div class="panel-title">Rotations</div></div>
+        <div class="panel-body">
+          <div style="display:flex;align-items:flex-end;gap:8px;height:100px;background:var(--surface2);border-radius:8px;padding:12px">${rotBars || '<div style="color:var(--muted);font-size:12px">No data</div>'}</div>
+        </div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-header"><div class="panel-title">Spin Directions</div></div>
+        <div class="panel-body">${dirItems || '<div style="color:var(--muted);font-size:12px">No data</div>'}</div>
+      </div>
+      <div class="panel-card" style="grid-column:1/-1">
+        <div class="panel-header"><div class="panel-title">Execution Quality Over Time (last 8 tricks)</div></div>
+        <div class="panel-body">
+          <div style="display:flex;align-items:flex-end;gap:6px;height:100px;background:var(--surface2);border-radius:8px;padding:12px">${execOverTime || '<div style="color:var(--muted);font-size:12px">No data</div>'}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ============================================
+// COACH REVIEW → SUPABASE
+// ============================================
+async function saveCoachReview() {
+  const athlete = document.getElementById('cr-athlete').value;
+  const coach   = document.getElementById('cr-coach').value;
+  if (!athlete || !coach) { alert('Please select an athlete and enter the coach name.'); return; }
+
+  const squadMap = {
+    'Mathilde Gremaud':'NM','Kim Gubser':'NM','Sarah Höfflin':'NM','Andri Ragettli':'NM','Giulia Tanno':'NM',
+    'Anouk Andraska':'A','Gian Andri Bolinger':'A','Fadri Rhyner':'A','Nils Rhyner':'A','Adrien Vaudaux':'A',
+    'Lou Annen':'B','Nicola Bolinger':'B','Tim Egger':'B','Viktor Maksyagin':'B',
+    'Alan Bornet':'C','Maxence Petzoldt':'C','Lars Ruchti':'C','Jason Zacharopoulos':'C'
+  };
+
+  const record = {
+    athlete, squad: squadMap[athlete] || '—', coach,
+    date: document.getElementById('cr-date').value || today,
+    rating_learning: parseInt(document.getElementById('cr-learning').value),
+    rating_rail:     parseInt(document.getElementById('cr-rail').value),
+    rating_kicker:   parseInt(document.getElementById('cr-kicker').value),
+    rating_halfpipe: parseInt(document.getElementById('cr-halfpipe').value),
+    rating_mental:   parseInt(document.getElementById('cr-mental').value),
+    notes: document.getElementById('cr-notes').value || null,
+  };
+
+  const btn = document.getElementById('cr-save-btn');
+  btn.disabled = true;
+
+  const { error } = await db.from('coach_reviews').insert([record]);
+  btn.disabled = false;
+
+  if (error) { alert('Error: ' + error.message); return; }
+
+  const msg = document.getElementById('cr-save-msg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
+  loadReviewList();
+}
+
+async function loadReviewList() {
+  const { data } = await db.from('coach_reviews').select('*').order('date', { ascending: false }).limit(20);
+  const el = document.getElementById('cr-list');
+  if (!data || data.length === 0) { el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted)">No reviews yet.</div>'; return; }
+  el.innerHTML = data.map(r => `
+    <div class="trick-item" style="flex-direction:column;align-items:start;gap:6px">
+      <div style="display:flex;justify-content:space-between;width:100%">
+        <span style="color:var(--accent2);font-weight:500">${r.athlete}</span>
+        <span style="color:var(--muted);font-size:11px">${r.date} · ${r.coach}</span>
+      </div>
+      <div style="display:flex;gap:12px;font-size:11px;color:var(--muted)">
+        <span>Rail <b style="color:var(--text)">${r.rating_rail}</b></span>
+        <span>Kicker <b style="color:var(--text)">${r.rating_kicker}</b></span>
+        <span>HP <b style="color:var(--text)">${r.rating_halfpipe}</b></span>
+        <span>Mental <b style="color:var(--text)">${r.rating_mental}</b></span>
+        <span>Learning <b style="color:var(--text)">${r.rating_learning}</b></span>
+      </div>
+      ${r.notes ? `<div style="font-size:12px;color:var(--muted)">${r.notes}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+// ============================================
+// DATABASE TAB
+// ============================================
+async function loadDatabase() {
+  const athlete = document.getElementById('db-filter-athlete')?.value || '';
+  const source  = document.getElementById('db-filter-source')?.value || '';
+  const tbody   = document.getElementById('db-tbody');
+  tbody.innerHTML = '<tr><td colspan="12" class="loading-bar">Loading...</td></tr>';
+
+  let query = db.from('tricks').select('*').order('date', { ascending: false }).limit(200);
+  if (athlete) query = query.eq('athlete', athlete);
+  if (source)  query = query.eq('source', source);
+
+  const { data, error } = await query;
+
+  if (error || !data || data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:32px">${error ? 'Error loading data.' : 'No entries found.'}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(t => `
+    <tr>
+      <td>${t.athlete}</td>
+      <td><span class="trick-squad squad-${t.squad}" style="display:inline-block">${t.squad}</span></td>
+      <td>${t.date}</td>
+      <td style="color:var(--muted)">${t.type || '—'}</td>
+      <td>${t.discipline}</td>
+      <td>${t.trick_name || '—'}</td>
+      <td>${t.rating_setup ?? '—'}</td>
+      <td>${t.rating_exec ?? '—'}</td>
+      <td>${t.rating_land ?? '—'}</td>
+      <td style="color:var(--accent);font-weight:700">${t.rating_total ?? '—'}</td>
+      <td>${t.landed ? '✅' : '❌'}</td>
+      <td style="color:var(--muted)">${t.comment || '—'}</td>
+    </tr>
+  `).join('');
+}
+
+// ============================================
+// CSV EXPORT
+// ============================================
+async function exportCSV() {
+  const { data } = await db.from('tricks').select('*').order('date', { ascending: false });
+  if (!data || data.length === 0) { alert('No data to export.'); return; }
+
+  const cols = ['athlete','squad','date','type','discipline','trick_name','direction','rotation','axis','flips','grab','rail_type','slide_form','in_spin','out_spin','rating_setup','rating_exec','rating_land','rating_total','landed','comment','video_url'];
+  const csv = [cols.join(','), ...data.map(r => cols.map(c => JSON.stringify(r[c] ?? '')).join(','))].join('\n');
+
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'trick-collector-export.csv';
+  a.click();
+}
+
+// ============================================
+// INIT
+// ============================================
+document.getElementById('s-date').value = today;
+document.getElementById('cr-date').value = today;
+</script>
+</body>
+</html>
