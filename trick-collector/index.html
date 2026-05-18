@@ -660,7 +660,7 @@
       <div style="display:flex;align-items:center;gap:10px;">
         <label style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Filter:</label>
         <select id="sl-filter-athlet" onchange="renderSessionList()" style="max-width:160px;">
-          <option value="">Alle Athletenen</option>
+          <option value="">All Athletes</option>
           <optgroup label="Nationalkader (NM)">
               <option>Mathilde Gremaud</option>
               <option>Kim Gubser</option>
@@ -743,7 +743,7 @@
     <div class="card-title">Trick-Liste</div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Date</th><th>Discipline</th><th>Trick</th><th>Quelle</th><th>Rating</th><th>Comment</th></tr></thead>
+        <thead><tr><th>Date</th><th>Discipline</th><th>Trick</th><th>Source</th><th>Rating</th><th>Comment</th></tr></thead>
         <tbody id="cp-tbody">
           <tr><td colspan="6"><div class="empty-state"><div class="icon">🏔</div>Select athlete</div></td></tr>
         </tbody>
@@ -1075,10 +1075,10 @@
       </div>
     </div>
 
-    <!-- Row 5: Repertoire-Entwicklung über Zeit -->
+    <!-- Row 5: Repertoire Development Over Time -->
     <div class="chart-grid single">
       <div class="chart-card">
-        <div class="chart-title">📅 Repertoire-Entwicklung über Zeit <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(Assessment — nur masterede Tricks)</span></div>
+        <div class="chart-title">📅 Repertoire Development Over Time <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(Assessment — mastered tricks only)</span></div>
         <div id="ev-verlauf"></div>
       </div>
     </div>
@@ -1162,12 +1162,12 @@
         <div class="tu-scale"><span>0</span><span>5</span><span>10</span></div>
       </div>
     </div>
-    <div class="form-group" style="margin-bottom:16px;"><label>Note</label><textarea id="tu-notiz" rows="2" placeholder="Ergänzende Bemerkungen..."></textarea></div>
-    <button onclick="saveTU()" style="width:100%;padding:18px;border:none;border-radius:12px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#000;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;cursor:pointer;box-shadow:0 4px 20px rgba(245,158,11,.35);">📋 URTEIL SAVE</button>
+    <div class="form-group" style="margin-bottom:16px;"><label>Note</label><textarea id="tu-notiz" rows="2" placeholder="Additional remarks..."></textarea></div>
+    <button onclick="saveTU()" style="width:100%;padding:18px;border:none;border-radius:12px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#000;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;cursor:pointer;box-shadow:0 4px 20px rgba(245,158,11,.35);">📋 SAVE REVIEW</button>
   </div>
 
   <div class="tu-history">
-    <div class="tu-history-title">BISHERIGE URTEILE</div>
+    <div class="tu-history-title">PREVIOUS REVIEWS</div>
     <div class="tu-avg-wrap" id="tu-avgs"></div>
     <div id="tu-list"><div style="color:#64748b;font-size:13px;">Select an athlete.</div></div>
   </div>
@@ -1178,10 +1178,10 @@
   <!-- TEAM RANKING -->
   <div class="card" style="margin-bottom:20px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--accent);">Team-Übersicht</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--accent);">Team Overview</div>
       <div style="display:flex;gap:8px;">
-        <button class="btn-secondary" onclick="loadDB()">↻ Aktualisieren</button>
-        <button class="btn-secondary" onclick="downloadRanking()" style="white-space:nowrap;">⬇ Team-Export</button>
+        <button class="btn-secondary" onclick="loadDB()">↻ Refresh</button>
+        <button class="btn-secondary" onclick="downloadRanking()" style="white-space:nowrap;">⬇ Team Export</button>
       </div>
     </div>
 
@@ -1218,7 +1218,7 @@
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <select id="db-filter-athlet" onchange="renderDBTable()" style="max-width:160px;">
-          <option value="">Alle Athletenen</option>
+          <option value="">All Athletes</option>
           <optgroup label="Nationalkader (NM)">
               <option>Mathilde Gremaud</option>
               <option>Kim Gubser</option>
@@ -1257,8 +1257,8 @@
     <div class="table-wrap">
       <table>
         <thead><tr>
-          <th>Athlete</th><th>Quelle</th><th>Date</th><th>Discipline</th><th>Trick</th>
-          <th>Setup</th><th>Ausf.</th><th>Land.</th><th>Gesamt</th><th>Comment</th><th></th>
+          <th>Athlete</th><th>Source</th><th>Date</th><th>Discipline</th><th>Trick</th>
+          <th>Setup</th><th>Exec.</th><th>Land.</th><th>Total</th><th>Comment</th><th></th>
         </tr></thead>
         <tbody id="db-tbody">
           <tr><td colspan="11"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr>
@@ -1739,7 +1739,7 @@ function renderDBRankings() {
           '<div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;">'
           + '<span style="color:var(--text);">' + a + '</span>'
           + '<span style="font-weight:700;color:' + col + ';">' + r + '°</span></div>'
-        ).join('') : '<div style="color:var(--muted);font-size:12px;">Keine Daten</div>')
+        ).join('') : '<div style="color:var(--muted);font-size:12px;">No data</div>')
       + '</div>';
   }).join('');
 
@@ -1790,7 +1790,7 @@ function renderDBTable() {
   tbody.innerHTML = all.map(t => {
     const isStandort = t._quelle === 'standort';
     const quelleBadge = isStandort
-      ? '<span style="font-size:10px;background:#1e3a5f;color:#60a5fa;border-radius:4px;padding:2px 6px;font-weight:600;">STANDORT</span>'
+      ? '<span style="font-size:10px;background:#1e3a5f;color:#60a5fa;border-radius:4px;padding:2px 6px;font-weight:600;">ASSESSMENT</span>'
       : '<span style="font-size:10px;background:#1a3320;color:#34d399;border-radius:4px;padding:2px 6px;font-weight:600;">SESSION</span>';
     const statusBadge = isStandort && t.status
       ? (t.status === 'mastered'
@@ -1834,7 +1834,7 @@ async function deleteStandort(id) {
 // ── TEAM RANKING EXPORT (4 Sheets) ───────────────────────────────
 function downloadRanking() {
   const allForRot = [...dbAllTricks, ...dbAllStandort];
-  if (!allForRot.length) { showToast('Keine Daten zum Exportieren', 'error'); return; }
+  if (!allForRot.length) { showToast('No data to export', 'error'); return; }
 
   function exDeg(val) {
     if (!val) return -1;
@@ -1862,7 +1862,7 @@ function downloadRanking() {
     if (!t.athlet||!stats[t.athlet]) return;
     if (t.status==='mastered') stats[t.athlet].mastered++;
     else if (t.status==='goal')  stats[t.athlet].goal++;
-    // Only masterede Tricks count for rotation + balance
+    // Only mastered Tricks count for rotation + balance
     if (t.status !== 'mastered') return;
     const dir = nDir(t.drehrichtung);
     if (dir && t.rotation) { const deg=exDeg(t.rotation); if(deg>stats[t.athlet].maxRot[dir]) stats[t.athlet].maxRot[dir]=deg; }
@@ -1965,7 +1965,7 @@ function downloadExcel() {
   if (filterAthlet) all = all.filter(t => t.athlet === filterAthlet);
   all.sort((a,b) => (b.datum||'').localeCompare(a.datum||''));
 
-  if (!all.length) { showToast('Keine Daten zum Exportieren', 'error'); return; }
+  if (!all.length) { showToast('No data to export', 'error'); return; }
 
   const headers = ['Athlete','Quelle','Status','Datum','Disziplin','Drehrichtung','Rotation','Flips',
     'Grab','Bring Back','Style','Rail Art','Slide Form','Slide Var','In-Spin','Swap','Out-Spin',
@@ -2337,7 +2337,7 @@ async function loadEntwicklung() {
     </div>
     <div class="chart-grid single">
       <div class="chart-card">
-        <div class="chart-title">📅 Repertoire-Entwicklung über Zeit <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(Assessment — nur masterede Tricks)</span></div>
+        <div class="chart-title">📅 Repertoire Development Over Time <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(Assessment — mastered tricks only)</span></div>
         <div id="ev-verlauf"></div>
       </div>
     </div>`;
@@ -2489,7 +2489,7 @@ async function loadEntwicklung() {
     }
   }
 
-  // ── 8. Repertoire-Entwicklung über Zeit ──────────────────────────
+  // ── 8. Repertoire Development Over Time ──────────────────────────
   const verlaufEl = document.getElementById('ev-verlauf');
   if (verlaufEl) {
     // Only mastered/erreicht standort entries with datum
@@ -2556,7 +2556,7 @@ function updateQualityChart() {
   const filtered = window._evTricksWithRating.filter(t => window._evTrickLabel(t) === chosen);
   if (!filtered.length) {
     if (cvLine) cvLine.style.display = 'none';
-    if (cvEmpty) { cvEmpty.style.display = 'block'; cvEmpty.textContent = 'Keine Daten für diesen Trick.'; }
+    if (cvEmpty) { cvEmpty.style.display = 'block'; cvEmpty.textContent = 'No data for this trick.'; }
     return;
   }
   // Group by date, average rating
@@ -2713,7 +2713,7 @@ function drawRadarSplit(canvasId, labels, valsT, valsS, rawT, rawS) {
 // ── SPLIT BAR CHART (Training=blue / Standort=amber stacked) ───────
 function drawBarsSplit(containerId, entries) {
   const el = document.getElementById(containerId);
-  if (!el || !entries.length) { if(el) el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px;">Keine Daten</div>'; return; }
+  if (!el || !entries.length) { if(el) el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px;">No data</div>'; return; }
   const max = Math.max(...entries.map(e=>e[1]+e[2]), 1);
   el.innerHTML = entries.map(([label, cT, cS]) => {
     const pctT = Math.round(cT/max*100);
