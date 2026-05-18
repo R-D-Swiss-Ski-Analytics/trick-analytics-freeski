@@ -132,6 +132,10 @@
     font-size: 13px; cursor: pointer; transition: border-color .2s;
   }
   .btn-secondary:hover { border-color: var(--accent); }
+  .sess-type-btn { padding:10px 18px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s; }
+  .sess-type-btn.active { background:rgba(57,195,212,0.15);border-color:#39c3d4;color:#39c3d4; }
+  .sess-trick-btn { padding:8px 14px;background:var(--surface2);border:2px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap; }
+  .sess-trick-btn.active { background:rgba(57,195,212,0.15);border-color:#39c3d4;color:#39c3d4; }
   .loading { text-align: center; padding: 40px; color: var(--muted); }
   .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-right: 8px; vertical-align: middle; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -448,10 +452,23 @@
 
     <div class="card" style="margin-bottom:16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div class="card-title" style="margin:0;">Step 1 — Select Athletes (max. 8)</div>
+        <div class="card-title" style="margin:0;">Step 1 — Session Type</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;" id="sess-type-btns">
+        <button onclick="selectSessType(this,'Landing Bag')"    class="sess-type-btn">🛍 Landing Bag</button>
+        <button onclick="selectSessType(this,'Jump On-Snow')"  class="sess-type-btn">🎿 Jump On-Snow</button>
+        <button onclick="selectSessType(this,'Big Air Comp')"  class="sess-type-btn">🏆 Big Air Competition</button>
+        <button onclick="selectSessType(this,'Rail Training')" class="sess-type-btn">🛷 Rail Training</button>
+        <button onclick="selectSessType(this,'Halfpipe')"      class="sess-type-btn">🏂 Halfpipe</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="card-title" style="margin:0;">Step 2 — Select Athletes (max. 8)</div>
         <button onclick="clearSessionSelection()" style="padding:6px 14px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">Clear all</button>
       </div>
-      <div id="sess-athlete-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;"></div>
+      <div id="sess-athlete-grid"></div>
     </div>
 
     <div id="sess-trick-selection" style="display:none;margin-bottom:16px;"></div>
@@ -1826,24 +1843,42 @@ const SESS_ALL_ATHLETES = [
   {name:'Alan Bornet',squad:'C'},{name:'Maxence Petzoldt',squad:'C'},
   {name:'Lars Ruchti',squad:'C'},{name:'Jason Zacharopoulos',squad:'C'},
 ];
+const SESS_SQUADS = [
+  {key:'NM', label:'National Team', color:'#39c3d4'},
+  {key:'A',  label:'A-Squad',       color:'#7ab51d'},
+  {key:'B',  label:'B-Squad',       color:'#f59e0b'},
+  {key:'C',  label:'C-Squad',       color:'#6b8299'},
+];
 
 let sessSelectedAthletes = [];
 let sessAthleteData = {};
 let sessActiveTricks = {};
 let sessLog = [];
+let sessType = '';
+
+function selectSessType(btn, type) {
+  document.querySelectorAll('.sess-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  sessType = type;
+}
 
 function initSessionSetup() {
   document.getElementById('sess-date-label').textContent =
     new Date().toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const grid = document.getElementById('sess-athlete-grid');
-  grid.innerHTML = SESS_ALL_ATHLETES.map(a => `
-    <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s;" id="sess-ath-card-${a.name.replace(/\s/g,'_')}">
-      <input type="checkbox" value="${a.name}" onchange="toggleSessionAthlete('${a.name}')" style="width:18px;height:18px;accent-color:#39c3d4;cursor:pointer;flex-shrink:0;">
-      <div>
-        <div style="font-weight:600;font-size:13px;color:var(--text);">${shortName(a.name)}</div>
-        <div style="font-size:10px;color:var(--muted);">${a.squad}-Squad</div>
+  grid.innerHTML = SESS_SQUADS.map(sq => {
+    const athletes = SESS_ALL_ATHLETES.filter(a => a.squad === sq.key);
+    return `<div style="margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${sq.color};margin-bottom:8px;">${sq.label}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${athletes.map(a => `
+          <label style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s;" id="sess-ath-card-${a.name.replace(/\s/g,'_')}">
+            <input type="checkbox" value="${a.name}" onchange="toggleSessionAthlete('${a.name}')" style="width:16px;height:16px;accent-color:${sq.color};cursor:pointer;flex-shrink:0;">
+            <span style="font-weight:600;font-size:13px;color:var(--text);">${shortName(a.name)}</span>
+          </label>`).join('')}
       </div>
-    </label>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function toggleSessionAthlete(name) {
@@ -1917,7 +1952,8 @@ function startSession() {
   document.getElementById('sess-setup').style.display = 'none';
   document.getElementById('sess-live').style.display = 'block';
   document.getElementById('sess-live-date').textContent =
-    new Date().toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    new Date().toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'})
+    + (sessType ? '  ·  ' + sessType : '');
   renderLiveSession();
 }
 
@@ -1933,11 +1969,11 @@ function renderLiveSession() {
     return `<div class="card" style="padding:20px;text-align:center;" id="sess-col-${name.replace(/\s/g,'_')}">
       <div style="font-size:20px;font-weight:800;color:#39c3d4;margin-bottom:2px;">${shortName(name)}</div>
       <div style="margin:14px 0;">
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Working on</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Working on</div>
         ${tricks.length > 0
-          ? `<select onchange="sessSetTrick('${name}',this.value)" style="text-align:center;font-weight:600;font-size:13px;">
-              ${tricks.map(t=>`<option value="${t}"${t===d.currentTrick?' selected':''}>${t}</option>`).join('')}
-            </select>`
+          ? `<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
+              ${tricks.map(t=>`<button class="sess-trick-btn${t===d.currentTrick?' active':''}" onclick="sessPickTrick('${name}','${t.replace(/'/g,"\\'")}',this)">${t}</button>`).join('')}
+            </div>`
           : `<input type="text" placeholder="Enter trick..." value="${d.currentTrick}" oninput="sessSetTrick('${name}',this.value)" style="text-align:center;font-weight:600;font-size:13px;">`
         }
       </div>
@@ -1966,6 +2002,13 @@ function renderLiveSession() {
 
 function sessSetTrick(name, trick) { sessAthleteData[name].currentTrick = trick; }
 
+function sessPickTrick(name, trick, btn) {
+  sessAthleteData[name].currentTrick = trick;
+  const col = document.getElementById('sess-col-' + name.replace(/\s/g,'_'));
+  col.querySelectorAll('.sess-trick-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
 async function logAttempt(name, result) {
   const d = sessAthleteData[name];
   d.stats.attempts++;
@@ -1988,7 +2031,7 @@ async function logAttempt(name, result) {
   const trickInfo = sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
   db.from('tricks').insert({
     athlet:name, datum:new Date().toISOString().split('T')[0],
-    typ:'Training', disziplin:trickInfo.disziplin||null,
+    typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
     trickaufbau:d.currentTrick, gelandet:result==='miss'?'No':'Yes',
     gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
   }).then(({error})=>{ if(error) console.error('Save error:',error); });
