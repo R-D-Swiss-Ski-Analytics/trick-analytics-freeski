@@ -1907,6 +1907,17 @@ async function toggleSessionAthlete(name) {
 const SESS_DIRECTIONS = ['Left','Right','Switch Left','Switch Right'];
 const SESS_GRABS = ['Safety','Mute','Tail','Blunt','Japan','Critical','Esco','Nose','Octo','Truckdriver','Stale','Cuban','Seatbelt','Bow and Arrow','In and out'];
 
+function tricksForDir(tricks, dir) {
+  return tricks.filter(t => {
+    const lbl = (t.trick_label||'').toLowerCase();
+    if (dir === 'Left')         return lbl.startsWith('left ') && !lbl.startsWith('switch');
+    if (dir === 'Right')        return lbl.startsWith('right ') && !lbl.startsWith('switch');
+    if (dir === 'Switch Left')  return lbl.startsWith('switch left');
+    if (dir === 'Switch Right') return lbl.startsWith('switch right');
+    return false;
+  });
+}
+
 function renderSessionTrickSelection() {
   const container = document.getElementById('sess-trick-selection');
   const startBtn = document.getElementById('sess-start-btn');
@@ -1914,40 +1925,29 @@ function renderSessionTrickSelection() {
   container.style.display = 'block';
   container.innerHTML = '<div class="card"><div class="card-title">Step 3 — Select tricks to work on</div>'
     + sessSelectedAthletes.map(name => {
+      if (!sessAthleteData[name]) return ''; // race condition guard
       const safeId = name.replace(/\s/g,'_');
+      const allTricks = sessAthleteData[name].tricks || [];
       return `<div style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);">
         <div style="font-weight:700;font-size:14px;color:#39c3d4;margin-bottom:14px;">${shortName(name)}</div>
-        ${(() => {
-          const d = sessAthleteData[name];
-          const mastered = (d.tricks||[]).filter(t => t.status==='mastered');
-          const goals    = (d.tricks||[]).filter(t => t.status==='goal');
-          if (!mastered.length && !goals.length) return '';
+        ${SESS_DIRECTIONS.map(dir => {
+          const mastered = tricksForDir(allTricks.filter(t=>t.status==='mastered'), dir);
+          const goals    = tricksForDir(allTricks.filter(t=>t.status==='goal'), dir);
           return `<div style="margin-bottom:14px;">
-            ${mastered.length ? `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#2d8a4e;margin-bottom:7px;">Mastered</div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-                ${mastered.map(t=>`<button onclick="toggleSessAssessmentTrick('${name}','${t.trick_label.replace(/'/g,"\\'")}',this)"
-                  style="padding:6px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${t.trick_label}</button>`).join('')}
-              </div>` : ''}
-            ${goals.length ? `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#f59e0b;margin-bottom:7px;">Goals</div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-                ${goals.map(t=>`<button onclick="toggleSessAssessmentTrick('${name}','${t.trick_label.replace(/'/g,"\\'")}',this)"
-                  style="padding:6px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${t.trick_label}</button>`).join('')}
-              </div>` : ''}
-            <div style="border-top:1px solid var(--border);margin:10px 0 14px;"></div>
-          </div>`;
-        })()}
-        ${SESS_DIRECTIONS.map(dir => `
-          <div style="margin-bottom:12px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:7px;">${dir}</div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent2);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);">${dir}</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              ${mastered.map(t => `<button onclick="toggleSessAssessmentTrick('${name}','${t.trick_label.replace(/'/g,"\\'")}',this)"
+                style="padding:6px 12px;background:rgba(45,138,78,0.12);border:1.5px solid #2d8a4e;border-radius:7px;color:#2d8a4e;font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;" title="Mastered">${t.trick_label}</button>`).join('')}
+              ${goals.map(t => `<button onclick="toggleSessAssessmentTrick('${name}','${t.trick_label.replace(/'/g,"\\'")}',this)"
+                style="padding:6px 12px;background:rgba(245,158,11,0.12);border:1.5px solid #f59e0b;border-radius:7px;color:#f59e0b;font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;" title="Goal">${t.trick_label}</button>`).join('')}
               ${SESS_GRABS.map(grab => {
-                const key = dir+'|'+grab;
                 const id = 'sg_'+safeId+'_'+dir.replace(/\s/g,'')+'_'+grab.replace(/\s/g,'');
                 return `<button id="${id}" onclick="toggleSessGrab('${name}','${dir}','${grab}',this)"
                   style="padding:6px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${grab}</button>`;
               }).join('')}
             </div>
-          </div>`).join('')}
+          </div>`;
+        }).join('')}
         <div style="margin-top:10px;">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Selected tricks</div>
           <div id="sess-selected-${safeId}" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;">
