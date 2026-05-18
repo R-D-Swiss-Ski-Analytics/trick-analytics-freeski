@@ -1943,17 +1943,30 @@ function showGrabPicker(name, trickLabel, status, btn) {
   // Reset all trick wrappers to inline-block
   document.querySelectorAll('.trick-wrap-' + safeId).forEach(el => el.style.display = 'inline-block');
 
+  const base = baseLabel(trickLabel);
+  const alreadySelected = (sessActiveTricks[name] || [])
+    .filter(t => t.startsWith(base + ' — '))
+    .map(t => t.slice(base.length + 3));
+
   const grabs = parseGrabsFromLabel(trickLabel);
   const picker = document.createElement('div');
   picker.className = 'grab-picker-' + safeId;
   picker.style.cssText = 'margin-top:8px;padding:10px 14px;background:var(--surface);border:1px solid #39c3d4;border-radius:10px;width:100%;';
-  picker.innerHTML = `<div style="font-size:10px;color:#39c3d4;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">Select grab</div>
+  picker.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span style="font-size:10px;color:#39c3d4;font-weight:700;text-transform:uppercase;letter-spacing:.8px;">Select grab(s)</span>
+      <span style="font-size:10px;color:var(--muted);">Multiple possible</span>
+    </div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;">
-      ${grabs.map(g => `<button onclick="addTrickWithGrab('${name}','${trickLabel.replace(/'/g,"\\'")}','${g}',this)"
-        style="padding:6px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${g}</button>`).join('')}
+      ${grabs.map(g => {
+        const sel = alreadySelected.includes(g);
+        const s = sel
+          ? 'background:rgba(57,195,212,0.18);border-color:#39c3d4;color:#39c3d4;'
+          : 'background:var(--surface2);border-color:var(--border);color:var(--text);';
+        return `<button onclick="addTrickWithGrab('${name}','${trickLabel.replace(/'/g,"\\'")}','${g}',this)"
+          style="padding:6px 14px;${s}border-width:1.5px;border-style:solid;border-radius:7px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${g}</button>`;
+      }).join('')}
     </div>`;
 
-  // Insert directly inside the trick's wrapper div, after the button
   const wrapper = btn.parentElement;
   wrapper.style.display = 'block';
   wrapper.appendChild(picker);
