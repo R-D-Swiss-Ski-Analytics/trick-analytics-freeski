@@ -140,20 +140,20 @@
 
   /* ── STANDORTBESTIMMUNG ───────────────────────────────────────── */
 
-  /* Two-column overview: Beherrscht | Ziele */
+  /* Two-column overview: Mastered | Ziele */
   .sb-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .sb-col-header {
     font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 2px;
     padding: 10px 14px; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 8px;
   }
-  .sb-col-header.beherrscht { background: #052e1a; color: #10b981; border: 1px solid #10b981; border-bottom: none; }
-  .sb-col-header.ziel       { background: #1a1a05; color: #f59e0b; border: 1px solid #f59e0b; border-bottom: none; }
+  .sb-col-header.mastered { background: #052e1a; color: #10b981; border: 1px solid #10b981; border-bottom: none; }
+  .sb-col-header.goal       { background: #1a1a05; color: #f59e0b; border: 1px solid #f59e0b; border-bottom: none; }
   .sb-col-body {
     border-radius: 0 0 8px 8px; min-height: 80px;
     border: 1px solid var(--border); background: var(--surface2);
   }
-  .sb-col-body.beherrscht { border-color: #10b981; }
-  .sb-col-body.ziel       { border-color: #f59e0b; }
+  .sb-col-body.mastered { border-color: #10b981; }
+  .sb-col-body.goal       { border-color: #f59e0b; }
 
   .sb-trick-row {
     display: flex; align-items: center; gap: 8px;
@@ -181,25 +181,25 @@
 
   /* Entry form — reuses same fields as Erfassen */
   .sb-form-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
-  .btn-beherrscht {
+  .btn-mastered {
     background: linear-gradient(135deg, #065f46, #047857); color: white; border: none;
     border-radius: 8px; padding: 13px; font-family: 'Bebas Neue', sans-serif;
     font-size: 18px; letter-spacing: 2px; cursor: pointer; transition: opacity .2s;
   }
-  .btn-beherrscht:hover { opacity: .9; }
-  .btn-ziel {
+  .btn-mastered:hover { opacity: .9; }
+  .btn-goal {
     background: linear-gradient(135deg, #92400e, #b45309); color: white; border: none;
     border-radius: 8px; padding: 13px; font-family: 'Bebas Neue', sans-serif;
     font-size: 18px; letter-spacing: 2px; cursor: pointer; transition: opacity .2s;
   }
-  .btn-ziel:hover { opacity: .9; }
+  .btn-goal:hover { opacity: .9; }
 
   /* Fortschritt timeline */
   .timeline { display: flex; flex-direction: column; gap: 0; }
   .timeline-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
   .timeline-item:last-child { border-bottom: none; }
   .timeline-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
-  .dot-beherrscht { background: var(--success); }
+  .dot-mastered { background: var(--success); }
   .dot-ziel       { background: var(--warn); }
   .dot-erreicht   { background: var(--accent); }
   .timeline-body  { flex: 1; }
@@ -264,20 +264,20 @@
   <div style="background:#111827;border:1px solid #1e2d45;border-radius:16px;padding:40px;max-width:360px;width:90%;text-align:center;">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;background:linear-gradient(90deg,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;">TRICK COLLECTOR FREESKI</div>
     <div style="font-size:12px;color:#64748b;margin-bottom:28px;letter-spacing:1px;">Swiss-Ski</div>
-    <input id="app-pw-input" type="password" placeholder="Passwort eingeben" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1e2d45;background:#1a2235;color:#e2e8f0;font-size:15px;margin-bottom:12px;outline:none;font-family:'DM Sans',sans-serif;">
-    <div id="app-pw-error" style="color:#ef4444;font-size:12px;margin-bottom:10px;display:none;">Falsches Passwort.</div>
-    <button onclick="checkAppPassword()" style="width:100%;padding:12px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Anmelden</button>
+    <input id="app-pw-input" type="password" placeholder="Enter password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1e2d45;background:#1a2235;color:#e2e8f0;font-size:15px;margin-bottom:12px;outline:none;font-family:'DM Sans',sans-serif;">
+    <div id="app-pw-error" style="color:#ef4444;font-size:12px;margin-bottom:10px;display:none;">Incorrect password.</div>
+    <button onclick="checkAppPassword()" style="width:100%;padding:12px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Sign In</button>
   </div>
 </div>
 
 <header>
   <h1>TRICK COLLECTOR</h1>
   <nav class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('standort', this)">Standortbestimmung</button>
+    <button class="nav-tab active" onclick="showPage('standort', this)">Assessment</button>
     <button class="nav-tab" onclick="showPage('erfassen', this)">Session</button>
-    <button class="nav-tab" onclick="showPage('entwicklung', this)">Entwicklung</button>
-    <button class="nav-tab" onclick="checkDBPassword(this, 'trainerurteil')">Trainer:innenurteil</button>
-    <button class="nav-tab" onclick="checkDBPassword(this)">Datenbank</button>
+    <button class="nav-tab" onclick="showPage('entwicklung', this)">Development</button>
+    <button class="nav-tab" onclick="checkDBPassword(this, 'trainerurteil')">Coach Review</button>
+    <button class="nav-tab" onclick="checkDBPassword(this)">Database</button>
   </nav>
 </header>
 
@@ -287,16 +287,16 @@
 <div id="edit-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;align-items:center;justify-content:center;padding:20px;">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--accent2);">EINTRAG BEARBEITEN</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--accent2);">EDIT ENTRY</div>
       <button onclick="closeEditModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
     </div>
     <input type="hidden" id="edit-idx">
     <input type="hidden" id="edit-id">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <!-- Athlet / Datum / Typ / Disziplin -->
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Athlet:in</label>
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Athlete</label>
         <select id="edit-athlet" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
-          <option value="">– auswählen –</option>
+          <option value="">— select —</option>
           <optgroup label="Nationalkader (NM)">
               <option>Mathilde Gremaud</option>
               <option>Kim Gubser</option>
@@ -324,18 +324,18 @@
               <option>Jason Zacharopoulos</option>
             </optgroup>
             </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Datum</label>
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Date</label>
         <input id="edit-datum" type="date" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;"></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Typ</label>
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Type</label>
         <select id="edit-typ" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
-          <option value="">– auswählen –</option><option>Training</option><option>Wettkampf</option>
+          <option value="">— select —</option><option>Training</option><option>Competition</option>
         </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Disziplin</label>
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Discipline</label>
         <select id="edit-disziplin" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
-          <option value="">– auswählen –</option><option>Kicker</option><option>Rail</option><option>Halfpipe</option><option>Landing Bag</option>
+          <option value="">— select —</option><option>Jump</option><option>Rail</option><option>Halfpipe</option><option>Landing Bag</option>
         </select></div>
-      <!-- Baukasten Kicker -->
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Drehrichtung</label>
+      <!-- Baukasten Jump -->
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Direction</label>
         <select id="edit-drehrichtung" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
           <option value="">–</option><option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option>
         </select></div>
@@ -345,38 +345,38 @@
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Flips</label>
         <select id="edit-flips" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
-          <option value="">–</option><option>keine</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
+          <option value="">–</option><option>None</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
         </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Achse</label>
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Axis</label>
         <select id="edit-achse" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
-          <option value="">–</option><option>Cork</option><option>Bio/Misty</option><option>Flat</option><option>Rodeo</option><option>Flache Achse</option><option>Frontflip</option><option>Backflip</option>
+          <option value="">–</option><option>Cork</option><option>Bio/Misty</option><option>Flat</option><option>Rodeo</option><option>Flat Axis</option><option>Frontflip</option><option>Backflip</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Grab</label>
         <select id="edit-grab" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
           <option value="">–</option><option>Safety</option><option>Mute</option><option>Tail</option><option>Blunt</option><option>Japan</option><option>Critical</option><option>Esco</option><option>In and out</option><option>Nose</option><option>Octo</option><option>Truckdriver</option><option>Stale</option><option>Cuban</option><option>Seatbelt</option><option>Bow and Arrow</option>
         </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Absprung</label>
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Take-off</label>
         <select id="edit-absprung" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
-          <option value="">–</option><option>Carved</option><option>Innenkanten</option><option>Nose-Butter</option><option>Tail-Butter</option>
+          <option value="">–</option><option>Carved</option><option>Inside Edge</option><option>Nose-Butter</option><option>Tail-Butter</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Bring Back</label>
         <select id="edit-bringback" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
           <option value="">–</option><option>180</option><option>360</option><option>540</option>
         </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Style-Element</label>
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Style Element</label>
         <select id="edit-style" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
           <option value="">–</option><option>Tweak</option><option>Poke</option><option>Screamin' Seamen</option>
         </select></div>
       <!-- Rail -->
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Rail-Art</label>
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Rail Type</label>
         <select id="edit-railart" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
           <option value="">–</option><option>Box</option><option>Tube</option><option>Rail</option><option>Down Tube</option><option>Down Rail</option><option>DFD</option><option>Waterfall</option><option>Ellbow</option><option>Flat-Down</option><option>S-Rail</option><option>C-Rail</option><option>Pole-Jam</option>
         </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Slide-Form</label>
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Slide Form</label>
         <select id="edit-slideform" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
           <option value="">–</option><option>50-50</option><option>Switch 50-50</option><option>Slide</option><option>Lip On</option><option>Switch Tails On</option><option>Switch Lip On</option>
         </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Slide-Variante</label>
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Slide Variant</label>
         <select id="edit-slidevar" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
           <option value="">–</option><option>Back Slide</option><option>Front Slide</option>
         </select></div>
@@ -395,31 +395,31 @@
       <!-- Ratings -->
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Setup Rating</label>
         <input id="edit-setup" type="number" min="1" max="10" placeholder="1–10" oninput="updateEditGesamt()" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;"></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Ausführung Rating</label>
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Execution Rating</label>
         <input id="edit-ausfuehrung" type="number" min="1" max="10" placeholder="1–10" oninput="updateEditGesamt()" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;"></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Landung Rating</label>
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Landing Rating</label>
         <input id="edit-landung" type="number" min="1" max="10" placeholder="1–10" oninput="updateEditGesamt()" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;"></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Gelandet</label>
+      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Landed</label>
         <select id="edit-gelandet" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
-          <option value="">— auswählen —</option><option value="Ja">✅ Ja</option><option value="Nein">❌ Nein</option>
+          <option value="">— auswählen —</option><option value="Yes">✅ Yes</option><option value="No">❌ No</option>
         </select></div>
     </div>
     <div style="margin-top:10px;">
-      <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Kommentar</label>
+      <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Comment</label>
       <input id="edit-kommentar" type="text" placeholder="Kommentar..." style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
     </div>
     <div style="margin-top:10px;">
-      <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Trickaufbau</label>
-      <input id="edit-trickaufbau" type="text" placeholder="Trickaufbau..." style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
+      <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Trick Setup</label>
+      <input id="edit-trickaufbau" type="text" placeholder="Trick setup..." style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
     </div>
     <div style="margin-top:10px;">
-      <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Videolink</label>
+      <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Video Link</label>
       <input id="edit-videolink" type="text" placeholder="https://..." style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;">
     </div>
     <div id="edit-gesamt-preview" style="margin-top:10px;font-size:13px;color:var(--accent);font-weight:600;"></div>
     <div style="display:flex;gap:10px;margin-top:16px;">
-      <button onclick="saveEditModal()" style="flex:1;padding:12px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">SPEICHERN</button>
-      <button onclick="closeEditModal()" style="padding:12px 20px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;">Abbrechen</button>
+      <button onclick="saveEditModal()" style="flex:1;padding:12px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">SAVE</button>
+      <button onclick="closeEditModal()" style="padding:12px 20px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancel</button>
     </div>
   </div>
 </div>
@@ -427,13 +427,13 @@
 <!-- ══════════════════════════════════════════ ERFASSEN -->
 <div class="page" id="page-erfassen">
   <div class="card">
-    <div class="card-title">Trick erfassen</div>
+    <div class="card-title">Log Trick</div>
     <div class="form-grid">
 
       <div class="form-group">
-        <label>Athlet:in</label>
+        <label>Athlete</label>
         <select id="f-athlet">
-          <option value="">– auswählen –</option>
+          <option value="">— select —</option>
           <optgroup label="Nationalkader (NM)">
               <option>Mathilde Gremaud</option>
               <option>Kim Gubser</option>
@@ -464,42 +464,42 @@
       </div>
 
       <div class="form-group">
-        <label>Datum</label>
+        <label>Date</label>
         <input type="date" id="f-datum">
       </div>
 
       <div class="form-group">
-        <label>Typ</label>
+        <label>Type</label>
         <select id="f-typ">
-          <option value="">– auswählen –</option>
+          <option value="">— select —</option>
           <option>Training</option>
-          <option>Wettkampf</option>
+          <option>Competition</option>
         </select>
       </div>
       <div class="form-group full">
-        <label>Disziplin</label>
+        <label>Discipline</label>
         <select id="f-disziplin" onchange="toggleDisziplin('f')">
-          <option value="">– auswählen –</option>
-          <option>Kicker</option><option>Rail</option><option>Halfpipe</option><option>Landing Bag</option>
+          <option value="">— select —</option>
+          <option>Jump</option><option>Rail</option><option>Halfpipe</option><option>Landing Bag</option>
         </select>
       </div>
 
-      <div class="section-divider kicker-field-f hidden">Kicker / Halfpipe</div>
-      <div class="form-group kicker-field-f hidden"><label>Drehrichtung</label>
+      <div class="section-divider kicker-field-f hidden">Jump / Halfpipe</div>
+      <div class="form-group kicker-field-f hidden"><label>Direction</label>
         <select id="f-drehrichtung"><option value="">–</option>
           <option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option>
         </select></div>
       <div class="form-group kicker-field-f hidden"><label>Flips</label>
         <select id="f-flips"><option value="">–</option>
-          <option>keine</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
+          <option>None</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
         </select></div>
-      <div class="form-group kicker-field-f hidden"><label>Achse</label>
+      <div class="form-group kicker-field-f hidden"><label>Axis</label>
         <select id="f-achse"><option value="">–</option>
           <optgroup label="Off-Axis">
             <option>Cork</option><option>Bio/Misty</option><option>Flat</option><option>Rodeo</option>
           </optgroup>
           <optgroup label="Flache Achsen">
-            <option>Flache Achse</option>
+            <option>Flat Axis</option>
           </optgroup>
           <optgroup label="Klassische Akrobatische Achsen">
             <option>Frontflip</option><option>Backflip</option>
@@ -522,9 +522,9 @@
           <option>2340</option>
           <option>2520</option>
         </select></div>
-      <div class="form-group kicker-field-f hidden"><label>Absprung</label>
+      <div class="form-group kicker-field-f hidden"><label>Take-off</label>
         <select id="f-absprung"><option value="">–</option>
-          <option>Carved</option><option>Innenkanten</option><option>Nose-Butter</option><option>Tail-Butter</option>
+          <option>Carved</option><option>Inside Edge</option><option>Nose-Butter</option><option>Tail-Butter</option>
         </select></div>
       <div class="form-group kicker-field-f hidden"><label>Grab</label>
         <select id="f-grab"><option value="">–</option>
@@ -536,24 +536,24 @@
         <select id="f-bringback"><option value="">–</option>
           <option>180</option><option>360</option><option>540</option>
         </select></div>
-      <div class="form-group kicker-field-f hidden"><label>Style-Element</label>
+      <div class="form-group kicker-field-f hidden"><label>Style Element</label>
         <select id="f-style"><option value="">–</option>
           <option>Tweak</option><option>Poke</option><option>Screamin' Seamen</option>
         </select></div>
 
       <div class="section-divider rail-field-f hidden">Rail</div>
-      <div class="form-group rail-field-f hidden"><label>Rail-Art</label>
+      <div class="form-group rail-field-f hidden"><label>Rail Type</label>
         <select id="f-railart"><option value="">–</option>
           <option>Box</option><option>Tube</option><option>Rail</option><option>Down Tube</option>
           <option>Down Rail</option><option>DFD</option><option>Waterfall</option><option>Ellbow</option>
           <option>Flat-Down</option><option>S-Rail</option><option>C-Rail</option><option>Pole-Jam</option>
         </select></div>
-      <div class="form-group rail-field-f hidden"><label>Slide-Form</label>
+      <div class="form-group rail-field-f hidden"><label>Slide Form</label>
         <select id="f-slideform"><option value="">–</option>
           <option>50-50</option><option>Switch 50-50</option><option>Slide</option>
           <option>Lip On</option><option>Switch Tails On</option><option>Switch Lip On</option>
         </select></div>
-      <div class="form-group rail-field-f hidden"><label>Slide-Variante</label>
+      <div class="form-group rail-field-f hidden"><label>Slide Variant</label>
         <select id="f-slidevar"><option value="">–</option>
           <option>Back Slide</option><option>Front Slide</option>
         </select></div>
@@ -583,72 +583,72 @@
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
         <span style="font-size:18px;">🎓</span>
         <div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:#f59e0b;">TRAINER:INNEN-BEURTEILUNG</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:1px;">Nur für Trainer:innen — nicht durch Athletinnen und Athleten auszufüllen</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:#f59e0b;">COACH ASSESSMENT</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:1px;">For coaches only — not to be filled in by athletes</div>
         </div>
       </div>
 
-      <div class="section-divider" style="margin-top:0;margin-bottom:12px;">Qualitätsranking</div>
+      <div class="section-divider" style="margin-top:0;margin-bottom:12px;">Quality Rating</div>
       <div class="rating-grid">
         <div>
           <label>Setup</label>
           <input type="number" id="f-setup" min="1" max="10" placeholder="1–10" oninput="updateGesamt()">
           <div class="rating-num" id="d-setup">–</div>
-          <div class="rating-sub">Anfahrt & Absprung</div>
+          <div class="rating-sub">Approach & Take-off</div>
         </div>
         <div>
-          <label>Ausführung</label>
+          <label>Execution</label>
           <input type="number" id="f-aus" min="1" max="10" placeholder="1–10" oninput="updateGesamt()">
           <div class="rating-num" id="d-aus">–</div>
           <div class="rating-sub">Air, Grab, Style</div>
         </div>
         <div>
-          <label>Landung</label>
+          <label>Landing</label>
           <input type="number" id="f-land" min="1" max="10" placeholder="1–10" oninput="updateGesamt()">
           <div class="rating-num" id="d-land">–</div>
-          <div class="rating-sub">Sauberkeit, Ride-out</div>
+          <div class="rating-sub">Cleanliness, Ride-out</div>
         </div>
       </div>
       <div class="gesamt-box">
         <div class="gesamt-num" id="d-gesamt">–</div>
-        <div class="gesamt-label">Gesamt-Rating</div>
+        <div class="gesamt-label">Overall Rating</div>
       </div>
 
       <div class="form-grid" style="margin-top:16px;">
         <div class="form-group full">
-          <label>Gelandet?</label>
+          <label>Landed?</label>
           <select id="f-gelandet" style="border-color:#f59e0b44;">
             <option value="">— auswählen —</option>
-            <option value="Ja">✅ Ja</option>
-            <option value="Nein">❌ Nein</option>
+            <option value="Yes">✅ Yes</option>
+            <option value="No">❌ No</option>
           </select>
         </div>
         <div class="form-group full">
-          <label>Kommentar</label>
+          <label>Comment</label>
           <textarea id="f-kommentar" placeholder="Feedback, Beobachtungen..." style="border-color:#f59e0b44;"></textarea>
         </div>
         <div class="form-group full">
-          <label>Trickaufbau</label>
+          <label>Trick Setup</label>
           <input type="text" id="f-trickaufbau" placeholder="z.B. 7 auf 7, 5 auf 7, 10 auf 7" style="border-color:#f59e0b44;">
         </div>
         <div class="form-group full">
-          <label>Videolink</label>
+          <label>Video Link</label>
           <input type="text" id="f-videolink" placeholder="https://..." style="border-color:#f59e0b44;">
         </div>
       </div>
     </div>
 
-    <button class="btn-primary" id="btn-save" onclick="saveTrick()" style="margin-top:16px;">TRICK SPEICHERN</button>
+    <button class="btn-primary" id="btn-save" onclick="saveTrick()" style="margin-top:16px;">SAVE TRICK</button>
   </div>
 
   <!-- SESSION TRICK LIST -->
   <div class="card" style="margin-top:16px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-      <div class="card-title" style="margin:0;">Tricks dieser Session</div>
+      <div class="card-title" style="margin:0;">Session Tricks</div>
       <div style="display:flex;align-items:center;gap:10px;">
         <label style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Filter:</label>
         <select id="sl-filter-athlet" onchange="renderSessionList()" style="max-width:160px;">
-          <option value="">Alle Athlet:innen</option>
+          <option value="">Alle Athletenen</option>
           <optgroup label="Nationalkader (NM)">
               <option>Mathilde Gremaud</option>
               <option>Kim Gubser</option>
@@ -680,7 +680,7 @@
       </div>
     </div>
     <div id="session-list-body">
-      <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Noch keine Tricks in dieser Session.</div>
+      <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No tricks logged in this session yet.</div>
     </div>
   </div>
 </div>
@@ -688,9 +688,9 @@
 <!-- ════════════════════════════════════════════ COCKPIT -->
 <div class="page" id="page-cockpit">
   <div class="athlete-selector">
-    <label>Athlet:in</label>
+    <label>Athlete</label>
     <select id="cp-athlet" onchange="renderCockpit()">
-          <option value="">– auswählen –</option>
+          <option value="">— select —</option>
           <optgroup label="Nationalkader (NM)">
               <option>Mathilde Gremaud</option>
               <option>Kim Gubser</option>
@@ -731,9 +731,9 @@
     <div class="card-title">Trick-Liste</div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Datum</th><th>Disziplin</th><th>Trick</th><th>Quelle</th><th>Rating</th><th>Kommentar</th></tr></thead>
+        <thead><tr><th>Date</th><th>Discipline</th><th>Trick</th><th>Quelle</th><th>Rating</th><th>Comment</th></tr></thead>
         <tbody id="cp-tbody">
-          <tr><td colspan="6"><div class="empty-state"><div class="icon">🏔</div>Athlet:in auswählen</div></td></tr>
+          <tr><td colspan="6"><div class="empty-state"><div class="icon">🏔</div>Athlete auswählen</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -747,7 +747,7 @@
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
     <label style="font-size:16px;color:#3b82f6;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;">ATHLET:IN</label>
     <select id="sb-athlet" style="max-width:200px;border:2px solid #3b82f6;border-radius:8px;" onchange="loadStandort()">
-          <option value="">– auswählen –</option>
+          <option value="">— select —</option>
           <optgroup label="Nationalkader (NM)">
               <option>Mathilde Gremaud</option>
               <option>Kim Gubser</option>
@@ -775,14 +775,14 @@
               <option>Jason Zacharopoulos</option>
             </optgroup>
             </select>
-    <button class="btn-secondary" id="sb-add-btn" style="display:none;" onclick="toggleSbForm()">+ Eintrag hinzufügen</button>
+    <button class="btn-secondary" id="sb-add-btn" style="display:none;" onclick="toggleSbForm()">+ Add Entry</button>
   </div>
 
   <!-- Empty hint -->
   <div id="sb-empty" style="text-align:center;padding:60px;color:var(--muted);">
     <div style="font-size:40px;margin-bottom:16px;">🎯</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:8px;">Standortbestimmung</div>
-    <div style="font-size:13px;">Athlet:in auswählen um die Übersicht zu sehen.</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:8px;">Assessment</div>
+    <div style="font-size:13px;">Athlete auswählen um die Übersicht zu sehen.</div>
   </div>
 
   <!-- Main content (hidden until athlete selected) -->
@@ -797,33 +797,33 @@
       <div class="form-grid">
 
         <div class="form-group">
-          <label>Datum</label>
+          <label>Date</label>
           <input type="date" id="sb-datum">
         </div>
         <div class="form-group full">
-          <label>Disziplin</label>
+          <label>Discipline</label>
           <select id="sb-disziplin" onchange="toggleDisziplin('sb')">
-            <option value="">– auswählen –</option>
-            <option>Kicker</option><option>Rail</option><option>Halfpipe</option><option>Landing Bag</option>
+            <option value="">— select —</option>
+            <option>Jump</option><option>Rail</option><option>Halfpipe</option><option>Landing Bag</option>
           </select>
         </div>
 
-        <div class="section-divider kicker-field-sb hidden">Kicker / Halfpipe</div>
-        <div class="form-group kicker-field-sb hidden"><label>Drehrichtung</label>
+        <div class="section-divider kicker-field-sb hidden">Jump / Halfpipe</div>
+        <div class="form-group kicker-field-sb hidden"><label>Direction</label>
           <select id="sb-drehrichtung"><option value="">–</option>
             <option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option>
           </select></div>
         <div class="form-group kicker-field-sb hidden"><label>Flips</label>
           <select id="sb-flips"><option value="">–</option>
-            <option>keine</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
+            <option>None</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
           </select></div>
-        <div class="form-group kicker-field-sb hidden"><label>Achse</label>
+        <div class="form-group kicker-field-sb hidden"><label>Axis</label>
           <select id="sb-achse"><option value="">–</option>
             <optgroup label="Off-Axis">
               <option>Cork</option><option>Bio/Misty</option><option>Flat</option><option>Rodeo</option>
             </optgroup>
             <optgroup label="Flache Achsen">
-              <option>Flache Achse</option>
+              <option>Flat Axis</option>
             </optgroup>
             <optgroup label="Klassische Akrobatische Achsen">
               <option>Frontflip</option><option>Backflip</option>
@@ -846,9 +846,9 @@
           <option>2340</option>
           <option>2520</option>
           </select></div>
-        <div class="form-group kicker-field-sb hidden"><label>Absprung</label>
+        <div class="form-group kicker-field-sb hidden"><label>Take-off</label>
           <select id="sb-absprung"><option value="">–</option>
-            <option>Carved</option><option>Innenkanten</option><option>Nose-Butter</option><option>Tail-Butter</option>
+            <option>Carved</option><option>Inside Edge</option><option>Nose-Butter</option><option>Tail-Butter</option>
           </select></div>
         <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(mehrere möglich)</span></label>
           <div id="sb-grab-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;">
@@ -878,24 +878,24 @@
           <select id="sb-bringback"><option value="">–</option>
             <option>180</option><option>360</option><option>540</option>
           </select></div>
-        <div class="form-group kicker-field-sb hidden"><label>Style-Element</label>
+        <div class="form-group kicker-field-sb hidden"><label>Style Element</label>
           <select id="sb-style"><option value="">–</option>
             <option>Tweak</option><option>Poke</option><option>Screamin' Seamen</option>
           </select></div>
 
         <div class="section-divider rail-field-sb hidden">Rail</div>
-        <div class="form-group rail-field-sb hidden"><label>Rail-Art</label>
+        <div class="form-group rail-field-sb hidden"><label>Rail Type</label>
           <select id="sb-railart"><option value="">–</option>
             <option>Box</option><option>Tube</option><option>Rail</option><option>Down Tube</option>
             <option>Down Rail</option><option>DFD</option><option>Waterfall</option><option>Ellbow</option>
             <option>Flat-Down</option><option>S-Rail</option><option>C-Rail</option><option>Pole-Jam</option>
           </select></div>
-        <div class="form-group rail-field-sb hidden"><label>Slide-Form</label>
+        <div class="form-group rail-field-sb hidden"><label>Slide Form</label>
           <select id="sb-slideform"><option value="">–</option>
             <option>50-50</option><option>Switch 50-50</option><option>Slide</option>
             <option>Lip On</option><option>Switch Tails On</option><option>Switch Lip On</option>
           </select></div>
-        <div class="form-group rail-field-sb hidden"><label>Slide-Variante</label>
+        <div class="form-group rail-field-sb hidden"><label>Slide Variant</label>
           <select id="sb-slidevar"><option value="">–</option>
             <option>Back Slide</option><option>Front Slide</option>
           </select></div>
@@ -923,8 +923,8 @@
 
       <!-- ATHLETE SAVE BUTTONS -->
       <div class="sb-form-btns">
-        <button class="btn-beherrscht" onclick="sbSave('beherrscht')">✓ BEHERRSCHT</button>
-        <button class="btn-ziel"       onclick="sbSave('ziel')">🎯 ZIEL / IN ARBEIT</button>
+        <button class="btn-mastered" onclick="sbSave('mastered')">✓ MASTERED</button>
+        <button class="btn-goal"       onclick="sbSave('goal')">🎯 GOAL / IN ARBEIT</button>
       </div>
 
       <!-- COACH SECTION -->
@@ -933,7 +933,7 @@
           <span style="font-size:18px;">🎓</span>
           <div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:#f59e0b;">TRAINER:INNENBEURTEILUNG</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:1px;">Nur für Trainer:innen — nicht durch Athletinnen und Athleten auszufüllen</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:1px;">For coaches only — not to be filled in by athletes</div>
           </div>
         </div>
         <div class="form-grid">
@@ -962,10 +962,10 @@
         </div>
       </div>
 
-      <button class="btn-secondary" style="width:100%;margin-top:12px;" onclick="toggleSbForm()">Abbrechen</button>
+      <button class="btn-secondary" style="width:100%;margin-top:12px;" onclick="toggleSbForm()">Cancel</button>
     </div>
 
-    <!-- Overview: Beherrscht | Ziele side by side -->
+    <!-- Overview: Mastered | Ziele side by side -->
     <div class="sb-columns" id="sb-columns"></div>
 
     <!-- Fortschritt / Timeline -->
@@ -983,7 +983,7 @@
   <div class="ev-selector">
     <label style="font-size:16px;color:#3b82f6;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;">ATHLET:IN</label>
     <select id="ev-athlet" style="border:2px solid #3b82f6;border-radius:8px;" onchange="loadEntwicklung()">
-          <option value="">– auswählen –</option>
+          <option value="">— select —</option>
           <optgroup label="Nationalkader (NM)">
               <option>Mathilde Gremaud</option>
               <option>Kim Gubser</option>
@@ -1015,8 +1015,8 @@
 
   <div id="ev-empty" style="text-align:center;padding:60px;color:var(--muted);">
     <div style="font-size:40px;margin-bottom:16px;">📊</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:8px;">Entwicklung</div>
-    <div style="font-size:13px;">Athlet:in auswählen um die Auswertung zu sehen.</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:8px;">Development</div>
+    <div style="font-size:13px;">Athlete auswählen um die Auswertung zu sehen.</div>
   </div>
 
   <div id="ev-main" style="display:none;">
@@ -1066,7 +1066,7 @@
     <!-- Row 5: Repertoire-Entwicklung über Zeit -->
     <div class="chart-grid single">
       <div class="chart-card">
-        <div class="chart-title">📅 Repertoire-Entwicklung über Zeit <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(Standortbestimmung — nur beherrschte Tricks)</span></div>
+        <div class="chart-title">📅 Repertoire-Entwicklung über Zeit <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(Assessment — nur masterede Tricks)</span></div>
         <div id="ev-verlauf"></div>
       </div>
     </div>
@@ -1081,7 +1081,7 @@
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
       <label style="font-size:16px;color:#f59e0b;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;">ATHLET:IN</label>
       <select id="tu-athlet" style="max-width:220px;" onchange="loadTU()">
-        <option value="">– Athlet:in wählen –</option>
+        <option value="">– Athlete wählen –</option>
         <optgroup label="Nationalkader (NM)">
               <option>Mathilde Gremaud</option>
               <option>Kim Gubser</option>
@@ -1115,12 +1115,12 @@
   <div class="card" style="margin-bottom:20px;">
     <div class="card-title" style="color:#f59e0b;font-size:22px;letter-spacing:3px;">NEUES TRAINER:INNENURTEIL</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-      <div class="form-group"><label>Trainer:in</label><input type="text" id="tu-coach" placeholder="Name Coach"></div>
-      <div class="form-group"><label>Datum</label><input type="date" id="tu-datum"></div>
+      <div class="form-group"><label>Coach</label><input type="text" id="tu-coach" placeholder="Name Coach"></div>
+      <div class="form-group"><label>Date</label><input type="date" id="tu-datum"></div>
     </div>
     <div class="tu-grid">
       <div class="tu-card">
-        <div class="tu-cat">Lernkurve</div>
+        <div class="tu-cat">Learning Curve</div>
         <div class="tu-desc">Lerngeschwindigkeit, Aufnahmefähigkeit neuer Tricks und Korrekturen.</div>
         <div class="tu-slider-wrap"><input type="range" class="tu-slider" id="tu-lernkurve" min="0" max="10" step="0.5" value="5" oninput="updateTUVal('lernkurve')"><div class="tu-val" id="tuv-lernkurve">5</div></div>
         <div class="tu-scale"><span>0</span><span>5</span><span>10</span></div>
@@ -1132,8 +1132,8 @@
         <div class="tu-scale"><span>0</span><span>5</span><span>10</span></div>
       </div>
       <div class="tu-card">
-        <div class="tu-cat">Technikniveau Kicker</div>
-        <div class="tu-desc">Technisches Niveau auf dem Kicker im internationalen Vergleich.</div>
+        <div class="tu-cat">Technikniveau Jump</div>
+        <div class="tu-desc">Technisches Niveau auf dem Jump im internationalen Vergleich.</div>
         <div class="tu-slider-wrap"><input type="range" class="tu-slider" id="tu-kicker" min="0" max="10" step="0.5" value="5" oninput="updateTUVal('kicker')"><div class="tu-val" id="tuv-kicker">5</div></div>
         <div class="tu-scale"><span>0</span><span>5</span><span>10</span></div>
       </div>
@@ -1150,14 +1150,14 @@
         <div class="tu-scale"><span>0</span><span>5</span><span>10</span></div>
       </div>
     </div>
-    <div class="form-group" style="margin-bottom:16px;"><label>Notiz</label><textarea id="tu-notiz" rows="2" placeholder="Ergänzende Bemerkungen..."></textarea></div>
-    <button onclick="saveTU()" style="width:100%;padding:18px;border:none;border-radius:12px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#000;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;cursor:pointer;box-shadow:0 4px 20px rgba(245,158,11,.35);">📋 URTEIL SPEICHERN</button>
+    <div class="form-group" style="margin-bottom:16px;"><label>Note</label><textarea id="tu-notiz" rows="2" placeholder="Ergänzende Bemerkungen..."></textarea></div>
+    <button onclick="saveTU()" style="width:100%;padding:18px;border:none;border-radius:12px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#000;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;cursor:pointer;box-shadow:0 4px 20px rgba(245,158,11,.35);">📋 URTEIL SAVE</button>
   </div>
 
   <div class="tu-history">
     <div class="tu-history-title">BISHERIGE URTEILE</div>
     <div class="tu-avg-wrap" id="tu-avgs"></div>
-    <div id="tu-list"><div style="color:#64748b;font-size:13px;">Athlet:in auswählen.</div></div>
+    <div id="tu-list"><div style="color:#64748b;font-size:13px;">Athlete auswählen.</div></div>
   </div>
 </div>
 
@@ -1173,10 +1173,10 @@
       </div>
     </div>
 
-    <!-- Ranking: Beherrschte Tricks -->
+    <!-- Ranking: Masterede Tricks -->
     <div style="margin-bottom:20px;">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Beherrschte Tricks pro Athlet:in (Standortbestimmung)</div>
-      <div id="rank-beherrscht" style="display:flex;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Masterede Tricks pro Athlete (Assessment)</div>
+      <div id="rank-mastered" style="display:flex;flex-wrap:wrap;gap:8px;">
         <div class="loading"><span class="spinner"></span></div>
       </div>
     </div>
@@ -1206,7 +1206,7 @@
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <select id="db-filter-athlet" onchange="renderDBTable()" style="max-width:160px;">
-          <option value="">Alle Athlet:innen</option>
+          <option value="">Alle Athletenen</option>
           <optgroup label="Nationalkader (NM)">
               <option>Mathilde Gremaud</option>
               <option>Kim Gubser</option>
@@ -1237,7 +1237,7 @@
         <select id="db-filter-quelle" onchange="renderDBTable()" style="max-width:160px;">
           <option value="">Session + Standort</option>
           <option value="session">Nur Session</option>
-          <option value="standort">Nur Standortbestimmung</option>
+          <option value="standort">Nur Assessment</option>
         </select>
         <button class="btn-secondary" onclick="downloadExcel()" style="white-space:nowrap;">⬇ Excel</button>
       </div>
@@ -1245,11 +1245,11 @@
     <div class="table-wrap">
       <table>
         <thead><tr>
-          <th>Athlet:in</th><th>Quelle</th><th>Datum</th><th>Disziplin</th><th>Trick</th>
-          <th>Setup</th><th>Ausf.</th><th>Land.</th><th>Gesamt</th><th>Kommentar</th><th></th>
+          <th>Athlete</th><th>Quelle</th><th>Date</th><th>Discipline</th><th>Trick</th>
+          <th>Setup</th><th>Ausf.</th><th>Land.</th><th>Gesamt</th><th>Comment</th><th></th>
         </tr></thead>
         <tbody id="db-tbody">
-          <tr><td colspan="11"><div class="loading"><span class="spinner"></span>Laden...</div></td></tr>
+          <tr><td colspan="11"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -1278,8 +1278,8 @@ function showPage(id, btn) {
 // ── DISZIPLIN TOGGLE (prefix = 'f' or 'sb') ──────────────────────
 function toggleDisziplin(prefix) {
   const v = document.getElementById(prefix + '-disziplin').value;
-  const isKicker = v === 'Kicker' || v === 'Halfpipe' || v === 'Landing Bag';
-  document.querySelectorAll('.kicker-field-' + prefix).forEach(el => el.classList.toggle('hidden', !isKicker));
+  const isJump = v === 'Jump' || v === 'Halfpipe' || v === 'Landing Bag';
+  document.querySelectorAll('.kicker-field-' + prefix).forEach(el => el.classList.toggle('hidden', !isJump));
   document.querySelectorAll('.rail-field-' + prefix).forEach(el => el.classList.toggle('hidden', v !== 'Rail'));
 }
 
@@ -1349,10 +1349,10 @@ async function saveTrick() {
   const athlet    = val('f-athlet');
   const datum     = val('f-datum');
   const disziplin = val('f-disziplin');
-  if (!athlet || !datum || !disziplin) { showToast('Bitte Athlet:in, Datum und Disziplin auswählen!', 'error'); return; }
+  if (!athlet || !datum || !disziplin) { showToast('Bitte Athlete, Datum und Disziplin auswählen!', 'error'); return; }
 
   const btn = document.getElementById('btn-save');
-  btn.disabled = true; btn.textContent = 'SPEICHERN...';
+  btn.disabled = true; btn.textContent = 'SAVE...';
 
   const setup = parseFloat(document.getElementById('f-setup').value) || null;
   const aus   = parseFloat(document.getElementById('f-aus').value)   || null;
@@ -1369,8 +1369,8 @@ async function saveTrick() {
     gelandet: val('f-gelandet') || null,
   });
 
-  btn.disabled = false; btn.textContent = 'TRICK SPEICHERN';
-  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  btn.disabled = false; btn.textContent = 'SAVE TRICK';
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
   // Add to session list
   sessionTricks.unshift({
     athlet, datum, typ: val('f-typ'), disziplin,
@@ -1385,7 +1385,7 @@ async function saveTrick() {
   if (filterEl && athlet) filterEl.value = athlet;
   renderSessionList();
 
-  showToast('\u2713 Trick gespeichert!', 'success');
+  showToast('\u2713 Trick saved!', 'success');
   resetForm();
 }
 
@@ -1394,7 +1394,7 @@ let sessionTricks = [];
 
 async function loadSessionTricks() {
   const { data, error } = await db.from('tricks').select('*').order('datum', { ascending: false }).order('id', { ascending: false }).limit(100);
-  if (error) { showToast('Fehler beim Laden: ' + error.message, 'error'); return; }
+  if (error) { showToast('Error loading data: ' + error.message, 'error'); return; }
   sessionTricks = data || [];
   renderSessionList();
 }
@@ -1543,7 +1543,7 @@ function ratingPill(r) {
   return `<span class="rating-pill ${cls}">${r}</span>`;
 }
 function badge(d) {
-  const cls = d==='Kicker'||d==='Landing Bag'?'badge-kicker':d==='Rail'?'badge-rail':'badge-halfpipe';
+  const cls = d==='Jump'||d==='Landing Bag'?'badge-kicker':d==='Rail'?'badge-rail':'badge-halfpipe';
   return `<span class="badge ${cls}">${d||'?'}</span>`;
 }
 function avg(arr) {
@@ -1565,18 +1565,18 @@ async function renderCockpit() {
   const athlet = document.getElementById('cp-athlet').value;
   const tbody = document.getElementById('cp-tbody');
   if (!athlet) {
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">🏔</div>Athlet:in auswählen</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">🏔</div>Athlete auswählen</div></td></tr>';
     ['s-total','s-gesamt','s-setup','s-aus','s-land','s-best'].forEach(id => document.getElementById(id).textContent = '–');
     return;
   }
-  tbody.innerHTML = '<tr><td colspan="6"><div class="loading"><span class="spinner"></span>Laden...</div></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr>';
 
   const [tricksRes, standortRes] = await Promise.all([
     db.from('tricks').select('*').eq('athlet', athlet).order('datum', { ascending: false }),
     db.from('standort').select('*').eq('athlet', athlet),
   ]);
 
-  if (tricksRes.error) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--danger);padding:20px;">Fehler beim Laden</td></tr>'; return; }
+  if (tricksRes.error) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--danger);padding:20px;">Error loading data</td></tr>'; return; }
 
   const tricks = tricksRes.data || [];
   const standortEntries = standortRes.data || [];
@@ -1602,14 +1602,14 @@ async function renderCockpit() {
     kommentar: t.kommentar,
   }));
 
-  // Rows from Standortbestimmung that are NOT already in training
+  // Rows from Assessment that are NOT already in training
   const standortRows = standortEntries
     .filter(e => !trainedLabels.has(e.trick_label))
     .map(e => ({
       datum: null,
       disziplin: e.disziplin,
       label: e.trick_label,
-      quelle: e.status, // 'beherrscht' | 'ziel' | 'erreicht'
+      quelle: e.status, // 'mastered' | 'goal' | 'erreicht'
       gesamt: null,
       kommentar: e.notiz,
     }));
@@ -1623,8 +1623,8 @@ async function renderCockpit() {
 
   const quelleTag = (q) => {
     if (q === 'training') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#1e3a5f;color:#60a5fa;text-transform:uppercase;letter-spacing:.5px;">Training</span>';
-    if (q === 'beherrscht') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#052e1a;color:#10b981;text-transform:uppercase;letter-spacing:.5px;">Standort ✓</span>';
-    if (q === 'ziel') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#1a1a05;color:#f59e0b;text-transform:uppercase;letter-spacing:.5px;">Standort 🎯</span>';
+    if (q === 'mastered') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#052e1a;color:#10b981;text-transform:uppercase;letter-spacing:.5px;">Standort ✓</span>';
+    if (q === 'goal') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#1a1a05;color:#f59e0b;text-transform:uppercase;letter-spacing:.5px;">Standort 🎯</span>';
     if (q === 'erreicht') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#0f1f38;color:#60a5fa;text-transform:uppercase;letter-spacing:.5px;">Standort ★</span>';
     return '–';
   };
@@ -1646,10 +1646,10 @@ let dbAllStandort = [];  // standort tricks
 
 async function loadDB() {
   // Show spinners
-  ['rank-beherrscht','rank-rotation','rank-balance'].forEach(id => {
+  ['rank-mastered','rank-rotation','rank-balance'].forEach(id => {
     document.getElementById(id).innerHTML = '<div class="loading"><span class="spinner"></span></div>';
   });
-  document.getElementById('db-tbody').innerHTML = '<tr><td colspan="11"><div class="loading"><span class="spinner"></span>Laden...</div></td></tr>';
+  document.getElementById('db-tbody').innerHTML = '<tr><td colspan="11"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr>';
 
   const [{ data: tricks, error: e1 }, { data: standort, error: e2 }] = await Promise.all([
     db.from('tricks').select('*').order('datum', { ascending: false }),
@@ -1657,7 +1657,7 @@ async function loadDB() {
   ]);
 
   if (e1 || e2) {
-    document.getElementById('db-tbody').innerHTML = '<tr><td colspan="11" style="color:var(--danger);padding:20px;">Fehler beim Laden</td></tr>';
+    document.getElementById('db-tbody').innerHTML = '<tr><td colspan="11" style="color:var(--danger);padding:20px;">Error loading data</td></tr>';
     return;
   }
 
@@ -1669,14 +1669,14 @@ async function loadDB() {
 }
 
 function renderDBRankings() {
-  // ── 1. Beherrschte Tricks pro Athlet:in (from standort, status=beherrscht) ──
+  // ── 1. Masterede Tricks pro Athlete (from standort, status=mastered) ──
   const beherrschMap = {};
-  dbAllStandort.filter(t => t.status === 'beherrscht').forEach(t => {
+  dbAllStandort.filter(t => t.status === 'mastered').forEach(t => {
     beherrschMap[t.athlet] = (beherrschMap[t.athlet] || 0) + 1;
   });
   const sorted = Object.entries(beherrschMap).sort((a,b) => b[1]-a[1]);
   const maxB = sorted[0]?.[1] || 1;
-  document.getElementById('rank-beherrscht').innerHTML = sorted.length ? sorted.map(([athlet, count], i) => {
+  document.getElementById('rank-mastered').innerHTML = sorted.length ? sorted.map(([athlet, count], i) => {
     const pct = Math.round(count/maxB*100);
     const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
     return '<div style="flex:1;min-width:140px;max-width:200px;">'
@@ -1685,7 +1685,7 @@ function renderDBRankings() {
       + '<span style="color:var(--accent);font-weight:700;">' + count + '</span></div>'
       + '<div style="background:var(--border);border-radius:4px;height:6px;">'
       + '<div style="background:var(--accent);width:' + pct + '%;height:6px;border-radius:4px;transition:width .4s;"></div></div></div>';
-  }).join('') : '<div style="color:var(--muted);font-size:13px;">Noch keine Standortbestimmungen erfasst.</div>';
+  }).join('') : '<div style="color:var(--muted);font-size:13px;">Noch keine Assessmenten erfasst.</div>';
 
   // ── 2. Höchste Rotation pro Drehrichtung (from session tricks) ──
   // Combine session + standort for rotation ranking
@@ -1708,8 +1708,8 @@ function renderDBRankings() {
   }
   // Also normalize rotation: strip non-numeric suffix for comparison, keep original for display
   const dirMap = { 'Forward Left': {}, 'Forward Right': {}, 'Switch Left': {}, 'Switch Right': {} };
-  // Only include standort entries with status 'beherrscht' in rotation ranking
-  allForRot.filter(t => t.drehrichtung && t.rotation && t.athlet && (t._quelle === 'session' || t.status === 'beherrscht')).forEach(t => {
+  // Only include standort entries with status 'mastered' in rotation ranking
+  allForRot.filter(t => t.drehrichtung && t.rotation && t.athlet && (t._quelle === 'session' || t.status === 'mastered')).forEach(t => {
     const dir = normalizeDir(t.drehrichtung);
     if (!dir) return;
     const curDeg  = extractDeg(t.rotation);
@@ -1731,9 +1731,9 @@ function renderDBRankings() {
       + '</div>';
   }).join('');
 
-  // ── 3. Forward vs Switch Balance per Athlet:in ──
+  // ── 3. Forward vs Switch Balance per Athlete ──
   const balMap = {};
-  allForRot.filter(t => t.drehrichtung && t.athlet && (t._quelle === 'session' || t.status === 'beherrscht')).forEach(t => {
+  allForRot.filter(t => t.drehrichtung && t.athlet && (t._quelle === 'session' || t.status === 'mastered')).forEach(t => {
     if (!balMap[t.athlet]) balMap[t.athlet] = { fwd: 0, sw: 0 };
     const nd = normalizeDir(t.drehrichtung);
     if (nd && nd.startsWith('Forward')) balMap[t.athlet].fwd++;
@@ -1781,7 +1781,7 @@ function renderDBTable() {
       ? '<span style="font-size:10px;background:#1e3a5f;color:#60a5fa;border-radius:4px;padding:2px 6px;font-weight:600;">STANDORT</span>'
       : '<span style="font-size:10px;background:#1a3320;color:#34d399;border-radius:4px;padding:2px 6px;font-weight:600;">SESSION</span>';
     const statusBadge = isStandort && t.status
-      ? (t.status === 'beherrscht'
+      ? (t.status === 'mastered'
           ? ' <span style="font-size:10px;background:#14532d;color:#4ade80;border-radius:4px;padding:1px 5px;">✓</span>'
           : ' <span style="font-size:10px;background:#431407;color:#fb923c;border-radius:4px;padding:1px 5px;">🎯</span>')
       : '';
@@ -1844,14 +1844,14 @@ function downloadRanking() {
 
   // Build per-athlete stats
   const stats = {};
-  athletes.forEach(a => { stats[a] = { beherrscht:0, ziel:0, session:0, fwd:0, sw:0, maxRot:{} }; dirs.forEach(d => stats[a].maxRot[d]=-1); });
+  athletes.forEach(a => { stats[a] = { mastered:0, goal:0, session:0, fwd:0, sw:0, maxRot:{} }; dirs.forEach(d => stats[a].maxRot[d]=-1); });
 
   dbAllStandort.forEach(t => {
     if (!t.athlet||!stats[t.athlet]) return;
-    if (t.status==='beherrscht') stats[t.athlet].beherrscht++;
-    else if (t.status==='ziel')  stats[t.athlet].ziel++;
-    // Only beherrschte Tricks count for rotation + balance
-    if (t.status !== 'beherrscht') return;
+    if (t.status==='mastered') stats[t.athlet].mastered++;
+    else if (t.status==='goal')  stats[t.athlet].goal++;
+    // Only masterede Tricks count for rotation + balance
+    if (t.status !== 'mastered') return;
     const dir = nDir(t.drehrichtung);
     if (dir && t.rotation) { const deg=exDeg(t.rotation); if(deg>stats[t.athlet].maxRot[dir]) stats[t.athlet].maxRot[dir]=deg; }
     if (dir) { if(dir.startsWith('Forward')) stats[t.athlet].fwd++; else stats[t.athlet].sw++; }
@@ -1866,21 +1866,21 @@ function downloadRanking() {
 
   const wb = XLSX.utils.book_new();
 
-  // ── SHEET 1: Beherrschte Tricks Ranking ──────────────────────────
+  // ── SHEET 1: Masterede Tricks Ranking ──────────────────────────
   const s1 = [
-    ['Rang','Athlet:in','Beherrschte Tricks','Ziele / In Arbeit','Total Standort-Einträge'],
+    ['Rang','Athlete','Masterede Tricks','Ziele / In Arbeit','Total Standort-Einträge'],
   ];
-  [...athletes].sort((a,b)=>stats[b].beherrscht-stats[a].beherrscht).forEach((a,i)=>{
+  [...athletes].sort((a,b)=>stats[b].mastered-stats[a].mastered).forEach((a,i)=>{
     const s=stats[a];
-    s1.push([i+1, a, s.beherrscht, s.ziel, s.beherrscht+s.ziel]);
+    s1.push([i+1, a, s.mastered, s.goal, s.mastered+s.goal]);
   });
   const ws1 = XLSX.utils.aoa_to_sheet(s1);
   ws1['!cols'] = [{wch:6},{wch:16},{wch:22},{wch:22},{wch:24}];
-  XLSX.utils.book_append_sheet(wb, ws1, '1 Beherrschte Tricks');
+  XLSX.utils.book_append_sheet(wb, ws1, '1 Masterede Tricks');
 
   // ── SHEET 2: Höchste Rotation pro Drehrichtung ───────────────────
   const s2 = [
-    ['Rang','Athlet:in','Forward Left','Forward Right','Switch Left','Switch Right','Höchste insgesamt'],
+    ['Rang','Athlete','Forward Left','Forward Right','Switch Left','Switch Right','Höchste insgesamt'],
   ];
   [...athletes].sort((a,b)=>{
     const maxA = Math.max(...dirs.map(d=>stats[a].maxRot[d]));
@@ -1898,7 +1898,7 @@ function downloadRanking() {
 
   // ── SHEET 3: Forward vs Switch Balance ───────────────────────────
   const s3 = [
-    ['Rang (Ausgewogenheit)','Athlet:in','Forward Tricks','Switch Tricks','Total','Forward %','Switch %','Balance-Score (100=perfekt)'],
+    ['Rang (Ausgewogenheit)','Athlete','Forward Tricks','Switch Tricks','Total','Forward %','Switch %','Balance-Score (100=perfekt)'],
   ];
   // Balance score: 100 = perfect 50/50, 0 = all one side
   [...athletes].sort((a,b)=>{
@@ -1920,11 +1920,11 @@ function downloadRanking() {
   XLSX.utils.book_append_sheet(wb, ws3, '3 Forward vs Switch');
 
   // ── SHEET 4: Alle Einträge ────────────────────────────────────────
-  const s4 = [['Athlet:in','Quelle','Status','Datum','Disziplin','Drehrichtung','Rotation','Grab','Bring Back','Setup','Ausführung','Landung','Gesamt','Kommentar']];
+  const s4 = [['Athlete','Quelle','Status','Datum','Disziplin','Drehrichtung','Rotation','Grab','Bring Back','Setup','Ausführung','Landung','Gesamt','Kommentar']];
   const allSorted = [...dbAllTricks,...dbAllStandort].sort((a,b)=>(a.athlet||'').localeCompare(b.athlet||''));
   allSorted.forEach(t=>{
     s4.push([
-      t.athlet||'', t._quelle==='standort'?'Standortbestimmung':'Session',
+      t.athlet||'', t._quelle==='standort'?'Assessment':'Session',
       t.status||'', t.datum||'', t.disziplin||'',
       nDir(t.drehrichtung)||t.drehrichtung||'',
       t.rotation||'', t.grab||'', t.bringback||'',
@@ -1955,13 +1955,13 @@ function downloadExcel() {
 
   if (!all.length) { showToast('Keine Daten zum Exportieren', 'error'); return; }
 
-  const headers = ['Athlet:in','Quelle','Status','Datum','Disziplin','Drehrichtung','Rotation','Flips',
+  const headers = ['Athlete','Quelle','Status','Datum','Disziplin','Drehrichtung','Rotation','Flips',
     'Grab','Bring Back','Style','Rail Art','Slide Form','Slide Var','In-Spin','Swap','Out-Spin',
     'Setup','Ausführung','Landung','Gesamt','Kommentar','Trickaufbau','Videolink'];
 
   const rows = all.map(t => [
     t.athlet || '',
-    t._quelle === 'standort' ? 'Standortbestimmung' : 'Session',
+    t._quelle === 'standort' ? 'Assessment' : 'Session',
     t.status || '',
     t.datum || '',
     t.disziplin || '',
@@ -2036,7 +2036,7 @@ async function loadStandort() {
   addBtn.style.display = 'inline-block';
 
   // Show loading
-  document.getElementById('sb-columns').innerHTML = '<div class="loading" style="grid-column:1/-1"><span class="spinner"></span>Laden...</div>';
+  document.getElementById('sb-columns').innerHTML = '<div class="loading" style="grid-column:1/-1"><span class="spinner"></span>Loading...</div>';
 
   // Load standort entries + tricks from DB in parallel
   const [sbRes, tricksRes] = await Promise.all([
@@ -2046,17 +2046,17 @@ async function loadStandort() {
 
   if (sbRes.error || tricksRes.error) {
     const errMsg = (sbRes.error || tricksRes.error)?.message || 'Unbekannt';
-    document.getElementById('sb-columns').innerHTML = '<div style="color:var(--danger);padding:20px;grid-column:1/-1">Fehler: ' + errMsg + '</div>';
+    document.getElementById('sb-columns').innerHTML = '<div style="color:var(--danger);padding:20px;grid-column:1/-1">Error: ' + errMsg + '</div>';
     return;
   }
 
   sbData = sbRes.data || [];
 
-  // Auto-check: if a "ziel" entry now appears in tricks DB → mark as erreicht
+  // Auto-check: if a "goal" entry now appears in tricks DB → mark as erreicht
   const dbTrickLabels = new Set((tricksRes.data || []).map(t => trickDesc(t)));
 
   const toMarkReached = sbData.filter(e =>
-    e.status === 'ziel' && dbTrickLabels.has(e.trick_label)
+    e.status === 'goal' && dbTrickLabels.has(e.trick_label)
   );
   for (const e of toMarkReached) {
     await db.from('standort').update({ status: 'erreicht', updated_at: new Date().toISOString() }).eq('id', e.id);
@@ -2068,17 +2068,17 @@ async function loadStandort() {
 
 function renderStandort() {
   // Stats
-  const beherrscht = sbData.filter(e => e.status === 'beherrscht').length;
-  const ziele      = sbData.filter(e => e.status === 'ziel').length;
+  const mastered = sbData.filter(e => e.status === 'mastered').length;
+  const goale      = sbData.filter(e => e.status === 'goal').length;
   const erreicht   = sbData.filter(e => e.status === 'erreicht').length;
 
   document.getElementById('sb-overview').innerHTML = `
     <div class="sb-ov-card">
-      <div class="sb-ov-num" style="color:var(--success);">${beherrscht}</div>
-      <div class="sb-ov-label">Beherrscht</div>
+      <div class="sb-ov-num" style="color:var(--success);">${mastered}</div>
+      <div class="sb-ov-label">Mastered</div>
     </div>
     <div class="sb-ov-card">
-      <div class="sb-ov-num" style="color:var(--warn);">${ziele}</div>
+      <div class="sb-ov-num" style="color:var(--warn);">${goale}</div>
       <div class="sb-ov-label">Ziele offen</div>
     </div>
     <div class="sb-ov-card">
@@ -2087,9 +2087,9 @@ function renderStandort() {
     </div>
   `;
 
-  // Two columns: Beherrscht | Ziele
-  const bList = sbData.filter(e => e.status === 'beherrscht');
-  const zList = sbData.filter(e => e.status === 'ziel');
+  // Two columns: Mastered | Ziele
+  const bList = sbData.filter(e => e.status === 'mastered');
+  const zList = sbData.filter(e => e.status === 'goal');
 
   function renderList(items, emptyMsg) {
     if (!items.length) return `<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center;">${emptyMsg}</div>`;
@@ -2112,12 +2112,12 @@ function renderStandort() {
 
   document.getElementById('sb-columns').innerHTML = `
     <div>
-      <div class="sb-col-header beherrscht">✅ BEHERRSCHT <span style="opacity:.6;font-size:13px;">(${bList.length})</span></div>
-      <div class="sb-col-body beherrscht">${renderList(bList, 'Noch keine Einträge')}</div>
+      <div class="sb-col-header mastered">✅ MASTERED <span style="opacity:.6;font-size:13px;">(${bList.length})</span></div>
+      <div class="sb-col-body mastered">${renderList(bList, 'Noch keine Einträge')}</div>
     </div>
     <div>
-      <div class="sb-col-header ziel">🎯 ZIELE / IN ARBEIT <span style="opacity:.6;font-size:13px;">(${zList.length})</span></div>
-      <div class="sb-col-body ziel">${renderList(zList, 'Noch keine Ziele')}</div>
+      <div class="sb-col-header goal">🎯 GOALE / IN ARBEIT <span style="opacity:.6;font-size:13px;">(${zList.length})</span></div>
+      <div class="sb-col-body goal">${renderList(zList, 'Noch keine Ziele')}</div>
     </div>
   `;
 
@@ -2148,7 +2148,7 @@ async function sbSave(status) {
   if (!fields.disziplin) { showToast('Bitte Disziplin auswählen', 'error'); return; }
 
   const trickLabel = trickDesc(null, 'sb');
-  if (!trickLabel || trickLabel === '–') { showToast('Bitte mindestens ein Trick-Feld ausfüllen', 'error'); return; }
+  if (!trickLabel || trickLabel === '–') { showToast('Please fill in at least one trick field', 'error'); return; }
 
   const notiz = val('sb-notiz');
 
@@ -2169,9 +2169,9 @@ async function sbSave(status) {
     coach_video: document.getElementById('sb-coach-video').value || null,
   }).select();
 
-  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
 
-  showToast(status === 'beherrscht' ? '✓ Als beherrscht gespeichert!' : '🎯 Als Ziel gespeichert!', 'success');
+  showToast(status === 'mastered' ? '✓ Als mastered gespeichert!' : '🎯 Saved as goal!', 'success');
 
   // Reset sb form fields
   ['sb-disziplin','sb-drehrichtung','sb-flips','sb-achse','sb-rotation','sb-absprung',
@@ -2187,12 +2187,12 @@ async function sbSave(status) {
 }
 
 async function deleteSbEntry(id) {
-  if (!confirm('Eintrag entfernen?')) return;
+  if (!confirm('Remove entry?')) return;
   const { error } = await db.from('standort').delete().eq('id', id);
   if (error) { showToast('Fehler', 'error'); return; }
   sbData = sbData.filter(e => e.id !== id);
   renderStandort();
-  showToast('Entfernt', 'success');
+  showToast('Removed', 'success');
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -2219,13 +2219,13 @@ document.addEventListener('DOMContentLoaded', function() {
 function checkDBPassword(btn, page) {
   page = page || 'datenbank';
   if (dbUnlocked) { showPage(page, btn); return; }
-  const pw = prompt('Nur für Trainer:innen — Passwort eingeben:');
+  const pw = prompt('Nur für Trainer:innen — Enter password:');
   if (pw === null) return;
   if (pw === 'Coach') {
     dbUnlocked = true;
     showPage(page, btn);
   } else {
-    alert('Falsches Passwort.');
+    alert('Incorrect password.');
   }
 }
 
@@ -2236,7 +2236,7 @@ async function loadEntwicklung() {
   if (!athlet) { empty.style.display='block'; main.style.display='none'; return; }
   empty.style.display = 'none';
   main.style.display  = 'block';
-  main.innerHTML = '<div class="loading" style="padding:60px;text-align:center;"><span class="spinner"></span>Laden...</div>';
+  main.innerHTML = '<div class="loading" style="padding:60px;text-align:center;"><span class="spinner"></span>Loading...</div>';
 
   const [tricksRes, standortRes] = await Promise.all([
     db.from('tricks').select('*').eq('athlet', athlet).order('datum', { ascending: true }),
@@ -2247,7 +2247,7 @@ async function loadEntwicklung() {
   const standort = standortRes.data || [];
 
   if (!tricks.length && !standort.length) {
-    main.innerHTML = '<div class="empty-state"><div class="icon">📋</div>Noch keine Einträge für diese Athlet:in</div>';
+    main.innerHTML = '<div class="empty-state"><div class="icon">📋</div>Noch keine Einträge für diese Athlete</div>';
     return;
   }
 
@@ -2258,7 +2258,7 @@ async function loadEntwicklung() {
         <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#3b82f6;"></span> Training (${tricks.length})
       </div>
       <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);">
-        <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#f59e0b;"></span> Standortbestimmung (${standort.length})
+        <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#f59e0b;"></span> Assessment (${standort.length})
       </div>
     </div>
     <div class="chart-grid">
@@ -2301,7 +2301,7 @@ async function loadEntwicklung() {
     </div>
     <div class="chart-grid single">
       <div class="chart-card">
-        <div class="chart-title">📅 Repertoire-Entwicklung über Zeit <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(Standortbestimmung — nur beherrschte Tricks)</span></div>
+        <div class="chart-title">📅 Repertoire-Entwicklung über Zeit <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;">(Assessment — nur masterede Tricks)</span></div>
         <div id="ev-verlauf"></div>
       </div>
     </div>`;
@@ -2310,7 +2310,7 @@ async function loadEntwicklung() {
   // standort has: drehrichtung, rotation, achse, grab, flips, disziplin, status
   // We tag each entry with its source
   const tTagged = tricks.map(t  => ({ ...t,  _src: 'training' }));
-  const sTagged = standort.filter(s => s.status === 'beherrscht' || s.status === 'erreicht').map(s => ({
+  const sTagged = standort.filter(s => s.status === 'mastered' || s.status === 'erreicht').map(s => ({
     drehrichtung: s.drehrichtung, rotation: s.rotation, achse: s.achse,
     grab: s.grab, flips: s.flips, disziplin: s.disziplin,
     gesamt: null, datum: null,
@@ -2456,12 +2456,12 @@ async function loadEntwicklung() {
   // ── 8. Repertoire-Entwicklung über Zeit ──────────────────────────
   const verlaufEl = document.getElementById('ev-verlauf');
   if (verlaufEl) {
-    // Only beherrscht/erreicht standort entries with datum
+    // Only mastered/erreicht standort entries with datum
     const sbMitDatum = standort.filter(s =>
-      (s.status === 'beherrscht' || s.status === 'erreicht') && (s.datum || s.created_at)
+      (s.status === 'mastered' || s.status === 'erreicht') && (s.datum || s.created_at)
     );
     if (!sbMitDatum.length) {
-      verlaufEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Noch keine beherrschten Tricks in der Standortbestimmung erfasst.</div>';
+      verlaufEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Noch keine mastereden Tricks in der Assessment erfasst.</div>';
     } else {
       // Group by date
       const byDate = {};
@@ -2496,7 +2496,7 @@ async function loadEntwicklung() {
         return `<div style="padding:12px 0;${borderTop}">
           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
             <span style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:#3b82f6;">${dateStr}</span>
-            <span style="font-size:13px;color:var(--text);font-weight:600;">${r.total} Tricks beherrscht</span>
+            <span style="font-size:13px;color:var(--text);font-weight:600;">${r.total} Tricks mastered</span>
             ${newBadge}
           </div>
           ${newList}
@@ -2791,7 +2791,7 @@ async function saveTU() {
   const athlet=document.getElementById('tu-athlet').value;
   const coach=document.getElementById('tu-coach').value;
   const datum=document.getElementById('tu-datum').value;
-  if(!athlet){showToast('Bitte Athlet:in auswählen','error');return;}
+  if(!athlet){showToast('Bitte Athlete auswählen','error');return;}
   if(!coach){showToast('Bitte Coach-Name eingeben','error');return;}
   if(!datum){showToast('Bitte Datum wählen','error');return;}
   const {error}=await db.from('trainerurteil').insert({
@@ -2803,8 +2803,8 @@ async function saveTU() {
     mental:parseFloat(document.getElementById('tu-mental').value),
     notiz:document.getElementById('tu-notiz').value,
   });
-  if(error){showToast('Fehler: '+error.message,'error');return;}
-  showToast('Urteil gespeichert!');
+  if(error){showToast('Error: '+error.message,'error');return;}
+  showToast('Review saved!');
   ['lernkurve','rail','kicker','halfpipe','mental'].forEach(id=>{
     document.getElementById('tu-'+id).value=5;
     document.getElementById('tuv-'+id).textContent='5';
@@ -2817,14 +2817,14 @@ async function loadTU() {
   const athlet=document.getElementById('tu-athlet').value;
   const listEl=document.getElementById('tu-list');
   const avgEl=document.getElementById('tu-avgs');
-  if(!athlet){listEl.innerHTML='<div style="color:#64748b;font-size:13px;">Athlet:in auswählen.</div>';return;}
+  if(!athlet){listEl.innerHTML='<div style="color:#64748b;font-size:13px;">Athlete auswählen.</div>';return;}
   const {data,error}=await db.from('trainerurteil').select('*').eq('athlet',athlet).order('datum',{ascending:false});
   if(error||!data.length){listEl.innerHTML='<div style="color:#64748b;font-size:13px;">Noch keine Urteile.</div>';avgEl.innerHTML='';return;}
   const avg=key=>(data.reduce((s,r)=>s+(parseFloat(r[key])||0),0)/data.length).toFixed(1);
   avgEl.innerHTML=`
-    <div class="tu-avg-chip">Lernkurve <span>${avg('lernkurve')}</span></div>
+    <div class="tu-avg-chip">Learning Curve <span>${avg('lernkurve')}</span></div>
     <div class="tu-avg-chip">Rail <span>${avg('rail')}</span></div>
-    <div class="tu-avg-chip">Kicker <span>${avg('kicker')}</span></div>
+    <div class="tu-avg-chip">Jump <span>${avg('kicker')}</span></div>
     <div class="tu-avg-chip">Halfpipe <span>${avg('halfpipe')}</span></div>
     <div class="tu-avg-chip">Mental <span>${avg('mental')}</span></div>`;
   const bar=v=>`<div class="tu-bar-bg"><div class="tu-bar-fill" style="width:${(v/10)*100}%"></div></div>`;
@@ -2832,20 +2832,20 @@ async function loadTU() {
     <div class="tu-entry">
       <div class="tu-entry-header"><span>👤 ${r.coach}</span><span>📅 ${r.datum||'–'}</span>
         <button class="btn-del" onclick="deleteTU(${r.id})">✕</button></div>
-      <div class="tu-bar-row"><span class="tu-bar-label">Lernkurve</span>${bar(r.lernkurve)}<span class="tu-bar-num">${r.lernkurve}</span></div>
+      <div class="tu-bar-row"><span class="tu-bar-label">Learning Curve</span>${bar(r.lernkurve)}<span class="tu-bar-num">${r.lernkurve}</span></div>
       <div class="tu-bar-row"><span class="tu-bar-label">Technik Rail</span>${bar(r.rail)}<span class="tu-bar-num">${r.rail}</span></div>
-      <div class="tu-bar-row"><span class="tu-bar-label">Technik Kicker</span>${bar(r.kicker)}<span class="tu-bar-num">${r.kicker}</span></div>
+      <div class="tu-bar-row"><span class="tu-bar-label">Technik Jump</span>${bar(r.kicker)}<span class="tu-bar-num">${r.kicker}</span></div>
       <div class="tu-bar-row"><span class="tu-bar-label">Technik Halfpipe</span>${bar(r.halfpipe||0)}<span class="tu-bar-num">${r.halfpipe||0}</span></div>
       <div class="tu-bar-row"><span class="tu-bar-label">Mentale Einstellung</span>${bar(r.mental)}<span class="tu-bar-num">${r.mental}</span></div>
       ${r.notiz?`<div style="margin-top:8px;font-size:12px;color:#64748b;border-top:1px solid #1e2d45;padding-top:8px;">💬 ${r.notiz}</div>`:''}
     </div>`).join('');
 }
-async function deleteTU(id){if(!confirm('Urteil löschen?'))return;await db.from('trainerurteil').delete().eq('id',id);loadTU();}
+async function deleteTU(id){if(!confirm('Delete review?'))return;await db.from('trainerurteil').delete().eq('id',id);loadTU();}
 
 // ── SB EDIT ──────────────────────────────────────────────
 function sbeToggle(){
   const v=document.getElementById('sbe-disziplin').value;
-  const isK=v==='Kicker'||v==='Halfpipe'||v==='Landing Bag';
+  const isK=v==='Jump'||v==='Halfpipe'||v==='Landing Bag';
   document.querySelectorAll('.sbe-kicker').forEach(el=>el.style.display=isK?'':'none');
   document.querySelectorAll('.sbe-rail').forEach(el=>el.style.display=v==='Rail'?'':'none');
 }
@@ -2901,11 +2901,11 @@ async function saveSbEdit(){
     inspin:gv('sbe-inspin'),outspin:gv('sbe-outspin'),notiz:gv('sbe-notiz'),
     status:gv('sbe-status'),coach_rating:gv('sbe-coach-rating')||null,coach_kommentar:gv('sbe-coach-kommentar')||null,
   };
-  const isK=['Kicker','Halfpipe','Landing Bag'].includes(updates.disziplin);
+  const isK=['Jump','Halfpipe','Landing Bag'].includes(updates.disziplin);
   const parts=isK?[updates.drehrichtung,updates.flips&&updates.flips!=='keine'?updates.flips:null,updates.rotation,updates.achse,updates.grab,updates.absprung]:[updates.inspin,updates.slideform,updates.railart,updates.outspin];
   updates.trick_label=parts.filter(Boolean).join(' ')||'–';
   const {error}=await db.from('standort').update(updates).eq('id',id);
-  if(error){showToast('Fehler: '+error.message,'error');return;}
+  if(error){showToast('Error: '+error.message,'error');return;}
   showToast('✓ Trick aktualisiert!');closeSbEdit();loadStandort();
 }
 
@@ -2919,12 +2919,12 @@ document.getElementById('f-datum').valueAsDate = new Date();
     <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#3b82f6;margin-bottom:16px;">✏️ TRICK BEARBEITEN</div>
     <input type="hidden" id="sbe-id">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-      <div class="form-group"><label>Datum</label><input type="date" id="sbe-datum"></div>
-      <div class="form-group"><label>Disziplin</label>
+      <div class="form-group"><label>Date</label><input type="date" id="sbe-datum"></div>
+      <div class="form-group"><label>Discipline</label>
         <select id="sbe-disziplin" onchange="sbeToggle()"><option value="">–</option>
-          <option>Kicker</option><option>Rail</option><option>Halfpipe</option><option>Landing Bag</option>
+          <option>Jump</option><option>Rail</option><option>Halfpipe</option><option>Landing Bag</option>
         </select></div>
-      <div class="form-group sbe-kicker"><label>Drehrichtung</label>
+      <div class="form-group sbe-kicker"><label>Direction</label>
         <select id="sbe-drehrichtung"><option value="">–</option>
           <option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option>
         </select></div>
@@ -2935,33 +2935,33 @@ document.getElementById('f-datum').valueAsDate = new Date();
         </select></div>
       <div class="form-group sbe-kicker"><label>Flips</label>
         <select id="sbe-flips"><option value="">–</option>
-          <option>keine</option><option>Single</option><option>Double</option><option>Triple</option>
+          <option>None</option><option>Single</option><option>Double</option><option>Triple</option>
         </select></div>
-      <div class="form-group sbe-kicker"><label>Achse</label>
+      <div class="form-group sbe-kicker"><label>Axis</label>
         <select id="sbe-achse"><option value="">–</option>
           <option>Cork</option><option>Bio/Misty</option><option>Flat</option><option>Rodeo</option>
-          <option>Flache Achse</option><option>Frontflip</option><option>Backflip</option>
+          <option>Flat Axis</option><option>Frontflip</option><option>Backflip</option>
         </select></div>
       <div class="form-group sbe-kicker" style="grid-column:1/-1;"><label>Grabs</label>
         <div id="sbe-grab-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;">
           <input type="hidden" id="sbe-grab" value=""></div></div>
-      <div class="form-group sbe-kicker"><label>Style-Element</label>
+      <div class="form-group sbe-kicker"><label>Style Element</label>
         <select id="sbe-style"><option value="">–</option>
           <option>Tweak</option><option>Poke</option><option>Screamin' Seamen</option>
         </select></div>
-      <div class="form-group sbe-kicker"><label>Absprung</label>
+      <div class="form-group sbe-kicker"><label>Take-off</label>
         <select id="sbe-absprung"><option value="">–</option>
-          <option>Carved</option><option>Innenkanten</option><option>Nose-Butter</option><option>Tail-Butter</option>
+          <option>Carved</option><option>Inside Edge</option><option>Nose-Butter</option><option>Tail-Butter</option>
         </select></div>
       <div class="form-group sbe-kicker"><label>Bring Back</label>
         <select id="sbe-bringback"><option value="">–</option>
           <option>Japan</option><option>Mute</option><option>Safety</option>
         </select></div>
-      <div class="form-group sbe-rail"><label>Rail-Art</label>
+      <div class="form-group sbe-rail"><label>Rail Type</label>
         <select id="sbe-railart"><option value="">–</option>
           <option>Box</option><option>Tube</option><option>Rail</option><option>Down Tube</option><option>Down Rail</option>
         </select></div>
-      <div class="form-group sbe-rail"><label>Slide-Form</label>
+      <div class="form-group sbe-rail"><label>Slide Form</label>
         <select id="sbe-slideform"><option value="">–</option>
           <option>50-50</option><option>Switch 50-50</option><option>Slide</option><option>Lip On</option>
         </select></div>
@@ -2976,21 +2976,21 @@ document.getElementById('f-datum').valueAsDate = new Date();
           <option>L 180</option><option>R 180</option>
         </select></div>
       <div class="form-group" style="grid-column:1/-1;"><label>Status</label>
-        <select id="sbe-status"><option value="">– auswählen –</option>
-          <option value="beherrscht">Beherrscht</option>
-          <option value="ziel">Ziel / In Arbeit</option>
+        <select id="sbe-status"><option value="">— select —</option>
+          <option value="mastered">Mastered</option>
+          <option value="goal">Ziel / In Arbeit</option>
           <option value="erreicht">Erreicht</option>
         </select></div>
       <div class="form-group"><label>Coach-Rating (1–10)</label>
         <input type="number" id="sbe-coach-rating" min="1" max="10" placeholder="1–10"></div>
       <div class="form-group full"><label>Coach-Kommentar</label>
         <textarea id="sbe-coach-kommentar" rows="2" placeholder="Coach-Kommentar..."></textarea></div>
-      <div class="form-group" style="grid-column:1/-1;"><label>Notiz</label>
+      <div class="form-group" style="grid-column:1/-1;"><label>Note</label>
         <textarea id="sbe-notiz" rows="2" placeholder="Optional..."></textarea></div>
     </div>
     <div style="display:flex;gap:10px;">
       <button onclick="closeSbEdit()" style="flex:1;background:#1a2235;border:1px solid #1e2d45;color:#94a3b8;border-radius:8px;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer;">ABBRECHEN</button>
-      <button onclick="saveSbEdit()" style="flex:1;background:linear-gradient(135deg,#3b82f6,#6366f1);border:none;color:#fff;border-radius:8px;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer;">SPEICHERN</button>
+      <button onclick="saveSbEdit()" style="flex:1;background:linear-gradient(135deg,#3b82f6,#6366f1);border:none;color:#fff;border-radius:8px;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer;">SAVE</button>
     </div>
   </div>
 </div>
@@ -2999,7 +2999,7 @@ document.getElementById('f-datum').valueAsDate = new Date();
 <div id="edit-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;align-items:center;justify-content:center;padding:16px;">
   <div style="background:#111827;border:1px solid #1e2d45;border-radius:16px;padding:24px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#06b6d4;">EINTRAG BEARBEITEN</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#06b6d4;">EDIT ENTRY</div>
       <button onclick="closeEditModal()" style="background:none;border:none;color:#64748b;font-size:20px;cursor:pointer;">✕</button>
     </div>
     <input type="hidden" id="edit-idx">
@@ -3021,28 +3021,28 @@ document.getElementById('f-datum').valueAsDate = new Date();
         <div id="edit-gesamt-preview" style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#3b82f6;padding-bottom:6px;"></div>
       </div>
       <div class="form-group">
-        <label>Gelandet?</label>
+        <label>Landed?</label>
         <select id="edit-gelandet">
           <option value="">— auswählen —</option>
-          <option value="Ja">✅ Ja</option>
-          <option value="Nein">❌ Nein</option>
+          <option value="Yes">✅ Yes</option>
+          <option value="No">❌ No</option>
         </select>
       </div>
       <div class="form-group full">
-        <label>Kommentar</label>
+        <label>Comment</label>
         <textarea id="edit-kommentar" rows="2" placeholder="Kommentar zur Ausführung..."></textarea>
       </div>
       <div class="form-group full">
-        <label>Trickaufbau</label>
+        <label>Trick Setup</label>
         <input type="text" id="edit-trickaufbau" placeholder="z.B. Cab 5 → Cab 7 → Cab 9...">
       </div>
       <div class="form-group full">
-        <label>Videolink</label>
+        <label>Video Link</label>
         <input type="text" id="edit-videolink" placeholder="https://...">
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:20px;">
-      <button onclick="closeEditModal()" style="flex:1;padding:12px;background:#1a2235;border:1px solid #1e2d45;border-radius:8px;color:#94a3b8;font-size:14px;cursor:pointer;">Abbrechen</button>
+      <button onclick="closeEditModal()" style="flex:1;padding:12px;background:#1a2235;border:1px solid #1e2d45;border-radius:8px;color:#94a3b8;font-size:14px;cursor:pointer;">Cancel</button>
       <button onclick="saveEditModal()" style="flex:2;padding:12px;background:#3b82f6;border:none;border-radius:8px;color:white;font-size:14px;font-weight:600;cursor:pointer;">Speichern</button>
     </div>
   </div>
