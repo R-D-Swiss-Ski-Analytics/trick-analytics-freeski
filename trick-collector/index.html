@@ -1919,11 +1919,9 @@ function tricksForDir(tricks, dir) {
   });
 }
 
-const SESS_STRIP = [...SESS_GRABS, 'Carved','Inside Edge','Innenkanten','x','X','Nose-Butter','Tail-Butter'];
-
 function baseLabel(label) {
   let result = ' ' + label + ' ';
-  SESS_STRIP.sort((a,b) => b.length - a.length).forEach(t => {
+  [...SESS_GRABS].sort((a,b) => b.length - a.length).forEach(t => {
     const esc = t.trim().replace(/[-.*+?^${}()|[\]\\]/g,'\\$&');
     result = result.replace(new RegExp('[, ]+' + esc + '(?=[, ]|$)', 'gi'), '');
   });
