@@ -2562,14 +2562,42 @@ async function loadEntwicklung() {
     return res;
   }
 
-  // ── 1. RADAR: Drehrichtungen (combined, split visually)
+  // ── 1. RADAR: Directions — session landing rate (blue) + assessment volume (amber)
   const directions = ['Right','Switch Right','Switch Left','Left'];
-  const { train: dirT, stand: dirS } = countBySplit('drehrichtung');
-  const maxDir = Math.max(...directions.map(d => (dirT[d]||0)+(dirS[d]||0)), 1);
+
+  // Parse direction from trickaufbau (new session format: "Left Double 1080 Cork — Japan")
+  function dirFromTrickaufbau(tb) {
+    if (!tb) return null;
+    for (const d of ['Switch Right','Switch Left','Right','Left']) {
+      if (tb.startsWith(d + ' ') || tb.startsWith(d + ' —')) return d;
+    }
+    return null;
+  }
+
+  // Calculate landing rate per direction from session data
+  const dirStats = {};
+  tTagged.forEach(t => {
+    // New session entries (trickaufbau with " — ")
+    const dir = t.trickaufbau && t.trickaufbau.includes(' — ')
+      ? dirFromTrickaufbau(t.trickaufbau)
+      : t.drehrichtung;
+    if (!dir) return;
+    if (!dirStats[dir]) dirStats[dir] = { total: 0, landed: 0 };
+    dirStats[dir].total++;
+    if (t.gelandet === 'Yes') dirStats[dir].landed++;
+  });
+
+  const dirRates    = directions.map(d => dirStats[d]?.total ? dirStats[d].landed / dirStats[d].total : 0);
+  const dirRatePct  = directions.map(d => dirStats[d]?.total ? Math.round(dirStats[d].landed / dirStats[d].total * 100) : null);
+
+  // Assessment volume for amber polygon
+  const { stand: dirS } = countBySplit('drehrichtung');
+  const maxDirS = Math.max(...directions.map(d => dirS[d]||0), 1);
+
   drawRadarSplit('cv-radar', directions,
-    directions.map(d => (dirT[d]||0)/maxDir),
-    directions.map(d => (dirS[d]||0)/maxDir),
-    directions.map(d => dirT[d]||0),
+    dirRates,
+    directions.map(d => (dirS[d]||0)/maxDirS),
+    dirRatePct,
     directions.map(d => dirS[d]||0));
 
   // ── 1b. RADAR: Achsen by direction (Cork & Bio/Misty × Richtung)
@@ -2942,7 +2970,7 @@ function drawRadarSplit(canvasId, labels, valsT, valsS, rawT, rawS) {
     const countStr = (rawT[i]>0?`\u25CF${rawT[i]}`:'') + (rawT[i]>0&&rawS[i]>0?' ':'') + (rawS[i]>0?`\u25CF${rawS[i]}`:'');
     // Draw each part in correct color
     const parts=[];
-    if(rawT[i]>0) parts.push({text:`●${rawT[i]}`,color:'#3b82f6'});
+    if(rawT[i]!=null && rawT[i]!==0) parts.push({text:`●${rawT[i]}%`,color:'#39c3d4'});
     if(rawS[i]>0) parts.push({text:`●${rawS[i]}`,color:'#f59e0b'});
     let totalW=0;
     parts.forEach(p=>{ ctx.font='bold 11px Bebas Neue,sans-serif'; totalW+=ctx.measureText(p.text+' ').width; });
