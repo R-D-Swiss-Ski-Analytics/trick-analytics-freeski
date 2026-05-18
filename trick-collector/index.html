@@ -958,7 +958,7 @@ async function loadAssessment() {
   content.innerHTML = '<div class="loading-bar">Loading...</div>';
 
   const { data, error } = await db.from('tricks').select('*').eq('athlete', athlete).eq('source', 'assessment').order('date', { ascending: false });
-  if (error) { content.innerHTML = '<p style="color:var(--accent3)">Error loading data.</p>'; return; }
+  if (error) { content.innerHTML = '<p style="color:var(--accent3)">Error: ' + error.message + '</p>'; return; }
 
   if (!data || data.length === 0) {
     content.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted)">No assessment entries yet for ' + athlete + '.</div>';
