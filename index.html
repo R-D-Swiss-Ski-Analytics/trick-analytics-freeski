@@ -447,7 +447,10 @@
     </div>
 
     <div class="card" style="margin-bottom:16px;">
-      <div class="card-title">Step 1 — Select Athletes (max. 8)</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="card-title" style="margin:0;">Step 1 — Select Athletes (max. 8)</div>
+        <button onclick="clearSessionSelection()" style="padding:6px 14px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">Clear all</button>
+      </div>
       <div id="sess-athlete-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;"></div>
     </div>
 
@@ -2004,6 +2007,14 @@ function renderSessionLog() {
       <span style="color:var(--muted);font-size:11px;">${e.time}</span>
     </div>`;
   }).join('');
+}
+
+function clearSessionSelection() {
+  sessSelectedAthletes=[]; sessAthleteData={}; sessActiveTricks={};
+  document.querySelectorAll('#sess-athlete-grid input[type=checkbox]').forEach(c => c.checked=false);
+  document.querySelectorAll('#sess-athlete-grid label').forEach(c => c.style.borderColor='var(--border)');
+  document.getElementById('sess-trick-selection').style.display='none';
+  document.getElementById('sess-start-btn').style.display='none';
 }
 
 function resetSession() {
