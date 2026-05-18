@@ -1904,34 +1904,67 @@ async function toggleSessionAthlete(name) {
   renderSessionTrickSelection();
 }
 
+const SESS_DIRECTIONS = ['Left','Right','Switch Left','Switch Right'];
+const SESS_GRABS = ['Safety','Mute','Tail','Blunt','Japan','Critical','Esco','Nose','Octo','Truckdriver','Stale','Cuban','Seatbelt','Bow and Arrow','In and out'];
+
 function renderSessionTrickSelection() {
   const container = document.getElementById('sess-trick-selection');
   const startBtn = document.getElementById('sess-start-btn');
   if (sessSelectedAthletes.length === 0) { container.style.display='none'; startBtn.style.display='none'; return; }
   container.style.display = 'block';
-  container.innerHTML = '<div class="card"><div class="card-title">Step 2 — Select tricks to work on</div>'
+  container.innerHTML = '<div class="card"><div class="card-title">Step 3 — Select tricks to work on</div>'
     + sessSelectedAthletes.map(name => {
-      const d = sessAthleteData[name];
-      const mastered = d.tricks.filter(t => t.status==='mastered');
-      const goals    = d.tricks.filter(t => t.status==='goal');
-      return `<div style="margin-bottom:18px;">
-        <div style="font-weight:700;font-size:14px;color:#39c3d4;margin-bottom:10px;">${shortName(name)}</div>
-        ${mastered.length ? `<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">✓ Mastered</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-            ${mastered.map(t=>`<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(45,138,78,0.15);border:1px solid #2d8a4e;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text);">
-              <input type="checkbox" onchange="toggleSessTrick('${name}','${t.trick_label}',this.checked)" style="accent-color:#2d8a4e;">${t.trick_label}
-            </label>`).join('')}
-          </div>` : ''}
-        ${goals.length ? `<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">🎯 Goals</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;">
-            ${goals.map(t=>`<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(245,158,11,0.12);border:1px solid #f59e0b;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text);">
-              <input type="checkbox" onchange="toggleSessTrick('${name}','${t.trick_label}',this.checked)" style="accent-color:#f59e0b;">${t.trick_label}
-            </label>`).join('')}
-          </div>` : ''}
-        ${!mastered.length && !goals.length ? '<div style="color:var(--muted);font-size:12px;">No assessment entries — any trick name can be entered during session.</div>' : ''}
+      const safeId = name.replace(/\s/g,'_');
+      return `<div style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);">
+        <div style="font-weight:700;font-size:14px;color:#39c3d4;margin-bottom:14px;">${shortName(name)}</div>
+        ${SESS_DIRECTIONS.map(dir => `
+          <div style="margin-bottom:12px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:7px;">${dir}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              ${SESS_GRABS.map(grab => {
+                const key = dir+'|'+grab;
+                const id = 'sg_'+safeId+'_'+dir.replace(/\s/g,'')+'_'+grab.replace(/\s/g,'');
+                return `<button id="${id}" onclick="toggleSessGrab('${name}','${dir}','${grab}',this)"
+                  style="padding:6px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${grab}</button>`;
+              }).join('')}
+            </div>
+          </div>`).join('')}
+        <div style="margin-top:10px;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Selected tricks</div>
+          <div id="sess-selected-${safeId}" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;">
+            <span style="color:var(--muted);font-size:12px;">None yet</span>
+          </div>
+        </div>
       </div>`;
     }).join('') + '</div>';
   startBtn.style.display = 'block';
+}
+
+function toggleSessGrab(name, dir, grab, btn) {
+  if (!sessActiveTricks[name]) sessActiveTricks[name] = [];
+  const label = dir + ' — ' + grab;
+  const idx = sessActiveTricks[name].indexOf(label);
+  if (idx === -1) {
+    sessActiveTricks[name].push(label);
+    btn.style.background = 'rgba(57,195,212,0.18)';
+    btn.style.borderColor = '#39c3d4';
+    btn.style.color = '#39c3d4';
+  } else {
+    sessActiveTricks[name].splice(idx, 1);
+    btn.style.background = 'var(--surface2)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--muted)';
+  }
+  renderSessSelected(name);
+}
+
+function renderSessSelected(name) {
+  const el = document.getElementById('sess-selected-' + name.replace(/\s/g,'_'));
+  if (!el) return;
+  const tricks = sessActiveTricks[name] || [];
+  el.innerHTML = tricks.length
+    ? tricks.map(t => `<span style="padding:4px 10px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;border-radius:6px;font-size:12px;color:#39c3d4;">${t}</span>`).join('')
+    : '<span style="color:var(--muted);font-size:12px;">None yet</span>';
 }
 
 function toggleSessTrick(name, trick, checked) {
