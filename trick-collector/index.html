@@ -1894,12 +1894,13 @@ async function toggleSessionAthlete(name) {
       return;
     }
     sessSelectedAthletes.push(name);
+    sessAthleteData[name] = { tricks: [], currentTrick: '', stats: {attempts:0,landed:0,perfect:0} };
+    sessActiveTricks[name] = [];
     const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
     if (card) card.style.borderColor = '#39c3d4';
-    const {data} = await db.from('standort').select('trick_label,disziplin,status')
-      .eq('athlet', name).in('status', ['mastered','goal']).order('trick_label');
-    sessAthleteData[name] = { tricks: data || [], currentTrick: '', stats: {attempts:0,landed:0,perfect:0} };
-    sessActiveTricks[name] = [];
+    const {data, error} = await db.from('standort').select('trick_label,disziplin,status')
+      .eq('athlet', name).or('status.eq.mastered,status.eq.goal').order('trick_label');
+    if (!error) sessAthleteData[name].tricks = data || [];
   }
   renderSessionTrickSelection();
 }
