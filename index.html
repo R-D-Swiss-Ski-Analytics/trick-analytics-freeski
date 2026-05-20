@@ -1239,11 +1239,17 @@ function updateFwdSwBtn(prefix) {
   }
 }
 
+const FS_DIR_NORMAL = '<option value="">–</option><option>Left</option><option>Right</option><option>Switch Left</option><option>Switch Right</option>';
+const FS_DIR_HP     = '<option value="">–</option><option>Left</option><option>Left Alley Oop</option><option>Right</option><option>Right Alley Oop</option><option>Switch Left</option><option>Switch Left Alley Oop</option><option>Switch Right</option><option>Switch Right Alley Oop</option>';
+
 function toggleDisziplin(prefix) {
   if (prefix === 'sb') {
     const v = document.getElementById('sb-disziplin').value;
     const divider = document.getElementById('sb-disc-divider');
     if (divider) divider.textContent = v || 'Jump / Halfpipe';
+    // Update direction options for HP
+    const dirSel = document.getElementById('sb-drehrichtung');
+    if (dirSel) dirSel.innerHTML = v === 'Halfpipe' ? FS_DIR_HP : FS_DIR_NORMAL;
   }
   const v = document.getElementById(prefix + '-disziplin').value;
   const isJump = v === 'Jump' || v === 'Halfpipe' || v === 'Landing Bag';
