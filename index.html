@@ -361,7 +361,7 @@
       <!-- Baukasten Jump -->
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Direction</label>
         <select id="edit-drehrichtung" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option><option>Forward</option><option>Switch</option>
+          <option value="">–</option><option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Rotation</label>
         <select id="edit-rotation" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
@@ -372,7 +372,7 @@
           <option value="">–</option><option>None</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Axis</label>
-        <select id="edit-achse" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+        <select id="edit-achse" onchange="updateFwdSwBtn('edit')" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
           <option value="">–</option><option>Cork</option><option>Bio/Misty</option><option>Flat Spins</option><option>Rodeo</option><option>Regular Spins</option><option>Frontflip</option><option>Backflip</option><option>Sideflip Right</option><option>Sideflip Left</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Grab</label>
@@ -633,14 +633,14 @@
         <div class="section-divider kicker-field-sb hidden" id="sb-disc-divider">Jump / Halfpipe</div>
         <div class="form-group kicker-field-sb hidden"><label>Direction</label>
           <select id="sb-drehrichtung"><option value="">–</option>
-            <option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option><option>Forward</option><option>Switch</option>
+            <option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option>
           </select></div>
         <div class="form-group kicker-field-sb hidden"><label>Flips</label>
           <select id="sb-flips"><option value="">–</option>
             <option>None</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
           </select></div>
         <div class="form-group kicker-field-sb hidden"><label>Axis</label>
-          <select id="sb-achse"><option value="">–</option>
+          <select id="sb-achse" onchange="updateFwdSwBtn('sb')"><option value="">–</option>
             <optgroup label="Off-Axis">
               <option>Cork</option><option>Bio/Misty</option><option>Flat Spins</option><option>Rodeo</option>
             </optgroup>
@@ -1193,6 +1193,50 @@ function updateSbDisciplines() {
     sel.style.display = '';
   }
   toggleDisziplin('sb');
+}
+
+// Classic acrobatic axes that need Forward/Switch buttons instead of normal direction
+const CLASSIC_ACRO_AXES_FS = new Set(['Frontflip','Backflip','Sideflip Right','Sideflip Left']);
+
+function updateFwdSwBtn(prefix) {
+  const achse = (document.getElementById(prefix+'-achse') || document.getElementById('edit-achse') || document.getElementById('sbe-achse'))?.value || '';
+  const isClassic = CLASSIC_ACRO_AXES_FS.has(achse);
+  const dirSelect = document.getElementById(prefix+'-drehrichtung') || document.getElementById('edit-drehrichtung') || document.getElementById('sbe-drehrichtung');
+  const btnWrap = document.getElementById('fwsw-btns-'+prefix);
+
+  if (!dirSelect) return;
+  if (isClassic) {
+    dirSelect.style.display = 'none';
+    if (!btnWrap) {
+      const wrap = document.createElement('div');
+      wrap.id = 'fwsw-btns-' + prefix;
+      wrap.style.cssText = 'display:flex;gap:8px;margin-top:2px;';
+      ['Forward','Switch'].forEach(val => {
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.textContent = val;
+        btn.dataset.val = val;
+        const isActive = dirSelect.value === val;
+        btn.style.cssText = `flex:1;padding:8px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .15s;
+          background:${isActive?'rgba(57,195,212,0.18)':'var(--surface2)'};
+          border-color:${isActive?'#39c3d4':'var(--border)'};
+          color:${isActive?'#39c3d4':'var(--muted)'};`;
+        btn.onclick = () => {
+          dirSelect.value = val;
+          wrap.querySelectorAll('button').forEach(b => {
+            const active = b.dataset.val === val;
+            b.style.background = active?'rgba(57,195,212,0.18)':'var(--surface2)';
+            b.style.borderColor = active?'#39c3d4':'var(--border)';
+            b.style.color = active?'#39c3d4':'var(--muted)';
+          });
+        };
+        wrap.appendChild(btn);
+      });
+      dirSelect.parentElement.appendChild(wrap);
+    } else { btnWrap.style.display = 'flex'; }
+  } else {
+    dirSelect.style.display = '';
+    if (btnWrap) btnWrap.style.display = 'none';
+  }
 }
 
 function toggleDisziplin(prefix) {
@@ -3551,7 +3595,7 @@ document.getElementById('f-datum').valueAsDate = new Date();
         </select></div>
       <div class="form-group sbe-kicker"><label>Direction</label>
         <select id="sbe-drehrichtung"><option value="">–</option>
-          <option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option><option>Forward</option><option>Switch</option>
+          <option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option>
         </select></div>
       <div class="form-group sbe-kicker"><label>Rotation</label>
         <select id="sbe-rotation"><option value="">–</option>
@@ -3563,7 +3607,7 @@ document.getElementById('f-datum').valueAsDate = new Date();
           <option>None</option><option>Single</option><option>Double</option><option>Triple</option>
         </select></div>
       <div class="form-group sbe-kicker"><label>Axis</label>
-        <select id="sbe-achse"><option value="">–</option>
+        <select id="sbe-achse" onchange="updateFwdSwBtn('sbe')"><option value="">–</option>
           <option>Cork</option><option>Bio/Misty</option><option>Flat Spins</option><option>Rodeo</option>
           <option>Regular Spins</option><option>Frontflip</option><option>Backflip</option><option>Sideflip Right</option><option>Sideflip Left</option>
         </select></div>
