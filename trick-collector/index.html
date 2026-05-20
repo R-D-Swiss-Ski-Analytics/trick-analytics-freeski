@@ -1208,13 +1208,14 @@ function trickDesc(t, prefix) {
     return parts.join(' ') || '–';
   } else {
     const parts = [
+      t ? t.absprung  : val(p+'absprung'),
       t ? t.drehrichtung : val(p+'drehrichtung'),
       (t ? t.flips : val(p+'flips')) && (t ? t.flips : val(p+'flips')) !== 'keine' ? (t ? t.flips : val(p+'flips')) : null,
       t ? t.rotation     : val(p+'rotation'),
       t ? t.achse : val(p+'achse'),
-      t ? t.grab      : val(p+'grab'),
-      t ? t.bringback : val(p+'bringback'),
-      t ? t.style     : val(p+'style'),
+      t ? t.grab  : val(p+'grab'),
+      (t ? t.bringback : val(p+'bringback')) ? 'Bringback ' + (t ? t.bringback : val(p+'bringback')) : null,
+      t ? t.style : val(p+'style'),
     ].filter(Boolean);
     return parts.join(' ') || '–';
   }
@@ -3434,7 +3435,8 @@ async function saveSbEdit(){
     status:gv('sbe-status'),coach_rating:gv('sbe-coach-rating')||null,coach_kommentar:gv('sbe-coach-kommentar')||null,
   };
   const isK=['Jump','Halfpipe','Landing Bag'].includes(updates.disziplin);
-  const parts=isK?[updates.drehrichtung,updates.flips&&updates.flips!=='keine'?updates.flips:null,updates.rotation,updates.achse,updates.grab,updates.bringback,updates.absprung]:[updates.inspin,updates.slideform,updates.railart,updates.outspin];
+  const bb = updates.bringback ? 'Bringback ' + updates.bringback : null;
+  const parts=isK?[updates.absprung,updates.drehrichtung,updates.flips&&updates.flips!=='keine'?updates.flips:null,updates.rotation,updates.achse,updates.grab,bb]:[updates.inspin,updates.slideform,updates.railart,updates.outspin];
   updates.trick_label=parts.filter(Boolean).join(' ')||'–';
   const {error}=await db.from('standort').update(updates).eq('id',id);
   if(error){showToast('Error: '+error.message,'error');return;}
