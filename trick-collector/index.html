@@ -289,7 +289,8 @@
     <button class="nav-tab active" onclick="showPage('standort', this)">Assessment</button>
     <button class="nav-tab" onclick="showPage('erfassen', this)">Session</button>
     <button class="nav-tab" onclick="showPage('entwicklung', this)">Development</button>
-    <button class="nav-tab" onclick="checkDBPassword(this, 'notebook')">Notebook</button>
+    <button class="nav-tab" onclick="showPage('athlete-notebook', this)">Notebook Athlete</button>
+    <button class="nav-tab" onclick="checkDBPassword(this, 'notebook')">Notebook Coach</button>
     <button class="nav-tab" onclick="checkDBPassword(this, 'trainerurteil')">Coach Review</button>
     <button class="nav-tab" onclick="checkDBPassword(this)">Database</button>
   </nav>
@@ -985,6 +986,69 @@
   </div>
 </div>
 
+
+<!-- ══════════════════════════════════════════ ATHLETE NOTEBOOK -->
+<div class="page" id="page-athlete-notebook">
+  <div style="display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start;">
+    <div class="card">
+      <div class="card-title">New Entry</div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Athlete</label>
+        <select id="anb-athlet" onchange="loadAthleteNotebook()">
+          <option value="">— select athlete —</option>
+        <optgroup label="TG SS&BA Greg & Kai">
+          <option>Adrien Vaudaux</option>
+          <option>Andri Ragettli</option>
+          <option>Fadri Rhyner</option>
+          <option>Gian Andri Bolinger</option>
+          <option>Giulia Tanno</option>
+          <option>Kim Gubser</option>
+          <option>Mathilde Gremaud</option>
+          <option>Nicola Bolinger</option>
+          <option>Nils Rhyner</option>
+          <option>Sarah Höfflin</option>
+          <option>Viktor Maksyagin</option>
+        </optgroup>
+<optgroup label="TG SS&BA Xeno">
+          <option>Anouk Andraska</option>
+          <option>Jason Zacharopoulos</option>
+          <option>Lars Ruchti</option>
+          <option>Lou Annen</option>
+          <option>Maxence Petzoldt</option>
+          <option>Tim Egger</option>
+        </optgroup>
+<optgroup label="TG Halfpipe">
+          <option>Alan Bornet</option>
+        </optgroup>
+      </select>
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Category</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
+          <button onclick="selectAnbCat(this,'Rituale Wettkampf')" class="nb-cat-btn">Rituale Wettkampf</button>
+          <button onclick="selectAnbCat(this,'Learnings')"         class="nb-cat-btn">Learnings</button>
+          <button onclick="selectAnbCat(this,'Ziele')"             class="nb-cat-btn">Ziele</button>
+        </div>
+        <input type="hidden" id="anb-kategorie">
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Entry</label>
+        <textarea id="anb-kommentar" rows="5" placeholder="Write your entry..."></textarea>
+      </div>
+      <button class="btn-primary" onclick="saveAthleteNotebook()" style="font-size:16px;letter-spacing:1px;margin-top:4px;">SAVE ENTRY</button>
+      <div id="anb-save-msg" style="display:none;color:var(--success);font-size:13px;text-align:center;margin-top:10px;">✓ Entry saved!</div>
+    </div>
+    <div>
+      <div class="card" id="anb-list-wrap">
+        <div class="card-title" style="margin-bottom:16px;">Entries</div>
+        <div id="anb-list">
+          <div style="color:var(--muted);font-size:13px;text-align:center;padding:32px;">Select an athlete to view entries.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════ COACHES NOTEBOOK -->
 <div class="page" id="page-notebook">
   <div style="display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start;">
@@ -1173,6 +1237,7 @@ function showPage(id, btn) {
   if (id === 'entwicklung') loadEntwicklung();
   if (id === 'erfassen') initSessionSetup();
   if (id === 'notebook') loadNotebook();
+  if (id === 'athlete-notebook') loadAthleteNotebook();
   if (id === 'erfassen') loadSessionTricks();
 }
 
@@ -3387,6 +3452,77 @@ function drawLine(canvasId, labels, values) {
   });
 }
 
+
+
+// ── ATHLETE NOTEBOOK ─────────────────────────────────────────────
+let anbSelectedCat = '';
+
+function selectAnbCat(btn, cat) {
+  document.querySelectorAll('#page-athlete-notebook .nb-cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  anbSelectedCat = cat;
+  document.getElementById('anb-kategorie').value = cat;
+}
+
+async function saveAthleteNotebook() {
+  const athlet = document.getElementById('anb-athlet').value;
+  const text   = document.getElementById('anb-kommentar').value.trim();
+  const kat    = document.getElementById('anb-kategorie').value;
+  if (!athlet) { showToast('Please select an athlete', 'error'); return; }
+  if (!text)   { showToast('Please write an entry', 'error'); return; }
+  if (!kat)    { showToast('Please select a category', 'error'); return; }
+
+  const btn = document.querySelector('#page-athlete-notebook .btn-primary');
+  btn.disabled = true; btn.textContent = 'Saving...';
+
+  const { error } = await db.from('athlete_notebook').insert({
+    athlet, kat,
+    datum: new Date().toISOString().split('T')[0],
+    kommentar: text,
+  });
+
+  btn.disabled = false; btn.textContent = 'SAVE ENTRY';
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+
+  const msg = document.getElementById('anb-save-msg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
+  document.getElementById('anb-kommentar').value = '';
+  document.querySelectorAll('#page-athlete-notebook .nb-cat-btn').forEach(b => b.classList.remove('active'));
+  anbSelectedCat = '';
+  document.getElementById('anb-kategorie').value = '';
+  loadAthleteNotebook();
+}
+
+async function loadAthleteNotebook() {
+  const athlet = document.getElementById('anb-athlet').value;
+  const el = document.getElementById('anb-list');
+  if (!athlet) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:32px;">Select an athlete to view entries.</div>'; return; }
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+
+  const { data, error } = await db.from('athlete_notebook').select('*')
+    .eq('athlet', athlet).order('datum', { ascending: false }).order('id', { ascending: false });
+
+  if (error) { el.innerHTML = '<div style="color:var(--danger);">Error: ' + error.message + '</div>'; return; }
+  if (!data || !data.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:32px;">No entries yet for ' + athlet + '.</div>'; return; }
+
+  const catColors = { 'Rituale Wettkampf': 'nb-cat-Competition', 'Learnings': 'nb-cat-Mindset', 'Ziele': 'nb-cat-Technique' };
+  el.innerHTML = data.map(e => `
+    <div class="nb-entry">
+      <div class="nb-entry-header">
+        <span class="nb-cat-badge ${catColors[e.kat]||'nb-cat-General'}">${e.kat||'General'}</span>
+        <span style="color:var(--muted);font-size:12px;">📅 ${e.datum}</span>
+        <button onclick="deleteAthleteNotebook(${e.id})" style="margin-left:auto;background:none;border:none;color:var(--danger);cursor:pointer;font-size:13px;opacity:.6;" title="Delete">✕</button>
+      </div>
+      <div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap;">${e.kommentar}</div>
+    </div>`).join('');
+}
+
+async function deleteAthleteNotebook(id) {
+  if (!confirm('Delete this entry?')) return;
+  await db.from('athlete_notebook').delete().eq('id', id);
+  loadAthleteNotebook();
+}
 
 // ── COACHES NOTEBOOK ─────────────────────────────────────────────
 let nbSelectedCat = '';
