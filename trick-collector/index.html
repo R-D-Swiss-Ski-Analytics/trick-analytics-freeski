@@ -687,6 +687,10 @@
             const grabs=['Safety', 'Mute', 'Tail', 'Blunt', 'Japan', 'Critical', 'Esco', 'In and out', 'Nose', 'Octo', 'Truckdriver', 'Stale', 'Cuban', 'Seatbelt', 'Bow and Arrow'];
             const wrap=document.getElementById("sb-grab-wrap");
             const hid=document.getElementById("sb-grab");
+            function updateHidden(){
+              const leadOn=document.getElementById("sb-lead-toggle")?.checked;
+              hid.value=Array.from(wrap.querySelectorAll(".grab-active")).map(b=>leadOn?"Lead "+b.dataset.grab:b.dataset.grab).join(", ");
+            }
             grabs.forEach(g=>{
               const btn=document.createElement("button");
               btn.type="button";btn.textContent=g;btn.dataset.grab=g;
@@ -696,12 +700,16 @@
                 btn.style.background=a?"#1e3a5f":"#1a2235";
                 btn.style.borderColor=a?"#3b82f6":"#1e2d45";
                 btn.style.color=a?"#60a5fa":"#94a3b8";
-                hid.value=Array.from(wrap.querySelectorAll(".grab-active")).map(b=>b.dataset.grab).join(", ");
+                updateHidden();
               };
               wrap.appendChild(btn);
             });
           })();
-          </script></div>
+          </script>
+          <label style="display:flex;align-items:center;gap:6px;margin-top:6px;cursor:pointer;">
+            <input type="checkbox" id="sb-lead-toggle" style="accent-color:#7ab51d;width:15px;height:15px;" onchange="(function(){const w=document.getElementById('sb-grab-wrap'),h=document.getElementById('sb-grab'),l=document.getElementById('sb-lead-toggle').checked;h.value=Array.from(w.querySelectorAll('.grab-active')).map(b=>l?'Lead '+b.dataset.grab:b.dataset.grab).join(', ')})()">
+            <span style="font-size:12px;color:#7ab51d;font-weight:600;">Lead Grab</span>
+          </label></div>
         <div class="form-group kicker-field-sb hidden"><label>Bring Back</label>
           <select id="sb-bringback"><option value="">–</option>
             <option>180</option><option>360</option><option>540</option>
@@ -2056,16 +2064,10 @@ function showGrabPicker(name, trickLabel, status, btn) {
   picker.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
       <span style="font-size:10px;color:#39c3d4;font-weight:700;text-transform:uppercase;letter-spacing:.8px;">Select grab(s)</span>
-      <div style="display:flex;gap:12px;align-items:center;">
-        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted);">
-          <input type="checkbox" id="lead-toggle-${safeId}" style="accent-color:#7ab51d;width:15px;height:15px;">
-          <span style="color:#7ab51d;font-weight:600;">Lead</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted);">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--muted);">
           <input type="checkbox" id="dg-toggle-${safeId}" onchange="toggleDoubleGrab('${name}','${trickLabel.replace(/'/g,"\\'")}','${pickerId}')" style="accent-color:#f59e0b;width:15px;height:15px;">
           <span id="dg-label-${safeId}">Double Grab</span>
-        </label>
-      </div>
+      </label>
     </div>
     <div id="dg-hint-${safeId}" style="display:none;font-size:11px;color:#f59e0b;margin-bottom:8px;">Select first grab →</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;" id="dg-grabs-${safeId}">
@@ -2135,11 +2137,7 @@ function doubleGrabClick(name, trickLabel, grab, btn, safeId) {
 
 function addTrickWithGrab(name, trickLabel, grab, btn) {
   if (!sessActiveTricks[name]) sessActiveTricks[name] = [];
-  const safeId = name.replace(/\s/g,'_');
-  const leadToggle = document.getElementById('lead-toggle-' + safeId);
-  const isLead = leadToggle && leadToggle.checked;
-  const grabLabel = isLead ? 'Lead ' + grab : grab;
-  const label = baseLabel(trickLabel) + ' — ' + grabLabel;
+  const label = baseLabel(trickLabel) + ' — ' + grab;
   const idx = sessActiveTricks[name].indexOf(label);
   if (idx === -1) {
     sessActiveTricks[name].push(label);
