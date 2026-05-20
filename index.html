@@ -1628,7 +1628,7 @@ function renderDBRankings() {
   }).join('');
 
   // ── 3. Direction Balance per Athlete (all 4 directions) ──
-  const DIRS4 = ['Left','Right','Switch Left','Switch Right','Forward','Switch'];
+  const DIRS4 = ['Left','Right','Switch Left','Switch Right']; // Forward/Switch excluded from balance chart
   const DIR4_COLORS = { 'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b' };
   const balMap = {};
 
