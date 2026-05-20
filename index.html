@@ -2423,10 +2423,15 @@ function renderStandort() {
     return null;
   }
 
+  function displayTrickLabel(label) {
+    if (!label) return '';
+    return label.replace(/[, ]+x\b/gi, '').replace(/\s{2,}/g, ' ').trim();
+  }
+
   function renderTrickRow(e) {
     return `<div class="sb-trick-row">
       <span class="sb-trick-name">
-        <span style="font-weight:500;">${e.trick_label}</span>
+        <span style="font-weight:500;">${displayTrickLabel(e.trick_label)}</span>
         <span style="display:flex;gap:8px;align-items:center;margin-top:2px;">
           ${e.datum ? `<span style="font-size:10px;color:var(--muted);">📅 ${e.datum}</span>` : ''}
           ${e.notiz ? `<span style="font-size:10px;color:var(--muted);">${e.notiz}</span>` : ''}
