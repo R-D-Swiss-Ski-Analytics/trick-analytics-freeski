@@ -1208,34 +1208,29 @@ function updateFwdSwBtn(prefix) {
   if (isClassic) {
     dirSelect.style.display = 'none';
     if (btnWrap) btnWrap.remove(); // always recreate so labels stay correct
-    {
-      const wrap = document.createElement('div');
-      wrap.id = 'fwsw-btns-' + prefix;
-      wrap.style.cssText = 'display:flex;gap:8px;margin-top:2px;';
-      const isSideflip = achse === 'Sideflip';
-      const btnLabels = isSideflip ? ['Right','Left'] : ['Forward','Switch'];
-      btnLabels.forEach(val => {
-        const btn = document.createElement('button');
-        btn.type = 'button'; btn.textContent = val;
-        btn.dataset.val = val;
-        const isActive = dirSelect.value === val;
-        btn.style.cssText = `flex:1;padding:8px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .15s;
-          background:${isActive?'rgba(57,195,212,0.18)':'var(--surface2)'};
-          border-color:${isActive?'#39c3d4':'var(--border)'};
-          color:${isActive?'#39c3d4':'var(--muted)'};`;
-        btn.onclick = () => {
-          dirSelect.value = val;
-          wrap.querySelectorAll('button').forEach(b => {
-            const active = b.dataset.val === val;
-            b.style.background = active?'rgba(57,195,212,0.18)':'var(--surface2)';
-            b.style.borderColor = active?'#39c3d4':'var(--border)';
-            b.style.color = active?'#39c3d4':'var(--muted)';
-          });
-        };
-        wrap.appendChild(btn);
-      });
-      dirSelect.parentElement.appendChild(wrap);
-    } else { btnWrap.style.display = 'flex'; }
+    const wrap = document.createElement('div');
+    wrap.id = 'fwsw-btns-' + prefix;
+    wrap.style.cssText = 'display:flex;gap:8px;margin-top:2px;';
+    const isSideflip = achse === 'Sideflip';
+    const btnLabels = isSideflip ? ['Right','Left'] : ['Forward','Switch'];
+    btnLabels.forEach(val => {
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.textContent = val;
+      btn.dataset.val = val;
+      const isActive = dirSelect.value === val;
+      btn.style.cssText = `flex:1;padding:8px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .15s;background:${isActive?'rgba(57,195,212,0.18)':'var(--surface2)'};border-color:${isActive?'#39c3d4':'var(--border)'};color:${isActive?'#39c3d4':'var(--muted)'};`;
+      btn.onclick = () => {
+        dirSelect.value = val;
+        wrap.querySelectorAll('button').forEach(b => {
+          const active = b.dataset.val === val;
+          b.style.background = active?'rgba(57,195,212,0.18)':'var(--surface2)';
+          b.style.borderColor = active?'#39c3d4':'var(--border)';
+          b.style.color = active?'#39c3d4':'var(--muted)';
+        });
+      };
+      wrap.appendChild(btn);
+    });
+    dirSelect.parentElement.appendChild(wrap);
   } else {
     dirSelect.style.display = '';
     if (btnWrap) btnWrap.style.display = 'none';
