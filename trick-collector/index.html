@@ -373,7 +373,7 @@
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Axis</label>
         <select id="edit-achse" onchange="updateFwdSwBtn('edit')" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>Cork</option><option>Bio/Misty</option><option>Flat Spins</option><option>Rodeo</option><option>Regular Spins</option><option>Frontflip</option><option>Backflip</option><option>Sideflip Right</option><option>Sideflip Left</option>
+          <option value="">–</option><option>Cork</option><option>Bio/Misty</option><option>Flat Spins</option><option>Rodeo</option><option>Regular Spins</option><option>Frontflip</option><option>Backflip</option><option>Sideflip</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Grab</label>
         <select id="edit-grab" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
@@ -648,7 +648,7 @@
               <option>Regular Spins</option>
             </optgroup>
             <optgroup label="Classic Acrobatic Axis (Transverse Axis and Sagittal Axis)">
-              <option>Frontflip</option><option>Backflip</option><option>Sideflip Right</option><option>Sideflip Left</option>
+              <option>Frontflip</option><option>Backflip</option><option>Sideflip</option>
             </optgroup>
           </select></div>
         <div class="form-group kicker-field-sb hidden"><label>Rotation</label>
@@ -1196,7 +1196,7 @@ function updateSbDisciplines() {
 }
 
 // Classic acrobatic axes that need Forward/Switch buttons instead of normal direction
-const CLASSIC_ACRO_AXES_FS = new Set(['Frontflip','Backflip','Sideflip Right','Sideflip Left']);
+const CLASSIC_ACRO_AXES_FS = new Set(['Frontflip','Backflip','Sideflip Right','Sideflip Left','Sideflip']);
 
 function updateFwdSwBtn(prefix) {
   const achse = (document.getElementById(prefix+'-achse') || document.getElementById('edit-achse') || document.getElementById('sbe-achse'))?.value || '';
@@ -1211,7 +1211,9 @@ function updateFwdSwBtn(prefix) {
       const wrap = document.createElement('div');
       wrap.id = 'fwsw-btns-' + prefix;
       wrap.style.cssText = 'display:flex;gap:8px;margin-top:2px;';
-      ['Forward','Switch'].forEach(val => {
+      const isSideflip = achse === 'Sideflip';
+  const btnLabels = isSideflip ? ['Right','Left'] : ['Forward','Switch'];
+  btnLabels.forEach(val => {
         const btn = document.createElement('button');
         btn.type = 'button'; btn.textContent = val;
         btn.dataset.val = val;
@@ -3628,7 +3630,7 @@ document.getElementById('f-datum').valueAsDate = new Date();
       <div class="form-group sbe-kicker"><label>Axis</label>
         <select id="sbe-achse" onchange="updateFwdSwBtn('sbe')"><option value="">–</option>
           <option>Cork</option><option>Bio/Misty</option><option>Flat Spins</option><option>Rodeo</option>
-          <option>Regular Spins</option><option>Frontflip</option><option>Backflip</option><option>Sideflip Right</option><option>Sideflip Left</option>
+          <option>Regular Spins</option><option>Frontflip</option><option>Backflip</option><option>Sideflip</option>
         </select></div>
       <div class="form-group sbe-kicker" style="grid-column:1/-1;"><label>Grabs</label>
         <div id="sbe-grab-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;">
