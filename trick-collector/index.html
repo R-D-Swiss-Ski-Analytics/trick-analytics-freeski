@@ -1207,13 +1207,14 @@ function updateFwdSwBtn(prefix) {
   if (!dirSelect) return;
   if (isClassic) {
     dirSelect.style.display = 'none';
-    if (!btnWrap) {
+    if (btnWrap) btnWrap.remove(); // always recreate so labels stay correct
+    {
       const wrap = document.createElement('div');
       wrap.id = 'fwsw-btns-' + prefix;
       wrap.style.cssText = 'display:flex;gap:8px;margin-top:2px;';
       const isSideflip = achse === 'Sideflip';
-  const btnLabels = isSideflip ? ['Right','Left'] : ['Forward','Switch'];
-  btnLabels.forEach(val => {
+      const btnLabels = isSideflip ? ['Right','Left'] : ['Forward','Switch'];
+      btnLabels.forEach(val => {
         const btn = document.createElement('button');
         btn.type = 'button'; btn.textContent = val;
         btn.dataset.val = val;
