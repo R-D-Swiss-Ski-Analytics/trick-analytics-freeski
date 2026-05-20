@@ -630,7 +630,7 @@
           </select>
         </div>
 
-        <div class="section-divider kicker-field-sb hidden">Jump / Halfpipe</div>
+        <div class="section-divider kicker-field-sb hidden" id="sb-disc-divider">Jump / Halfpipe</div>
         <div class="form-group kicker-field-sb hidden"><label>Direction</label>
           <select id="sb-drehrichtung"><option value="">–</option>
             <option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option><option>Forward</option><option>Switch</option>
@@ -1180,17 +1180,27 @@ function showPage(id, btn) {
 function updateSbDisciplines() {
   const athlet = document.getElementById('sb-athlet').value;
   const sel = document.getElementById('sb-disziplin');
-  if (!athlet) return;
-  // Determine TG
-  const hpAthletes = ['Alan Bornet'];
-  const isHP = hpAthletes.includes(athlet);
-  sel.innerHTML = isHP
-    ? '<option value="">— select —</option><option>Halfpipe</option>'
-    : '<option value="">— select —</option><option>Jump</option><option>Rail</option>';
+  const selRow = sel.closest('.form-row') || sel.parentElement;
+  if (!athlet) { sel.style.display=''; return; }
+  const isHP = ['Alan Bornet'].includes(athlet);
+  if (isHP) {
+    sel.innerHTML = '<option value="Halfpipe">Halfpipe</option>';
+    sel.value = 'Halfpipe';
+    sel.style.display = 'none';
+  } else {
+    sel.innerHTML = '<option value="">— select —</option><option>Jump</option><option>Rail</option>';
+    sel.value = '';
+    sel.style.display = '';
+  }
   toggleDisziplin('sb');
 }
 
 function toggleDisziplin(prefix) {
+  if (prefix === 'sb') {
+    const v = document.getElementById('sb-disziplin').value;
+    const divider = document.getElementById('sb-disc-divider');
+    if (divider) divider.textContent = v === 'Halfpipe' ? 'Halfpipe' : 'Jump / Halfpipe';
+  }
   const v = document.getElementById(prefix + '-disziplin').value;
   const isJump = v === 'Jump' || v === 'Halfpipe' || v === 'Landing Bag';
   document.querySelectorAll('.kicker-field-' + prefix).forEach(el => el.classList.toggle('hidden', !isJump));
