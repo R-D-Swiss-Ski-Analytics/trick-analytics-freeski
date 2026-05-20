@@ -2056,10 +2056,16 @@ function showGrabPicker(name, trickLabel, status, btn) {
   picker.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
       <span style="font-size:10px;color:#39c3d4;font-weight:700;text-transform:uppercase;letter-spacing:.8px;">Select grab(s)</span>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--muted);">
-        <input type="checkbox" id="dg-toggle-${safeId}" onchange="toggleDoubleGrab('${name}','${trickLabel.replace(/'/g,"\\'")}','${pickerId}')" style="accent-color:#f59e0b;width:15px;height:15px;">
-        <span id="dg-label-${safeId}">Double Grab</span>
-      </label>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted);">
+          <input type="checkbox" id="lead-toggle-${safeId}" style="accent-color:#7ab51d;width:15px;height:15px;">
+          <span style="color:#7ab51d;font-weight:600;">Lead</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted);">
+          <input type="checkbox" id="dg-toggle-${safeId}" onchange="toggleDoubleGrab('${name}','${trickLabel.replace(/'/g,"\\'")}','${pickerId}')" style="accent-color:#f59e0b;width:15px;height:15px;">
+          <span id="dg-label-${safeId}">Double Grab</span>
+        </label>
+      </div>
     </div>
     <div id="dg-hint-${safeId}" style="display:none;font-size:11px;color:#f59e0b;margin-bottom:8px;">Select first grab →</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;" id="dg-grabs-${safeId}">
@@ -2129,7 +2135,11 @@ function doubleGrabClick(name, trickLabel, grab, btn, safeId) {
 
 function addTrickWithGrab(name, trickLabel, grab, btn) {
   if (!sessActiveTricks[name]) sessActiveTricks[name] = [];
-  const label = baseLabel(trickLabel) + ' — ' + grab;
+  const safeId = name.replace(/\s/g,'_');
+  const leadToggle = document.getElementById('lead-toggle-' + safeId);
+  const isLead = leadToggle && leadToggle.checked;
+  const grabLabel = isLead ? 'Lead ' + grab : grab;
+  const label = baseLabel(trickLabel) + ' — ' + grabLabel;
   const idx = sessActiveTricks[name].indexOf(label);
   if (idx === -1) {
     sessActiveTricks[name].push(label);
