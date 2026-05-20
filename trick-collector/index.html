@@ -1243,7 +1243,7 @@ function toggleDisziplin(prefix) {
   if (prefix === 'sb') {
     const v = document.getElementById('sb-disziplin').value;
     const divider = document.getElementById('sb-disc-divider');
-    if (divider) divider.textContent = v === 'Halfpipe' ? 'Halfpipe' : 'Jump / Halfpipe';
+    if (divider) divider.textContent = v || 'Jump / Halfpipe';
   }
   const v = document.getElementById(prefix + '-disziplin').value;
   const isJump = v === 'Jump' || v === 'Halfpipe' || v === 'Landing Bag';
