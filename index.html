@@ -678,38 +678,44 @@
           <select id="sb-absprung"><option value="">–</option>
             <option>Carved</option><option>Inside Edge</option><option>Nosebutter</option><option>Tailbutter</option>
           </select></div>
-        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(mehrere möglich)</span></label>
-          <div id="sb-grab-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;">
+        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(click = normal · L = lead)</span></label>
+          <div id="sb-grab-wrap" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0;">
             <input type="hidden" id="sb-grab" value="">
           </div>
           <script>
           (function(){
-            const grabs=['Safety', 'Mute', 'Tail', 'Blunt', 'Japan', 'Critical', 'Esco', 'In and out', 'Nose', 'Octo', 'Truckdriver', 'Stale', 'Cuban', 'Seatbelt', 'Bow and Arrow'];
+            const grabs=['Safety','Mute','Tail','Blunt','Japan','Critical','Esco','In and out','Nose','Octo','Truckdriver','Stale','Cuban','Seatbelt','Bow and Arrow'];
             const wrap=document.getElementById("sb-grab-wrap");
             const hid=document.getElementById("sb-grab");
-            function updateHidden(){
-              const leadOn=document.getElementById("sb-lead-toggle")?.checked;
-              hid.value=Array.from(wrap.querySelectorAll(".grab-active")).map(b=>leadOn?"Lead "+b.dataset.grab:b.dataset.grab).join(", ");
-            }
+            const selected=new Set();
+            function updateHidden(){ hid.value=[...selected].join(", "); }
             grabs.forEach(g=>{
+              const pair=document.createElement("div");
+              pair.style.cssText="display:inline-flex;border-radius:20px;overflow:hidden;border:1px solid #1a3450;";
+              // Normal button
               const btn=document.createElement("button");
-              btn.type="button";btn.textContent=g;btn.dataset.grab=g;
-              btn.style.cssText="background:#112236;border:1px solid #1a3450;border-radius:20px;color:#6b8299;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;";
+              btn.type="button"; btn.textContent=g; btn.dataset.key=g;
+              btn.style.cssText="background:#112236;color:#6b8299;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;border:none;border-right:1px solid #1a3450;";
               btn.onclick=()=>{
-                const a=btn.classList.toggle("grab-active");
-                btn.style.background=a?"#1e3a5f":"#1a2235";
-                btn.style.borderColor=a?"#3b82f6":"#1e2d45";
-                btn.style.color=a?"#60a5fa":"#94a3b8";
+                if(selected.has(g)){selected.delete(g);btn.style.background="#112236";btn.style.color="#6b8299";}
+                else{selected.add(g);btn.style.background="#1e3a5f";btn.style.color="#60a5fa";}
                 updateHidden();
               };
-              wrap.appendChild(btn);
+              // Lead button
+              const lBtn=document.createElement("button");
+              lBtn.type="button"; lBtn.textContent="L"; lBtn.dataset.key="Lead "+g;
+              lBtn.style.cssText="background:#112236;color:#6b8299;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;border:none;";
+              lBtn.onclick=()=>{
+                const k="Lead "+g;
+                if(selected.has(k)){selected.delete(k);lBtn.style.background="#112236";lBtn.style.color="#6b8299";}
+                else{selected.add(k);lBtn.style.background="#1a3a1a";lBtn.style.color="#7ab51d";}
+                updateHidden();
+              };
+              pair.appendChild(btn); pair.appendChild(lBtn);
+              wrap.appendChild(pair);
             });
           })();
-          </script>
-          <label style="display:flex;align-items:center;gap:6px;margin-top:6px;cursor:pointer;">
-            <input type="checkbox" id="sb-lead-toggle" style="accent-color:#7ab51d;width:15px;height:15px;" onchange="(function(){const w=document.getElementById('sb-grab-wrap'),h=document.getElementById('sb-grab'),l=document.getElementById('sb-lead-toggle').checked;h.value=Array.from(w.querySelectorAll('.grab-active')).map(b=>l?'Lead '+b.dataset.grab:b.dataset.grab).join(', ')})()">
-            <span style="font-size:12px;color:#7ab51d;font-weight:600;">Lead Grab</span>
-          </label></div>
+          </script></div>
         <div class="form-group kicker-field-sb hidden"><label>Bring Back</label>
           <select id="sb-bringback"><option value="">–</option>
             <option>180</option><option>360</option><option>540</option>
