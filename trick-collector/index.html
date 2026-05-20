@@ -363,7 +363,7 @@
       <!-- Baukasten Jump -->
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Direction</label>
         <select id="edit-drehrichtung" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option>
+          <option value="">–</option><option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option><option>Forward</option><option>Switch</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Rotation</label>
         <select id="edit-rotation" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
@@ -639,7 +639,7 @@
         <div class="section-divider kicker-field-sb hidden">Jump / Halfpipe</div>
         <div class="form-group kicker-field-sb hidden"><label>Direction</label>
           <select id="sb-drehrichtung"><option value="">–</option>
-            <option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option>
+            <option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option><option>Forward</option><option>Switch</option>
           </select></div>
         <div class="form-group kicker-field-sb hidden"><label>Flips</label>
           <select id="sb-flips"><option value="">–</option>
@@ -1594,14 +1594,14 @@ function renderDBRankings() {
   function normalizeDir(d) {
     if (!d) return null;
     const s = d.trim();
-    if (s === 'Left'  || s === 'Forward Left'  || s === 'FL') return 'Forward Left';
-    if (s === 'Right' || s === 'Forward Right' || s === 'FR') return 'Forward Right';
+    if (s === 'Left'  || s === 'Left'  || s === 'FL') return 'Left';
+    if (s === 'Right' || s === 'Right' || s === 'FR') return 'Right';
     if (s === 'Switch Left'  || s === 'SL') return 'Switch Left';
     if (s === 'Switch Right' || s === 'SR') return 'Switch Right';
     return null;
   }
   // Also normalize rotation: strip non-numeric suffix for comparison, keep original for display
-  const dirMap = { 'Forward Left': {}, 'Forward Right': {}, 'Switch Left': {}, 'Switch Right': {} };
+  const dirMap = { 'Left': {}, 'Right': {}, 'Switch Left': {}, 'Switch Right': {} };
   // Only include standort entries with status 'mastered' in rotation ranking
   allForRot.filter(t => t.drehrichtung && t.rotation && t.athlet && (t._quelle === 'session' || t.status === 'mastered')).forEach(t => {
     const dir = normalizeDir(t.drehrichtung);
@@ -1611,7 +1611,7 @@ function renderDBRankings() {
     if (curDeg > prevDeg) dirMap[dir][t.athlet] = String(curDeg); // store clean number
   });
   const rotOrder = ['180','270','360','450','540','630','720','810','900','1080'];
-  const dirColors = { 'Forward Left':'#3b82f6','Forward Right':'#06b6d4','Switch Left':'#a78bfa','Switch Right':'#f59e0b' };
+  const dirColors = { 'Left':'#3b82f6','Right':'#06b6d4','Switch Left':'#a78bfa','Switch Right':'#f59e0b' };
   document.getElementById('rank-rotation').innerHTML = Object.entries(dirMap).map(([dir, athMap]) => {
     const entries = Object.entries(athMap).sort((a,b) => extractDeg(b[1]) - extractDeg(a[1]));
     const col = dirColors[dir] || '#3b82f6';
@@ -1626,7 +1626,7 @@ function renderDBRankings() {
   }).join('');
 
   // ── 3. Direction Balance per Athlete (all 4 directions) ──
-  const DIRS4 = ['Left','Right','Switch Left','Switch Right'];
+  const DIRS4 = ['Left','Right','Switch Left','Switch Right','Forward','Switch'];
   const DIR4_COLORS = { 'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b' };
   const balMap = {};
 
@@ -1636,8 +1636,8 @@ function renderDBRankings() {
     const fromTb = ['Switch Right','Switch Left','Right','Left'].find(d => tb.startsWith(d+' ') || tb.startsWith(d+' —')) || null;
     const raw = fromTb || t.drehrichtung || '';
     const s = raw.trim();
-    if (s === 'Left' || s === 'Forward Left') return 'Left';
-    if (s === 'Right' || s === 'Forward Right') return 'Right';
+    if (s === 'Left' || s === 'Left') return 'Left';
+    if (s === 'Right' || s === 'Right') return 'Right';
     if (s === 'Switch Left') return 'Switch Left';
     if (s === 'Switch Right') return 'Switch Right';
     return null;
@@ -1751,15 +1751,15 @@ function downloadRanking() {
   function nDir(d) {
     if (!d) return null;
     const s = d.trim();
-    if (s==='Left'||s==='Forward Left')   return 'Forward Left';
-    if (s==='Right'||s==='Forward Right') return 'Forward Right';
+    if (s==='Left'||s==='Left')   return 'Left';
+    if (s==='Right'||s==='Right') return 'Right';
     if (s==='Switch Left')  return 'Switch Left';
     if (s==='Switch Right') return 'Switch Right';
     return null;
   }
 
   const athletes = [...new Set(allForRot.map(t=>t.athlet).filter(Boolean))].sort();
-  const dirs = ['Forward Left','Forward Right','Switch Left','Switch Right'];
+  const dirs = ['Left','Right','Switch Left','Switch Right'];
 
   // Build per-athlete stats
   const stats = {};
@@ -1799,7 +1799,7 @@ function downloadRanking() {
 
   // ── SHEET 2: Höchste Rotation pro Drehrichtung ───────────────────
   const s2 = [
-    ['Rank','Athlete','Forward Left','Forward Right','Switch Left','Switch Right','Highest Total'],
+    ['Rank','Athlete','Left','Right','Switch Left','Switch Right','Highest Total'],
   ];
   [...athletes].sort((a,b)=>{
     const maxA = Math.max(...dirs.map(d=>stats[a].maxRot[d]));
@@ -2000,7 +2000,7 @@ async function toggleSessionAthlete(name) {
   renderSessionTrickSelection();
 }
 
-const SESS_DIRECTIONS = ['Left','Right','Switch Left','Switch Right'];
+const SESS_DIRECTIONS = ['Left','Right','Switch Left','Switch Right','Forward','Switch'];
 const SESS_GRABS = ['Safety','Mute','Tail','Blunt','Japan','Critical','Esco','Nose','Octo','Truckdriver','Stale','Cuban','Seatbelt','Bow and Arrow','In and out'];
 
 function tricksForDir(tricks, dir) {
@@ -2416,8 +2416,8 @@ function renderStandort() {
   function normDir4(d) {
     if (!d) return null;
     const s = d.trim();
-    if (s === 'Left' || s === 'Forward Left') return 'Left';
-    if (s === 'Right' || s === 'Forward Right') return 'Right';
+    if (s === 'Left' || s === 'Left') return 'Left';
+    if (s === 'Right' || s === 'Right') return 'Right';
     if (s === 'Switch Left') return 'Switch Left';
     if (s === 'Switch Right') return 'Switch Right';
     return null;
@@ -3452,7 +3452,7 @@ document.getElementById('f-datum').valueAsDate = new Date();
         </select></div>
       <div class="form-group sbe-kicker"><label>Direction</label>
         <select id="sbe-drehrichtung"><option value="">–</option>
-          <option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option>
+          <option>Right</option><option>Left</option><option>Switch Left</option><option>Switch Right</option><option>Forward</option><option>Switch</option>
         </select></div>
       <div class="form-group sbe-kicker"><label>Rotation</label>
         <select id="sbe-rotation"><option value="">–</option>
