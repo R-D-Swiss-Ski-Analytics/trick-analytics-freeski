@@ -988,7 +988,7 @@
 
 
 <!-- ══════════════════════════════════════════ ATHLETE NOTEBOOK -->
-<div class="page" id="page-athlete-notebook">
+<div class="page" id="page-athlete-notebook" class="page active">
   <div style="display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start;">
     <div class="card">
       <div class="card-title">New Entry</div>
@@ -1025,9 +1025,9 @@
       <div class="form-group" style="margin-bottom:14px;">
         <label>Category</label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
-          <button onclick="selectAnbCat(this,'Rituale Wettkampf')" class="nb-cat-btn">Rituale Wettkampf</button>
+          <button onclick="selectAnbCat(this,'Competition Rituals')" class="nb-cat-btn">Competition Rituals</button>
           <button onclick="selectAnbCat(this,'Learnings')"         class="nb-cat-btn">Learnings</button>
-          <button onclick="selectAnbCat(this,'Ziele')"             class="nb-cat-btn">Ziele</button>
+          <button onclick="selectAnbCat(this,'Goals')"             class="nb-cat-btn">Goals</button>
         </div>
         <input type="hidden" id="anb-kategorie">
       </div>
@@ -3506,7 +3506,7 @@ async function loadAthleteNotebook() {
   if (error) { el.innerHTML = '<div style="color:var(--danger);">Error: ' + error.message + '</div>'; return; }
   if (!data || !data.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:32px;">No entries yet for ' + athlet + '.</div>'; return; }
 
-  const catColors = { 'Rituale Wettkampf': 'nb-cat-Competition', 'Learnings': 'nb-cat-Mindset', 'Ziele': 'nb-cat-Technique' };
+  const catColors = { 'Competition Rituals': 'nb-cat-Competition', 'Learnings': 'nb-cat-Mindset', 'Goals': 'nb-cat-Technique' };
   el.innerHTML = data.map(e => `
     <div class="nb-entry">
       <div class="nb-entry-header">
