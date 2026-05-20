@@ -377,7 +377,7 @@
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Grab</label>
         <select id="edit-grab" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>Safety</option><option>Mute</option><option>Tail</option><option>Blunt</option><option>Japan</option><option>Critical</option><option>Esco</option><option>In and out</option><option>Nose</option><option>Octo</option><option>Truckdriver</option><option>Stale</option><option>Cuban</option><option>Seatbelt</option><option>Bow and Arrow</option>
+          <option value="">–</option><option>Blunt</option><option>Bow and Arrow</option><option>Critical</option><option>Cuban</option><option>Esco</option><option>In and out</option><option>Japan</option><option>Mute</option><option>Nose</option><option>Octo</option><option>Safety</option><option>Seatbelt</option><option>Stale</option><option>Tail</option><option>Truckdriver</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Take-off</label>
         <select id="edit-absprung" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
@@ -3551,7 +3551,7 @@ function openSbEdit(id){
   const wrap=document.getElementById('sbe-grab-wrap');
   const hid=document.getElementById('sbe-grab');
   if(wrap.querySelectorAll('button').length===0){
-    ['Safety', 'Mute', 'Tail', 'Blunt', 'Japan', 'Critical', 'Esco', 'In and out', 'Nose', 'Octo', 'Truckdriver', 'Stale', 'Cuban', 'Seatbelt', 'Bow and Arrow'].forEach(g=>{
+    ['Blunt', 'Bow and Arrow', 'Critical', 'Cuban', 'Esco', 'In and out', 'Japan', 'Mute', 'Nose', 'Octo', 'Safety', 'Seatbelt', 'Stale', 'Tail', 'Truckdriver'].forEach(g=>{
       const btn=document.createElement('button');
       btn.type='button';btn.textContent=g;btn.dataset.grab=g;
       btn.style.cssText='background:#112236;border:1px solid #1a3450;border-radius:20px;color:#6b8299;padding:4px 10px;font-size:11px;cursor:pointer;margin:2px;';
