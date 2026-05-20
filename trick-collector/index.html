@@ -2033,12 +2033,14 @@ function parseGrabsFromLabel(label) {
   return found.length ? found : SESS_GRABS;
 }
 
+// Double grab state: {athleteName: firstGrab}
+const doubleGrabFirst = {};
+
 function showGrabPicker(name, trickLabel, status, btn) {
   const safeId = name.replace(/\s/g,'_');
-  // Remove any existing picker
   document.querySelectorAll('.grab-picker-' + safeId).forEach(el => el.remove());
-  // Reset all trick wrappers to inline-block
   document.querySelectorAll('.trick-wrap-' + safeId).forEach(el => el.style.display = 'inline-block');
+  delete doubleGrabFirst[name]; // reset double grab state
 
   const base = baseLabel(trickLabel);
   const alreadySelected = (sessActiveTricks[name] || [])
@@ -2046,19 +2048,24 @@ function showGrabPicker(name, trickLabel, status, btn) {
     .map(t => t.slice(base.length + 3));
 
   const grabs = parseGrabsFromLabel(trickLabel);
+  const pickerId = 'gp-' + safeId;
   const picker = document.createElement('div');
   picker.className = 'grab-picker-' + safeId;
+  picker.id = pickerId;
   picker.style.cssText = 'margin-top:8px;padding:10px 14px;background:var(--surface);border:1px solid #39c3d4;border-radius:10px;width:100%;';
-  picker.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+  picker.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
       <span style="font-size:10px;color:#39c3d4;font-weight:700;text-transform:uppercase;letter-spacing:.8px;">Select grab(s)</span>
-      <span style="font-size:10px;color:var(--muted);">Multiple possible</span>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--muted);">
+        <input type="checkbox" id="dg-toggle-${safeId}" onchange="toggleDoubleGrab('${name}','${trickLabel.replace(/'/g,"\\'")}','${pickerId}')" style="accent-color:#f59e0b;width:15px;height:15px;">
+        <span id="dg-label-${safeId}">Double Grab</span>
+      </label>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+    <div id="dg-hint-${safeId}" style="display:none;font-size:11px;color:#f59e0b;margin-bottom:8px;">Select first grab →</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;" id="dg-grabs-${safeId}">
       ${grabs.map(g => {
         const sel = alreadySelected.includes(g);
-        const s = sel
-          ? 'background:rgba(57,195,212,0.18);border-color:#39c3d4;color:#39c3d4;'
-          : 'background:var(--surface2);border-color:var(--border);color:var(--text);';
+        const s = sel ? 'background:rgba(57,195,212,0.18);border-color:#39c3d4;color:#39c3d4;' : 'background:var(--surface2);border-color:var(--border);color:var(--text);';
         return `<button onclick="addTrickWithGrab('${name}','${trickLabel.replace(/'/g,"\\'")}','${g}',this)"
           style="padding:6px 14px;${s}border-width:1.5px;border-style:solid;border-radius:7px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${g}</button>`;
       }).join('')}
@@ -2067,6 +2074,57 @@ function showGrabPicker(name, trickLabel, status, btn) {
   const wrapper = btn.parentElement;
   wrapper.style.display = 'block';
   wrapper.appendChild(picker);
+}
+
+function toggleDoubleGrab(name, trickLabel, pickerId) {
+  const safeId = name.replace(/\s/g,'_');
+  const isDouble = document.getElementById('dg-toggle-' + safeId).checked;
+  const hint = document.getElementById('dg-hint-' + safeId);
+  const grabsDiv = document.getElementById('dg-grabs-' + safeId);
+  delete doubleGrabFirst[name];
+  hint.style.display = isDouble ? 'block' : 'none';
+  // Rewire grab buttons
+  const grabs = parseGrabsFromLabel(trickLabel);
+  if (isDouble) {
+    grabsDiv.querySelectorAll('button').forEach((btn, i) => {
+      const g = grabs[i];
+      btn.onclick = () => doubleGrabClick(name, trickLabel, g, btn, safeId);
+      btn.style.background = 'var(--surface2)'; btn.style.borderColor = 'var(--border)'; btn.style.color = 'var(--text)';
+    });
+  } else {
+    grabsDiv.querySelectorAll('button').forEach((btn, i) => {
+      const g = grabs[i];
+      btn.onclick = () => addTrickWithGrab(name, trickLabel, g, btn);
+    });
+  }
+}
+
+function doubleGrabClick(name, trickLabel, grab, btn, safeId) {
+  if (!doubleGrabFirst[name]) {
+    // First grab selected
+    doubleGrabFirst[name] = grab;
+    btn.style.background = 'rgba(245,158,11,0.2)'; btn.style.borderColor = '#f59e0b'; btn.style.color = '#f59e0b';
+    const hint = document.getElementById('dg-hint-' + safeId);
+    if (hint) hint.textContent = grab + ' to → select second grab';
+  } else {
+    // Second grab — create combined
+    const combined = doubleGrabFirst[name] + ' to ' + grab;
+    delete doubleGrabFirst[name];
+    if (!sessActiveTricks[name]) sessActiveTricks[name] = [];
+    const label = baseLabel(trickLabel) + ' — ' + combined;
+    if (!sessActiveTricks[name].includes(label)) {
+      sessActiveTricks[name].push(label);
+    }
+    renderSessSelected(name);
+    // Reset all buttons
+    const grabsDiv = document.getElementById('dg-grabs-' + safeId);
+    if (grabsDiv) grabsDiv.querySelectorAll('button').forEach(b => {
+      b.style.background = 'var(--surface2)'; b.style.borderColor = 'var(--border)'; b.style.color = 'var(--text)';
+    });
+    const hint = document.getElementById('dg-hint-' + safeId);
+    if (hint) hint.textContent = 'Select first grab →';
+    showToast('Added: ' + combined, 'success');
+  }
 }
 
 function addTrickWithGrab(name, trickLabel, grab, btn) {
