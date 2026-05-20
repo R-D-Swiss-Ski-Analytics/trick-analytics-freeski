@@ -570,7 +570,7 @@
   <!-- Athlete + top controls -->
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
     <label style="font-size:16px;color:#ffffff;font-family:'Poppins',sans-serif;letter-spacing:0.5px;">ATHLETE</label>
-    <select id="sb-athlet" style="max-width:200px;border:2px solid #39c3d4;border-radius:8px;" onchange="loadStandort()">
+    <select id="sb-athlet" style="max-width:200px;border:2px solid #39c3d4;border-radius:8px;" onchange="loadStandort();updateSbDisciplines()">
           <option value="">— select —</option>
           <optgroup label="TG Greg & Kai">
               <option>Mathilde Gremaud</option>
@@ -626,7 +626,7 @@
           <label>Discipline</label>
           <select id="sb-disziplin" onchange="toggleDisziplin('sb')">
             <option value="">— select —</option>
-            <option>Jump</option><option>Rail</option><option>Halfpipe</option><option>Landing Bag</option>
+            <option>Jump</option><option>Rail</option><option>Halfpipe</option>
           </select>
         </div>
 
@@ -1177,6 +1177,19 @@ function showPage(id, btn) {
 }
 
 // ── DISZIPLIN TOGGLE (prefix = 'f' or 'sb') ──────────────────────
+function updateSbDisciplines() {
+  const athlet = document.getElementById('sb-athlet').value;
+  const sel = document.getElementById('sb-disziplin');
+  if (!athlet) return;
+  // Determine TG
+  const hpAthletes = ['Alan Bornet'];
+  const isHP = hpAthletes.includes(athlet);
+  sel.innerHTML = isHP
+    ? '<option value="">— select —</option><option>Halfpipe</option>'
+    : '<option value="">— select —</option><option>Jump</option><option>Rail</option>';
+  toggleDisziplin('sb');
+}
+
 function toggleDisziplin(prefix) {
   const v = document.getElementById(prefix + '-disziplin').value;
   const isJump = v === 'Jump' || v === 'Halfpipe' || v === 'Landing Bag';
