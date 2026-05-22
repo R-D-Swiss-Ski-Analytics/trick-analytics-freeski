@@ -1242,6 +1242,7 @@ const SUPABASE_URL = 'https://nvibrxtqknkmsiccauzs.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_8RRRG5c_PhJ8Cc1rC03zJw_1W5UYkS7';
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+document.addEventListener('DOMContentLoaded',()=>{const o=document.getElementById('login-overlay');if(o)o.style.display='none';currentRole='coach';initApp('coach');});
 
 const COACH_PW = 'FreeskiCoach26';
 let currentRole=null,currentAthlete=null;
