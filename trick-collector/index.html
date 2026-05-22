@@ -375,11 +375,11 @@
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Axis</label>
         <select id="edit-achse" onchange="updateFwdSwBtn('edit')" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>Cork</option><option>Bio/Misty</option><option>Flat Spins</option><option>Rodeo</option><option>Regular Spins</option><option>Frontflip</option><option>Backflip</option><option>Sideflip</option>
+          <option value="">–</option><option>Cork</option><option>Bio/Misty</option><option>Flat Spins</option><option>Rodeo</option><option>Upright Spins</option><option>Frontflip</option><option>Backflip</option><option>Sideflip</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Grab</label>
         <select id="edit-grab" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>Blunt</option><option>Bow and Arrow</option><option>Critical</option><option>Cuban</option><option>Esco</option><option>In and out</option><option>Japan</option><option>Mute</option><option>Nose</option><option>Octo</option><option>Safety</option><option>Seatbelt</option><option>Stale</option><option>Tail</option><option>Truckdriver</option>
+          <option value="">–</option><option>Blunt</option><option>Bow and Arrow</option><option>Broken Arrow</option><option>Critical</option><option>Cuban</option><option>Double Japan</option><option>Esco</option><option>Guitar</option><option>High Mute</option><option>In and out</option><option>Indi-Truck</option><option>Inside Tail</option><option>Japan</option><option>Mute</option><option>Nose</option><option>Octo</option><option>Rocket</option><option>Safety</option><option>Seatbelt</option><option>Seatbelt Japan</option><option>Stale</option><option>Stink Bug</option><option>Tail</option><option>Truckdriver</option><option>Venom</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Take-off</label>
         <select id="edit-absprung" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
@@ -391,7 +391,7 @@
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Style Element</label>
         <select id="edit-style" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>Tweak</option><option>Poke/Bone</option><option>Screamin' Seamen</option>
+          <option value="">–</option><option>Tweak</option><option>Poke/Bone</option><option>Screamin' Seamen</option><option>Blender</option>
         </select></div>
       <!-- Rail -->
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Rail Type</label>
@@ -646,8 +646,8 @@
             <optgroup label="Off-Axis">
               <option>Cork</option><option>Bio/Misty</option><option>Flat Spins</option><option>Rodeo</option>
             </optgroup>
-            <optgroup label="Regular Spins (Longitudinal Axis)">
-              <option>Regular Spins</option>
+            <optgroup label="Upright Spins (Longitudinal Axis)">
+              <option>Upright Spins</option>
             </optgroup>
             <optgroup label="Classic Acrobatic Axis (Transverse Axis and Sagittal Axis)">
               <option>Frontflip</option><option>Backflip</option><option>Sideflip</option>
@@ -718,7 +718,7 @@
           </select></div>
         <div class="form-group kicker-field-sb hidden"><label>Style Element</label>
           <select id="sb-style"><option value="">–</option>
-            <option>Tweak</option><option>Poke/Bone</option><option>Screamin' Seamen</option>
+            <option>Tweak</option><option>Poke/Bone</option><option>Screamin' Seamen</option><option>Blender</option>
           </select></div>
 
         <div class="section-divider rail-field-sb hidden">Rail</div>
@@ -2586,19 +2586,6 @@ function toggleSbForm() {
 
 
 
-function renderOlympicBenchmarks(athlet) {
-  const hp = ['Alan Bornet', 'Demo HP Freeski'];
-  const isHP = hp.includes(athlet);
-  const existing = document.getElementById("olympic-section-wrap");
-  if(existing) existing.remove();
-  const wrap = document.createElement("div");
-  wrap.id = "olympic-section-wrap";
-  const hp_html = '<div class="card" style="margin-bottom:16px;">\n  <div class="card-title" style="color:#f59e0b;">🏅 Olympic Halfpipe 2026 — Milano Cortina</div>\n  <div style="margin-bottom:12px;">\n    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#2d8a4e;margin-bottom:6px;">Women</div>\n    <div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥇 Eileen Gu</span>\n            <span style="font-size:11px;color:var(--muted);">CHN</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Right cork 900 Buick, 900 tailgrab, switch 700, back-to-back alley-oop flat 540s</div>\n        </div><div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥈 Li Fanghui</span>\n            <span style="font-size:11px;color:var(--muted);">CHN</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">High-difficulty run with multiple cork tricks</div>\n        </div><div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥉 Zoe Atkin</span>\n            <span style="font-size:11px;color:var(--muted);">GBR</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">5.4m above pipe, powerful consistent run</div>\n        </div>\n  </div>\n  <div>\n    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#39c3d4;margin-bottom:6px;">Men</div>\n    <div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥇 Alex Ferreira</span>\n            <span style="font-size:11px;color:var(--muted);">USA</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Double corks in all four directions, signature pole swing on final hit</div>\n        </div><div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥈 Henry Sildaru</span>\n            <span style="font-size:11px;color:var(--muted);">EST</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Back-to-back double 1620s, alley-oop cork 1080 blunt</div>\n        </div><div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥉 Brendan Mackay</span>\n            <span style="font-size:11px;color:var(--muted);">CAN</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Switch double cork 1620</div>\n        </div>\n  </div>\n</div>';
-  const ssba_html = '<div class="card" style="margin-bottom:16px;">\n  <div class="card-title" style="color:#f59e0b;">🏅 Olympic Big Air 2026 — Milano Cortina</div>\n  <div style="margin-bottom:12px;">\n    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#2d8a4e;margin-bottom:6px;">Women</div>\n    <div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥇 Megan Oldham</span>\n            <span style="font-size:11px;color:var(--muted);">CAN</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Switch left double cork 1260 safety</div>\n        </div><div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥈 Eileen Gu</span>\n            <span style="font-size:11px;color:var(--muted);">CHN</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Left double cork 1260</div>\n        </div><div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥉 Flora Tabanelli</span>\n            <span style="font-size:11px;color:var(--muted);">ITA</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Left double 1440 / Left double 1620 Cindy</div>\n        </div>\n  </div>\n  <div>\n    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#39c3d4;margin-bottom:6px;">Men</div>\n    <div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥇 Tormod Frostad</span>\n            <span style="font-size:11px;color:var(--muted);">NOR</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Right nosebutter double bio 1620 / Switch right tailbutter double bio 1620</div>\n        </div><div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥈 Mac Forehand</span>\n            <span style="font-size:11px;color:var(--muted);">USA</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Nosebutter triple cork 2160 safety</div>\n        </div><div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥉 Matej Svancer</span>\n            <span style="font-size:11px;color:var(--muted);">AUT</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">2160</div>\n        </div>\n  </div>\n</div><div class="card" style="margin-bottom:16px;">\n  <div class="card-title" style="color:#f59e0b;">🏅 Olympic Slopestyle 2026 — Milano Cortina</div>\n  <div style="margin-bottom:12px;">\n    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#2d8a4e;margin-bottom:6px;">Women</div>\n    <div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥇 Mathilde Gremaud</span>\n            <span style="font-size:11px;color:var(--muted);">SUI</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Switch double 1080, double 1260, double 1260, switch double cork 1260 safety — first woman with 3 doubles in competition</div>\n        </div><div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥈 Eileen Gu</span>\n            <span style="font-size:11px;color:var(--muted);">CHN</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Multiple cork rotations, switch 270 disaster on rails</div>\n        </div><div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥉 Megan Oldham</span>\n            <span style="font-size:11px;color:var(--muted);">CAN</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Two 900s, left cork 720 safety</div>\n        </div>\n  </div>\n  <div>\n    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#39c3d4;margin-bottom:6px;">Men</div>\n    <div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥇 Birk Ruud</span>\n            <span style="font-size:11px;color:var(--muted);">NOR</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Switch right double cork 1800, switch left double 1620, left nosebutter double 1620</div>\n        </div><div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥈 Alex Hall</span>\n            <span style="font-size:11px;color:var(--muted);">USA</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Unique rail techniques, bring-back on knuckle section</div>\n        </div><div style="padding:8px 0;border-bottom:1px solid var(--border);">\n          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">\n            <span style="font-weight:600;font-size:13px;">🥉 Luca Harrington</span>\n            <span style="font-size:11px;color:var(--muted);">NZL</span>\n          </div>\n          <div style="font-size:12px;color:#39c3d4;">Pull-back 1440 to 1260 on final jump</div>\n        </div>\n  </div>\n</div>';
-  wrap.innerHTML = isHP ? hp_html : ssba_html;
-  const cols = document.getElementById("sb-columns");
-  if(cols && cols.parentNode) cols.parentNode.insertBefore(wrap, cols.nextSibling);
-}
 
 async function loadStandort() {
   sbAthlet = document.getElementById('sb-athlet').value;
@@ -2646,7 +2633,6 @@ async function loadStandort() {
   }
 
   renderStandort();
-  renderOlympicBenchmarks(sbAthlet);
 }
 
 function renderStandort() {
@@ -3807,14 +3793,14 @@ document.getElementById('f-datum').valueAsDate = new Date();
       <div class="form-group sbe-kicker"><label>Axis</label>
         <select id="sbe-achse" onchange="updateFwdSwBtn('sbe')"><option value="">–</option>
           <option>Cork</option><option>Bio/Misty</option><option>Flat Spins</option><option>Rodeo</option>
-          <option>Regular Spins</option><option>Frontflip</option><option>Backflip</option><option>Sideflip</option>
+          <option>Upright Spins</option><option>Frontflip</option><option>Backflip</option><option>Sideflip</option>
         </select></div>
       <div class="form-group sbe-kicker" style="grid-column:1/-1;"><label>Grabs</label>
         <div id="sbe-grab-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;">
           <input type="hidden" id="sbe-grab" value=""></div></div>
       <div class="form-group sbe-kicker"><label>Style Element</label>
         <select id="sbe-style"><option value="">–</option>
-          <option>Tweak</option><option>Poke/Bone</option><option>Screamin' Seamen</option>
+          <option>Tweak</option><option>Poke/Bone</option><option>Screamin' Seamen</option><option>Blender</option>
         </select></div>
       <div class="form-group sbe-kicker"><label>Take-off</label>
         <select id="sbe-absprung"><option value="">–</option>
