@@ -271,7 +271,7 @@
 </style>
 </head>
 <body>
-<div id="login-overlay" style="position:fixed;inset:0;background:linear-gradient(135deg,#001a2e 0%,#004877 100%);z-index:9999;display:flex;align-items:center;justify-content:center;"><div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:40px;width:100%;max-width:420px;text-align:center;"><div style="font-family:'Poppins',sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:4px;">TRICK COLLECTOR</div><div id="login-subtitle" style="font-size:12px;color:#6b8299;margin-bottom:32px;letter-spacing:1px;"></div><div id="mode-select"><div style="font-size:13px;color:#6b8299;margin-bottom:16px;">Who are you?</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><button onclick="selectMode('coach')" style="padding:18px;background:rgba(0,72,119,0.3);border:1.5px solid #004877;border-radius:10px;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Coach</button><button onclick="selectMode('athlete')" style="padding:18px;background:rgba(45,138,78,0.15);border:1.5px solid #2d8a4e;border-radius:10px;color:#2d8a4e;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Athlete</button></div></div><div id="coach-login" style="display:none;"><div style="font-size:13px;color:#39c3d4;font-weight:600;margin-bottom:20px;">Coach Login</div><input type="password" id="coach-pw" placeholder="Coach password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;"><div id="coach-err" style="color:#e2001a;font-size:12px;margin-bottom:10px;display:none;">Incorrect password.</div><button onclick="doCoachLogin()" style="width:100%;padding:12px;background:#004877;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">Sign In</button><button onclick="showModeSelect()" style="width:100%;padding:10px;background:none;color:#6b8299;border:none;font-size:13px;cursor:pointer;margin-top:8px;">← Back</button></div><div id="athlete-login" style="display:none;"><div style="font-size:13px;color:#2d8a4e;font-weight:600;margin-bottom:20px;">Athlete Login</div><select id="login-athlet" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;"><option value="">— select your name —</option><option>Demo SS&BA Freeski</option><option>Demo HP Freeski</option><option>Adrien Vaudaux</option><option>Alan Bornet</option><option>Andri Ragettli</option><option>Anouk Andraska</option><option>Fadri Rhyner</option><option>Gian Andri Bolinger</option><option>Giulia Tanno</option><option>Jason Zacharopoulos</option><option>Kim Gubser</option><option>Lars Ruchti</option><option>Lou Annen</option><option>Mathilde Gremaud</option><option>Maxence Petzoldt</option><option>Nicola Bolinger</option><option>Nils Rhyner</option><option>Sarah Höfflin</option><option>Tim Egger</option><option>Viktor Maksyagin</option></select><input type="password" id="athlete-pin" placeholder="PIN" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;" onkeydown="if(event.key==='Enter')doAthleteLogin()"><div id="athlete-err" style="color:#e2001a;font-size:12px;margin-bottom:10px;display:none;">Incorrect PIN.</div><button onclick="doAthleteLogin()" style="width:100%;padding:12px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">Sign In</button><button onclick="showModeSelect()" style="width:100%;padding:10px;background:none;color:#6b8299;border:none;font-size:13px;cursor:pointer;margin-top:8px;">← Back</button></div><div id="change-pin-dialog" style="display:none;"><div style="font-size:13px;color:#f59e0b;font-weight:600;margin-bottom:8px;">Welcome! Please set your personal PIN.</div><div style="font-size:12px;color:#6b8299;margin-bottom:20px;">Choose a PIN of at least 4 characters.</div><input type="password" id="new-pin1" placeholder="New PIN" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:10px;outline:none;font-family:'Poppins',sans-serif;"><input type="password" id="new-pin2" placeholder="Confirm PIN" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;"><div id="pin-err" style="color:#e2001a;font-size:12px;margin-bottom:10px;display:none;"></div><button onclick="saveNewPin()" style="width:100%;padding:12px;background:#f59e0b;color:#000;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">Save PIN & Enter</button></div></div></div>
+<div id="login-overlay" style="position:fixed;inset:0;background:linear-gradient(135deg,#001a2e 0%,#004877 100%);z-index:9999;display:flex;align-items:center;justify-content:center;"><div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:40px;width:100%;max-width:420px;text-align:center;"><div style="font-family:'Poppins',sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:4px;">TRICK COLLECTOR</div><div id="login-subtitle" style="font-size:12px;color:#6b8299;margin-bottom:32px;letter-spacing:1px;"></div><div id="mode-select"><div style="font-size:13px;color:#6b8299;margin-bottom:16px;">Who are you?</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><button onclick="selectMode('coach')" style="padding:18px;background:rgba(0,72,119,0.3);border:1.5px solid #004877;border-radius:10px;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Coach</button><button onclick="selectMode('athlete')" style="padding:18px;background:rgba(45,138,78,0.15);border:1.5px solid #2d8a4e;border-radius:10px;color:#2d8a4e;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Athlete</button></div></div><div id="coach-login" style="display:none;"><div style="font-size:13px;color:#39c3d4;font-weight:600;margin-bottom:20px;">Coach Login</div><input type="password" id="coach-pw" placeholder="Coach password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;"><div id="coach-err" style="color:#e2001a;font-size:12px;margin-bottom:10px;display:none;">Incorrect password.</div><button onclick="doCoachLogin()" style="width:100%;padding:12px;background:#004877;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">Sign In</button><button onclick="showModeSelect()" style="width:100%;padding:10px;background:none;color:#6b8299;border:none;font-size:13px;cursor:pointer;margin-top:8px;">← Back</button></div><div id="athlete-login" style="display:none;"><div style="font-size:13px;color:#2d8a4e;font-weight:600;margin-bottom:20px;">Athlete Login</div><select id="login-athlet" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;"><option value="">— select your name —</option><option>Adrien Vaudaux</option><option>Alan Bornet</option><option>Andri Ragettli</option><option>Anouk Andraska</option><option>Fadri Rhyner</option><option>Gian Andri Bolinger</option><option>Giulia Tanno</option><option>Jason Zacharopoulos</option><option>Kim Gubser</option><option>Lars Ruchti</option><option>Lou Annen</option><option>Mathilde Gremaud</option><option>Maxence Petzoldt</option><option>Nicola Bolinger</option><option>Nils Rhyner</option><option>Sarah Höfflin</option><option>Tim Egger</option><option>Viktor Maksyagin</option></select><input type="password" id="athlete-pin" placeholder="PIN" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;" onkeydown="if(event.key==='Enter')doAthleteLogin()"><div id="athlete-err" style="color:#e2001a;font-size:12px;margin-bottom:10px;display:none;">Incorrect PIN.</div><button onclick="doAthleteLogin()" style="width:100%;padding:12px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">Sign In</button><button onclick="showModeSelect()" style="width:100%;padding:10px;background:none;color:#6b8299;border:none;font-size:13px;cursor:pointer;margin-top:8px;">← Back</button></div><div id="change-pin-dialog" style="display:none;"><div style="font-size:13px;color:#f59e0b;font-weight:600;margin-bottom:8px;">Welcome! Please set your personal PIN.</div><div style="font-size:12px;color:#6b8299;margin-bottom:20px;">Choose a PIN of at least 4 characters.</div><input type="password" id="new-pin1" placeholder="New PIN" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:10px;outline:none;font-family:'Poppins',sans-serif;"><input type="password" id="new-pin2" placeholder="Confirm PIN" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;"><div id="pin-err" style="color:#e2001a;font-size:12px;margin-bottom:10px;display:none;"></div><button onclick="saveNewPin()" style="width:100%;padding:12px;background:#f59e0b;color:#000;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">Save PIN & Enter</button></div></div></div>
 
 <!-- APP PASSWORD OVERLAY -->
 <div id="app-overlay" style="position:fixed;inset:0;background:linear-gradient(135deg,#001a2e 0%,#004877 100%);z-index:9999;display:none;align-items:center;justify-content:center;">
@@ -339,8 +339,7 @@
             <option>Viktor Maksyagin</option>
           </optgroup>
           <optgroup label="TG SS&BA Xeno">
-              <option>Demo SS&BA Freeski</option>
-            <option>Anouk Andraska</option>
+                          <option>Anouk Andraska</option>
             <option>Jason Zacharopoulos</option>
             <option>Lars Ruchti</option>
             <option>Lou Annen</option>
@@ -348,8 +347,7 @@
             <option>Tim Egger</option>
           </optgroup>
           <optgroup label="TG Halfpipe">
-              <option>Demo HP Freeski</option>
-            <option>Alan Bornet</option>
+                          <option>Alan Bornet</option>
           </optgroup>
           </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Date</label>
@@ -535,8 +533,7 @@
             <option>Viktor Maksyagin</option>
           </optgroup>
           <optgroup label="TG SS&BA Xeno">
-              <option>Demo SS&BA Freeski</option>
-            <option>Anouk Andraska</option>
+                          <option>Anouk Andraska</option>
             <option>Jason Zacharopoulos</option>
             <option>Lars Ruchti</option>
             <option>Lou Annen</option>
@@ -544,8 +541,7 @@
             <option>Tim Egger</option>
           </optgroup>
           <optgroup label="TG Halfpipe">
-              <option>Demo HP Freeski</option>
-            <option>Alan Bornet</option>
+                          <option>Alan Bornet</option>
           </optgroup>
           </select>
   </div>
@@ -592,8 +588,7 @@
             <option>Viktor Maksyagin</option>
           </optgroup>
           <optgroup label="TG SS&BA Xeno">
-              <option>Demo SS&BA Freeski</option>
-            <option>Anouk Andraska</option>
+                          <option>Anouk Andraska</option>
             <option>Jason Zacharopoulos</option>
             <option>Lars Ruchti</option>
             <option>Lou Annen</option>
@@ -601,8 +596,7 @@
             <option>Tim Egger</option>
           </optgroup>
           <optgroup label="TG Halfpipe">
-              <option>Demo HP Freeski</option>
-            <option>Alan Bornet</option>
+                          <option>Alan Bornet</option>
           </optgroup>
           </select>
     <button class="btn-secondary" id="sb-add-btn" style="display:none;" onclick="toggleSbForm()">+ Add Entry</button>
@@ -842,8 +836,7 @@
             <option>Viktor Maksyagin</option>
           </optgroup>
           <optgroup label="TG SS&BA Xeno">
-              <option>Demo SS&BA Freeski</option>
-            <option>Anouk Andraska</option>
+                          <option>Anouk Andraska</option>
             <option>Jason Zacharopoulos</option>
             <option>Lars Ruchti</option>
             <option>Lou Annen</option>
@@ -851,8 +844,7 @@
             <option>Tim Egger</option>
           </optgroup>
           <optgroup label="TG Halfpipe">
-              <option>Demo HP Freeski</option>
-            <option>Alan Bornet</option>
+                          <option>Alan Bornet</option>
           </optgroup>
           </select>
   </div>
@@ -932,8 +924,7 @@
             <option>Viktor Maksyagin</option>
           </optgroup>
           <optgroup label="TG SS&BA Xeno">
-              <option>Demo SS&BA Freeski</option>
-            <option>Anouk Andraska</option>
+                          <option>Anouk Andraska</option>
             <option>Jason Zacharopoulos</option>
             <option>Lars Ruchti</option>
             <option>Lou Annen</option>
@@ -941,8 +932,7 @@
             <option>Tim Egger</option>
           </optgroup>
           <optgroup label="TG Halfpipe">
-              <option>Demo HP Freeski</option>
-            <option>Alan Bornet</option>
+                          <option>Alan Bornet</option>
           </optgroup>
           </select>
     </div>
@@ -1021,8 +1011,7 @@
           <option>Viktor Maksyagin</option>
         </optgroup>
 <optgroup label="TG SS&BA Xeno">
-              <option>Demo SS&BA Freeski</option>
-          <option>Anouk Andraska</option>
+                        <option>Anouk Andraska</option>
           <option>Jason Zacharopoulos</option>
           <option>Lars Ruchti</option>
           <option>Lou Annen</option>
@@ -1030,8 +1019,7 @@
           <option>Tim Egger</option>
         </optgroup>
 <optgroup label="TG Halfpipe">
-              <option>Demo HP Freeski</option>
-          <option>Alan Bornet</option>
+                        <option>Alan Bornet</option>
         </optgroup>
       </select>
       </div>
@@ -1088,8 +1076,7 @@
             <option>Viktor Maksyagin</option>
           </optgroup>
           <optgroup label="TG SS&BA Xeno">
-              <option>Demo SS&BA Freeski</option>
-            <option>Anouk Andraska</option>
+                          <option>Anouk Andraska</option>
             <option>Jason Zacharopoulos</option>
             <option>Lars Ruchti</option>
             <option>Lou Annen</option>
@@ -1097,8 +1084,7 @@
             <option>Tim Egger</option>
           </optgroup>
           <optgroup label="TG Halfpipe">
-              <option>Demo HP Freeski</option>
-            <option>Alan Bornet</option>
+                          <option>Alan Bornet</option>
           </optgroup>
           </select>
       </div>
@@ -1201,8 +1187,7 @@
             <option>Viktor Maksyagin</option>
           </optgroup>
           <optgroup label="TG SS&BA Xeno">
-              <option>Demo SS&BA Freeski</option>
-            <option>Anouk Andraska</option>
+                          <option>Anouk Andraska</option>
             <option>Jason Zacharopoulos</option>
             <option>Lars Ruchti</option>
             <option>Lou Annen</option>
@@ -1210,8 +1195,7 @@
             <option>Tim Egger</option>
           </optgroup>
           <optgroup label="TG Halfpipe">
-              <option>Demo HP Freeski</option>
-            <option>Alan Bornet</option>
+                          <option>Alan Bornet</option>
           </optgroup>
           </select>
         <select id="db-filter-quelle" onchange="renderDBTable()" style="max-width:160px;">
@@ -2122,8 +2106,6 @@ function downloadExcel() {
 // ── NEW SESSION ───────────────────────────────────────────────────
 
 const SESS_ALL_ATHLETES = [
-  {name:'Demo SS&BA Freeski',squad:'X'},
-  {name:'Demo HP Freeski',squad:'X'},
   {name:'Adrien Vaudaux',squad:'GK'},
   {name:'Andri Ragettli',squad:'GK'},
   {name:'Fadri Rhyner',squad:'GK'},
