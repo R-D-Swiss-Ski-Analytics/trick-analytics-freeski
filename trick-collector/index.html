@@ -3196,6 +3196,17 @@ async function loadEntwicklung() {
   }
 }
 
+
+// ── GLOBAL DIRECTION HELPER ───────────────────────────────────────────
+function normDir4global(entry) {
+  const raw = (entry.drehrichtung || '').trim();
+  if (raw === 'Left' || raw === 'Forward Left') return 'Left';
+  if (raw === 'Right' || raw === 'Forward Right') return 'Right';
+  if (raw === 'Switch Left') return 'Switch Left';
+  if (raw === 'Switch Right') return 'Switch Right';
+  return null;
+}
+
 // ── ASSESSMENT DIRECTION RADAR ───────────────────────────────────────
 function renderAssessmentDirection(standort) {
   const canvas = document.getElementById('ev-dir-radar');
@@ -3207,14 +3218,15 @@ function renderAssessmentDirection(standort) {
   const counts = {};
   DIRS.forEach(d => counts[d] = 0);
   mastered.forEach(e => {
-    const d = normDir4 ? normDir4(e) : e.drehrichtung;
+    const d = normDir4global(e);
     if (d && counts[d] !== undefined) counts[d]++;
   });
   const total = DIRS.reduce((s,d) => s+counts[d], 0) || 1;
   const vals = DIRS.map(d => counts[d]/total);
 
   // Draw radar
-  canvas.width = canvas.offsetWidth || 320;
+  canvas.style.width = '100%';
+  canvas.width = canvas.parentElement?.offsetWidth || 320;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 60;
@@ -3265,7 +3277,7 @@ function renderMasteredProgression(standort) {
   const rows = dates.map(date => {
     const dayTricks = mastered.filter(e => e.datum === date);
     dayTricks.forEach(e => {
-      const d = normDir4 ? normDir4(e) : e.drehrichtung;
+      const d = normDir4global(e);
       if (d && DIRS.includes(d)) cumulative[d]++;
       totalCum++;
     });
