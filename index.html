@@ -3447,56 +3447,71 @@ function renderTrickAnalytics() {
     const canvas = document.getElementById(cid); if(!canvas) return;
     const dpr = window.devicePixelRatio||1;
     const W = canvas.parentElement.offsetWidth - 2;
-    const H = hasComponents ? 180 : 130;
+    const H = 200;
     canvas.style.width = W+'px'; canvas.style.height = H+'px';
     canvas.width = W*dpr; canvas.height = H*dpr;
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
-
-    const pad = {l:38, r:12, t:10, b:52};
+    const pad = {l:42, r:16, t:14, b:60};
     const n = pts.length;
-    const xs = pts.map((_,i) => pad.l + (n===1?0:i/(n-1)) * (W-pad.l-pad.r));
+    const xs = pts.map((_,i) => pad.l + (n===1?(W-pad.l-pad.r)/2:i/(n-1)*(W-pad.l-pad.r)));
     const toY = v => pad.t + (1-v/100)*(H-pad.t-pad.b);
 
-    // Grid
+    // Vertical grid lines at each point
+    xs.forEach(x => {
+      ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(x,pad.t); ctx.lineTo(x,H-pad.b); ctx.stroke();
+    });
+    // Horizontal grid
     [0,25,50,75,100].forEach(pct => {
       const y = toY(pct);
-      ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+      ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=1;
       ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
-      ctx.fillStyle='#6b8299'; ctx.font=`10px Poppins,sans-serif`; ctx.textAlign='right'; ctx.fillText(pct+'%',pad.l-4,y+3);
+      ctx.fillStyle='#6b8299'; ctx.font='10px Poppins,sans-serif'; ctx.textAlign='right';
+      ctx.fillText(pct+'%', pad.l-5, y+3);
     });
 
-    // Helper: draw line
-    function drawLine(values, col, dashed=false) {
-      const valid = values.map((v,i)=>v!==null?{x:xs[i],y:toY(v)}:null).filter(Boolean);
-      if(valid.length<1) return;
-      if(dashed) ctx.setLineDash([4,4]); else ctx.setLineDash([]);
-      ctx.beginPath(); ctx.strokeStyle=col; ctx.lineWidth=2;
-      valid.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke();
-      ctx.setLineDash([]);
-      valid.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,4,0,2*Math.PI);ctx.fillStyle=col;ctx.fill();});
+    function drawLine(values, col, lw=2.5) {
+      const pts2 = values.map((v,i)=>v!==null?{x:xs[i],y:toY(v)}:null).filter(Boolean);
+      if(pts2.length<1) return;
+      // Gradient fill under line
+      if(lw>2) {
+        const g=ctx.createLinearGradient(0,pad.t,0,H-pad.b);
+        g.addColorStop(0,col.replace(')',',0.15)').replace('#','rgba(').replace(/rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2}),/i,(m,r,g2,b)=>`rgba(${parseInt(r,16)},${parseInt(g2,16)},${parseInt(b,16)},`)||col);
+        g.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.beginPath(); ctx.moveTo(pts2[0].x,pts2[0].y);
+        pts2.forEach(p=>ctx.lineTo(p.x,p.y));
+        ctx.lineTo(pts2[pts2.length-1].x,H-pad.b); ctx.lineTo(pts2[0].x,H-pad.b);
+        ctx.closePath(); ctx.fillStyle=g; ctx.fill();
+      }
+      ctx.beginPath(); ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.lineJoin='round';
+      pts2.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke();
+      pts2.forEach(p=>{
+        ctx.beginPath(); ctx.arc(p.x,p.y,5,0,2*Math.PI);
+        ctx.fillStyle=col; ctx.fill();
+        ctx.beginPath(); ctx.arc(p.x,p.y,3,0,2*Math.PI);
+        ctx.fillStyle='#0c1a2b'; ctx.fill();
+      });
     }
-
-    // Landing % line (solid, primary)
-    drawLine(pts.map(p=>p.landPct), '#2d8a4e');
-    // Stomp % (dashed)
-    drawLine(pts.map(p=>p.perfPct), 'rgba(45,138,78,0.4)', true);
 
     if (hasComponents) {
-      drawLine(pts.map(p=>p.landing), '#2d8a4e');
-      drawLine(pts.map(p=>p.trick), '#39c3d4');
-      drawLine(pts.map(p=>p.grab), '#f59e0b');
+      drawLine(pts.map(p=>p.grab), '#f59e0b', 2);
+      drawLine(pts.map(p=>p.trick), '#39c3d4', 2);
+      drawLine(pts.map(p=>p.landing), '#2d8a4e', 2.5);
+    } else {
+      drawLine(pts.map(p=>p.landPct), '#39c3d4', 2.5);
     }
 
-    // X-axis labels — directly below each dot
-    ctx.fillStyle='#e8edf2'; ctx.font=`bold 11px Poppins,sans-serif`; ctx.textAlign='center';
+    // X-axis labels
+    ctx.textAlign='center';
     pts.forEach((p,i) => {
-      const x = xs[i], y = H-pad.b+14;
-      ctx.fillStyle='#39c3d4'; ctx.font='bold 11px Poppins,sans-serif';
-      ctx.fillText(p.landPct+'%', x, y);
+      const x = xs[i];
+      const mainVal = hasComponents ? p.landPct : p.landPct;
+      ctx.fillStyle='#2d8a4e'; ctx.font='bold 12px Poppins,sans-serif';
+      ctx.fillText(mainVal+'%', x, H-pad.b+16);
       ctx.fillStyle='#6b8299'; ctx.font='10px Poppins,sans-serif';
-      ctx.fillText(p.d.slice(5), x, y+14);
-      ctx.fillText(p.att+' runs', x, y+26);
+      ctx.fillText(p.d.slice(5), x, H-pad.b+30);
+      ctx.fillText(p.att+'×', x, H-pad.b+44);
     });
   });
 }
