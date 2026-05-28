@@ -612,6 +612,14 @@
     <!-- Stats row -->
     <div class="sb-overview" id="sb-overview"></div>
 
+    <!-- Direction Radar (Assessment only) -->
+    <div id="sb-dir-radar-wrap" style="display:none;margin-bottom:16px;">
+      <div class="card" style="padding:16px;">
+        <div style="font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Direction Balance</div>
+        <canvas id="sb-dir-radar" height="260" style="width:100%;max-width:320px;display:block;margin:0 auto;"></canvas>
+      </div>
+    </div>
+
     <!-- Add-entry form (collapsible, same fields as Erfassen) -->
     <div class="card" id="sb-form-card" style="display:none;">
       <div class="card-title">Trick eintragen</div>
@@ -2628,6 +2636,61 @@ async function loadStandort() {
   }
 
   renderStandort();
+  renderSbDirRadar();
+}
+
+function renderSbDirRadar() {
+  const canvas = document.getElementById('sb-dir-radar');
+  const wrap = document.getElementById('sb-dir-radar-wrap');
+  if (!canvas || !wrap) return;
+  const mastered = sbData.filter(e => e.status === 'mastered');
+  if (!mastered.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  const DIRS = ['Left','Right','Switch Left','Switch Right'];
+  const DIR_COLORS = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
+  const counts = {}; DIRS.forEach(d => counts[d] = 0);
+  mastered.forEach(e => {
+    const raw = (e.drehrichtung||'').trim();
+    const d = (raw==='Left'||raw==='Forward Left')?'Left':(raw==='Right'||raw==='Forward Right')?'Right':raw==='Switch Left'?'Switch Left':raw==='Switch Right'?'Switch Right':null;
+    if (d) counts[d]++;
+  });
+  const total = DIRS.reduce((s,d) => s+counts[d], 0) || 1;
+  const vals = DIRS.map(d => counts[d]/total);
+
+  canvas.width = canvas.offsetWidth || 280;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 55;
+  ctx.clearRect(0,0,W,H);
+  const angles = DIRS.map((_,i) => i*2*Math.PI/4 - Math.PI/4);
+
+  // Grid rings
+  [0.25,0.5,0.75,1].forEach(f => {
+    ctx.beginPath();
+    angles.forEach((a,i) => { const x=cx+Math.cos(a)*r*f, y=cy+Math.sin(a)*r*f; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.closePath(); ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=1; ctx.stroke();
+  });
+  // Spokes
+  angles.forEach(a => { ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.stroke(); });
+
+  // Assessment polygon (amber)
+  ctx.beginPath();
+  angles.forEach((a,i) => { const x=cx+Math.cos(a)*r*vals[i], y=cy+Math.sin(a)*r*vals[i]; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.closePath(); ctx.fillStyle='rgba(245,158,11,0.2)'; ctx.fill();
+  ctx.strokeStyle='#f59e0b'; ctx.lineWidth=2; ctx.stroke();
+
+  // Dots + labels
+  ctx.font='bold 11px Poppins,sans-serif';
+  angles.forEach((a,i) => {
+    const x=cx+Math.cos(a)*r*vals[i], y=cy+Math.sin(a)*r*vals[i];
+    ctx.beginPath(); ctx.arc(x,y,5,0,2*Math.PI); ctx.fillStyle=DIR_COLORS[DIRS[i]]; ctx.fill();
+    const lx=cx+Math.cos(a)*(r+28), ly=cy+Math.sin(a)*(r+28);
+    ctx.fillStyle='#e8edf2'; ctx.textAlign=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center'; ctx.textBaseline='middle';
+    ctx.fillText(DIRS[i], lx, ly-8);
+    ctx.fillStyle=DIR_COLORS[DIRS[i]];
+    ctx.fillText(counts[DIRS[i]]+'  '+Math.round(vals[i]*100)+'%', lx, ly+8);
+  });
 }
 
 function renderStandort() {
