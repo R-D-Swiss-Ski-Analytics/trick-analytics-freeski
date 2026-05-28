@@ -3489,26 +3489,33 @@ function renderTrickAnalytics() {
       ctx.fillText(pct+'%', pad.l-5, y+3);
     });
 
-    function drawLine(values, col, lw) {
-      lw = lw||2.5;
+    function drawLine(values, col, lw, dotR, hollow) {
+      lw = lw||2.5; dotR = dotR||5;
       const pts2 = [];
       values.forEach((v,i)=>{ if(v!==null) pts2.push({x:xs[i],y:toY(v)}); });
       if(pts2.length<1) return;
-      ctx.beginPath(); ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.lineJoin='round';
-      pts2.forEach(function(p,i){ i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); });
-      ctx.stroke();
+      if(pts2.length>1){
+        ctx.beginPath(); ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.lineJoin='round';
+        pts2.forEach(function(p,i){ i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); });
+        ctx.stroke();
+      }
       pts2.forEach(function(p){
-        ctx.beginPath(); ctx.arc(p.x,p.y,5,0,2*Math.PI); ctx.fillStyle=col; ctx.fill();
-        ctx.beginPath(); ctx.arc(p.x,p.y,2.5,0,2*Math.PI); ctx.fillStyle='#0a0e1a'; ctx.fill();
+        if(hollow){
+          ctx.beginPath(); ctx.arc(p.x,p.y,dotR,0,2*Math.PI);
+          ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
+        } else {
+          ctx.beginPath(); ctx.arc(p.x,p.y,dotR,0,2*Math.PI); ctx.fillStyle=col; ctx.fill();
+          ctx.beginPath(); ctx.arc(p.x,p.y,dotR-2.5,0,2*Math.PI); ctx.fillStyle='#0a0e1a'; ctx.fill();
+        }
       });
     }
 
     if (hasComponents) {
-      drawLine(pts.map(p=>p.grab), '#f59e0b', 2);
-      drawLine(pts.map(p=>p.trick), '#39c3d4', 2);
-      drawLine(pts.map(p=>p.landing), '#2d8a4e', 2.5);
+      drawLine(pts.map(p=>p.grab), '#f59e0b', 2, 9, true);
+      drawLine(pts.map(p=>p.trick), '#39c3d4', 2, 6, true);
+      drawLine(pts.map(p=>p.landing), '#2d8a4e', 2.5, 4, false);
     } else {
-      drawLine(pts.map(p=>p.landPct), '#39c3d4', 2.5);
+      drawLine(pts.map(p=>p.landPct), '#39c3d4', 2.5, 5, false);
     }
 
     // X-axis labels
