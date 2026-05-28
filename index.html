@@ -3470,7 +3470,7 @@ function renderTrickAnalytics() {
     canvas.width = W*dpr; canvas.height = H*dpr;
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
-    const pad = {l:42, r:16, t:14, b:60};
+    const pad = {l:42, r:16, t:14, b:48};
     const n = pts.length;
     const xs = pts.map((_,i) => pad.l + (n===1?(W-pad.l-pad.r)/2:i/(n-1)*(W-pad.l-pad.r)));
     const toY = v => pad.t + (1-v/100)*(H-pad.t-pad.b);
@@ -3522,12 +3522,9 @@ function renderTrickAnalytics() {
     ctx.textAlign='center';
     pts.forEach((p,i) => {
       const x = xs[i];
-      const mainVal = hasComponents ? p.landPct : p.landPct;
-      ctx.fillStyle='#2d8a4e'; ctx.font='bold 12px Poppins,sans-serif';
-      ctx.fillText(mainVal+'%', x, H-pad.b+16);
-      ctx.fillStyle='#6b8299'; ctx.font='10px Poppins,sans-serif';
-      ctx.fillText(p.d.slice(5), x, H-pad.b+30);
-      ctx.fillText(p.att+'×', x, H-pad.b+44);
+      ctx.fillStyle='#6b8299'; ctx.font='11px Poppins,sans-serif';
+      ctx.fillText(p.d.slice(5), x, H-pad.b+16);
+      ctx.fillText(p.att+'×', x, H-pad.b+30);
     });
   });
 }
