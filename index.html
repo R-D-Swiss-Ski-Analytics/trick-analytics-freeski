@@ -3438,12 +3438,11 @@ function renderTrickAnalytics() {
         const gPct=gavg('Grab'), tPct=gavg('Trick'), lPct=gavg('Landing');
         const overallPct=att?Math.round(land/att*100):0;
         const col=v=>v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
-        return `<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;text-align:center;">
+        return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;text-align:center;">
           <div><div style="font-size:26px;font-weight:800;color:var(--text);">${att}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
           <div><div style="font-size:26px;font-weight:800;color:${col(gPct||0)};">${gPct!==null?gPct+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Grab</div></div>
           <div><div style="font-size:26px;font-weight:800;color:${col(tPct||0)};">${tPct!==null?tPct+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Trick</div></div>
           <div><div style="font-size:26px;font-weight:800;color:${col(lPct||0)};">${lPct!==null?lPct+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Landing</div></div>
-          <div><div style="font-size:26px;font-weight:800;color:${col(overallPct)};">${overallPct}%</div><div style="font-size:11px;color:var(--muted);">Success %</div></div>
         </div>`;
       } else {
         return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;text-align:center;">
