@@ -863,12 +863,18 @@
         <div id="bars-grab"></div>
       </div>
     </div>
+    </div>
 
-    <!-- Row 5: Repertoire Development Over Time -->
-    <div class="chart-grid single">
+    <!-- Row 5: Assessment Direction Radar -->
+    <div class="chart-grid">
       <div class="chart-card">
-        <div class="chart-title">📅 Repertoire Development Over Time <span style="font-size:11px;color:var(--muted);font-family:'Poppins',sans-serif;letter-spacing:0;">(Assessment — mastered tricks only)</span></div>
-        <div id="ev-verlauf"></div>
+        <div class="chart-title">🧭 Direction Balance (Assessment)</div>
+        <canvas id="ev-dir-radar" width="360" height="300"></canvas>
+        <div id="ev-dir-labels" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px;font-size:12px;"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">📈 Mastered Tricks — Progression</div>
+        <div id="ev-progression"></div>
       </div>
     </div>
 
@@ -877,11 +883,9 @@
       <div class="chart-card">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
           <div class="chart-title" style="margin:0;">🎯 Trick Analytics</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <select id="ev-trick-select" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
-              <option value="">— All Tricks (Overall) —</option>
-            </select>
-          </div>
+          <select id="ev-trick-select" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+            <option value="">— All Tricks (Overall) —</option>
+          </select>
         </div>
         <div id="ev-trick-analytics"></div>
       </div>
@@ -2893,12 +2897,6 @@ async function loadEntwicklung() {
         <div id="bars-bio"></div>
       </div>
     </div>
-    </div>
-    <div class="chart-grid single">
-      <div class="chart-card">
-        <div class="chart-title">📅 Repertoire Development Over Time <span style="font-size:11px;color:var(--muted);font-family:'Poppins',sans-serif;letter-spacing:0;">(Assessment — mastered tricks only)</span></div>
-        <div id="ev-verlauf"></div>
-      </div>
     </div>`;
 
   // ── Normalise standort entries to same shape as tricks
@@ -3128,7 +3126,11 @@ async function loadEntwicklung() {
     }
   }
 
-  // ── 9. Trick Analytics ───────────────────────────────────────────────
+  // ── 9. Assessment Direction Radar + Progression ──────────────────────
+  renderAssessmentDirection(standort);
+  renderMasteredProgression(standort);
+
+  // ── 10. Trick Analytics ──────────────────────────────────────────────
   initTrickAnalytics(tricks);
 
   // ── 9b. Trick + Grab Session Stats ───────────────────────────────────
@@ -3192,6 +3194,98 @@ async function loadEntwicklung() {
       </table>`;
     }
   }
+}
+
+// ── ASSESSMENT DIRECTION RADAR ───────────────────────────────────────
+function renderAssessmentDirection(standort) {
+  const canvas = document.getElementById('ev-dir-radar');
+  const labelsEl = document.getElementById('ev-dir-labels');
+  if (!canvas) return;
+  const mastered = standort.filter(e => e.status === 'mastered');
+  const DIRS = ['Left','Right','Switch Left','Switch Right'];
+  const DIR_COLORS = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
+  const counts = {};
+  DIRS.forEach(d => counts[d] = 0);
+  mastered.forEach(e => {
+    const d = normDir4 ? normDir4(e) : e.drehrichtung;
+    if (d && counts[d] !== undefined) counts[d]++;
+  });
+  const total = DIRS.reduce((s,d) => s+counts[d], 0) || 1;
+  const vals = DIRS.map(d => counts[d]/total);
+
+  // Draw radar
+  canvas.width = canvas.offsetWidth || 320;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 60;
+  ctx.clearRect(0,0,W,H);
+  const angles = DIRS.map((_,i) => (i*2*Math.PI/4) - Math.PI/4);
+  // Grid rings
+  [0.25,0.5,0.75,1].forEach(f => {
+    ctx.beginPath(); angles.forEach((a,i) => {
+      const x=cx+Math.cos(a)*r*f, y=cy+Math.sin(a)*r*f;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }); ctx.closePath();
+    ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=1; ctx.stroke();
+  });
+  // Spokes
+  angles.forEach(a => { ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.stroke(); });
+  // Fill
+  ctx.beginPath(); angles.forEach((a,i) => { const x=cx+Math.cos(a)*r*vals[i], y=cy+Math.sin(a)*r*vals[i]; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.closePath(); ctx.fillStyle='rgba(57,195,212,0.2)'; ctx.fill();
+  ctx.strokeStyle='#39c3d4'; ctx.lineWidth=2; ctx.stroke();
+  // Dots + labels
+  angles.forEach((a,i) => {
+    const x=cx+Math.cos(a)*r*vals[i], y=cy+Math.sin(a)*r*vals[i];
+    ctx.beginPath(); ctx.arc(x,y,5,0,2*Math.PI); ctx.fillStyle=DIR_COLORS[DIRS[i]]||'#39c3d4'; ctx.fill();
+    const lx=cx+Math.cos(a)*(r+28), ly=cy+Math.sin(a)*(r+28);
+    ctx.fillStyle='#e8edf2'; ctx.font='bold 11px Poppins,sans-serif';
+    ctx.textAlign=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center';
+    ctx.textBaseline='middle'; ctx.fillText(DIRS[i],lx,ly-8);
+    ctx.font='11px Poppins,sans-serif'; ctx.fillStyle=DIR_COLORS[DIRS[i]]||'#39c3d4';
+    ctx.fillText(`${counts[DIRS[i]]} tricks (${Math.round(vals[i]*100)}%)`,lx,ly+6);
+  });
+  if (labelsEl) labelsEl.innerHTML = '';
+}
+
+// ── MASTERED PROGRESSION ─────────────────────────────────────────────
+function renderMasteredProgression(standort) {
+  const el = document.getElementById('ev-progression');
+  if (!el) return;
+  const mastered = standort.filter(e => e.status === 'mastered' && e.datum);
+  if (mastered.length === 0) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No assessment data yet.</div>'; return; }
+
+  // Group by date — cumulative mastered per direction
+  const DIRS = ['Left','Right','Switch Left','Switch Right'];
+  const DIR_COLORS = ['#39c3d4','#3b82f6','#a78bfa','#f59e0b'];
+  const dates = [...new Set(mastered.map(e=>e.datum))].sort();
+  const cumulative = {}; DIRS.forEach(d => cumulative[d] = 0);
+  let totalCum = 0;
+
+  const rows = dates.map(date => {
+    const dayTricks = mastered.filter(e => e.datum === date);
+    dayTricks.forEach(e => {
+      const d = normDir4 ? normDir4(e) : e.drehrichtung;
+      if (d && DIRS.includes(d)) cumulative[d]++;
+      totalCum++;
+    });
+    return { date, total: totalCum, ...Object.fromEntries(DIRS.map(d=>[d,cumulative[d]])) };
+  });
+
+  const maxTotal = rows[rows.length-1]?.total || 1;
+  el.innerHTML = rows.map(r => {
+    const dateStr = new Date(r.date+'T12:00:00').toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit',year:'2-digit'});
+    const pct = Math.round(r.total/maxTotal*100);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:11px;color:var(--muted);min-width:56px;">${dateStr}</span>
+      <div style="flex:1;background:var(--surface2);border-radius:4px;height:10px;overflow:hidden;">
+        ${DIRS.map((d,i)=>`<div style="display:inline-block;width:${Math.round((r[d]||0)/maxTotal*100)}%;height:10px;background:${DIR_COLORS[i]};"></div>`).join('')}
+      </div>
+      <span style="font-size:12px;color:#39c3d4;font-weight:700;min-width:32px;text-align:right;">${r.total}</span>
+    </div>`;
+  }).join('') + `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;">
+    ${DIRS.map((d,i)=>`<span style="font-size:11px;color:${DIR_COLORS[i]};display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:${DIR_COLORS[i]};display:inline-block;"></span>${d}: ${cumulative[d]}</span>`).join('')}
+  </div>`;
 }
 
 // ── TRICK ANALYTICS ──────────────────────────────────────────────────
