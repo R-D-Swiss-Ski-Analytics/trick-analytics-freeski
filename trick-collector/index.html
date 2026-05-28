@@ -376,11 +376,11 @@
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Grab</label>
         <select id="edit-grab" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>Blunt</option><option>Bow and Arrow</option><option>Broken Arrow</option><option>Critical</option><option>Cuban</option><option>Double Japan</option><option>Esco</option><option>Guitar</option><option>High Mute</option><option>In and out</option><option>Indi-Truck</option><option>Inside Tail</option><option>Japan</option><option>Mute</option><option>Nose</option><option>Octo</option><option>Rocket</option><option>Safety</option><option>Seatbelt</option><option>Seatbelt Japan</option><option>Stale</option><option>Stink Bug</option><option>Tail</option><option>Truckdriver</option><option>Venom</option>
+          <option value="">–</option><option>Blunt</option><option>Bow and Arrow</option><option>Broken Arrow</option><option>Critical</option><option>Cuban</option><option>Double Japan</option><option>Esco</option><option>Guitar</option><option>High Mute</option><option>In and out</option><option>Indi-Truck</option><option>Inside Tail</option><option>Japan</option><option>Mute</option><option>Nose</option><option>Octo</option><option>Rocket</option><option>Safety</option><option>Screamin' Seamen</option><option>Seatbelt</option><option>Seatbelt Japan</option><option>Stale</option><option>Stink Bug</option><option>Tail</option><option>Truckdriver</option><option>Venom</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Take-off</label>
         <select id="edit-absprung" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>Carved</option><option>Inside Edge</option><option>Nosebutter</option><option>Tailbutter</option>
+          <option value="">–</option><option>Blender</option><option>Carved</option><option>Inside Edge</option><option>Nosebutter</option><option>Tailbutter</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Bring Back</label>
         <select id="edit-bringback" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
@@ -388,7 +388,7 @@
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Style Element</label>
         <select id="edit-style" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>Tweak</option><option>Poke/Bone</option><option>Screamin' Seamen</option><option>Blender</option>
+          <option value="">–</option><option>Tweak/Bone</option><option>Poke</option>
         </select></div>
       <!-- Rail -->
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Rail Type</label>
@@ -684,7 +684,7 @@
           </select></div>
         <div class="form-group kicker-field-sb hidden"><label>Take-off</label>
           <select id="sb-absprung"><option value="">–</option>
-            <option>Carved</option><option>Inside Edge</option><option>Nosebutter</option><option>Tailbutter</option>
+            <option>Blender</option><option>Carved</option><option>Inside Edge</option><option>Nosebutter</option><option>Tailbutter</option>
           </select></div>
         <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(click = normal · L = lead · multiple possible)</span></label>
           <div id="sb-grab-wrap" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0;">
@@ -692,7 +692,7 @@
           </div>
           <script>
           (function(){
-            const grabs=['Blunt','Bow and Arrow','Broken Arrow','Critical','Cuban','Double Japan','Esco','Guitar','High Mute','In and out','Indi-Truck','Inside Tail','Japan','Mute','Nose','Octo','Rocket','Safety','Seatbelt','Seatbelt Japan','Stale','Stink Bug','Tail','Truckdriver','Venom'];
+            const grabs=['Blunt', 'Bow and Arrow', 'Broken Arrow', 'Critical', 'Cuban', 'Double Japan', 'Esco', 'Guitar', 'High Mute', 'In and out', 'Indi-Truck', 'Inside Tail', 'Japan', 'Mute', 'Nose', 'Octo', 'Rocket', 'Safety', 'Screamin' Seamen', 'Seatbelt', 'Seatbelt Japan', 'Stale', 'Stink Bug', 'Tail', 'Truckdriver', 'Venom'];
             const wrap=document.getElementById("sb-grab-wrap");
             const hid=document.getElementById("sb-grab");
             const selected=new Set();
@@ -730,7 +730,7 @@
           </select></div>
         <div class="form-group kicker-field-sb hidden"><label>Style Element</label>
           <select id="sb-style"><option value="">–</option>
-            <option>Tweak</option><option>Poke/Bone</option><option>Screamin' Seamen</option><option>Blender</option>
+            <option value="">–</option><option>Tweak/Bone</option><option>Poke</option>
           </select></div>
 
         <div class="section-divider rail-field-sb hidden">Rail</div>
@@ -2167,7 +2167,7 @@ async function toggleSessionAthlete(name) {
 }
 
 const SESS_DIRECTIONS = ['Left','Right','Switch Left','Switch Right','Forward','Switch'];
-const SESS_GRABS = ['Blunt', 'Bow and Arrow', 'Broken Arrow', 'Critical', 'Cuban', 'Double Japan', 'Esco', 'Guitar', 'High Mute', 'In and out', 'Indi-Truck', 'Inside Tail', 'Japan', 'Mute', 'Nose', 'Octo', 'Rocket', 'Safety', 'Seatbelt', 'Seatbelt Japan', 'Stale', 'Stink Bug', 'Tail', 'Truckdriver', 'Venom'];
+const SESS_GRABS = ['Blunt', 'Bow and Arrow', 'Broken Arrow', 'Critical', 'Cuban', 'Double Japan', 'Esco', 'Guitar', 'High Mute', 'In and out', 'Indi-Truck', 'Inside Tail', 'Japan', 'Mute', 'Nose', 'Octo', 'Rocket', 'Safety', 'Screamin' Seamen', 'Seatbelt', 'Seatbelt Japan', 'Stale', 'Stink Bug', 'Tail', 'Truckdriver', 'Venom'];
 
 function tricksForDir(tricks, dir) {
   return tricks.filter(t => {
@@ -4107,11 +4107,11 @@ document.getElementById('f-datum').valueAsDate = new Date();
           <input type="hidden" id="sbe-grab" value=""></div></div>
       <div class="form-group sbe-kicker"><label>Style Element</label>
         <select id="sbe-style"><option value="">–</option>
-          <option>Tweak</option><option>Poke/Bone</option><option>Screamin' Seamen</option><option>Blender</option>
+          <option value="">–</option><option>Tweak/Bone</option><option>Poke</option>
         </select></div>
       <div class="form-group sbe-kicker"><label>Take-off</label>
         <select id="sbe-absprung"><option value="">–</option>
-          <option>Carved</option><option>Inside Edge</option><option>Nosebutter</option><option>Tailbutter</option>
+          <option>Blender</option><option>Carved</option><option>Inside Edge</option><option>Nosebutter</option><option>Tailbutter</option>
         </select></div>
       <div class="form-group sbe-kicker"><label>Bring Back</label>
         <select id="sbe-bringback"><option value="">–</option>
