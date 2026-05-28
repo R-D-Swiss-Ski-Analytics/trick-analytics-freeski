@@ -853,41 +853,46 @@
   </div>
 
   <div id="ev-main" style="display:none;">
+
+    <!-- Row 1: Drehrichtungen (Radar) + Rotationen (Balken) -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">🔄 Drehrichtungen</div>
+        <div class="radar-wrap">
+          <canvas id="cv-radar" width="360" height="360"></canvas>
+        </div>
+      </div>
       <div class="chart-card">
         <div class="chart-title">🔢 Rotationen</div>
         <div id="bars-rotation"></div>
       </div>
     </div>
+
+    <!-- Row 2: Achsen + Grabs -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">⚙️ Achsen</div>
+        <div id="bars-achse"></div>
+      </div>
       <div class="chart-card">
         <div class="chart-title">✋ Grabs</div>
         <div id="bars-grab"></div>
       </div>
     </div>
-    </div>
 
-    <!-- Row 5: Assessment Direction Radar -->
-    <div class="chart-grid">
-      <div class="chart-card">
-        <div class="chart-title">🧭 Direction Balance (Assessment)</div>
-        <canvas id="ev-dir-radar" width="360" height="300"></canvas>
-        <div id="ev-dir-labels" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px;font-size:12px;"></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">📈 Mastered Tricks — Progression</div>
-        <div id="ev-progression"></div>
-      </div>
-    </div>
-
-    <!-- Row 6: Trick Analytics -->
+    <!-- Row 5: Repertoire Development Over Time -->
     <div class="chart-grid single">
       <div class="chart-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
-          <div class="chart-title" style="margin:0;">🎯 Trick Analytics</div>
-          <select id="ev-trick-select" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
-            <option value="">— All Tricks (Overall) —</option>
-          </select>
-        </div>
-        <div id="ev-trick-analytics"></div>
+        <div class="chart-title">📅 Repertoire Development Over Time <span style="font-size:11px;color:var(--muted);font-family:'Poppins',sans-serif;letter-spacing:0;">(Assessment — mastered tricks only)</span></div>
+        <div id="ev-verlauf"></div>
+      </div>
+    </div>
+
+    <!-- Row 6: Trick + Grab Session Stats -->
+    <div class="chart-grid single">
+      <div class="chart-card">
+        <div class="chart-title">🎯 Session Stats — Trick &amp; Grab</div>
+        <div id="ev-trick-stats"></div>
       </div>
     </div>
 
@@ -2878,36 +2883,34 @@ async function loadEntwicklung() {
         <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#f59e0b;"></span> Assessment (${standort.length})
       </div>
     </div>
-      <div class="chart-card"><div class="chart-title">🔢 Rotations</div><div id="bars-rotation"></div></div>
-    </div>
     <div class="chart-grid">
-      <div class="chart-card">
-        <div class="chart-title">🧭 Direction Balance (Assessment)</div>
-        <canvas id="ev-dir-radar" width="360" height="300" style="width:100%;"></canvas>
-        <div id="ev-dir-labels" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px;font-size:12px;"></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">📈 Mastered Tricks — Progression</div>
-        <div id="ev-progression"></div>
-      </div>
+      <div class="chart-card"><div class="chart-title">🔄 Directions</div><div class="radar-wrap"><canvas id="cv-radar" width="360" height="360"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">🔢 Rotations</div><div id="bars-rotation"></div></div>
     </div>
     <div class="chart-grid single">
       <div class="chart-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
-          <div class="chart-title" style="margin:0;">🎯 Trick Analytics</div>
-          <select id="ev-trick-select" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
-            <option value="">— All Tricks (Overall) —</option>
-          </select>
-        </div>
-        <div id="ev-trick-analytics"></div>
+        <div class="chart-title">🎯 Session Stats — Trick &amp; Grab</div>
+        <div id="ev-trick-stats"></div>
       </div>
     </div>
+    <div class="chart-grid">
+      <div class="chart-card"><div class="chart-title">⚙️ Axis</div><div id="bars-achse"></div></div>
       <div class="chart-card"><div class="chart-title">✋ Grabs</div><div id="bars-grab"></div></div>
     </div>
+    <div class="chart-grid single">
+      <div class="chart-card"><div class="chart-title">🎿 Cork — by direction</div>
+        <div id="bars-cork"></div>
+      </div>
       <div class="chart-card"><div class="chart-title">🌊 Bio/Misty — by direction</div>
         <div id="bars-bio"></div>
       </div>
     </div>
+    </div>
+    <div class="chart-grid single">
+      <div class="chart-card">
+        <div class="chart-title">📅 Repertoire Development Over Time <span style="font-size:11px;color:var(--muted);font-family:'Poppins',sans-serif;letter-spacing:0;">(Assessment — mastered tricks only)</span></div>
+        <div id="ev-verlauf"></div>
+      </div>
     </div>`;
 
   // ── Normalise standort entries to same shape as tricks
@@ -3137,14 +3140,7 @@ async function loadEntwicklung() {
     }
   }
 
-  // ── 9. Assessment Direction Radar + Progression ──────────────────────
-  renderAssessmentDirection(standort);
-  renderMasteredProgression(standort);
-
-  // ── 10. Trick Analytics ──────────────────────────────────────────────
-  initTrickAnalytics(tricks);
-
-  // ── 9b. Trick + Grab Session Stats ───────────────────────────────────
+  // ── 9. Trick + Grab Session Stats ─────────────────────────────────
   const statsEl = document.getElementById('ev-trick-stats');
   if (statsEl) {
     const sessionTricks = tricks.filter(t => t.trickaufbau && t.trickaufbau.includes(' — '));
@@ -3204,282 +3200,6 @@ async function loadEntwicklung() {
         </tbody>
       </table>`;
     }
-  }
-}
-
-
-// ── GLOBAL DIRECTION HELPER ───────────────────────────────────────────
-function normDir4global(entry) {
-  const raw = (entry.drehrichtung || '').trim();
-  if (raw === 'Left' || raw === 'Forward Left') return 'Left';
-  if (raw === 'Right' || raw === 'Forward Right') return 'Right';
-  if (raw === 'Switch Left') return 'Switch Left';
-  if (raw === 'Switch Right') return 'Switch Right';
-  return null;
-}
-
-// ── ASSESSMENT DIRECTION RADAR ───────────────────────────────────────
-function renderAssessmentDirection(standort) {
-  const canvas = document.getElementById('ev-dir-radar');
-  const labelsEl = document.getElementById('ev-dir-labels');
-  if (!canvas) return;
-  const mastered = standort.filter(e => e.status === 'mastered');
-  const DIRS = ['Left','Right','Switch Left','Switch Right'];
-  const DIR_COLORS = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
-  const counts = {};
-  DIRS.forEach(d => counts[d] = 0);
-  mastered.forEach(e => {
-    const d = normDir4global(e);
-    if (d && counts[d] !== undefined) counts[d]++;
-  });
-  const total = DIRS.reduce((s,d) => s+counts[d], 0) || 1;
-  const vals = DIRS.map(d => counts[d]/total);
-
-  // Draw radar
-  canvas.style.width = '100%';
-  canvas.width = canvas.parentElement?.offsetWidth || 320;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 60;
-  ctx.clearRect(0,0,W,H);
-  const angles = DIRS.map((_,i) => (i*2*Math.PI/4) - Math.PI/4);
-  // Grid rings
-  [0.25,0.5,0.75,1].forEach(f => {
-    ctx.beginPath(); angles.forEach((a,i) => {
-      const x=cx+Math.cos(a)*r*f, y=cy+Math.sin(a)*r*f;
-      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-    }); ctx.closePath();
-    ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=1; ctx.stroke();
-  });
-  // Spokes
-  angles.forEach(a => { ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.stroke(); });
-  // Fill
-  ctx.beginPath(); angles.forEach((a,i) => { const x=cx+Math.cos(a)*r*vals[i], y=cy+Math.sin(a)*r*vals[i]; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
-  ctx.closePath(); ctx.fillStyle='rgba(57,195,212,0.2)'; ctx.fill();
-  ctx.strokeStyle='#39c3d4'; ctx.lineWidth=2; ctx.stroke();
-  // Dots + labels
-  angles.forEach((a,i) => {
-    const x=cx+Math.cos(a)*r*vals[i], y=cy+Math.sin(a)*r*vals[i];
-    ctx.beginPath(); ctx.arc(x,y,5,0,2*Math.PI); ctx.fillStyle=DIR_COLORS[DIRS[i]]||'#39c3d4'; ctx.fill();
-    const lx=cx+Math.cos(a)*(r+28), ly=cy+Math.sin(a)*(r+28);
-    ctx.fillStyle='#e8edf2'; ctx.font='bold 11px Poppins,sans-serif';
-    ctx.textAlign=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center';
-    ctx.textBaseline='middle'; ctx.fillText(DIRS[i],lx,ly-8);
-    ctx.font='11px Poppins,sans-serif'; ctx.fillStyle=DIR_COLORS[DIRS[i]]||'#39c3d4';
-    ctx.fillText(`${counts[DIRS[i]]} tricks (${Math.round(vals[i]*100)}%)`,lx,ly+6);
-  });
-  if (labelsEl) labelsEl.innerHTML = '';
-}
-
-// ── MASTERED PROGRESSION ─────────────────────────────────────────────
-function renderMasteredProgression(standort) {
-  const el = document.getElementById('ev-progression');
-  if (!el) return;
-  const mastered = standort.filter(e => e.status === 'mastered' && e.datum);
-  if (mastered.length === 0) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No assessment data yet.</div>'; return; }
-
-  // Group by date — cumulative mastered per direction
-  const DIRS = ['Left','Right','Switch Left','Switch Right'];
-  const DIR_COLORS = ['#39c3d4','#3b82f6','#a78bfa','#f59e0b'];
-  const dates = [...new Set(mastered.map(e=>e.datum))].sort();
-  const cumulative = {}; DIRS.forEach(d => cumulative[d] = 0);
-  let totalCum = 0;
-
-  const rows = dates.map(date => {
-    const dayTricks = mastered.filter(e => e.datum === date);
-    dayTricks.forEach(e => {
-      const d = normDir4global(e);
-      if (d && DIRS.includes(d)) cumulative[d]++;
-      totalCum++;
-    });
-    return { date, total: totalCum, ...Object.fromEntries(DIRS.map(d=>[d,cumulative[d]])) };
-  });
-
-  const maxTotal = rows[rows.length-1]?.total || 1;
-  el.innerHTML = rows.map(r => {
-    const dateStr = new Date(r.date+'T12:00:00').toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit',year:'2-digit'});
-    const pct = Math.round(r.total/maxTotal*100);
-    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:11px;color:var(--muted);min-width:56px;">${dateStr}</span>
-      <div style="flex:1;background:var(--surface2);border-radius:4px;height:10px;overflow:hidden;">
-        ${DIRS.map((d,i)=>`<div style="display:inline-block;width:${Math.round((r[d]||0)/maxTotal*100)}%;height:10px;background:${DIR_COLORS[i]};"></div>`).join('')}
-      </div>
-      <span style="font-size:12px;color:#39c3d4;font-weight:700;min-width:32px;text-align:right;">${r.total}</span>
-    </div>`;
-  }).join('') + `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;">
-    ${DIRS.map((d,i)=>`<span style="font-size:11px;color:${DIR_COLORS[i]};display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:${DIR_COLORS[i]};display:inline-block;"></span>${d}: ${cumulative[d]}</span>`).join('')}
-  </div>`;
-}
-
-// ── TRICK ANALYTICS ──────────────────────────────────────────────────
-let _trickAnalyticsData = [];
-
-function initTrickAnalytics(tricks) {
-  // Only new-format session tricks (trickaufbau with " — ")
-  const sessionTricks = tricks.filter(t => t.trickaufbau && t.trickaufbau.includes(' — '));
-  _trickAnalyticsData = sessionTricks;
-
-  // Populate trick selector
-  const sel = document.getElementById('ev-trick-select');
-  if (!sel) return;
-  const tricks_unique = [...new Set(sessionTricks.map(t => t.trickaufbau))].sort();
-  sel.innerHTML = '<option value="">— All Tricks (Overall) —</option>' +
-    tricks_unique.map(t => `<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
-  renderTrickAnalytics();
-}
-
-function renderTrickAnalytics() {
-  const el = document.getElementById('ev-trick-analytics');
-  if (!el) return;
-  const sel = document.getElementById('ev-trick-select');
-  const selectedTrick = sel?.value || '';
-  const data = selectedTrick
-    ? _trickAnalyticsData.filter(t => t.trickaufbau === selectedTrick)
-    : _trickAnalyticsData;
-
-  if (!data.length) { el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;">No session data yet.</div>'; return; }
-
-  // Stats
-  const attempts = data.length;
-  const landed = data.filter(t => t.gelandet === 'Yes').length;
-  const perfect = data.filter(t => t.gesamt >= 10).length;
-  const failed = data.filter(t => t.gelandet !== 'Yes').length;
-  const consistency = attempts ? Math.round(landed / attempts * 100) : 0;
-  const avgRating = attempts ? (data.reduce((s,t)=>s+(t.gesamt||0),0)/attempts).toFixed(1) : '—';
-  const badgeColor = consistency >= 70 ? '#2d8a4e' : consistency >= 40 ? '#f59e0b' : '#e2001a';
-
-  // Group by date for progression chart
-  const byDate = {};
-  data.forEach(t => {
-    if (!t.datum) return;
-    if (!byDate[t.datum]) byDate[t.datum] = {attempts:0, landed:0, perfect:0};
-    byDate[t.datum].attempts++;
-    if (t.gelandet === 'Yes') byDate[t.datum].landed++;
-    if (t.gesamt >= 10) byDate[t.datum].perfect++;
-  });
-  const dates = Object.keys(byDate).sort();
-  const points = dates.map(d => ({
-    date: d,
-    pct: Math.round(byDate[d].landed / byDate[d].attempts * 100),
-    perfectPct: Math.round(byDate[d].perfect / byDate[d].attempts * 100),
-    attempts: byDate[d].attempts,
-    landed: byDate[d].landed,
-    perfect: byDate[d].perfect,
-  }));
-
-  // Per-trick cards (if Overall mode)
-  let trickCards = '';
-  if (!selectedTrick) {
-    const trickMap = {};
-    _trickAnalyticsData.forEach(t => {
-      if (!trickMap[t.trickaufbau]) trickMap[t.trickaufbau] = {attempts:0,landed:0,perfect:0};
-      trickMap[t.trickaufbau].attempts++;
-      if (t.gelandet === 'Yes') trickMap[t.trickaufbau].landed++;
-      if (t.gesamt >= 10) trickMap[t.trickaufbau].perfect++;
-    });
-    trickCards = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">
-      ${Object.entries(trickMap).sort((a,b)=>b[1].attempts-a[1].attempts).map(([trick,s])=>{
-        const pct = s.attempts ? Math.round(s.landed/s.attempts*100) : 0;
-        const col = pct>=70?'#2d8a4e':pct>=40?'#f59e0b':'#e2001a';
-        return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;min-width:180px;flex:1;">
-          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">${trick}</div>
-          <div style="display:flex;gap:12px;font-size:12px;">
-            <span style="color:var(--muted);">${s.attempts} att.</span>
-            <span style="color:#2d8a4e;">${s.landed} ✓</span>
-            <span style="color:#39c3d4;">${s.perfect} ⭐</span>
-            <span style="color:${col};font-weight:700;margin-left:auto;">${pct}%</span>
-          </div>
-          <div style="background:var(--border);border-radius:3px;height:4px;margin-top:6px;">
-            <div style="background:${col};width:${pct}%;height:4px;border-radius:3px;"></div>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }
-
-  // Draw progression chart
-  const chartId = 'trick-analytics-chart-' + Date.now();
-  el.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;">
-      <div style="text-align:center;">
-        <div style="font-family:'Poppins',sans-serif;font-size:28px;font-weight:800;color:var(--text);">${attempts}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Attempts</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-family:'Poppins',sans-serif;font-size:28px;font-weight:800;color:#2d8a4e;">${landed}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Landed</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-family:'Poppins',sans-serif;font-size:28px;font-weight:800;color:#39c3d4;">${perfect}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Perfect</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-family:'Poppins',sans-serif;font-size:28px;font-weight:800;color:#e2001a;">${failed}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Failed</div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-family:'Poppins',sans-serif;font-size:28px;font-weight:800;color:#f59e0b;">${avgRating}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Avg Rating</div>
-      </div>
-    </div>
-    <div style="display:inline-block;padding:4px 12px;border-radius:20px;background:${badgeColor}22;border:1px solid ${badgeColor};color:${badgeColor};font-size:12px;font-weight:700;margin-bottom:16px;">${consistency}% consistency</div>
-    ${points.length > 1 ? `
-    <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;">↗ Landing % Progression</div>
-    <canvas id="${chartId}" height="120" style="width:100%;"></canvas>
-    <div style="display:flex;gap:0;justify-content:space-between;margin-top:4px;">
-      ${points.map(p=>`<div style="text-align:center;flex:1;font-size:10px;">
-        <div style="color:#39c3d4;font-weight:700;">${p.pct}%</div>
-        <div style="color:var(--muted);">${p.date.slice(5)} <br>${p.attempts}r</div>
-      </div>`).join('')}
-    </div>` : '<div style="color:var(--muted);font-size:12px;">More sessions needed for progression chart.</div>'}
-    ${trickCards}
-  `;
-
-  // Draw line chart
-  if (points.length > 1) {
-    requestAnimationFrame(() => {
-      const canvas = document.getElementById(chartId);
-      if (!canvas) return;
-      canvas.width = canvas.offsetWidth || 600;
-      const ctx = canvas.getContext('2d');
-      const W = canvas.width, H = canvas.height;
-      const pad = {l:30,r:10,t:10,b:10};
-      const n = points.length;
-      const xs = points.map((_,i) => pad.l + (i/(n-1))*(W-pad.l-pad.r));
-      const ys = points.map(p => pad.t + (1-p.pct/100)*(H-pad.t-pad.b));
-      const ysp = points.map(p => pad.t + (1-p.perfectPct/100)*(H-pad.t-pad.b));
-
-      // Grid lines at 25/50/75/100%
-      ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
-      [0,25,50,75,100].forEach(pct=>{
-        const y = pad.t + (1-pct/100)*(H-pad.t-pad.b);
-        ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
-        ctx.fillStyle='#6b8299'; ctx.font='10px Poppins,sans-serif'; ctx.fillText(pct+'%',0,y+3);
-      });
-
-      // Gradient fill for landed %
-      const grad = ctx.createLinearGradient(0,pad.t,0,H-pad.b);
-      grad.addColorStop(0,'rgba(57,195,212,0.3)'); grad.addColorStop(1,'rgba(57,195,212,0)');
-      ctx.beginPath(); ctx.moveTo(xs[0],ys[0]);
-      xs.forEach((x,i)=>ctx.lineTo(x,ys[i]));
-      ctx.lineTo(xs[n-1],H-pad.b); ctx.lineTo(xs[0],H-pad.b); ctx.closePath();
-      ctx.fillStyle=grad; ctx.fill();
-
-      // Landed % line
-      ctx.beginPath(); ctx.strokeStyle='#39c3d4'; ctx.lineWidth=2;
-      xs.forEach((x,i)=>i===0?ctx.moveTo(x,ys[i]):ctx.lineTo(x,ys[i])); ctx.stroke();
-
-      // Perfect % line (dashed)
-      ctx.beginPath(); ctx.strokeStyle='#f59e0b'; ctx.lineWidth=1.5; ctx.setLineDash([4,4]);
-      xs.forEach((x,i)=>i===0?ctx.moveTo(x,ysp[i]):ctx.lineTo(x,ysp[i])); ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Dots
-      xs.forEach((x,i)=>{
-        ctx.beginPath(); ctx.arc(x,ys[i],4,0,2*Math.PI); ctx.fillStyle='#39c3d4'; ctx.fill();
-        ctx.beginPath(); ctx.arc(x,ysp[i],3,0,2*Math.PI); ctx.fillStyle='#f59e0b'; ctx.fill();
-      });
-    });
   }
 }
 
