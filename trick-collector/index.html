@@ -2468,9 +2468,7 @@ function renderLiveSession() {
                 onclick="sessPickTrick('${name}','${t.replace(/'/g,"\\'")}',this)"
                 style="font-size:13px;padding:8px 14px;">${t}</button>`).join('')}
             </div>`
-          : `<input type="text" placeholder="Enter trick..." value="${d.currentTrick}"
-              oninput="sessSetTrick('${name}',this.value)"
-              style="width:100%;text-align:center;font-weight:600;font-size:14px;">`
+          : `<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px;">No tricks selected — go back to Setup and select tricks from the assessment.</div>`
         }
       </div>
 
