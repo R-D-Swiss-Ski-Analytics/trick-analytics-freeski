@@ -3443,7 +3443,7 @@ function renderTrickAnalytics() {
           <div><div style="font-size:26px;font-weight:800;color:${col(gPct||0)};">${gPct!==null?gPct+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Grab</div></div>
           <div><div style="font-size:26px;font-weight:800;color:${col(tPct||0)};">${tPct!==null?tPct+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Trick</div></div>
           <div><div style="font-size:26px;font-weight:800;color:${col(lPct||0)};">${lPct!==null?lPct+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Landing</div></div>
-          <div><div style="font-size:26px;font-weight:800;color:${col(overallPct)};">${overallPct}%</div><div style="font-size:11px;color:var(--muted);">Overall</div></div>
+          <div><div style="font-size:26px;font-weight:800;color:${col(overallPct)};">${overallPct}%</div><div style="font-size:11px;color:var(--muted);">Success %</div></div>
         </div>`;
       } else {
         return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;text-align:center;">
@@ -3454,7 +3454,6 @@ function renderTrickAnalytics() {
         </div>`;
       }
     })()}
-    <div style="display:inline-block;padding:4px 14px;border-radius:20px;background:${badgeCol}22;border:1px solid ${badgeCol};color:${badgeCol};font-size:12px;font-weight:700;margin-bottom:${pts.length>1?'12px':'0'};">${cons}% consistency</div>
     ${pts.length>1?`
     ${legend}
     <canvas id="${cid}" style="width:100%;"></canvas>` : ''}
