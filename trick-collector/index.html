@@ -2974,6 +2974,17 @@ async function loadEntwicklung() {
         <div class="chart-title">📅 Repertoire Development Over Time <span style="font-size:11px;color:var(--muted);font-family:'Poppins',sans-serif;letter-spacing:0;">(Assessment — mastered tricks only)</span></div>
         <div id="ev-verlauf"></div>
       </div>
+    </div>
+    <div class="chart-grid single">
+      <div class="chart-card" id="ev-analytics-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+          <div class="chart-title" style="margin:0;">🎯 Trick Analytics — Session</div>
+          <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+            <option value="">— All Tricks —</option>
+          </select>
+        </div>
+        <div id="ev-trick-analytics"></div>
+      </div>
     </div>`;
 
   // ── Normalise standort entries to same shape as tricks
@@ -3203,7 +3214,10 @@ async function loadEntwicklung() {
     }
   }
 
-  // ── 9. Trick + Grab Session Stats ─────────────────────────────────
+  // ── 9. Trick Analytics ───────────────────────────────────────────────
+  initTrickAnalytics(tricks);
+
+  // ── 9b. Trick + Grab Session Stats ───────────────────────────────────
   const statsEl = document.getElementById('ev-trick-stats');
   if (statsEl) {
     const sessionTricks = tricks.filter(t => t.trickaufbau && t.trickaufbau.includes(' — '));
@@ -3264,6 +3278,127 @@ async function loadEntwicklung() {
       </table>`;
     }
   }
+}
+
+// ── TRICK ANALYTICS ──────────────────────────────────────────────────
+let _taData = [];
+
+function initTrickAnalytics(tricks) {
+  _taData = tricks.filter(t => t.trickaufbau && t.trickaufbau.includes(' — '));
+  const sel = document.getElementById('ev-trick-sel');
+  if (!sel) return;
+  const unique = [...new Set(_taData.map(t => t.trickaufbau))].sort();
+  sel.innerHTML = '<option value="">— All Tricks —</option>' +
+    unique.map(t => `<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
+  renderTrickAnalytics();
+}
+
+function renderTrickAnalytics() {
+  const el = document.getElementById('ev-trick-analytics');
+  if (!el) return;
+  const sel = document.getElementById('ev-trick-sel');
+  const chosen = sel ? sel.value : '';
+  const data = chosen ? _taData.filter(t => t.trickaufbau === chosen) : _taData;
+
+  if (!data.length) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">No session data yet. Log tricks in the Session tab first.</div>';
+    return;
+  }
+
+  const att = data.length;
+  const land = data.filter(t => t.gelandet === 'Yes').length;
+  const perf = data.filter(t => t.gesamt >= 10).length;
+  const fail = att - land;
+  const cons = att ? Math.round(land/att*100) : 0;
+  const badgeCol = cons>=70?'#2d8a4e':cons>=40?'#f59e0b':'#e2001a';
+
+  // Group by date+session for progression
+  const byDate = {};
+  data.forEach(t => {
+    if (!t.datum) return;
+    if (!byDate[t.datum]) byDate[t.datum] = {att:0,land:0,perf:0};
+    byDate[t.datum].att++;
+    if (t.gelandet==='Yes') byDate[t.datum].land++;
+    if (t.gesamt>=10) byDate[t.datum].perf++;
+  });
+  const dates = Object.keys(byDate).sort();
+  const pts = dates.map(d => ({d, att:byDate[d].att, land:byDate[d].land, perf:byDate[d].perf,
+    landPct:Math.round(byDate[d].land/byDate[d].att*100),
+    perfPct:Math.round(byDate[d].perf/byDate[d].att*100)}));
+
+  // Per-trick overview (Overall mode)
+  let trickOverview = '';
+  if (!chosen) {
+    const tmap = {};
+    _taData.forEach(t => {
+      if (!tmap[t.trickaufbau]) tmap[t.trickaufbau] = {att:0,land:0,perf:0};
+      tmap[t.trickaufbau].att++; if(t.gelandet==='Yes')tmap[t.trickaufbau].land++; if(t.gesamt>=10)tmap[t.trickaufbau].perf++;
+    });
+    trickOverview = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">' +
+      Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
+        const p=s.att?Math.round(s.land/s.att*100):0, col=p>=70?'#2d8a4e':p>=40?'#f59e0b':'#e2001a';
+        return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;flex:1;min-width:200px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;">${trick}</div>
+          <div style="display:flex;gap:10px;font-size:12px;">
+            <span style="color:var(--muted);">${s.att} att.</span>
+            <span style="color:#2d8a4e;">✓ ${s.land}</span>
+            <span style="color:#39c3d4;">⭐ ${s.perf}</span>
+            <span style="color:${col};font-weight:700;margin-left:auto;">${p}%</span>
+          </div>
+          <div style="background:var(--border);border-radius:3px;height:4px;margin-top:5px;"><div style="background:${col};width:${p}%;height:4px;border-radius:3px;"></div></div>
+        </div>`;
+      }).join('') + '</div>';
+  }
+
+  const cid = 'ta-chart-'+Date.now();
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;text-align:center;">
+      <div><div style="font-size:26px;font-weight:800;color:var(--text);">${att}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
+      <div><div style="font-size:26px;font-weight:800;color:#2d8a4e;">${land}</div><div style="font-size:11px;color:var(--muted);">Landed</div></div>
+      <div><div style="font-size:26px;font-weight:800;color:#39c3d4;">${perf}</div><div style="font-size:11px;color:var(--muted);">Stomped</div></div>
+      <div><div style="font-size:26px;font-weight:800;color:#e2001a;">${fail}</div><div style="font-size:11px;color:var(--muted);">Failed</div></div>
+      <div><div style="font-size:26px;font-weight:800;color:#f59e0b;">${att?((data.reduce((s,t)=>s+(t.gesamt||0),0)/att)).toFixed(1):'—'}</div><div style="font-size:11px;color:var(--muted);">Avg Rating</div></div>
+    </div>
+    <div style="display:inline-block;padding:4px 14px;border-radius:20px;background:${badgeCol}22;border:1px solid ${badgeCol};color:${badgeCol};font-size:12px;font-weight:700;margin-bottom:${pts.length>1?'16px':'0'};">${cons}% consistency</div>
+    ${pts.length>1?`
+    <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;">↗ Stomp % Progression</div>
+    <canvas id="${cid}" height="110" style="width:100%;"></canvas>
+    <div style="display:flex;gap:0;margin-top:4px;">
+      ${pts.map(p=>`<div style="flex:1;text-align:center;font-size:10px;">
+        <div style="color:#39c3d4;font-weight:700;">${p.landPct}%</div>
+        <div style="color:var(--muted);">${p.d.slice(5)}</div>
+        <div style="color:var(--muted);">${p.att} runs</div>
+      </div>`).join('')}
+    </div>` : ''}
+    ${trickOverview}
+  `;
+
+  if (pts.length > 1) requestAnimationFrame(() => {
+    const c = document.getElementById(cid); if(!c) return;
+    c.width = c.offsetWidth||600;
+    const ctx=c.getContext('2d'), W=c.width, H=c.height, pad={l:36,r:8,t:8,b:8};
+    const xs=pts.map((_,i)=>pad.l+(i/(pts.length-1))*(W-pad.l-pad.r));
+    const ys=pts.map(p=>pad.t+(1-p.landPct/100)*(H-pad.t-pad.b));
+    const yp=pts.map(p=>pad.t+(1-p.perfPct/100)*(H-pad.t-pad.b));
+    // Grid
+    [0,25,50,75,100].forEach(pct=>{
+      const y=pad.t+(1-pct/100)*(H-pad.t-pad.b);
+      ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+      ctx.fillStyle='#6b8299';ctx.font='10px Poppins,sans-serif';ctx.textAlign='right';ctx.fillText(pct+'%',pad.l-4,y+3);
+    });
+    // Dashed goal line at 100%
+    ctx.strokeStyle='rgba(45,138,78,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(W-pad.r,pad.t);ctx.stroke();ctx.setLineDash([]);
+    // Fill
+    const g=ctx.createLinearGradient(0,pad.t,0,H-pad.b);g.addColorStop(0,'rgba(57,195,212,0.3)');g.addColorStop(1,'rgba(57,195,212,0)');
+    ctx.beginPath();ctx.moveTo(xs[0],ys[0]);xs.forEach((x,i)=>ctx.lineTo(x,ys[i]));
+    ctx.lineTo(xs[pts.length-1],H-pad.b);ctx.lineTo(xs[0],H-pad.b);ctx.closePath();ctx.fillStyle=g;ctx.fill();
+    // Lines
+    ctx.beginPath();ctx.strokeStyle='#39c3d4';ctx.lineWidth=2;xs.forEach((x,i)=>i===0?ctx.moveTo(x,ys[i]):ctx.lineTo(x,ys[i]));ctx.stroke();
+    ctx.beginPath();ctx.strokeStyle='#39c3d4';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);xs.forEach((x,i)=>i===0?ctx.moveTo(x,yp[i]):ctx.lineTo(x,yp[i]));ctx.stroke();ctx.setLineDash([]);
+    // Dots
+    xs.forEach((x,i)=>{ctx.beginPath();ctx.arc(x,ys[i],4,0,2*Math.PI);ctx.fillStyle='#39c3d4';ctx.fill();});
+  });
 }
 
 function updateQualityChart() {
