@@ -2629,16 +2629,16 @@ function renderSbDirRadar() {
   if (!canvas) {
     canvas = document.createElement('canvas');
     canvas.id = 'sb-dir-radar';
-    canvas.style.cssText = 'width:100%;max-width:340px;display:block;margin:0 auto;';
+    canvas.style.cssText = 'width:100%;max-width:420px;display:block;margin:0 auto;';
     wrap.querySelector('.card').appendChild(canvas);
   }
   const dpr = window.devicePixelRatio || 1;
-  const size = Math.min(wrap.querySelector('.card')?.offsetWidth-32 || 340, 340);
+  const size = Math.min(wrap.querySelector('.card')?.offsetWidth-16 || 420, 420);
   canvas.style.width = size + 'px'; canvas.style.height = size + 'px';
   canvas.width = size * dpr; canvas.height = size * dpr;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
-  const W=size, H=size, cx=W/2, cy=H/2, r=Math.min(W,H)/2-72;
+  const W=size, H=size, cx=W/2, cy=H/2, r=Math.min(W,H)/2-90;
   ctx.clearRect(0,0,W,H);
   const angles = DIRS.map((_,i) => i*2*Math.PI/4 - Math.PI/4);
 
@@ -2658,7 +2658,7 @@ function renderSbDirRadar() {
   angles.forEach((a,i)=>{
     const vx=cx+Math.cos(a)*r*vals[i], vy=cy+Math.sin(a)*r*vals[i];
     ctx.beginPath(); ctx.arc(vx,vy,5,0,2*Math.PI); ctx.fillStyle=DIR_COLORS[DIRS[i]]; ctx.fill();
-    const lx=cx+Math.cos(a)*(r+40), ly=cy+Math.sin(a)*(r+40);
+    const lx=cx+Math.cos(a)*(r+50), ly=cy+Math.sin(a)*(r+50);
     const align=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center';
     ctx.textAlign=align; ctx.textBaseline='middle';
     ctx.font='bold 12px Poppins,sans-serif'; ctx.fillStyle='#e8edf2';
