@@ -3353,48 +3353,66 @@ function renderTrickAnalytics() {
   const data = chosen ? _taData.filter(t => t.trickaufbau === chosen) : _taData;
 
   if (!data.length) {
-    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">No session data yet. Log tricks in the Session tab first.</div>';
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">No session data yet.</div>';
     return;
   }
 
+  // Parse Grab/Trick/Landing from kommentar field
+  function parseRating(kommentar, key) {
+    const m = (kommentar||'').match(new RegExp(key+':(\\w+)'));
+    const val = m ? m[1] : null;
+    return val==='perfect'?100:val==='okay'?50:val==='miss'?0:null;
+  }
+  function ratingToStr(v) { return v===100?'Perfect':v===50?'Okay':v===0?'Miss':'—'; }
+
   const att = data.length;
-  const land = data.filter(t => t.gelandet === 'Yes').length;
-  const perf = data.filter(t => t.gesamt >= 10).length;
+  const land = data.filter(t => t.gelandet==='Yes').length;
+  const perf = data.filter(t => t.gesamt>=10).length;
   const fail = att - land;
   const cons = att ? Math.round(land/att*100) : 0;
   const badgeCol = cons>=70?'#2d8a4e':cons>=40?'#f59e0b':'#e2001a';
 
-  // Group by date+session for progression
+  // Group by date
   const byDate = {};
   data.forEach(t => {
     if (!t.datum) return;
-    if (!byDate[t.datum]) byDate[t.datum] = {att:0,land:0,perf:0};
+    if (!byDate[t.datum]) byDate[t.datum] = {att:0,land:0,perf:0,grab:[],trick:[],landing:[]};
     byDate[t.datum].att++;
     if (t.gelandet==='Yes') byDate[t.datum].land++;
     if (t.gesamt>=10) byDate[t.datum].perf++;
+    const g=parseRating(t.kommentar,'Grab'), tr=parseRating(t.kommentar,'Trick'), la=parseRating(t.kommentar,'Landing');
+    if(g!==null) byDate[t.datum].grab.push(g);
+    if(tr!==null) byDate[t.datum].trick.push(tr);
+    if(la!==null) byDate[t.datum].landing.push(la);
   });
   const dates = Object.keys(byDate).sort();
-  const pts = dates.map(d => ({d, att:byDate[d].att, land:byDate[d].land, perf:byDate[d].perf,
-    landPct:Math.round(byDate[d].land/byDate[d].att*100),
-    perfPct:Math.round(byDate[d].perf/byDate[d].att*100)}));
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  const pts = dates.map(d => ({
+    d, att:byDate[d].att,
+    landPct: Math.round(byDate[d].land/byDate[d].att*100),
+    perfPct: Math.round(byDate[d].perf/byDate[d].att*100),
+    grab: avg(byDate[d].grab), trick: avg(byDate[d].trick), landing: avg(byDate[d].landing)
+  }));
 
-  // Per-trick overview (Overall mode)
+  const hasComponents = pts.some(p => p.grab!==null);
+
+  // Per-trick overview
   let trickOverview = '';
   if (!chosen) {
     const tmap = {};
     _taData.forEach(t => {
-      if (!tmap[t.trickaufbau]) tmap[t.trickaufbau] = {att:0,land:0,perf:0};
+      if (!tmap[t.trickaufbau]) tmap[t.trickaufbau]={att:0,land:0,perf:0};
       tmap[t.trickaufbau].att++; if(t.gelandet==='Yes')tmap[t.trickaufbau].land++; if(t.gesamt>=10)tmap[t.trickaufbau].perf++;
     });
     trickOverview = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">' +
       Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
         const p=s.att?Math.round(s.land/s.att*100):0, col=p>=70?'#2d8a4e':p>=40?'#f59e0b':'#e2001a';
-        return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;flex:1;min-width:200px;">
+        return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;flex:1;min-width:180px;">
           <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;">${trick}</div>
-          <div style="display:flex;gap:10px;font-size:12px;">
-            <span style="color:var(--muted);">${s.att} att.</span>
-            <span style="color:#2d8a4e;">✓ ${s.land}</span>
-            <span style="color:#39c3d4;">⭐ ${s.perf}</span>
+          <div style="display:flex;gap:8px;font-size:12px;align-items:center;">
+            <span style="color:var(--muted);">${s.att}×</span>
+            <span style="color:#2d8a4e;">✓${s.land}</span>
+            <span style="color:#39c3d4;">⭐${s.perf}</span>
             <span style="color:${col};font-weight:700;margin-left:auto;">${p}%</span>
           </div>
           <div style="background:var(--border);border-radius:3px;height:4px;margin-top:5px;"><div style="background:${col};width:${p}%;height:4px;border-radius:3px;"></div></div>
@@ -3403,6 +3421,13 @@ function renderTrickAnalytics() {
   }
 
   const cid = 'ta-chart-'+Date.now();
+  const legend = hasComponents ? `
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;font-size:11px;">
+      <span style="color:#2d8a4e;">● Landing</span>
+      <span style="color:#39c3d4;">● Trick</span>
+      <span style="color:#f59e0b;">● Grab</span>
+    </div>` : '';
+
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;text-align:center;">
       <div><div style="font-size:26px;font-weight:800;color:var(--text);">${att}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
@@ -3411,45 +3436,68 @@ function renderTrickAnalytics() {
       <div><div style="font-size:26px;font-weight:800;color:#e2001a;">${fail}</div><div style="font-size:11px;color:var(--muted);">Failed</div></div>
       <div><div style="font-size:26px;font-weight:800;color:#f59e0b;">${att?((data.reduce((s,t)=>s+(t.gesamt||0),0)/att)).toFixed(1):'—'}</div><div style="font-size:11px;color:var(--muted);">Avg Rating</div></div>
     </div>
-    <div style="display:inline-block;padding:4px 14px;border-radius:20px;background:${badgeCol}22;border:1px solid ${badgeCol};color:${badgeCol};font-size:12px;font-weight:700;margin-bottom:${pts.length>1?'16px':'0'};">${cons}% consistency</div>
+    <div style="display:inline-block;padding:4px 14px;border-radius:20px;background:${badgeCol}22;border:1px solid ${badgeCol};color:${badgeCol};font-size:12px;font-weight:700;margin-bottom:${pts.length>1?'12px':'0'};">${cons}% consistency</div>
     ${pts.length>1?`
-    <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;">↗ Stomp % Progression</div>
-    <canvas id="${cid}" height="110" style="width:100%;"></canvas>
-    <div style="display:flex;gap:0;margin-top:4px;">
-      ${pts.map(p=>`<div style="flex:1;text-align:center;font-size:10px;">
-        <div style="color:#39c3d4;font-weight:700;">${p.landPct}%</div>
-        <div style="color:var(--muted);">${p.d.slice(5)}</div>
-        <div style="color:var(--muted);">${p.att} runs</div>
-      </div>`).join('')}
-    </div>` : ''}
+    ${legend}
+    <canvas id="${cid}" style="width:100%;"></canvas>` : ''}
     ${trickOverview}
   `;
 
   if (pts.length > 1) requestAnimationFrame(() => {
-    const c = document.getElementById(cid); if(!c) return;
-    c.width = c.offsetWidth||600;
-    const ctx=c.getContext('2d'), W=c.width, H=c.height, pad={l:36,r:8,t:8,b:8};
-    const xs=pts.map((_,i)=>pad.l+(i/(pts.length-1))*(W-pad.l-pad.r));
-    const ys=pts.map(p=>pad.t+(1-p.landPct/100)*(H-pad.t-pad.b));
-    const yp=pts.map(p=>pad.t+(1-p.perfPct/100)*(H-pad.t-pad.b));
+    const canvas = document.getElementById(cid); if(!canvas) return;
+    const dpr = window.devicePixelRatio||1;
+    const W = canvas.parentElement.offsetWidth - 2;
+    const H = hasComponents ? 180 : 130;
+    canvas.style.width = W+'px'; canvas.style.height = H+'px';
+    canvas.width = W*dpr; canvas.height = H*dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const pad = {l:38, r:12, t:10, b:52};
+    const n = pts.length;
+    const xs = pts.map((_,i) => pad.l + (n===1?0:i/(n-1)) * (W-pad.l-pad.r));
+    const toY = v => pad.t + (1-v/100)*(H-pad.t-pad.b);
+
     // Grid
-    [0,25,50,75,100].forEach(pct=>{
-      const y=pad.t+(1-pct/100)*(H-pad.t-pad.b);
-      ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
-      ctx.fillStyle='#6b8299';ctx.font='10px Poppins,sans-serif';ctx.textAlign='right';ctx.fillText(pct+'%',pad.l-4,y+3);
+    [0,25,50,75,100].forEach(pct => {
+      const y = toY(pct);
+      ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+      ctx.fillStyle='#6b8299'; ctx.font=`10px Poppins,sans-serif`; ctx.textAlign='right'; ctx.fillText(pct+'%',pad.l-4,y+3);
     });
-    // Dashed goal line at 100%
-    ctx.strokeStyle='rgba(45,138,78,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
-    ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(W-pad.r,pad.t);ctx.stroke();ctx.setLineDash([]);
-    // Fill
-    const g=ctx.createLinearGradient(0,pad.t,0,H-pad.b);g.addColorStop(0,'rgba(57,195,212,0.3)');g.addColorStop(1,'rgba(57,195,212,0)');
-    ctx.beginPath();ctx.moveTo(xs[0],ys[0]);xs.forEach((x,i)=>ctx.lineTo(x,ys[i]));
-    ctx.lineTo(xs[pts.length-1],H-pad.b);ctx.lineTo(xs[0],H-pad.b);ctx.closePath();ctx.fillStyle=g;ctx.fill();
-    // Lines
-    ctx.beginPath();ctx.strokeStyle='#39c3d4';ctx.lineWidth=2;xs.forEach((x,i)=>i===0?ctx.moveTo(x,ys[i]):ctx.lineTo(x,ys[i]));ctx.stroke();
-    ctx.beginPath();ctx.strokeStyle='#39c3d4';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);xs.forEach((x,i)=>i===0?ctx.moveTo(x,yp[i]):ctx.lineTo(x,yp[i]));ctx.stroke();ctx.setLineDash([]);
-    // Dots
-    xs.forEach((x,i)=>{ctx.beginPath();ctx.arc(x,ys[i],4,0,2*Math.PI);ctx.fillStyle='#39c3d4';ctx.fill();});
+
+    // Helper: draw line
+    function drawLine(values, col, dashed=false) {
+      const valid = values.map((v,i)=>v!==null?{x:xs[i],y:toY(v)}:null).filter(Boolean);
+      if(valid.length<1) return;
+      if(dashed) ctx.setLineDash([4,4]); else ctx.setLineDash([]);
+      ctx.beginPath(); ctx.strokeStyle=col; ctx.lineWidth=2;
+      valid.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke();
+      ctx.setLineDash([]);
+      valid.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,4,0,2*Math.PI);ctx.fillStyle=col;ctx.fill();});
+    }
+
+    // Landing % line (solid, primary)
+    drawLine(pts.map(p=>p.landPct), '#2d8a4e');
+    // Stomp % (dashed)
+    drawLine(pts.map(p=>p.perfPct), 'rgba(45,138,78,0.4)', true);
+
+    if (hasComponents) {
+      drawLine(pts.map(p=>p.landing), '#2d8a4e');
+      drawLine(pts.map(p=>p.trick), '#39c3d4');
+      drawLine(pts.map(p=>p.grab), '#f59e0b');
+    }
+
+    // X-axis labels — directly below each dot
+    ctx.fillStyle='#e8edf2'; ctx.font=`bold 11px Poppins,sans-serif`; ctx.textAlign='center';
+    pts.forEach((p,i) => {
+      const x = xs[i], y = H-pad.b+14;
+      ctx.fillStyle='#39c3d4'; ctx.font='bold 11px Poppins,sans-serif';
+      ctx.fillText(p.landPct+'%', x, y);
+      ctx.fillStyle='#6b8299'; ctx.font='10px Poppins,sans-serif';
+      ctx.fillText(p.d.slice(5), x, y+14);
+      ctx.fillText(p.att+' runs', x, y+26);
+    });
   });
 }
 
