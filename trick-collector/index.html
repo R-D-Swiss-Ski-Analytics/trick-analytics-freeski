@@ -2422,89 +2422,113 @@ function startSession() {
   renderLiveSession();
 }
 
-// Per-athlete rating state: {grab, trick, land} each null/'miss'/'okay'/'perfect'
+// Per-athlete rating state
 const sessRatings = {};
-
-function ratingBtn(name, cat, val, label, icon, col, bgcol) {
-  const sid = name.replace(/\s/g,'_');
-  return `<button onclick="setSessRating('${name}','${cat}','${val}',this)"
-    id="sr-${sid}-${cat}-${val}"
-    style="flex:1;padding:10px 4px;background:${bgcol};border:2px solid ${col};color:${col};border-radius:10px;font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer;line-height:1.4;transition:all .15s;-webkit-tap-highlight-color:transparent;">${icon}<br>${label}</button>`;
-}
+let sessActiveAthlete = null;
 
 function renderLiveSession() {
   const cols = document.getElementById('sess-athlete-cols');
-  const n = sessSelectedAthletes.length;
-  cols.style.gridTemplateColumns = n<=2 ? `repeat(${n},1fr)` : n<=4 ? 'repeat(4,1fr)' : 'repeat(4,1fr)';
-  cols.style.alignItems = 'stretch';
-  cols.innerHTML = sessSelectedAthletes.map(name => {
+  if (!sessActiveAthlete && sessSelectedAthletes.length > 0) {
+    sessActiveAthlete = sessSelectedAthletes[0];
+  }
+
+  // Athlete tab buttons
+  const tabsHtml = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+    ${sessSelectedAthletes.map(name => {
+      const r = sessRatings[name] || {};
+      const lastResult = sessLog.find(e => e.name === name);
+      const dot = lastResult ? (lastResult.result==='miss'?'🔴':lastResult.result==='perfect'?'🔵':'🟢') : '';
+      const isActive = name === sessActiveAthlete;
+      return `<button onclick="selectSessAthlete('${name}')" style="
+        padding:10px 18px;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;
+        background:${isActive?'rgba(57,195,212,0.2)':'var(--surface2)'};
+        border:2px solid ${isActive?'#39c3d4':'var(--border)'};
+        color:${isActive?'#39c3d4':'var(--muted)'};
+      ">${dot} ${shortName(name)}</button>`;
+    }).join('')}
+  </div>`;
+
+  // Active athlete card
+  const name = sessActiveAthlete;
+  let cardHtml = '';
+  if (name && sessAthleteData[name]) {
     if (!sessRatings[name]) sessRatings[name] = {grab:null,trick:null,land:null};
     const d = sessAthleteData[name];
     const tricks = sessActiveTricks[name] || [];
     const sid = name.replace(/\s/g,'_');
-    return `<div class="card" style="padding:16px;text-align:center;display:flex;flex-direction:column;" id="sess-col-${sid}">
-      <div style="font-size:18px;font-weight:800;color:#39c3d4;margin-bottom:10px;">${shortName(name)}</div>
-      <div style="margin-bottom:12px;">
-        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Working on</div>
+    cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${sid}">
+      <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:16px;text-align:center;">${shortName(name)}</div>
+
+      <!-- Trick selection -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Working on</div>
         ${tricks.length > 0
-          ? `<div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-height:100px;overflow-y:auto;">
-              ${tricks.map(t=>`<button class="sess-trick-btn${t===d.currentTrick?' active':''}" onclick="sessPickTrick('${name}','${t.replace(/'/g,"\\'")}',this)" style="font-size:11px;padding:4px 8px;">${t}</button>`).join('')}
+          ? `<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+              ${tricks.map(t=>`<button class="sess-trick-btn${t===d.currentTrick?' active':''}"
+                onclick="sessPickTrick('${name}','${t.replace(/'/g,"\\'")}',this)"
+                style="font-size:13px;padding:8px 14px;">${t}</button>`).join('')}
             </div>`
-          : `<input type="text" placeholder="Enter trick..." value="${d.currentTrick}" oninput="sessSetTrick('${name}',this.value)" style="text-align:center;font-weight:600;font-size:12px;">`
+          : `<input type="text" placeholder="Enter trick..." value="${d.currentTrick}"
+              oninput="sessSetTrick('${name}',this.value)"
+              style="width:100%;text-align:center;font-weight:600;font-size:14px;">`
         }
       </div>
-      <div style="display:flex;flex-direction:column;gap:8px;flex:1;">
-        ${['grab','trick','land'].map((cat,ci) => {
-          const labels = ['Grab','Trick','Landing'];
-          return `<div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;min-width:52px;text-align:left;">${labels[ci]}</span>
-            <div style="display:flex;gap:4px;flex:1;">
-              ${ratingBtn(name,cat,'miss','MISS','✗','#e2001a','rgba(226,0,26,0.08)')}
-              ${ratingBtn(name,cat,'okay','OKAY','✓','#2d8a4e','rgba(45,138,78,0.08)')}
-              ${ratingBtn(name,cat,'perfect','PERFECT','⭐','#39c3d4','rgba(57,195,212,0.08)')}
+
+      <!-- Rating rows -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        ${[['grab','Grab'],['trick','Trick'],['land','Landing']].map(([cat,label]) => `
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">${label}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+              ${[['miss','✗ MISS','#e2001a','rgba(226,0,26,0.1)'],
+                 ['okay','✓ OKAY','#2d8a4e','rgba(45,138,78,0.1)'],
+                 ['perfect','⭐ PERFECT','#39c3d4','rgba(57,195,212,0.1)']].map(([val,lbl,col,bg]) => {
+                   const active = sessRatings[name]?.[cat] === val;
+                   return `<button onclick="setSessRating('${name}','${cat}','${val}',this)"
+                     id="sr-${sid}-${cat}-${val}"
+                     style="padding:18px 8px;border-radius:12px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent;
+                     background:${active?col.replace(')',',0.25)').replace('rgba','rgba').replace('#','rgba(').replace(/rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2}),/i,(m,r,g,b)=>`rgba(${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},`)||bg:bg};
+                     border:${active?'3px':'2px'} solid ${col};color:${col};opacity:${active?1:0.6};"
+                   >${lbl}</button>`;
+                }).join('')}
             </div>
-          </div>`;
-        }).join('')}
+          </div>`).join('')}
       </div>
     </div>`;
-  }).join('');
-  // Restore active states
-  sessSelectedAthletes.forEach(name => {
-    const r = sessRatings[name] || {};
-    ['grab','trick','land'].forEach(cat => {
-      if (r[cat]) highlightRatingBtn(name, cat, r[cat]);
-    });
-  });
+  }
+
+  cols.innerHTML = tabsHtml + cardHtml;
+}
+
+function selectSessAthlete(name) {
+  sessActiveAthlete = name;
+  renderLiveSession();
 }
 
 function setSessRating(name, cat, val, btn) {
   if (!sessRatings[name]) sessRatings[name] = {grab:null,trick:null,land:null};
   sessRatings[name][cat] = val;
-  highlightRatingBtn(name, cat, val);
-  const r = sessRatings[name];
-  if (r.grab && r.trick && r.land) {
-    autoLogAttempt(name);
-  }
-}
-
-function highlightRatingBtn(name, cat, val) {
+  // Update button styles inline
   const sid = name.replace(/\s/g,'_');
   const colMap = {miss:'#e2001a', okay:'#2d8a4e', perfect:'#39c3d4'};
-  const bgMap = {miss:'rgba(226,0,26,0.2)', okay:'rgba(45,138,78,0.2)', perfect:'rgba(57,195,212,0.2)'};
+  const bgMap = {miss:'rgba(226,0,26,0.1)', okay:'rgba(45,138,78,0.1)', perfect:'rgba(57,195,212,0.1)'};
   ['miss','okay','perfect'].forEach(v => {
     const b = document.getElementById(`sr-${sid}-${cat}-${v}`);
     if (!b) return;
     const active = v === val;
-    b.style.background = active ? bgMap[v] : (v==='miss'?'rgba(226,0,26,0.08)':v==='okay'?'rgba(45,138,78,0.08)':'rgba(57,195,212,0.08)');
-    b.style.borderWidth = active ? '2px' : '2px';
+    b.style.background = active ? bgMap[v] : bgMap[v];
     b.style.opacity = active ? '1' : '0.5';
+    b.style.borderWidth = active ? '3px' : '2px';
   });
+  const r = sessRatings[name];
+  if (r.grab && r.trick && r.land) autoLogAttempt(name);
 }
+
+function highlightRatingBtn(name, cat, val) {}
 
 async function autoLogAttempt(name) {
   const r = sessRatings[name];
   const d = sessAthleteData[name];
-  // Compute overall: miss=1, okay=2, perfect=3
   const score = {miss:1,okay:2,perfect:3};
   const avg = (score[r.grab]+score[r.trick]+score[r.land])/3;
   const result = avg>=2.7?'perfect':avg>=1.7?'landed':'miss';
@@ -2514,28 +2538,24 @@ async function autoLogAttempt(name) {
   if (result==='landed'||result==='perfect') d.stats.landed++;
   if (result==='perfect') d.stats.perfect++;
 
-  // Flash
   const col = document.getElementById('sess-col-'+name.replace(/\s/g,'_'));
-  col.style.background = result==='miss'?'rgba(226,0,26,0.2)':result==='perfect'?'rgba(57,195,212,0.2)':'rgba(45,138,78,0.2)';
-  setTimeout(()=>{ col.style.background=''; }, 300);
+  if (col) { col.style.background=result==='miss'?'rgba(226,0,26,0.2)':result==='perfect'?'rgba(57,195,212,0.2)':'rgba(45,138,78,0.2)'; setTimeout(()=>{col.style.background='';},300); }
 
   sessLog.unshift({name, trick:d.currentTrick, result, grab:r.grab, trick_r:r.trick, land:r.land,
-    time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})});
+    time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})});
 
-  // Reset ratings
-  sessRatings[name] = {grab:null,trick:null,land:null};
+  sessRatings[name]={grab:null,trick:null,land:null};
   renderLiveSession();
   renderSessionLog();
 
-  // Save to DB
-  const trickInfo = sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
+  const trickInfo=sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
   db.from('tricks').insert({
     athlet:name, datum:new Date().toISOString().split('T')[0],
     typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
     trickaufbau:d.currentTrick, gelandet:r.land!=='miss'?'Yes':'No',
     gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
-    kommentar: `Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`
-  }).then(({error})=>{ if(error) console.error('Save error:',error); });
+    kommentar:`Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`
+  }).then(({error})=>{if(error)console.error(error);});
 }
 
 function sessSetTrick(name, trick) { sessAthleteData[name].currentTrick = trick; }
