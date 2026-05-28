@@ -2555,7 +2555,10 @@ async function autoLogAttempt(name) {
     trickaufbau:d.currentTrick, gelandet:r.land!=='miss'?'Yes':'No',
     gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
     kommentar:`Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`
-  }).then(({error})=>{if(error)console.error(error);});
+  }).select('id').then(({data,error})=>{
+    if(error){console.error(error);return;}
+    if(data&&data[0]) sessLog[0].dbId = data[0].id;
+  });
 }
 
 function sessSetTrick(name, trick) { sessAthleteData[name].currentTrick = trick; }
@@ -2597,18 +2600,65 @@ async function logAttempt(name, result) {
 
 function renderSessionLog() {
   const el = document.getElementById('sess-log');
-  if (!sessLog.length) return;
-  el.innerHTML = sessLog.slice(0,30).map(e=>{
+  if (!sessLog.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;">No attempts logged yet.</div>';
+    return;
+  }
+  el.innerHTML = sessLog.slice(0,30).map((e,i)=>{
     const icon = e.result==='miss'?'✗':e.result==='perfect'?'⭐':'✓';
     const col = e.result==='miss'?'#e2001a':e.result==='perfect'?'#39c3d4':'#2d8a4e';
-    const ratings = e.grab ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">G:${e.grab} T:${e.trick_r} L:${e.land}</span>` : '';
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;">
+    const ratings = e.grab ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">[G:${e.grab} T:${e.trick_r} L:${e.land}]</span>` : '';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;">
       <span style="color:${col};font-weight:800;font-size:15px;min-width:16px;">${icon}</span>
-      <span style="color:#39c3d4;font-weight:600;min-width:65px;">${shortName(e.name)}</span>
+      <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
       <span style="flex:1;color:var(--text);">${e.trick||'—'}${ratings}</span>
       <span style="color:var(--muted);font-size:11px;">${e.time}</span>
+      <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">✏️</button>
+      ${i===0?`<button onclick="undoLastEntry()" title="Undo" style="background:none;border:1px solid #e2001a;border-radius:6px;color:#e2001a;cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">↩</button>`:''}
     </div>`;
   }).join('');
+}
+
+async function undoLastEntry() {
+  if (!sessLog.length) return;
+  const e = sessLog[0];
+  if (e.dbId) {
+    await db.from('tricks').delete().eq('id', e.dbId);
+  }
+  // Revert stats
+  if (sessAthleteData[e.name]) {
+    sessAthleteData[e.name].stats.attempts = Math.max(0, sessAthleteData[e.name].stats.attempts - 1);
+    if (e.result==='landed'||e.result==='perfect') sessAthleteData[e.name].stats.landed = Math.max(0, sessAthleteData[e.name].stats.landed - 1);
+    if (e.result==='perfect') sessAthleteData[e.name].stats.perfect = Math.max(0, sessAthleteData[e.name].stats.perfect - 1);
+  }
+  sessLog.shift();
+  showToast('Last entry removed', 'success');
+  renderSessionLog();
+  renderLiveSession();
+}
+
+function editLogEntry(idx) {
+  const e = sessLog[idx];
+  if (!e) return;
+  // Switch to that athlete and pre-fill ratings
+  sessActiveAthlete = e.name;
+  if (!sessRatings[e.name]) sessRatings[e.name] = {grab:null,trick:null,land:null};
+  if (e.grab) {
+    sessRatings[e.name].grab = e.grab;
+    sessRatings[e.name].trick = e.trick_r;
+    sessRatings[e.name].land = e.land;
+  }
+  // Remove this log entry (will be re-added when re-rated)
+  if (e.dbId) db.from('tricks').delete().eq('id', e.dbId).then(()=>{});
+  if (sessAthleteData[e.name]) {
+    sessAthleteData[e.name].stats.attempts = Math.max(0, sessAthleteData[e.name].stats.attempts - 1);
+    if (e.result==='landed'||e.result==='perfect') sessAthleteData[e.name].stats.landed = Math.max(0, sessAthleteData[e.name].stats.landed - 1);
+    if (e.result==='perfect') sessAthleteData[e.name].stats.perfect = Math.max(0, sessAthleteData[e.name].stats.perfect - 1);
+  }
+  sessLog.splice(idx, 1);
+  showToast('Edit mode — re-rate the attempt', 'success');
+  renderLiveSession();
+  renderSessionLog();
 }
 
 function clearSessionSelection() {
