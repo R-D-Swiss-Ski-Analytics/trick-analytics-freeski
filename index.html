@@ -3429,13 +3429,31 @@ function renderTrickAnalytics() {
     </div>` : '';
 
   el.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;text-align:center;">
-      <div><div style="font-size:26px;font-weight:800;color:var(--text);">${att}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
-      <div><div style="font-size:26px;font-weight:800;color:#2d8a4e;">${land}</div><div style="font-size:11px;color:var(--muted);">Landed</div></div>
-      <div><div style="font-size:26px;font-weight:800;color:#39c3d4;">${perf}</div><div style="font-size:11px;color:var(--muted);">Stomped</div></div>
-      <div><div style="font-size:26px;font-weight:800;color:#e2001a;">${fail}</div><div style="font-size:11px;color:var(--muted);">Failed</div></div>
-      <div><div style="font-size:26px;font-weight:800;color:#f59e0b;">${att?((data.reduce((s,t)=>s+(t.gesamt||0),0)/att)).toFixed(1):'—'}</div><div style="font-size:11px;color:var(--muted);">Avg Rating</div></div>
-    </div>
+    ${(()=>{
+      // Calculate component averages from kommentar field
+      function pr(k,d){ const m=(d.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
+      const hasComp = data.some(t=>pr('Grab',t)!==null);
+      if(hasComp){
+        const gavg=d=>{ const v=data.map(t=>pr(d,t)).filter(v=>v!==null); return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):null; };
+        const gPct=gavg('Grab'), tPct=gavg('Trick'), lPct=gavg('Landing');
+        const overallPct=att?Math.round(land/att*100):0;
+        const col=v=>v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
+        return `<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;text-align:center;">
+          <div><div style="font-size:26px;font-weight:800;color:var(--text);">${att}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
+          <div><div style="font-size:26px;font-weight:800;color:${col(gPct||0)};">${gPct!==null?gPct+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Grab</div></div>
+          <div><div style="font-size:26px;font-weight:800;color:${col(tPct||0)};">${tPct!==null?tPct+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Trick</div></div>
+          <div><div style="font-size:26px;font-weight:800;color:${col(lPct||0)};">${lPct!==null?lPct+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Landing</div></div>
+          <div><div style="font-size:26px;font-weight:800;color:${col(overallPct)};">${overallPct}%</div><div style="font-size:11px;color:var(--muted);">Overall</div></div>
+        </div>`;
+      } else {
+        return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;text-align:center;">
+          <div><div style="font-size:26px;font-weight:800;color:var(--text);">${att}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
+          <div><div style="font-size:26px;font-weight:800;color:#2d8a4e;">${land}</div><div style="font-size:11px;color:var(--muted);">Landed</div></div>
+          <div><div style="font-size:26px;font-weight:800;color:#39c3d4;">${perf}</div><div style="font-size:11px;color:var(--muted);">Stomped</div></div>
+          <div><div style="font-size:26px;font-weight:800;color:#e2001a;">${fail}</div><div style="font-size:11px;color:var(--muted);">Failed</div></div>
+        </div>`;
+      }
+    })()}
     <div style="display:inline-block;padding:4px 14px;border-radius:20px;background:${badgeCol}22;border:1px solid ${badgeCol};color:${badgeCol};font-size:12px;font-weight:700;margin-bottom:${pts.length>1?'12px':'0'};">${cons}% consistency</div>
     ${pts.length>1?`
     ${legend}
