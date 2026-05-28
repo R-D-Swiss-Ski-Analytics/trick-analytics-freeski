@@ -728,9 +728,7 @@
             <option>180</option><option>360</option><option>540</option>
           </select></div>
         <div class="form-group kicker-field-sb hidden"><label>Style Element</label>
-          <select id="sb-style"><option value="">–</option>
-            <option value="">–</option><option>Tweak/Bone</option><option>Poke</option>
-          </select></div>
+          <select id="sb-style"><option value="">–</option><option>Tweak/Bone</option><option>Poke</option></select></div>
 
         <div class="section-divider rail-field-sb hidden">Rail</div>
         <div class="form-group rail-field-sb hidden"><label>Rail Type</label>
@@ -776,40 +774,6 @@
         <button class="btn-goal"       onclick="sbSave('goal')">🎯 GOAL / IN PROGRESS</button>
       </div>
 
-      <!-- COACH SECTION -->
-      <div style="margin-top:20px;border:2px solid #3b82f6;border-radius:12px;padding:16px;background:rgba(59,130,246,0.06);">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-          <span style="font-size:18px;">🎓</span>
-          <div>
-            <div style="font-family:'Poppins',sans-serif;font-size:16px;letter-spacing:0.5px;color:#3b82f6;">COACH ASSESSMENT</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:1px;">For coaches only — not to be filled in by athletes</div>
-          </div>
-        </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Ausführung / Qualität</label>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <input type="range" id="sb-coach-rating" min="1" max="10" step="1" value="5"
-                oninput="document.getElementById('sb-coach-rating-val').textContent=this.value"
-                style="flex:1;accent-color:#f59e0b;">
-              <span id="sb-coach-rating-val" style="font-family:'Poppins',sans-serif;font-size:22px;color:#f59e0b;min-width:28px;">5</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px;">
-              <span>Not clean</span><span>Competition ready</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Videolink (Coach)</label>
-            <input type="text" id="sb-coach-video" placeholder="https://..." style="border-color:#f59e0b44;">
-          </div>
-          <div class="form-group full">
-            <label>Coach-Kommentar zur Ausführung</label>
-            <textarea id="sb-coach-kommentar" rows="2"
-              placeholder="e.g. technical tip, focus point, feedback on execution..."
-              style="border-color:#f59e0b44;"></textarea>
-          </div>
-        </div>
-      </div>
 
       <button class="btn-secondary" style="width:100%;margin-top:12px;" onclick="toggleSbForm()">Cancel</button>
     </div>
