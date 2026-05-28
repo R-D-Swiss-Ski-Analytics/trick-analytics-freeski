@@ -2622,37 +2622,54 @@ function renderSbDirRadar() {
     const d = (raw==='Left'||raw==='Forward Left')?'Left':(raw==='Right'||raw==='Forward Right')?'Right':raw==='Switch Left'?'Switch Left':raw==='Switch Right'?'Switch Right':null;
     if (d) counts[d]++;
   });
-  const max = Math.max(...DIRS.map(d => counts[d]), 1);
   const total = DIRS.reduce((s,d) => s+counts[d], 0) || 1;
+  const vals = DIRS.map(d => counts[d]/total);
 
-  const canvas = document.getElementById('sb-dir-radar');
-  if (canvas) canvas.style.display = 'none'; // hide old canvas
+  let canvas = document.getElementById('sb-dir-radar');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'sb-dir-radar';
+    canvas.style.cssText = 'width:100%;max-width:340px;display:block;margin:0 auto;';
+    wrap.querySelector('.card').appendChild(canvas);
+  }
+  const dpr = window.devicePixelRatio || 1;
+  const size = Math.min(wrap.querySelector('.card')?.offsetWidth-32 || 340, 340);
+  canvas.style.width = size + 'px'; canvas.style.height = size + 'px';
+  canvas.width = size * dpr; canvas.height = size * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W=size, H=size, cx=W/2, cy=H/2, r=Math.min(W,H)/2-72;
+  ctx.clearRect(0,0,W,H);
+  const angles = DIRS.map((_,i) => i*2*Math.PI/4 - Math.PI/4);
 
-  const inner = document.getElementById('sb-dir-bars');
-  const container = inner || document.createElement('div');
-  if (!inner) { container.id = 'sb-dir-bars'; wrap.querySelector('.card').appendChild(container); }
+  [0.25,0.5,0.75,1].forEach(f => {
+    ctx.beginPath();
+    angles.forEach((a,i)=>{ const x=cx+Math.cos(a)*r*f, y=cy+Math.sin(a)*r*f; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.closePath(); ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='rgba(10,12,15,0.25)'; ctx.fill();
+  });
+  angles.forEach(a=>{ ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r); ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.stroke(); });
 
-  container.innerHTML = DIRS.map(dir => {
-    const n = counts[dir];
-    const pct = Math.round(n/total*100);
-    const barW = Math.round(n/max*100);
-    const col = DIR_COLORS[dir];
-    return `<div style="margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
-        <span style="font-weight:700;font-size:14px;color:${col};">${dir}</span>
-        <span style="font-size:13px;color:var(--muted);">${pct}%</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div style="flex:1;background:var(--surface2);border-radius:6px;height:14px;overflow:hidden;">
-          <div style="background:${col};width:${barW}%;height:14px;border-radius:6px;transition:width .4s;"></div>
-        </div>
-        <span style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:800;color:var(--text);min-width:36px;text-align:right;">${n}</span>
-        <span style="font-size:12px;color:var(--muted);min-width:40px;">tricks</span>
-      </div>
-    </div>`;
-  }).join('') +
-  `<div style="font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">Total mastered: ${total}</div>`;
+  ctx.beginPath();
+  angles.forEach((a,i)=>{ const x=cx+Math.cos(a)*r*vals[i], y=cy+Math.sin(a)*r*vals[i]; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.closePath(); ctx.fillStyle='rgba(245,158,11,0.18)'; ctx.fill();
+  ctx.strokeStyle='#f59e0b'; ctx.lineWidth=2.5; ctx.stroke();
+
+  angles.forEach((a,i)=>{
+    const vx=cx+Math.cos(a)*r*vals[i], vy=cy+Math.sin(a)*r*vals[i];
+    ctx.beginPath(); ctx.arc(vx,vy,5,0,2*Math.PI); ctx.fillStyle=DIR_COLORS[DIRS[i]]; ctx.fill();
+    const lx=cx+Math.cos(a)*(r+40), ly=cy+Math.sin(a)*(r+40);
+    const align=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center';
+    ctx.textAlign=align; ctx.textBaseline='middle';
+    ctx.font='bold 12px Poppins,sans-serif'; ctx.fillStyle='#e8edf2';
+    ctx.fillText(DIRS[i], lx, ly-11);
+    ctx.font='bold 15px Poppins,sans-serif'; ctx.fillStyle=DIR_COLORS[DIRS[i]];
+    ctx.fillText(counts[DIRS[i]]+' tricks', lx, ly+5);
+    ctx.font='11px Poppins,sans-serif'; ctx.fillStyle='rgba(255,255,255,0.45)';
+    ctx.fillText(Math.round(vals[i]*100)+'%', lx, ly+20);
+  });
 }
+
 
 function renderStandort() {
   // Stats
