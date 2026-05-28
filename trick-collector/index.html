@@ -3471,26 +3471,17 @@ function renderTrickAnalytics() {
       ctx.fillText(pct+'%', pad.l-5, y+3);
     });
 
-    function drawLine(values, col, lw=2.5) {
-      const pts2 = values.map((v,i)=>v!==null?{x:xs[i],y:toY(v)}:null).filter(Boolean);
+    function drawLine(values, col, lw) {
+      lw = lw||2.5;
+      const pts2 = [];
+      values.forEach((v,i)=>{ if(v!==null) pts2.push({x:xs[i],y:toY(v)}); });
       if(pts2.length<1) return;
-      // Gradient fill under line
-      if(lw>2) {
-        const g=ctx.createLinearGradient(0,pad.t,0,H-pad.b);
-        g.addColorStop(0,col.replace(')',',0.15)').replace('#','rgba(').replace(/rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2}),/i,(m,r,g2,b)=>`rgba(${parseInt(r,16)},${parseInt(g2,16)},${parseInt(b,16)},`)||col);
-        g.addColorStop(1,'rgba(0,0,0,0)');
-        ctx.beginPath(); ctx.moveTo(pts2[0].x,pts2[0].y);
-        pts2.forEach(p=>ctx.lineTo(p.x,p.y));
-        ctx.lineTo(pts2[pts2.length-1].x,H-pad.b); ctx.lineTo(pts2[0].x,H-pad.b);
-        ctx.closePath(); ctx.fillStyle=g; ctx.fill();
-      }
       ctx.beginPath(); ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.lineJoin='round';
-      pts2.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke();
-      pts2.forEach(p=>{
-        ctx.beginPath(); ctx.arc(p.x,p.y,5,0,2*Math.PI);
-        ctx.fillStyle=col; ctx.fill();
-        ctx.beginPath(); ctx.arc(p.x,p.y,3,0,2*Math.PI);
-        ctx.fillStyle='#0c1a2b'; ctx.fill();
+      pts2.forEach(function(p,i){ i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); });
+      ctx.stroke();
+      pts2.forEach(function(p){
+        ctx.beginPath(); ctx.arc(p.x,p.y,5,0,2*Math.PI); ctx.fillStyle=col; ctx.fill();
+        ctx.beginPath(); ctx.arc(p.x,p.y,2.5,0,2*Math.PI); ctx.fillStyle='#0a0e1a'; ctx.fill();
       });
     }
 
