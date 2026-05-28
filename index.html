@@ -290,8 +290,6 @@
     <button class="nav-tab active" onclick="showPage('standort', this)">Assessment</button>
     <button class="nav-tab" onclick="showPage('erfassen', this)">Session</button>
     <button class="nav-tab" onclick="showPage('entwicklung', this)">Development</button>
-    <button class="nav-tab" onclick="showPage('athlete-notebook', this)">Notebook Athlete</button>
-    <button class="nav-tab" onclick="showPage('notebook', this)">Notebook Coach</button>
     <button class="nav-tab" onclick="showPage('trainerurteil', this)">Coach Review</button>
     <button class="nav-tab" onclick="showPage('datenbank', this)">Database</button>
   </nav>
@@ -1239,12 +1237,12 @@ async function saveNewPin(){const p1=document.getElementById('new-pin1').value,p
 function initApp(role){
   if(role==='coach'){document.querySelectorAll('.nav-tab').forEach(t=>t.style.display='');addLogoutBtn();}
   else{
-    const allowed=['Notebook Athlete','Assessment','Development'];
+    const allowed=['Assessment','Development'];
     document.querySelectorAll('.nav-tab').forEach(t=>{t.style.display=allowed.includes(t.textContent.trim())?'':'none';});
     setTimeout(()=>setAthleteEverywhere(currentAthlete),200);
     addLogoutBtn(currentAthlete);
     lockAthleteSelectors();
-    const nb=Array.from(document.querySelectorAll('.nav-tab')).find(t=>t.textContent.trim()==='Notebook Athlete');
+    const nb=Array.from(document.querySelectorAll('.nav-tab')).find(t=>t.textContent.trim()==='Assessment');
     if(nb)nb.click();
   }
 }
@@ -1263,8 +1261,6 @@ function showPage(id, btn) {
   if (id === 'datenbank') loadDB();
   if (id === 'entwicklung') loadEntwicklung();
   if (id === 'erfassen') initSessionSetup();
-  if (id === 'notebook') loadNotebook();
-  if (id === 'athlete-notebook') loadAthleteNotebook();
   if (id === 'erfassen') loadSessionTricks();
 }
 
