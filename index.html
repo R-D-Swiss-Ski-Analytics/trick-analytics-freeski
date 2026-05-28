@@ -290,7 +290,6 @@
     <button class="nav-tab active" onclick="showPage('standort', this)">Assessment</button>
     <button class="nav-tab" onclick="showPage('erfassen', this)">Session</button>
     <button class="nav-tab" onclick="showPage('entwicklung', this)">Development</button>
-    <button class="nav-tab" onclick="showPage('trainerurteil', this)">Coach Review</button>
     <button class="nav-tab" onclick="showPage('datenbank', this)">Database</button>
   </nav>
 </header>
@@ -854,27 +853,11 @@
   </div>
 
   <div id="ev-main" style="display:none;">
-
-    <!-- Row 1: Drehrichtungen (Radar) + Rotationen (Balken) -->
-    <div class="chart-grid">
-      <div class="chart-card">
-        <div class="chart-title">🔄 Drehrichtungen</div>
-        <div class="radar-wrap">
-          <canvas id="cv-radar" width="360" height="360"></canvas>
-        </div>
-      </div>
       <div class="chart-card">
         <div class="chart-title">🔢 Rotationen</div>
         <div id="bars-rotation"></div>
       </div>
     </div>
-
-    <!-- Row 2: Achsen + Grabs -->
-    <div class="chart-grid">
-      <div class="chart-card">
-        <div class="chart-title">⚙️ Achsen</div>
-        <div id="bars-achse"></div>
-      </div>
       <div class="chart-card">
         <div class="chart-title">✋ Grabs</div>
         <div id="bars-grab"></div>
@@ -2891,8 +2874,6 @@ async function loadEntwicklung() {
         <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#f59e0b;"></span> Assessment (${standort.length})
       </div>
     </div>
-    <div class="chart-grid">
-      <div class="chart-card"><div class="chart-title">🔄 Directions</div><div class="radar-wrap"><canvas id="cv-radar" width="360" height="360"></canvas></div></div>
       <div class="chart-card"><div class="chart-title">🔢 Rotations</div><div id="bars-rotation"></div></div>
     </div>
     <div class="chart-grid single">
@@ -2906,14 +2887,8 @@ async function loadEntwicklung() {
         <div id="ev-trick-analytics"></div>
       </div>
     </div>
-    <div class="chart-grid">
-      <div class="chart-card"><div class="chart-title">⚙️ Axis</div><div id="bars-achse"></div></div>
       <div class="chart-card"><div class="chart-title">✋ Grabs</div><div id="bars-grab"></div></div>
     </div>
-    <div class="chart-grid single">
-      <div class="chart-card"><div class="chart-title">🎿 Cork — by direction</div>
-        <div id="bars-cork"></div>
-      </div>
       <div class="chart-card"><div class="chart-title">🌊 Bio/Misty — by direction</div>
         <div id="bars-bio"></div>
       </div>
