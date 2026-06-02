@@ -835,9 +835,14 @@
       <div class="chart-card" id="ev-analytics-card">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
           <div class="chart-title" style="margin:0;">📊 Trick Statistics</div>
-          <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
-            <option value="">— All Tricks —</option>
-          </select>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+              <option value="">— All Sessions —</option>
+            </select>
+            <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+              <option value="">— All Tricks —</option>
+            </select>
+          </div>
         </div>
         <div id="ev-trick-analytics"></div>
       </div>
@@ -3031,9 +3036,14 @@ async function loadEntwicklung() {
       <div class="chart-card" id="ev-analytics-card">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
           <div class="chart-title" style="margin:0;">📊 Trick Statistics</div>
-          <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
-            <option value="">— All Tricks —</option>
-          </select>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+              <option value="">— All Sessions —</option>
+            </select>
+            <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+              <option value="">— All Tricks —</option>
+            </select>
+          </div>
         </div>
         <div id="ev-trick-analytics"></div>
       </div>
@@ -3338,11 +3348,56 @@ let _taData = [];
 function initTrickAnalytics(tricks) {
   _taData = tricks.filter(t => t.trickaufbau && t.trickaufbau.includes(' — '));
   const sel = document.getElementById('ev-trick-sel');
+  const dateSel = document.getElementById('ev-date-sel');
   if (!sel) return;
+
+  // Populate trick filter
   const unique = [...new Set(_taData.map(t => t.trickaufbau))].sort();
   sel.innerHTML = '<option value="">— All Tricks —</option>' +
     unique.map(t => `<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
+
+  // Build session list: group by date, detect multiple sessions per day by time gaps
+  if (dateSel) {
+    const sessions = buildSessionList(_taData);
+    dateSel.innerHTML = '<option value="">— All Sessions —</option>' +
+      sessions.map(s => `<option value="${s.key}">${s.label}</option>`).join('');
+  }
   renderTrickAnalytics();
+}
+
+function buildSessionList(data) {
+  // Group by date, then detect sessions within same day (>2h gap = new session)
+  const byDate = {};
+  data.forEach(t => {
+    if (!t.datum) return;
+    if (!byDate[t.datum]) byDate[t.datum] = [];
+    byDate[t.datum].push(t);
+  });
+  const sessions = [];
+  Object.keys(byDate).sort().forEach(date => {
+    const dayData = byDate[date];
+    // Try to detect multiple sessions by created_at time
+    const withTime = dayData.filter(t => t.created_at).sort((a,b) => a.created_at.localeCompare(b.created_at));
+    if (withTime.length === 0) {
+      sessions.push({key: date+'|0', label: date.slice(5), date, sessionIdx: 0});
+      return;
+    }
+    let sessIdx = 0, lastTime = null;
+    const sessBreaks = [0];
+    withTime.forEach((t,i) => {
+      if (lastTime) {
+        const gap = (new Date(t.created_at) - new Date(lastTime)) / 3600000;
+        if (gap > 2) { sessIdx++; sessBreaks.push(i); }
+      }
+      lastTime = t.created_at;
+    });
+    const sessCount = sessIdx + 1;
+    for (let s = 0; s < sessCount; s++) {
+      const label = sessCount > 1 ? `${date.slice(5)} Session ${s+1}` : date.slice(5);
+      sessions.push({key: `${date}|${s}`, label, date, sessionIdx: s, sessCount});
+    }
+  });
+  return sessions;
 }
 
 function renderTrickAnalytics() {
@@ -3350,7 +3405,28 @@ function renderTrickAnalytics() {
   if (!el) return;
   const sel = document.getElementById('ev-trick-sel');
   const chosen = sel ? sel.value : '';
-  const data = chosen ? _taData.filter(t => t.trickaufbau === chosen) : _taData;
+  const dateKey = document.getElementById('ev-date-sel')?.value || '';
+  let data = _taData;
+  // Apply date/session filter
+  if (dateKey) {
+    const [filterDate, sessIdxStr] = dateKey.split('|');
+    const sessIdx = parseInt(sessIdxStr);
+    const dayData = data.filter(t => t.datum === filterDate).sort((a,b) => (a.created_at||'').localeCompare(b.created_at||''));
+    // Split into sessions by 2h gap
+    const sessions = [[]];
+    let lastTime = null, si = 0;
+    dayData.forEach(t => {
+      if (lastTime && t.created_at) {
+        const gap = (new Date(t.created_at) - new Date(lastTime)) / 3600000;
+        if (gap > 2) { si++; sessions.push([]); }
+      }
+      sessions[si].push(t);
+      lastTime = t.created_at;
+    });
+    data = sessions[sessIdx] || dayData;
+  }
+  // Apply trick filter
+  if (chosen) data = data.filter(t => t.trickaufbau === chosen);
 
   if (!data.length) {
     el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">No session data yet.</div>';
