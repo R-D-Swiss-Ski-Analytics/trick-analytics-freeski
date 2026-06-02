@@ -3400,6 +3400,89 @@ function buildSessionList(data) {
   return sessions;
 }
 
+
+function renderSessionSummary(data, sessionLabel) {
+  const el = document.getElementById('ev-trick-analytics');
+  if (!el) return;
+  if (!data.length) { el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;">No data for this session.</div>'; return; }
+
+  function pr(k,d){ const m=(d.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
+  const colQ = v => v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
+
+  // Group by trick
+  const tmap = {};
+  data.forEach(t => {
+    const key = t.trickaufbau || '—';
+    if (!tmap[key]) tmap[key] = {att:0, land:0, perf:0, grab:[], trick:[], land_r:[]};
+    tmap[key].att++;
+    if (t.gelandet==='Yes') tmap[key].land++;
+    if (t.gesamt>=10) tmap[key].perf++;
+    const g=pr('Grab',t), tr=pr('Trick',t), la=pr('Landing',t);
+    if(g!==null) tmap[key].grab.push(g);
+    if(tr!==null) tmap[key].trick.push(tr);
+    if(la!==null) tmap[key].land_r.push(la);
+  });
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  const total = data.length;
+  const totalLand = data.filter(t=>t.gelandet==='Yes').length;
+
+  // Session header
+  const headerHtml = `<div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;">
+    <div style="background:var(--surface2);border-radius:10px;padding:12px 18px;text-align:center;flex:1;min-width:80px;">
+      <div style="font-size:22px;font-weight:800;color:var(--text);">${total}</div>
+      <div style="font-size:11px;color:var(--muted);">Attempts</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px 18px;text-align:center;flex:1;min-width:80px;">
+      <div style="font-size:22px;font-weight:800;color:#2d8a4e;">${totalLand}</div>
+      <div style="font-size:11px;color:var(--muted);">Landed</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px 18px;text-align:center;flex:1;min-width:80px;">
+      <div style="font-size:22px;font-weight:800;color:#39c3d4;">${total?Math.round(totalLand/total*100)+'%':'—'}</div>
+      <div style="font-size:11px;color:var(--muted);">Success</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px 18px;text-align:center;flex:1;min-width:80px;">
+      <div style="font-size:22px;font-weight:800;color:#f59e0b;">${Object.keys(tmap).length}</div>
+      <div style="font-size:11px;color:var(--muted);">Tricks</div>
+    </div>
+  </div>`;
+
+  // Per-trick cards
+  const cardsHtml = Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
+    const hasComp = s.grab.length > 0;
+    const gAvg=avg(s.grab), tAvg=avg(s.trick), lAvg=avg(s.land_r);
+    const landPct = s.att ? Math.round(s.land/s.att*100) : 0;
+
+    const compBars = hasComp ? `
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+        ${[['Grab',gAvg,'#f59e0b'],['Trick',tAvg,'#39c3d4'],['Landing',lAvg,'#2d8a4e']].map(([lbl,val,col])=>
+          val!==null?`<div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;color:var(--muted);min-width:52px;">${lbl}</span>
+            <div style="flex:1;background:var(--border);border-radius:3px;height:8px;">
+              <div style="background:${col};width:${val}%;height:8px;border-radius:3px;"></div>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:${col};min-width:32px;text-align:right;">${val}%</span>
+          </div>`:'').join('')}
+      </div>` : '';
+
+    return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}</div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${landPct}%</div>
+          <div style="font-size:10px;color:var(--muted);">${s.att}× att.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;font-size:12px;margin-top:6px;">
+        <span style="color:#2d8a4e;">✓ ${s.land} landed</span>
+        ${s.perf>0?`<span style="color:#39c3d4;">⭐ ${s.perf} perfect</span>`:''}
+      </div>
+      ${compBars}
+    </div>`;
+  }).join('');
+
+  el.innerHTML = headerHtml + cardsHtml;
+}
+
 function renderTrickAnalytics() {
   const el = document.getElementById('ev-trick-analytics');
   if (!el) return;
@@ -3430,6 +3513,14 @@ function renderTrickAnalytics() {
 
   if (!data.length) {
     el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">No session data yet.</div>';
+    return;
+  }
+
+  // If a specific session/date is selected → show session summary instead of trend chart
+  if (dateKey && !chosen) {
+    const dateSel2 = document.getElementById('ev-date-sel');
+    const label = dateSel2?.options[dateSel2.selectedIndex]?.text || dateKey;
+    renderSessionSummary(data, label);
     return;
   }
 
