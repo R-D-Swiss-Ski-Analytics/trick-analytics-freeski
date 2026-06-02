@@ -3445,7 +3445,7 @@ function appendTrendChart(allData, highlightDate) {
     const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
     const pad={l:42,r:16,t:14,b:48};
     const n=pts.length;
-    const xs=pts.map((_,i)=>pad.l+(n===1?W/2-pad.l:i/(n-1)*(W-pad.l-pad.r)));
+    const xs=pts.map((_,i)=>pad.l+(n===1?(W-pad.l-pad.r)/2:i/(n-1)*(W-pad.l-pad.r)));
     const toY=v=>pad.t+(1-v/100)*(H-pad.t-pad.b);
     [0,25,50,75,100].forEach(pct=>{
       const y=toY(pct);
@@ -3453,39 +3453,78 @@ function appendTrendChart(allData, highlightDate) {
       ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
       ctx.fillStyle='#6b8299';ctx.font='10px Poppins,sans-serif';ctx.textAlign='right';ctx.fillText(pct+'%',pad.l-5,y+3);
     });
-    // Highlight column for selected date
-    pts.forEach((p,i)=>{
-      if(p.isHighlight){
-        ctx.fillStyle='rgba(57,195,212,0.08)';
-        ctx.fillRect(xs[i]-20,pad.t,40,H-pad.t-pad.b);
+    pts.forEach((p,i)=>{if(p.isHighlight){ctx.fillStyle='rgba(57,195,212,0.08)';ctx.fillRect(xs[i]-20,pad.t,40,H-pad.t-pad.b);}});
+
+    // Draw chart with mini-bars per date + connecting lines
+    const barW = Math.max(8, Math.min(20, (W-pad.l-pad.r)/(n*4)));
+    const colMap = {'landing':'#2d8a4e','trick':'#39c3d4','grab':'#f59e0b','single':'#39c3d4'};
+
+    function drawConnectLine(values, col) {
+      const pts2 = values.map((v,i)=>v!==null?{x:xs[i],y:toY(v)}:null).filter(Boolean);
+      if(pts2.length<2) return;
+      ctx.beginPath(); ctx.strokeStyle=col+'66'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+      pts2.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function drawBars(pt, x, isHi) {
+      if(hasComp && pt.grab!==null) {
+        // 3 mini bars: grab, trick, landing
+        const comps = [['grab','#f59e0b'],['trick','#39c3d4'],['landing','#2d8a4e']];
+        const bw = barW; const gap = 3;
+        const totalW = comps.length*(bw+gap)-gap;
+        comps.forEach(([key,col],ci) => {
+          const val = pt[key]; if(val===null) return;
+          const bx = x - totalW/2 + ci*(bw+gap);
+          const by = toY(val);
+          const bh = H-pad.b - by;
+          // Bar background (faint)
+          ctx.fillStyle = col+'22';
+          ctx.fillRect(bx, pad.t, bw, H-pad.t-pad.b);
+          // Actual bar
+          ctx.fillStyle = isHi ? col : col+'cc';
+          ctx.fillRect(bx, by, bw, bh);
+          // Value label on top
+          ctx.fillStyle = col; ctx.font = (isHi?'bold ':'')+'9px Poppins,sans-serif'; ctx.textAlign='center';
+          ctx.fillText(val+'%', bx+bw/2, by-3);
+        });
+      } else if(!hasComp && pt.landPct!==null) {
+        const val = pt.landPct;
+        const bx = x - barW/2;
+        const by = toY(val);
+        const bh = H-pad.b - by;
+        ctx.fillStyle = '#39c3d440';
+        ctx.fillRect(bx, pad.t, barW, H-pad.t-pad.b);
+        ctx.fillStyle = isHi ? '#39c3d4' : '#39c3d4cc';
+        ctx.fillRect(bx, by, barW, bh);
+        ctx.fillStyle='#39c3d4'; ctx.font=(isHi?'bold ':'')+'9px Poppins,sans-serif'; ctx.textAlign='center';
+        ctx.fillText(val+'%', bx+barW/2, by-3);
       }
-    });
-    function drawLine(values,col,lw,dotR,hollow){
-      lw=lw||2.5;dotR=dotR||5;
-      const pts2=[];values.forEach((v,i)=>{if(v!==null)pts2.push({x:xs[i],y:toY(v),hi:pts[i].isHighlight});});
-      if(pts2.length<1)return;
-      if(pts2.length>1){ctx.beginPath();ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.lineJoin='round';pts2.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.stroke();}
-      pts2.forEach(p=>{
-        const r=p.hi?dotR+2:dotR;
-        if(hollow){ctx.beginPath();ctx.arc(p.x,p.y,r,0,2*Math.PI);ctx.strokeStyle=col;ctx.lineWidth=p.hi?3:2;ctx.stroke();}
-        else{ctx.beginPath();ctx.arc(p.x,p.y,r,0,2*Math.PI);ctx.fillStyle=col;ctx.fill();ctx.beginPath();ctx.arc(p.x,p.y,r-2.5,0,2*Math.PI);ctx.fillStyle='#0a0e1a';ctx.fill();}
-      });
     }
-    if(hasComp){
-      drawLine(pts.map(p=>p.grab),'#f59e0b',2,9,true);
-      drawLine(pts.map(p=>p.trick),'#39c3d4',2,6,true);
-      drawLine(pts.map(p=>p.landing),'#2d8a4e',2.5,4,false);
+
+    // Draw connecting lines first (behind bars)
+    if(hasComp) {
+      drawConnectLine(pts.map(p=>p.grab), '#f59e0b');
+      drawConnectLine(pts.map(p=>p.trick), '#39c3d4');
+      drawConnectLine(pts.map(p=>p.landing), '#2d8a4e');
     } else {
-      drawLine(pts.map(p=>p.landPct),'#39c3d4',2.5,5,false);
+      drawConnectLine(pts.map(p=>p.landPct), '#39c3d4');
     }
+
+    // Draw bars for each date
+    pts.forEach((p,i) => drawBars(p, xs[i], p.isHighlight));
+
+    // X-axis labels
     ctx.textAlign='center';
-    pts.forEach((p,i)=>{
-      ctx.fillStyle=p.isHighlight?'#39c3d4':'#6b8299';
-      ctx.font=p.isHighlight?'bold 11px Poppins,sans-serif':'10px Poppins,sans-serif';
-      ctx.fillText(p.d.slice(5),xs[i],H-pad.b+14);
-      ctx.fillStyle='#6b8299';ctx.font='10px Poppins,sans-serif';
-      ctx.fillText(p.att+'×',xs[i],H-pad.b+28);
+    pts.forEach((p,i) => {
+      const isHi = p.isHighlight;
+      ctx.fillStyle = isHi?'#39c3d4':'#6b8299';
+      ctx.font = (isHi?'bold ':'')+'10px Poppins,sans-serif';
+      ctx.fillText(p.d.slice(5), xs[i], H-pad.b+14);
+      ctx.fillStyle='#6b8299'; ctx.font='10px Poppins,sans-serif';
+      ctx.fillText(p.att+'×', xs[i], H-pad.b+28);
     });
+
   });
 }
 
@@ -3731,15 +3770,10 @@ function renderTrickAnalytics() {
     ctx.scale(dpr, dpr);
     const pad = {l:42, r:16, t:14, b:48};
     const n = pts.length;
-    const xs = pts.map((_,i) => pad.l + (n===1?(W-pad.l-pad.r)/2:i/(n-1)*(W-pad.l-pad.r)));
+    const xs = pts.map((_,i) => pad.l+(n===1?(W-pad.l-pad.r)/2:i/(n-1)*(W-pad.l-pad.r)));
     const toY = v => pad.t + (1-v/100)*(H-pad.t-pad.b);
 
-    // Vertical grid lines at each point
-    xs.forEach(x => {
-      ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1;
-      ctx.beginPath(); ctx.moveTo(x,pad.t); ctx.lineTo(x,H-pad.b); ctx.stroke();
-    });
-    // Horizontal grid
+    // Grid
     [0,25,50,75,100].forEach(pct => {
       const y = toY(pct);
       ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=1;
@@ -3748,43 +3782,76 @@ function renderTrickAnalytics() {
       ctx.fillText(pct+'%', pad.l-5, y+3);
     });
 
-    function drawLine(values, col, lw, dotR, hollow) {
-      lw = lw||2.5; dotR = dotR||5;
-      const pts2 = [];
-      values.forEach((v,i)=>{ if(v!==null) pts2.push({x:xs[i],y:toY(v)}); });
-      if(pts2.length<1) return;
-      if(pts2.length>1){
-        ctx.beginPath(); ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.lineJoin='round';
-        pts2.forEach(function(p,i){ i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); });
-        ctx.stroke();
-      }
-      pts2.forEach(function(p){
-        if(hollow){
-          ctx.beginPath(); ctx.arc(p.x,p.y,dotR,0,2*Math.PI);
-          ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
-        } else {
-          ctx.beginPath(); ctx.arc(p.x,p.y,dotR,0,2*Math.PI); ctx.fillStyle=col; ctx.fill();
-          ctx.beginPath(); ctx.arc(p.x,p.y,dotR-2.5,0,2*Math.PI); ctx.fillStyle='#0a0e1a'; ctx.fill();
-        }
-      });
+    // Draw chart with mini-bars per date + connecting lines
+    const barW = Math.max(8, Math.min(20, (W-pad.l-pad.r)/(n*4)));
+    const colMap = {'landing':'#2d8a4e','trick':'#39c3d4','grab':'#f59e0b','single':'#39c3d4'};
+
+    function drawConnectLine(values, col) {
+      const pts2 = values.map((v,i)=>v!==null?{x:xs[i],y:toY(v)}:null).filter(Boolean);
+      if(pts2.length<2) return;
+      ctx.beginPath(); ctx.strokeStyle=col+'66'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+      pts2.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke();
+      ctx.setLineDash([]);
     }
 
-    if (hasComponents) {
-      drawLine(pts.map(p=>p.grab), '#f59e0b', 2, 9, true);
-      drawLine(pts.map(p=>p.trick), '#39c3d4', 2, 6, true);
-      drawLine(pts.map(p=>p.landing), '#2d8a4e', 2.5, 4, false);
-    } else {
-      drawLine(pts.map(p=>p.landPct), '#39c3d4', 2.5, 5, false);
+    function drawBars(pt, x, isHi) {
+      if(hasComp && pt.grab!==null) {
+        // 3 mini bars: grab, trick, landing
+        const comps = [['grab','#f59e0b'],['trick','#39c3d4'],['landing','#2d8a4e']];
+        const bw = barW; const gap = 3;
+        const totalW = comps.length*(bw+gap)-gap;
+        comps.forEach(([key,col],ci) => {
+          const val = pt[key]; if(val===null) return;
+          const bx = x - totalW/2 + ci*(bw+gap);
+          const by = toY(val);
+          const bh = H-pad.b - by;
+          // Bar background (faint)
+          ctx.fillStyle = col+'22';
+          ctx.fillRect(bx, pad.t, bw, H-pad.t-pad.b);
+          // Actual bar
+          ctx.fillStyle = isHi ? col : col+'cc';
+          ctx.fillRect(bx, by, bw, bh);
+          // Value label on top
+          ctx.fillStyle = col; ctx.font = (isHi?'bold ':'')+'9px Poppins,sans-serif'; ctx.textAlign='center';
+          ctx.fillText(val+'%', bx+bw/2, by-3);
+        });
+      } else if(!hasComp && pt.landPct!==null) {
+        const val = pt.landPct;
+        const bx = x - barW/2;
+        const by = toY(val);
+        const bh = H-pad.b - by;
+        ctx.fillStyle = '#39c3d440';
+        ctx.fillRect(bx, pad.t, barW, H-pad.t-pad.b);
+        ctx.fillStyle = isHi ? '#39c3d4' : '#39c3d4cc';
+        ctx.fillRect(bx, by, barW, bh);
+        ctx.fillStyle='#39c3d4'; ctx.font=(isHi?'bold ':'')+'9px Poppins,sans-serif'; ctx.textAlign='center';
+        ctx.fillText(val+'%', bx+barW/2, by-3);
+      }
     }
+
+    // Draw connecting lines first (behind bars)
+    if(hasComp) {
+      drawConnectLine(pts.map(p=>p.grab), '#f59e0b');
+      drawConnectLine(pts.map(p=>p.trick), '#39c3d4');
+      drawConnectLine(pts.map(p=>p.landing), '#2d8a4e');
+    } else {
+      drawConnectLine(pts.map(p=>p.landPct), '#39c3d4');
+    }
+
+    // Draw bars for each date
+    pts.forEach((p,i) => drawBars(p, xs[i], p.isHighlight||false));
 
     // X-axis labels
     ctx.textAlign='center';
     pts.forEach((p,i) => {
-      const x = xs[i];
-      ctx.fillStyle='#6b8299'; ctx.font='11px Poppins,sans-serif';
-      ctx.fillText(p.d.slice(5), x, H-pad.b+16);
-      ctx.fillText(p.att+'×', x, H-pad.b+30);
+      const isHi = p.isHighlight||false;
+      ctx.fillStyle = isHi?'#39c3d4':'#6b8299';
+      ctx.font = (isHi?'bold ':'')+'10px Poppins,sans-serif';
+      ctx.fillText(p.d.slice(5), xs[i], H-pad.b+14);
+      ctx.fillStyle='#6b8299'; ctx.font='10px Poppins,sans-serif';
+      ctx.fillText(p.att+'×', xs[i], H-pad.b+28);
     });
+
   });
 }
 
