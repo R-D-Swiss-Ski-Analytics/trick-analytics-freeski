@@ -3614,244 +3614,180 @@ function renderSessionSummary(data, sessionLabel) {
 
 function renderTrickAnalytics() {
   const el = document.getElementById('ev-trick-analytics');
-  if (!el) return;
+  if (!el || !_taData.length) {
+    if(el) el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;">No session data yet.</div>';
+    return;
+  }
   const sel = document.getElementById('ev-trick-sel');
+  const dateSel = document.getElementById('ev-date-sel');
   const chosen = sel ? sel.value : '';
-  const dateKey = document.getElementById('ev-date-sel')?.value || '';
-  let data = _taData;
-  // Apply date/session filter
-  if (dateKey) {
-    const [filterDate, sessIdxStr] = dateKey.split('|');
-    const sessIdx = parseInt(sessIdxStr);
-    const dayData = data.filter(t => t.datum === filterDate).sort((a,b) => (a.created_at||'').localeCompare(b.created_at||''));
-    // Split into sessions by 2h gap
-    const sessions = [[]];
-    let lastTime = null, si = 0;
-    dayData.forEach(t => {
-      if (lastTime && t.created_at) {
-        const gap = (new Date(t.created_at) - new Date(lastTime)) / 3600000;
-        if (gap > 2) { si++; sessions.push([]); }
-      }
-      sessions[si].push(t);
-      lastTime = t.created_at;
-    });
-    data = sessions[sessIdx] || dayData;
-  }
-  // ── VIEW LOGIC ────────────────────────────────────────────────────
-  if (dateKey) {
-    // VIEW 3: Session selected → show bar chart of ALL tricks in this session
-    const dateSel2 = document.getElementById('ev-date-sel');
-    const label = dateSel2?.options[dateSel2.selectedIndex]?.text || dateKey;
-    const filterDate2 = dateKey.split('|')[0];
-    const sessIdx2 = parseInt(dateKey.split('|')[1]||'0');
-    const allDayData = _taData.filter(t=>t.datum===filterDate2).sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
-    const sessions2=[[]]; let si2=0, lt2=null;
-    allDayData.forEach(t=>{if(lt2&&t.created_at&&(new Date(t.created_at)-new Date(lt2))/3600000>2){si2++;sessions2.push([]);}sessions2[si2].push(t);lt2=t.created_at;});
-    renderSessionSummary(sessions2[sessIdx2]||allDayData, label);
-    return; // NO trend chart in session view
-  }
+  const dateKey = dateSel ? dateSel.value : '';
 
-  // Parse Grab/Trick/Landing from kommentar field
-  // Apply trick filter (only for non-session views)
-  if (chosen) data = data.filter(t => t.trickaufbau === chosen);
-  if (!data.length) {
-    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">No session data yet.</div>';
+  function pr(k,d){ const m=(d.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+
+  // ── VIEW 3: Session selected → show tricks in that session ─────────────
+  if (dateKey) {
+    const label = dateSel.options[dateSel.selectedIndex]?.text || dateKey;
+    const filterDate = dateKey.split('|')[0];
+    const sessIdx = parseInt(dateKey.split('|')[1]||'0');
+    const dayData = _taData.filter(t=>t.datum===filterDate).sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
+    const sessions=[[]]; let si=0,lt=null;
+    dayData.forEach(t=>{if(lt&&t.created_at&&(new Date(t.created_at)-new Date(lt))/3600000>2){si++;sessions.push([]);}sessions[si].push(t);lt=t.created_at;});
+    const sd = sessions[sessIdx]||dayData;
+
+    if (!sd.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No data for this session.</div>'; return; }
+
+    // Group by trick
+    const tmap = {};
+    sd.forEach(t => {
+      const key = t.trickaufbau||'—';
+      if (!tmap[key]) tmap[key]={att:0,land:0,perf:0,grab:[],trick:[],land_r:[]};
+      tmap[key].att++;
+      if(t.gelandet==='Yes') tmap[key].land++;
+      if(t.gesamt>=10) tmap[key].perf++;
+      const g=pr('Grab',t),tr=pr('Trick',t),la=pr('Landing',t);
+      if(g!==null)tmap[key].grab.push(g);
+      if(tr!==null)tmap[key].trick.push(tr);
+      if(la!==null)tmap[key].land_r.push(la);
+    });
+    const colQ = v=>v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
+
+    el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">📅 ${label} — ${sd.length} attempts, ${Object.keys(tmap).length} tricks</div>` +
+      Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
+        const hasComp = s.grab.length>0;
+        const gA=avg(s.grab),tA=avg(s.trick),lA=avg(s.land_r);
+        const landPct=s.att?Math.round(s.land/s.att*100):0;
+        const bars = hasComp ? [['Grab',gA,'#f59e0b'],['Trick',tA,'#39c3d4'],['Landing',lA,'#2d8a4e']].map(([lbl,val,col])=>
+          val!==null?`<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+            <span style="font-size:10px;color:var(--muted);min-width:48px;">${lbl}</span>
+            <div style="flex:1;background:var(--border);border-radius:3px;height:7px;">
+              <div style="background:${col};width:${val}%;height:7px;border-radius:3px;"></div>
+            </div>
+            <span style="font-size:10px;font-weight:700;color:${col};min-width:32px;text-align:right;">${val}%</span>
+          </div>`:''
+        ).join('') : '';
+        return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}</span>
+            <div style="text-align:right;flex-shrink:0;">
+              <span style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${landPct}%</span>
+              <span style="font-size:10px;color:var(--muted);display:block;">${s.att}× att.</span>
+            </div>
+          </div>
+          ${bars}
+        </div>`;
+      }).join('');
     return;
   }
 
-  function parseRating(kommentar, key) {
-    const m = (kommentar||'').match(new RegExp(key+':(\\w+)'));
-    const val = m ? m[1] : null;
-    return val==='perfect'?100:val==='okay'?50:val==='miss'?0:null;
-  }
-  function ratingToStr(v) { return v===100?'Perfect':v===50?'Okay':v===0?'Miss':'—'; }
+  // ── VIEW 1 & 2: Trend chart (all tricks or specific trick) ─────────────
+  const chartData = chosen ? _taData.filter(t=>t.trickaufbau===chosen) : _taData;
+  if (!chartData.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No session data yet.</div>'; return; }
 
-  const att = data.length;
-  const land = data.filter(t => t.gelandet==='Yes').length;
-  const perf = data.filter(t => t.gesamt>=10).length;
-  const fail = att - land;
-  const cons = att ? Math.round(land/att*100) : 0;
-  const badgeCol = cons>=70?'#2d8a4e':cons>=40?'#f59e0b':'#e2001a';
-
-  // Group by date
-  const byDate = {};
-  data.forEach(t => {
-    if (!t.datum) return;
-    if (!byDate[t.datum]) byDate[t.datum] = {att:0,land:0,perf:0,grab:[],trick:[],landing:[]};
+  // Build per-date stats
+  const byDate={};
+  chartData.forEach(t=>{
+    if(!t.datum)return;
+    if(!byDate[t.datum])byDate[t.datum]={att:0,land:0,grab:[],trick:[],land_r:[]};
     byDate[t.datum].att++;
-    if (t.gelandet==='Yes') byDate[t.datum].land++;
-    if (t.gesamt>=10) byDate[t.datum].perf++;
-    const g=parseRating(t.kommentar,'Grab'), tr=parseRating(t.kommentar,'Trick'), la=parseRating(t.kommentar,'Landing');
-    if(g!==null) byDate[t.datum].grab.push(g);
-    if(tr!==null) byDate[t.datum].trick.push(tr);
-    if(la!==null) byDate[t.datum].landing.push(la);
+    if(t.gelandet==='Yes')byDate[t.datum].land++;
+    const g=pr('Grab',t),tr=pr('Trick',t),la=pr('Landing',t);
+    if(g!==null)byDate[t.datum].grab.push(g);
+    if(tr!==null)byDate[t.datum].trick.push(tr);
+    if(la!==null)byDate[t.datum].land_r.push(la);
   });
-  const dates = Object.keys(byDate).sort();
-  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
-  const pts = dates.map(d => ({
-    d, att:byDate[d].att,
-    landPct: Math.round(byDate[d].land/byDate[d].att*100),
-    perfPct: Math.round(byDate[d].perf/byDate[d].att*100),
-    grab: avg(byDate[d].grab), trick: avg(byDate[d].trick), landing: avg(byDate[d].landing)
-  }));
+  const dates=Object.keys(byDate).sort();
+  const pts=dates.map(d=>({d,att:byDate[d].att,
+    landPct:Math.round(byDate[d].land/byDate[d].att*100),
+    grab:avg(byDate[d].grab),trick:avg(byDate[d].trick),landing:avg(byDate[d].land_r)}));
+  const hasComp=pts.some(p=>p.grab!==null);
 
-  const hasComponents = pts.some(p => p.grab!==null);
+  // Overall stats
+  const totAtt=chartData.length, totLand=chartData.filter(t=>t.gelandet==='Yes').length;
+  const allGrab=chartData.map(t=>pr('Grab',t)).filter(v=>v!==null);
+  const allTrick=chartData.map(t=>pr('Trick',t)).filter(v=>v!==null);
+  const allLand=chartData.map(t=>pr('Landing',t)).filter(v=>v!==null);
+  const gAvg=avg(allGrab),tAvg=avg(allTrick),lAvg=avg(allLand);
+  const colQ=v=>v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
 
-  // Per-trick overview
-  let trickOverview = '';
-  if (!chosen) {
-    const tmap = {};
-    _taData.forEach(t => {
-      if (!tmap[t.trickaufbau]) tmap[t.trickaufbau]={att:0,land:0,perf:0};
-      tmap[t.trickaufbau].att++; if(t.gelandet==='Yes')tmap[t.trickaufbau].land++; if(t.gesamt>=10)tmap[t.trickaufbau].perf++;
-    });
-    trickOverview = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">' +
-      Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
-        const p=s.att?Math.round(s.land/s.att*100):0, col=p>=70?'#2d8a4e':p>=40?'#f59e0b':'#e2001a';
-        return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;flex:1;min-width:180px;">
-          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;">${trick}</div>
-          <div style="display:flex;gap:8px;font-size:12px;align-items:center;">
-            <span style="color:var(--muted);">${s.att}×</span>
-            <span style="color:#2d8a4e;">✓${s.land}</span>
-            <span style="color:#39c3d4;">⭐${s.perf}</span>
-            <span style="color:${col};font-weight:700;margin-left:auto;">${p}%</span>
-          </div>
-          <div style="background:var(--border);border-radius:3px;height:4px;margin-top:5px;"><div style="background:${col};width:${p}%;height:4px;border-radius:3px;"></div></div>
-        </div>`;
-      }).join('') + '</div>';
-  }
+  const statsHtml = hasComp
+    ? `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;text-align:center;">
+        <div><div style="font-size:26px;font-weight:800;color:var(--text);">${totAtt}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:${colQ(gAvg||0)};">${gAvg!==null?gAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Grab</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:${colQ(tAvg||0)};">${tAvg!==null?tAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Trick</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:${colQ(lAvg||0)};">${lAvg!==null?lAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Landing</div></div>
+      </div>`
+    : `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;text-align:center;">
+        <div><div style="font-size:26px;font-weight:800;color:var(--text);">${totAtt}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:#2d8a4e;">${totLand}</div><div style="font-size:11px;color:var(--muted);">Landed</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:${colQ(totAtt?Math.round(totLand/totAtt*100):0)};">${totAtt?Math.round(totLand/totAtt*100)+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Success</div></div>
+      </div>`;
+
+  const legend = hasComp ? `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;font-size:11px;">
+    <span style="color:#2d8a4e;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span>
+  </div>` : '';
 
   const cid = 'ta-chart-'+Date.now();
-  const legend = hasComponents ? `
-    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;font-size:11px;">
-      <span style="color:#2d8a4e;">● Landing</span>
-      <span style="color:#39c3d4;">● Trick</span>
-      <span style="color:#f59e0b;">● Grab</span>
-    </div>` : '';
+  el.innerHTML = statsHtml + legend + `<canvas id="${cid}" style="width:100%;"></canvas>`;
 
-  el.innerHTML = `
-    ${(()=>{
-      // Calculate component averages from kommentar field
-      function pr(k,d){ const m=(d.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
-      const hasComp = data.some(t=>pr('Grab',t)!==null);
-      if(hasComp){
-        const gavg=d=>{ const v=data.map(t=>pr(d,t)).filter(v=>v!==null); return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):null; };
-        const gPct=gavg('Grab'), tPct=gavg('Trick'), lPct=gavg('Landing');
-        const overallPct=att?Math.round(land/att*100):0;
-        const col=v=>v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
-        return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;text-align:center;">
-          <div><div style="font-size:26px;font-weight:800;color:var(--text);">${att}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
-          <div><div style="font-size:26px;font-weight:800;color:${col(gPct||0)};">${gPct!==null?gPct+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Grab</div></div>
-          <div><div style="font-size:26px;font-weight:800;color:${col(tPct||0)};">${tPct!==null?tPct+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Trick</div></div>
-          <div><div style="font-size:26px;font-weight:800;color:${col(lPct||0)};">${lPct!==null?lPct+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Landing</div></div>
-        </div>`;
-      } else {
-        return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;text-align:center;">
-          <div><div style="font-size:26px;font-weight:800;color:var(--text);">${att}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
-          <div><div style="font-size:26px;font-weight:800;color:#2d8a4e;">${land}</div><div style="font-size:11px;color:var(--muted);">Landed</div></div>
-          <div><div style="font-size:26px;font-weight:800;color:#39c3d4;">${perf}</div><div style="font-size:11px;color:var(--muted);">Stomped</div></div>
-          <div><div style="font-size:26px;font-weight:800;color:#e2001a;">${fail}</div><div style="font-size:11px;color:var(--muted);">Failed</div></div>
-        </div>`;
-      }
-    })()}
-    ${pts.length>=1?`
-    ${legend}
-    <canvas id="${cid}" style="width:100%;"></canvas>
-    ${pts.length===1?'<div style="color:var(--muted);font-size:11px;margin-top:4px;text-align:center;">📅 Log more sessions on different dates to see progression</div>':''}
-    ` : ''}
-  `;
+  requestAnimationFrame(()=>{
+    const canvas=document.getElementById(cid); if(!canvas)return;
+    const dpr=window.devicePixelRatio||1, W=(el.offsetWidth||600)-16, H=220;
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    canvas.width=W*dpr; canvas.height=H*dpr;
+    const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    const pad={l:42,r:16,t:14,b:52};
+    const n=pts.length;
+    const barW=Math.max(6,Math.min(16,(W-pad.l-pad.r)/(n*5)));
+    const totalBarW=3*(barW+2)-2;
+    const margin=totalBarW/2+6;
+    const xs=pts.map((_,i)=>pad.l+margin+(n===1?(W-pad.l-pad.r-margin*2)/2:i/(n-1)*(W-pad.l-pad.r-margin*2)));
+    const toY=v=>pad.t+(1-v/100)*(H-pad.t-pad.b);
 
-  if (pts.length >= 1) requestAnimationFrame(() => {
-    const canvas = document.getElementById(cid); if(!canvas) return;
-    const dpr = window.devicePixelRatio||1;
-    const W = (canvas.closest('.chart-card')?.offsetWidth || canvas.parentElement?.offsetWidth || el?.offsetWidth || 600) - 48;
-    const H = 200;
-    canvas.style.width = W+'px'; canvas.style.height = H+'px';
-    canvas.width = W*dpr; canvas.height = H*dpr;
-    const ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
-    const pad = {l:42, r:16, t:14, b:48};
-    const n = pts.length;
-    const barW = Math.max(6, Math.min(14, (W-pad.l-pad.r)/(n*5)));
-    const totalBarW = 3*(barW+2)-2;
-    const margin = totalBarW/2+4;
-    const xs = pts.map((_,i) => pad.l+margin+(n===1?(W-pad.l-pad.r-margin*2)/2:i/(n-1)*(W-pad.l-pad.r-margin*2)));
-    const toY = v => pad.t + (1-v/100)*(H-pad.t-pad.b);
-
-    // Grid
-    [0,25,50,75,100].forEach(pct => {
-      const y = toY(pct);
-      ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=1;
-      ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
-      ctx.fillStyle='#6b8299'; ctx.font='10px Poppins,sans-serif'; ctx.textAlign='right';
-      ctx.fillText(pct+'%', pad.l-5, y+3);
+    [0,25,50,75,100].forEach(pct=>{
+      const y=toY(pct);
+      ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+      ctx.fillStyle='#6b8299';ctx.font='10px Poppins,sans-serif';ctx.textAlign='right';
+      ctx.fillText(pct+'%',pad.l-5,y+3);
     });
 
-    // Draw chart with mini-bars per date + connecting lines
-    const colMap = {'landing':'#2d8a4e','trick':'#39c3d4','grab':'#f59e0b','single':'#39c3d4'};
-
-    function drawConnectLine(values, col) {
-      const pts2 = values.map((v,i)=>v!==null?{x:xs[i],y:toY(v)}:null).filter(Boolean);
-      if(pts2.length<2) return;
-      ctx.beginPath(); ctx.strokeStyle=col+'66'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
-      pts2.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke();
-      ctx.setLineDash([]);
+    function drawConn(values,col){
+      const pts2=values.map((v,i)=>v!==null?{x:xs[i],y:toY(v)}:null).filter(Boolean);
+      if(pts2.length<2)return;
+      ctx.beginPath();ctx.strokeStyle=col+'55';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+      pts2.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.stroke();ctx.setLineDash([]);
     }
-
-    function drawBars(pt, x, isHi) {
-      if(_hc && pt.grab!==null) {
-        // 3 mini bars: grab, trick, landing
-        const comps = [['grab','#f59e0b'],['trick','#39c3d4'],['landing','#2d8a4e']];
-        const bw = barW; const gap = 2;
-        const totalW = comps.length*(bw+gap)-gap;
-        comps.forEach(([key,col],ci) => {
-          const val = pt[key]; if(val===null) return;
-          const bx = x - totalW/2 + ci*(bw+gap);
-          const by = toY(val);
-          const bh = H-pad.b - by;
-          // Actual bar
-          ctx.fillStyle = isHi ? col : col+'cc';
-          ctx.fillRect(bx, by, bw, bh);
-          // Value label on top
-          ctx.fillStyle = col; ctx.font = (isHi?'bold ':'')+'9px Poppins,sans-serif'; ctx.textAlign='center';
-          ctx.fillText(val+'%', bx+bw/2, by-3);
+    function drawBars(pt,x){
+      if(hasComp&&pt.grab!==null){
+        const comps=[['grab','#f59e0b'],['trick','#39c3d4'],['landing','#2d8a4e']];
+        const bw=barW,gap=2,totalW=comps.length*(bw+gap)-gap;
+        comps.forEach(([key,col],ci)=>{
+          const val=pt[key]; if(val===null)return;
+          const bx=x-totalW/2+ci*(bw+gap), by=toY(val), bh=H-pad.b-by;
+          ctx.fillStyle=col+'cc';ctx.fillRect(bx,by,bw,bh);
+          ctx.fillStyle=col;ctx.font='9px Poppins,sans-serif';ctx.textAlign='center';
+          ctx.fillText(val+'%',bx+bw/2,by-3);
         });
-      } else if(!_hc && pt.landPct!==null) {
-        const val = pt.landPct;
-        const bx = x - barW/2;
-        const by = toY(val);
-        const bh = H-pad.b - by;
-        ctx.fillStyle = isHi ? '#39c3d4' : '#39c3d4cc';
-        ctx.fillRect(bx, by, barW, bh);
-        ctx.fillStyle='#39c3d4'; ctx.font=(isHi?'bold ':'')+'9px Poppins,sans-serif'; ctx.textAlign='center';
-        ctx.fillText(val+'%', bx+barW/2, by-3);
+      } else if(!hasComp&&pt.landPct!==null){
+        const val=pt.landPct, bx=x-barW/2, by=toY(val), bh=H-pad.b-by;
+        ctx.fillStyle='#39c3d4cc';ctx.fillRect(bx,by,barW,bh);
+        ctx.fillStyle='#39c3d4';ctx.font='9px Poppins,sans-serif';ctx.textAlign='center';
+        ctx.fillText(val+'%',bx+barW/2,by-3);
       }
     }
 
-    const _hc = typeof hasComp !== 'undefined' ? hasComp : pts.some(p=>p.grab!==null);
-    // Draw connecting lines first (behind bars)
-    if(_hc) {
-      drawConnectLine(pts.map(p=>p.grab), '#f59e0b');
-      drawConnectLine(pts.map(p=>p.trick), '#39c3d4');
-      drawConnectLine(pts.map(p=>p.landing), '#2d8a4e');
-    } else {
-      drawConnectLine(pts.map(p=>p.landPct), '#39c3d4');
-    }
+    if(hasComp){drawConn(pts.map(p=>p.grab),'#f59e0b');drawConn(pts.map(p=>p.trick),'#39c3d4');drawConn(pts.map(p=>p.landing),'#2d8a4e');}
+    else drawConn(pts.map(p=>p.landPct),'#39c3d4');
+    pts.forEach((p,i)=>drawBars(p,xs[i]));
 
-    // Draw bars for each date
-    pts.forEach((p,i) => drawBars(p, xs[i], p.isHighlight||false));
-
-    // X-axis labels
     ctx.textAlign='center';
-    pts.forEach((p,i) => {
-      const isHi = p.isHighlight||false;
-      ctx.fillStyle = isHi?'#39c3d4':'#6b8299';
-      ctx.font = (isHi?'bold ':'')+'10px Poppins,sans-serif';
-      ctx.fillText(p.d.split('-')[2]+'.'+p.d.split('-')[1]+'.', xs[i], H-pad.b+14);
-      ctx.fillStyle='#6b8299'; ctx.font='10px Poppins,sans-serif';
-      ctx.fillText(p.att+'×', xs[i], H-pad.b+28);
+    pts.forEach((p,i)=>{
+      ctx.fillStyle='#6b8299';ctx.font='10px Poppins,sans-serif';
+      ctx.fillText(p.d.split('-')[2]+'.'+p.d.split('-')[1]+'.',xs[i],H-pad.b+14);
+      ctx.fillText(p.att+'×',xs[i],H-pad.b+28);
     });
-
   });
 }
 
