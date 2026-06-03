@@ -3637,18 +3637,9 @@ function renderTrickAnalytics() {
     });
     data = sessions[sessIdx] || dayData;
   }
-  // Apply trick filter
-  if (chosen) data = data.filter(t => t.trickaufbau === chosen);
-
-  if (!data.length) {
-    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">No session data yet.</div>';
-    return;
-  }
-
-  // Session date selected without specific trick → show session summary + trend
   // ── VIEW LOGIC ────────────────────────────────────────────────────
   if (dateKey) {
-    // VIEW 3: Session selected → show only bar chart of tricks in this session
+    // VIEW 3: Session selected → show bar chart of ALL tricks in this session
     const dateSel2 = document.getElementById('ev-date-sel');
     const label = dateSel2?.options[dateSel2.selectedIndex]?.text || dateKey;
     const filterDate2 = dateKey.split('|')[0];
@@ -3661,6 +3652,13 @@ function renderTrickAnalytics() {
   }
 
   // Parse Grab/Trick/Landing from kommentar field
+  // Apply trick filter (only for non-session views)
+  if (chosen) data = data.filter(t => t.trickaufbau === chosen);
+  if (!data.length) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">No session data yet.</div>';
+    return;
+  }
+
   function parseRating(kommentar, key) {
     const m = (kommentar||'').match(new RegExp(key+':(\\w+)'));
     const val = m ? m[1] : null;
