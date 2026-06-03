@@ -3749,7 +3749,7 @@ function renderTrickAnalytics() {
         </div>`;
       }
     })()}
-    ${pts.length>=1?`
+    ${(chosen && pts.length>=1)?`
     ${legend}
     <canvas id="${cid}" style="width:100%;"></canvas>
     ${pts.length===1?'<div style="color:var(--muted);font-size:11px;margin-top:4px;text-align:center;">📅 Log more sessions on different dates to see progression</div>':''}
