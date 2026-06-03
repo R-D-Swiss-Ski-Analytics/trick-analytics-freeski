@@ -3601,6 +3601,7 @@ function renderSessionSummary(data, sessionLabel) {
         <span style="color:#2d8a4e;">✓ ${s.land} landed</span>
         ${s.perf>0?`<span style="color:#39c3d4;">⭐ ${s.perf} perfect</span>`:''}
       </div>
+      ${typeHtml}
       ${compBars}
     </div>`;
   }).join('');
@@ -3757,7 +3758,7 @@ function renderTrickAnalytics() {
     ${trickOverview}
   `;
 
-  if (pts.length >= 1) requestAnimationFrame(() => {
+  if (chosen && pts.length >= 1) requestAnimationFrame(() => {
     const canvas = document.getElementById(cid); if(!canvas) return;
     const dpr = window.devicePixelRatio||1;
     const W = (canvas.closest('.chart-card')?.offsetWidth || canvas.parentElement?.offsetWidth || el?.offsetWidth || 600) - 48;
