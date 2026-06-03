@@ -3366,7 +3366,6 @@ function initTrickAnalytics(tricks) {
 }
 
 function buildSessionList(data) {
-  // Group by date, then detect sessions within same day (>2h gap = new session)
   const byDate = {};
   data.forEach(t => {
     if (!t.datum) return;
@@ -3374,27 +3373,31 @@ function buildSessionList(data) {
     byDate[t.datum].push(t);
   });
   const sessions = [];
+  function swissDate(d) {
+    const [y,m,day] = d.split('-');
+    return `${day}.${m}.${y.slice(2)}`;
+  }
+  function sessType(dayData) {
+    const types = [...new Set(dayData.map(t=>t.typ||'Training'))];
+    const short = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Competition','Training':'Training'};
+    return types.map(t=>short[t]||t).join(', ');
+  }
   Object.keys(byDate).sort().forEach(date => {
     const dayData = byDate[date];
-    // Try to detect multiple sessions by created_at time
     const withTime = dayData.filter(t => t.created_at).sort((a,b) => a.created_at.localeCompare(b.created_at));
     if (withTime.length === 0) {
-      sessions.push({key: date+'|0', label: date.slice(5), date, sessionIdx: 0});
+      sessions.push({key: date+'|0', label: `${swissDate(date)} — ${sessType(dayData)}`, date, sessionIdx: 0});
       return;
     }
     let sessIdx = 0, lastTime = null;
-    const sessBreaks = [0];
     withTime.forEach((t,i) => {
-      if (lastTime) {
-        const gap = (new Date(t.created_at) - new Date(lastTime)) / 3600000;
-        if (gap > 2) { sessIdx++; sessBreaks.push(i); }
-      }
+      if (lastTime) { const gap = (new Date(t.created_at) - new Date(lastTime)) / 3600000; if (gap > 2) sessIdx++; }
       lastTime = t.created_at;
     });
     const sessCount = sessIdx + 1;
     for (let s = 0; s < sessCount; s++) {
-      const label = sessCount > 1 ? `${date.slice(5)} Session ${s+1}` : date.slice(5);
-      sessions.push({key: `${date}|${s}`, label, date, sessionIdx: s, sessCount});
+      const suffix = sessCount > 1 ? ` (${s+1})` : '';
+      sessions.push({key: `${date}|${s}`, label: `${swissDate(date)} — ${sessType(dayData)}${suffix}`, date, sessionIdx: s, sessCount});
     }
   });
   return sessions;
@@ -3643,7 +3646,7 @@ function renderTrickAnalytics() {
   }
 
   // Session date selected without specific trick → show session summary + trend
-  const showSessionView = !!(dateKey && !chosen);
+  const showSessionView = !!dateKey;
   if (showSessionView) {
     const dateSel2 = document.getElementById('ev-date-sel');
     const label = dateSel2?.options[dateSel2.selectedIndex]?.text || dateKey;
