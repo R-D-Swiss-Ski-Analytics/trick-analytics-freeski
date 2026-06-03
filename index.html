@@ -3749,15 +3749,14 @@ function renderTrickAnalytics() {
         </div>`;
       }
     })()}
-    ${(chosen && pts.length>=1)?`
+    ${pts.length>=1?`
     ${legend}
     <canvas id="${cid}" style="width:100%;"></canvas>
     ${pts.length===1?'<div style="color:var(--muted);font-size:11px;margin-top:4px;text-align:center;">📅 Log more sessions on different dates to see progression</div>':''}
     ` : ''}
-    ${trickOverview}
   `;
 
-  if (chosen && pts.length >= 1) requestAnimationFrame(() => {
+  if (pts.length >= 1) requestAnimationFrame(() => {
     const canvas = document.getElementById(cid); if(!canvas) return;
     const dpr = window.devicePixelRatio||1;
     const W = (canvas.closest('.chart-card')?.offsetWidth || canvas.parentElement?.offsetWidth || el?.offsetWidth || 600) - 48;
