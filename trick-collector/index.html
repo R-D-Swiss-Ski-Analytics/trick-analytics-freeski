@@ -3445,6 +3445,8 @@ function appendTrendChart(allData, highlightDate) {
     const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
     const pad={l:42,r:16,t:14,b:48};
     const n=pts.length;
+    const barW=Math.max(6,Math.min(14,(W-pad.l-pad.r)/(n*5)));
+    const totalBarW=3*(barW+2)-2;
     const margin=totalBarW/2+4;
     const xs=pts.map((_,i)=>pad.l+margin+(n===1?(W-pad.l-pad.r-margin*2)/2:i/(n-1)*(W-pad.l-pad.r-margin*2)));
     const toY=v=>pad.t+(1-v/100)*(H-pad.t-pad.b);
@@ -3457,8 +3459,6 @@ function appendTrendChart(allData, highlightDate) {
     pts.forEach((p,i)=>{if(p.isHighlight){ctx.fillStyle='rgba(57,195,212,0.08)';ctx.fillRect(xs[i]-20,pad.t,40,H-pad.t-pad.b);}});
 
     // Draw chart with mini-bars per date + connecting lines
-    const barW = Math.max(6, Math.min(14, (W-pad.l-pad.r)/(n*5)));
-    const totalBarW = 3*(barW+2)-2;
     const colMap = {'landing':'#2d8a4e','trick':'#39c3d4','grab':'#f59e0b','single':'#39c3d4'};
 
     function drawConnectLine(values, col) {
@@ -3767,6 +3767,8 @@ function renderTrickAnalytics() {
     ctx.scale(dpr, dpr);
     const pad = {l:42, r:16, t:14, b:48};
     const n = pts.length;
+    const barW = Math.max(6, Math.min(14, (W-pad.l-pad.r)/(n*5)));
+    const totalBarW = 3*(barW+2)-2;
     const margin = totalBarW/2+4;
     const xs = pts.map((_,i) => pad.l+margin+(n===1?(W-pad.l-pad.r-margin*2)/2:i/(n-1)*(W-pad.l-pad.r-margin*2)));
     const toY = v => pad.t + (1-v/100)*(H-pad.t-pad.b);
@@ -3781,8 +3783,6 @@ function renderTrickAnalytics() {
     });
 
     // Draw chart with mini-bars per date + connecting lines
-    const barW = Math.max(6, Math.min(14, (W-pad.l-pad.r)/(n*5)));
-    const totalBarW = 3*(barW+2)-2;
     const colMap = {'landing':'#2d8a4e','trick':'#39c3d4','grab':'#f59e0b','single':'#39c3d4'};
 
     function drawConnectLine(values, col) {
