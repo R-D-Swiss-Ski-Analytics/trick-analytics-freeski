@@ -3470,7 +3470,7 @@ function appendTrendChart(allData, highlightDate) {
     }
 
     function drawBars(pt, x, isHi) {
-      if(hasComp && pt.grab!==null) {
+      if(_hc && pt.grab!==null) {
         // 3 mini bars: grab, trick, landing
         const comps = [['grab','#f59e0b'],['trick','#39c3d4'],['landing','#2d8a4e']];
         const bw = barW; const gap = 2;
@@ -3487,7 +3487,7 @@ function appendTrendChart(allData, highlightDate) {
           ctx.fillStyle = col; ctx.font = (isHi?'bold ':'')+'9px Poppins,sans-serif'; ctx.textAlign='center';
           ctx.fillText(val+'%', bx+bw/2, by-3);
         });
-      } else if(!hasComp && pt.landPct!==null) {
+      } else if(!_hc && pt.landPct!==null) {
         const val = pt.landPct;
         const bx = x - barW/2;
         const by = toY(val);
@@ -3499,8 +3499,9 @@ function appendTrendChart(allData, highlightDate) {
       }
     }
 
+    const _hc = typeof hasComp !== 'undefined' ? hasComp : pts.some(p=>p.grab!==null);
     // Draw connecting lines first (behind bars)
-    if(hasComp) {
+    if(_hc) {
       drawConnectLine(pts.map(p=>p.grab), '#f59e0b');
       drawConnectLine(pts.map(p=>p.trick), '#39c3d4');
       drawConnectLine(pts.map(p=>p.landing), '#2d8a4e');
@@ -3759,7 +3760,7 @@ function renderTrickAnalytics() {
   if (pts.length >= 1) requestAnimationFrame(() => {
     const canvas = document.getElementById(cid); if(!canvas) return;
     const dpr = window.devicePixelRatio||1;
-    const W = canvas.parentElement.offsetWidth - 2;
+    const W = (canvas.closest('.chart-card')?.offsetWidth || canvas.parentElement?.offsetWidth || el?.offsetWidth || 600) - 48;
     const H = 200;
     canvas.style.width = W+'px'; canvas.style.height = H+'px';
     canvas.width = W*dpr; canvas.height = H*dpr;
@@ -3794,7 +3795,7 @@ function renderTrickAnalytics() {
     }
 
     function drawBars(pt, x, isHi) {
-      if(hasComp && pt.grab!==null) {
+      if(_hc && pt.grab!==null) {
         // 3 mini bars: grab, trick, landing
         const comps = [['grab','#f59e0b'],['trick','#39c3d4'],['landing','#2d8a4e']];
         const bw = barW; const gap = 2;
@@ -3811,7 +3812,7 @@ function renderTrickAnalytics() {
           ctx.fillStyle = col; ctx.font = (isHi?'bold ':'')+'9px Poppins,sans-serif'; ctx.textAlign='center';
           ctx.fillText(val+'%', bx+bw/2, by-3);
         });
-      } else if(!hasComp && pt.landPct!==null) {
+      } else if(!_hc && pt.landPct!==null) {
         const val = pt.landPct;
         const bx = x - barW/2;
         const by = toY(val);
@@ -3823,8 +3824,9 @@ function renderTrickAnalytics() {
       }
     }
 
+    const _hc = typeof hasComp !== 'undefined' ? hasComp : pts.some(p=>p.grab!==null);
     // Draw connecting lines first (behind bars)
-    if(hasComp) {
+    if(_hc) {
       drawConnectLine(pts.map(p=>p.grab), '#f59e0b');
       drawConnectLine(pts.map(p=>p.trick), '#39c3d4');
       drawConnectLine(pts.map(p=>p.landing), '#2d8a4e');
