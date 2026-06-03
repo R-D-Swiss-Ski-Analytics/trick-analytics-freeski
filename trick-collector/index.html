@@ -3642,14 +3642,13 @@ function renderTrickAnalytics() {
     return;
   }
 
-  // If a specific session/date is selected → show session summary THEN trend chart below
-  if (dateKey && !chosen) {
+  // Session date selected without specific trick → show session summary + trend
+  const showSessionView = !!(dateKey && !chosen);
+  if (showSessionView) {
     const dateSel2 = document.getElementById('ev-date-sel');
     const label = dateSel2?.options[dateSel2.selectedIndex]?.text || dateKey;
-    // Render session summary in el
     renderSessionSummary(data, label);
-    // Then append trend chart below using ALL data (not just this session)
-    const allData = chosen ? _taData.filter(t=>t.trickaufbau===chosen) : _taData;
+    const allData = _taData;
     appendTrendChart(allData, dateKey.split('|')[0]);
     return;
   }
