@@ -833,16 +833,19 @@
   <div id="ev-main" style="display:none;">
     <div class="chart-grid single">
       <div class="chart-card" id="ev-analytics-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
-          <div class="chart-title" style="margin:0;">📊 Trick Statistics</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
-              <option value="">— All Sessions —</option>
-            </select>
-            <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
-              <option value="">— All Tricks —</option>
-            </select>
+        <div style="margin-bottom:16px;">
+          <div class="chart-title" style="margin-bottom:12px;">📊 Trick Statistics</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <button id="ev-mode-overall" onclick="setStatsMode('overall')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Gesamtentwicklung</button>
+            <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Einzelner Trick</button>
+            <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Einzelne Session</button>
           </div>
+          <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+            <option value="">— Trick auswählen —</option>
+          </select>
+          <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+            <option value="">— Session auswählen —</option>
+          </select>
         </div>
         <div id="ev-trick-analytics"></div>
       </div>
@@ -3034,16 +3037,19 @@ async function loadEntwicklung() {
     </div>
     <div class="chart-grid single">
       <div class="chart-card" id="ev-analytics-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
-          <div class="chart-title" style="margin:0;">📊 Trick Statistics</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
-              <option value="">— All Sessions —</option>
-            </select>
-            <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
-              <option value="">— All Tricks —</option>
-            </select>
+        <div style="margin-bottom:16px;">
+          <div class="chart-title" style="margin-bottom:12px;">📊 Trick Statistics</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <button id="ev-mode-overall" onclick="setStatsMode('overall')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Gesamtentwicklung</button>
+            <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Einzelner Trick</button>
+            <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Einzelne Session</button>
           </div>
+          <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+            <option value="">— Trick auswählen —</option>
+          </select>
+          <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+            <option value="">— Session auswählen —</option>
+          </select>
         </div>
         <div id="ev-trick-analytics"></div>
       </div>
@@ -3610,6 +3616,26 @@ function renderSessionSummary(data, sessionLabel) {
   }).join('');
 
   el.innerHTML = headerHtml + cardsHtml;
+}
+
+
+function setStatsMode(mode) {
+  const trickSel = document.getElementById('ev-trick-sel');
+  const dateSel  = document.getElementById('ev-date-sel');
+  const btnO = document.getElementById('ev-mode-overall');
+  const btnT = document.getElementById('ev-mode-trick');
+  const btnS = document.getElementById('ev-mode-session');
+  // Reset all buttons
+  [btnO,btnT,btnS].forEach(b=>{if(b){b.style.background='var(--surface2)';b.style.borderColor='var(--border)';b.style.color='var(--muted)';}});
+  const active = mode==='overall'?btnO:mode==='trick'?btnT:btnS;
+  if(active){active.style.background='rgba(57,195,212,0.2)';active.style.borderColor='#39c3d4';active.style.color='#39c3d4';}
+  // Show/hide dropdowns
+  if(trickSel) trickSel.style.display = mode==='trick' ? '' : 'none';
+  if(dateSel)  dateSel.style.display  = mode==='session' ? '' : 'none';
+  // Reset values when switching mode
+  if(mode!=='trick'  && trickSel) trickSel.value='';
+  if(mode!=='session' && dateSel)  dateSel.value='';
+  renderTrickAnalytics();
 }
 
 function renderTrickAnalytics() {
