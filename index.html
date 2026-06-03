@@ -3346,7 +3346,7 @@ async function loadEntwicklung() {
 let _taData = [];
 
 function initTrickAnalytics(tricks) {
-  _taData = tricks.filter(t => t.trickaufbau && t.trickaufbau.includes(' — '));
+  _taData = tricks.filter(t => t.trickaufbau);
   const sel = document.getElementById('ev-trick-sel');
   const dateSel = document.getElementById('ev-date-sel');
   if (!sel) return;
