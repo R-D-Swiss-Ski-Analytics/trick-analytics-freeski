@@ -3646,22 +3646,18 @@ function renderTrickAnalytics() {
   }
 
   // Session date selected without specific trick → show session summary + trend
-  const showSessionView = !!dateKey;
-  if (showSessionView) {
+  // ── VIEW LOGIC ────────────────────────────────────────────────────
+  if (dateKey) {
+    // VIEW 3: Session selected → show only bar chart of tricks in this session
     const dateSel2 = document.getElementById('ev-date-sel');
     const label = dateSel2?.options[dateSel2.selectedIndex]?.text || dateKey;
-    // Show ALL tricks from this session (not filtered by trick dropdown)
     const filterDate2 = dateKey.split('|')[0];
     const sessIdx2 = parseInt(dateKey.split('|')[1]||'0');
     const allDayData = _taData.filter(t=>t.datum===filterDate2).sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
     const sessions2=[[]]; let si2=0, lt2=null;
     allDayData.forEach(t=>{if(lt2&&t.created_at&&(new Date(t.created_at)-new Date(lt2))/3600000>2){si2++;sessions2.push([]);}sessions2[si2].push(t);lt2=t.created_at;});
-    const sessionData = sessions2[sessIdx2]||allDayData;
-    renderSessionSummary(sessionData, label);
-    // Trend chart: use trick filter if set, else all
-    const trendData = chosen ? _taData.filter(t=>t.trickaufbau===chosen) : _taData;
-    appendTrendChart(trendData, filterDate2);
-    return;
+    renderSessionSummary(sessions2[sessIdx2]||allDayData, label);
+    return; // NO trend chart in session view
   }
 
   // Parse Grab/Trick/Landing from kommentar field
