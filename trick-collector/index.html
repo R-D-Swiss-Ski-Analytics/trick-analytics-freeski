@@ -3649,6 +3649,18 @@ function renderTrickAnalytics() {
   const chosen = sel ? sel.value : '';
   const dateKey = dateSel ? dateSel.value : '';
 
+  // Show nothing until selection is made (for trick and session modes)
+  const trickVisible = sel && sel.style.display !== 'none';
+  const sessionVisible = dateSel && dateSel.style.display !== 'none';
+  if (trickVisible && !chosen) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px;">Select a trick to view its progression.</div>';
+    return;
+  }
+  if (sessionVisible && !dateKey) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px;">Select a session to view its tricks.</div>';
+    return;
+  }
+
   function pr(k,d){ const m=(d.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
   const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
 
