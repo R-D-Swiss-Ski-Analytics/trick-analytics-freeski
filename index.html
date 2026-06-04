@@ -3368,7 +3368,7 @@ function initTrickAnalytics(tricks) {
     dateSel.innerHTML = '<option value="">— All Sessions —</option>' +
       sessions.map(s => `<option value="${s.key}">${s.label}</option>`).join('');
   }
-  renderTrickAnalytics();
+  setStatsMode('trick');
 }
 
 function buildSessionList(data) {
