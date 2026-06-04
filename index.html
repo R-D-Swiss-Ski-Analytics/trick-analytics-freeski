@@ -3585,6 +3585,9 @@ function renderSessionSummary(data, sessionLabel) {
     const hasComp = s.grab.length > 0;
     const gAvg=avg(s.grab), tAvg=avg(s.trick), lAvg=avg(s.land_r);
     const landPct = s.att ? Math.round(s.land/s.att*100) : 0;
+    // Overall quality score = average of the three component averages (where available)
+    const qualVals = [gAvg, tAvg, lAvg].filter(v => v !== null);
+    const qualAvg = qualVals.length ? Math.round(qualVals.reduce((a,b)=>a+b,0)/qualVals.length) : null;
 
     const compBars = hasComp ? `
       <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
@@ -3600,17 +3603,13 @@ function renderSessionSummary(data, sessionLabel) {
 
     return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-        <div style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}${s.perf>0?` <span style="font-size:11px;color:#39c3d4;font-weight:400;">⭐ ${s.perf}×</span>`:''}</div>
         <div style="text-align:right;flex-shrink:0;">
-          <div style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${landPct}%</div>
-          <div style="font-size:10px;color:var(--muted);">${s.att}× att.</div>
+          <div style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${s.land} / ${s.att}</div>
+          <div style="font-size:10px;color:var(--muted);">landed</div>
+          ${qualAvg!==null?`<div style="font-size:11px;font-weight:700;color:#39c3d4;margin-top:4px;">${qualAvg}% quality</div>`:''}
         </div>
       </div>
-      <div style="display:flex;gap:12px;font-size:12px;margin-top:6px;">
-        <span style="color:#2d8a4e;">✓ ${s.land} landed</span>
-        ${s.perf>0?`<span style="color:#39c3d4;">⭐ ${s.perf} perfect</span>`:''}
-      </div>
-      ${typeHtml}
       ${compBars}
     </div>`;
   }).join('');
