@@ -3695,6 +3695,8 @@ function renderTrickAnalytics() {
         const hasComp = s.grab.length>0;
         const gA=avg(s.grab),tA=avg(s.trick),lA=avg(s.land_r);
         const landPct=s.att?Math.round(s.land/s.att*100):0;
+        const qualVals=[gA,tA,lA].filter(v=>v!==null);
+        const qualAvg=qualVals.length?Math.round(qualVals.reduce((a,b)=>a+b,0)/qualVals.length):null;
         const bars = hasComp ? [['Grab',gA,'#f59e0b'],['Trick',tA,'#39c3d4'],['Landing',lA,'#2d8a4e']].map(([lbl,val,col])=>
           val!==null?`<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
             <span style="font-size:10px;color:var(--muted);min-width:48px;">${lbl}</span>
@@ -3706,10 +3708,11 @@ function renderTrickAnalytics() {
         ).join('') : '';
         return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-            <span style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}${s.perf>0?` <span style="font-size:11px;color:#39c3d4;font-weight:400;">⭐ ${s.perf}×</span>`:''}</span>
             <div style="text-align:right;flex-shrink:0;">
-              <span style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${landPct}%</span>
-              <span style="font-size:10px;color:var(--muted);display:block;">${s.att}× att.</span>
+              <span style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${s.land} / ${s.att}</span>
+              <span style="font-size:10px;color:var(--muted);display:block;">landed</span>
+              ${qualAvg!==null?`<span style="font-size:11px;font-weight:700;color:#39c3d4;display:block;margin-top:2px;">${qualAvg}% quality</span>`:''}
             </div>
           </div>
           ${bars}
