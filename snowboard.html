@@ -364,7 +364,7 @@
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Flips</label>
         <select id="edit-flips" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>None</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
+          <option value="">–</option><option value="">–</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
         </select></div>
       <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Axis</label>
         <select id="edit-achse" onchange="updateFwdSwBtn('edit')" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
@@ -635,7 +635,7 @@
           </select></div>
         <div class="form-group kicker-field-sb hidden"><label>Flips</label>
           <select id="sb-flips"><option value="">–</option>
-            <option>None</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
+            <option value="">–</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
           </select></div>
         <div class="form-group kicker-field-sb hidden"><label>Axis</label>
           <select id="sb-achse" onchange="updateFwdSwBtn('sb')"><option value="">–</option>
@@ -1383,7 +1383,7 @@ function trickDesc(t, prefix) {
     const parts = [
       t ? t.absprung  : val(p+'absprung'),
       t ? t.drehrichtung : val(p+'drehrichtung'),
-      (t ? t.flips : val(p+'flips')) && (t ? t.flips : val(p+'flips')) !== 'keine' ? (t ? t.flips : val(p+'flips')) : null,
+      (t ? t.flips : val(p+'flips')) && !['keine','None','none','—'].includes(t ? t.flips : val(p+'flips')) ? (t ? t.flips : val(p+'flips')) : null,
       t ? t.rotation     : val(p+'rotation'),
       t ? t.achse : val(p+'achse'),
       t ? t.grab  : val(p+'grab'),
@@ -1474,7 +1474,7 @@ function renderSessionList() {
   }
 
   body.innerHTML = filtered.map((t, i) => {
-    const trickName = [t.drehrichtung, t.flips && t.flips !== 'keine' ? t.flips : null, t.rotation, t.achse, t.grab, t.bringback].filter(Boolean).join(' ') || t.railart || '–';
+    const trickName = [t.drehrichtung, t.flips && !['keine','None','none'].includes(t.flips) ? t.flips : null, t.rotation, t.achse, t.grab, t.bringback].filter(Boolean).join(' ') || t.railart || '–';
     const g = t.gesamt;
     const ratingHtml = g ? '<span class="rating-pill ' + (g>=8?'rating-high':g>=6?'rating-mid':'rating-low') + '">' + g + '</span>' : '–';
     const diszBadge = badge(t.disziplin);
