@@ -2202,6 +2202,8 @@ function tricksForDir(tricks, dir) {
 
 function baseLabel(label) {
   let result = ' ' + label + ' ';
+  // Remove "None" (standalone word, from flips field)
+  result = result.replace(/\bNone\b/gi, '');
   [...SESS_GRABS].sort((a,b) => b.length - a.length).forEach(t => {
     const esc = t.trim().replace(/[-.*+?^${}()|[\]\\]/g,'\\$&');
     result = result.replace(new RegExp('[, ]+' + esc + '(?=[, ]|$)', 'gi'), '');
@@ -2766,7 +2768,7 @@ function renderStandort() {
   function renderTrickRow(e) {
     return `<div class="sb-trick-row">
       <span class="sb-trick-name">
-        <span style="font-weight:500;">${e.trick_label}</span>
+        <span style="font-weight:500;">${(e.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim()}</span>
         <span style="display:flex;gap:8px;align-items:center;margin-top:2px;">
           ${e.datum ? `<span style="font-size:10px;color:var(--muted);">📅 ${e.datum}</span>` : ''}
           ${e.notiz ? `<span style="font-size:10px;color:var(--muted);">${e.notiz}</span>` : ''}
