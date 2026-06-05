@@ -2478,7 +2478,8 @@ function toggleSessTrick(name, trick, checked) {
 }
 
 function startSession() {
-  if (sessSelectedAthletes.length === 0) return;
+  if (!sessType) { showToast('Please select a session type (Bag / On-Snow / Comp)', 'error'); return; }
+  if (sessSelectedAthletes.length === 0) { showToast('Please select at least one athlete', 'error'); return; }
   sessSelectedAthletes.forEach(name => {
     if (!sessAthleteData[name]) sessAthleteData[name] = {tricks:[],currentTrick:'',stats:{attempts:0,landed:0,perfect:0}};
     sessAthleteData[name].currentTrick = sessAthleteData[name].currentTrick || '';
@@ -2761,7 +2762,9 @@ function openReportPrint(report) {
   const d = report;
   const dateStr = d.datum ? (() => { const p=d.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
   const durH = d.duration_min ? (d.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
-  const condStars = d.conditions ? '★'.repeat(d.conditions)+'☆'.repeat(5-d.conditions) : '—';
+  const condLabel = d.conditions ? ['','Poor','Below Average','Average','Good','Excellent'][d.conditions]||d.conditions+'/5' : '—';
+  const condDots = d.conditions ? ('● '.repeat(d.conditions) + '○ '.repeat(5-d.conditions)).trim() : '—';
+  const typeShort = {'Landing Bag':'Landing Bag','Jump On-Snow':'Jump On-Snow','Big Air Competition':'Big Air Competition'}[d.session_type]||d.session_type||'—';
   const athletes = Array.isArray(d.athletes) ? d.athletes.join(', ') : (d.athletes||'');
   const tricks = Array.isArray(d.trick_data) ? d.trick_data : [];
 
@@ -2769,44 +2772,60 @@ function openReportPrint(report) {
     const pct = a.totalAtt ? Math.round(a.totalLand/a.totalAtt*100) : 0;
     const rows = (a.tricks||[]).map(t => {
       const lp = t.att ? Math.round(t.land/t.att*100) : 0;
-      return `<tr><td>${t.trick}</td><td style="text-align:center;">${t.att}</td><td style="text-align:center;">${t.land}</td><td style="text-align:center;">${lp}%</td><td style="text-align:center;">${t.stomped||0}</td></tr>`;
+      const landedOnly = t.land - (t.stomped||0);
+      return `<tr><td>${normSbTrick(t.trick)}</td><td>${t.att}</td><td>${landedOnly}</td><td>${t.stomped||0}</td><td>${lp}%</td></tr>`;
     }).join('');
-    return `<div class="athlete-section">
+    return `<div class="athlete-block">
       <div class="athlete-name">${a.athlet}</div>
-      <div class="athlete-stats">${a.totalAtt} attempts · ${a.totalLand} landed (${pct}%)</div>
-      <table><thead><tr><th>Trick</th><th>Att</th><th>Land</th><th>%</th><th>Stomped</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="athlete-summary">${a.totalAtt} attempts &nbsp;|&nbsp; ${a.totalLand} landed+stomped &nbsp;|&nbsp; ${pct}%</div>
+      <table><thead><tr><th>Trick</th><th>Att.</th><th>Landed</th><th>Stomped</th><th>Rate</th></tr></thead><tbody>${rows}</tbody></table>
     </div>`;
   }).join('');
 
   const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Session Report ${dateStr}</title>
+  win.document.write(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>Session Report — ${dateStr}</title>
 <style>
-  body{font-family:'Helvetica Neue',Arial,sans-serif;color:#111;background:#fff;margin:0;padding:24px;max-width:800px;margin:0 auto;}
-  h1{font-size:28px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
-  .meta{color:#555;font-size:14px;margin-bottom:20px;}
-  .meta span{margin-right:20px;}
-  .no-print{margin-bottom:20px;}
-  .athlete-section{border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:16px;}
-  .athlete-name{font-size:18px;font-weight:700;margin-bottom:4px;}
-  .athlete-stats{font-size:13px;color:#555;margin-bottom:12px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1a1a;background:#fff;padding:32px 40px;max-width:860px;margin:0 auto;font-size:13px;line-height:1.5;}
+  .print-btn{margin-bottom:28px;}
+  .print-btn button{padding:9px 22px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:.3px;}
+  header{border-bottom:2px solid #1a1a1a;padding-bottom:16px;margin-bottom:20px;}
+  header h1{font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;}
+  .meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 16px;}
+  .meta-item label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#777;margin-bottom:2px;}
+  .meta-item span{font-size:14px;font-weight:600;}
+  .section-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#777;margin:20px 0 8px;border-top:1px solid #e0e0e0;padding-top:12px;}
+  .comments{background:#f6f6f6;border-left:3px solid #1a1a1a;padding:10px 14px;font-size:13px;color:#333;margin-bottom:16px;}
+  .athlete-block{margin-bottom:20px;border:1px solid #e0e0e0;border-radius:4px;overflow:hidden;}
+  .athlete-name{background:#1a1a1a;color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;}
+  .athlete-summary{padding:6px 12px;font-size:12px;color:#555;background:#f9f9f9;border-bottom:1px solid #e0e0e0;}
   table{width:100%;border-collapse:collapse;}
-  th{background:#f0f0f0;padding:8px 10px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
-  td{padding:7px 10px;border-top:1px solid #eee;font-size:13px;}
-  .comments-box{background:#f8f8f8;border:1px solid #ddd;border-radius:8px;padding:14px;margin-bottom:20px;}
-  @media print{.no-print{display:none;}}
+  th{background:#f0f0f0;padding:7px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#555;}
+  td{padding:7px 12px;border-top:1px solid #eee;font-size:12px;color:#222;}
+  tr:hover td{background:#fafafa;}
+  footer{margin-top:32px;border-top:1px solid #ddd;padding-top:12px;font-size:11px;color:#aaa;display:flex;justify-content:space-between;}
+  @media print{.print-btn{display:none;} body{padding:20px;}}
 </style></head><body>
-  <div class="no-print"><button onclick="window.print()" style="padding:10px 20px;background:#004877;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">🖨️ Print / Save as PDF</button></div>
-  <h1>Session Report</h1>
-  <div class="meta">
-    <span>📅 ${dateStr}</span>
-    <span>🏷️ ${({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Competition'}[d.session_type]||d.session_type||'—')}</span>
-    <span>⏱️ ${durH}</span>
-    <span>📍 ${d.location||'—'}</span>
-    <span>🏂 Conditions: ${condStars}</span>
-  </div>
-  ${d.comments ? `<div class="comments-box"><strong>Coach Comments:</strong><br>${d.comments.replace(/\n/g,'<br>')}</div>` : ''}
-  <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Athletes: ${athletes}</div>
-  ${athleteSections || '<div style="color:#888;">No trick data recorded.</div>'}
+  <div class="print-btn"><button onclick="window.print()">Print / Save as PDF</button></div>
+  <header>
+    <h1>Session Report</h1>
+    <div class="meta-grid">
+      <div class="meta-item"><label>Date</label><span>${dateStr}</span></div>
+      <div class="meta-item"><label>Session Type</label><span>${typeShort}</span></div>
+      <div class="meta-item"><label>Duration</label><span>${durH}</span></div>
+      <div class="meta-item"><label>Location</label><span>${d.location||'—'}</span></div>
+      <div class="meta-item"><label>Conditions</label><span>${condDots} &nbsp; ${condLabel}</span></div>
+      <div class="meta-item"><label>Athletes</label><span>${athletes}</span></div>
+    </div>
+  </header>
+  ${d.comments ? `<div class="section-label">Coach Comments</div><div class="comments">${d.comments.replace(/\n/g,'<br>')}</div>` : ''}
+  <div class="section-label">Trick Performance by Athlete</div>
+  ${athleteSections || '<div style="color:#888;padding:12px 0;">No trick data recorded.</div>'}
+  <footer>
+    <span>Swiss-Ski Trick Collector</span>
+    <span>Generated ${new Date().toLocaleDateString('en-GB')}</span>
+  </footer>
 </body></html>`);
   win.document.close();
 }
