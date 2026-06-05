@@ -3846,8 +3846,31 @@ function renderTrickAnalytics() {
     <span style="color:#2d8a4e;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span>
   </div>` : '';
 
+  // Direction distribution for overall/trick view
+  const OV_DIRS = ['Left','Right','Switch Left','Switch Right'];
+  const OV_DIR_COL = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
+  const ovDirCnt = {}; OV_DIRS.forEach(d=>ovDirCnt[d]={tricks:new Set(),att:0});
+  chartData.forEach(t=>{
+    const name = t.trickaufbau||'';
+    let dir=null;
+    if(name.includes('Switch Left')) dir='Switch Left';
+    else if(name.includes('Switch Right')) dir='Switch Right';
+    else if(name.includes('Left')) dir='Left';
+    else if(name.includes('Right')) dir='Right';
+    if(dir){ovDirCnt[dir].tricks.add(name);ovDirCnt[dir].att++;}
+  });
+  const ovDirTotal = OV_DIRS.reduce((s,d)=>s+ovDirCnt[d].att,0);
+  // Convert Set to count for reuse in drawSessionDirRadar
+  const ovDirCntFinal = {}; OV_DIRS.forEach(d=>ovDirCntFinal[d]={tricks:ovDirCnt[d].tricks.size, att:ovDirCnt[d].att});
+
+  const pieId = 'ta-pie-'+Date.now();
   const cid = 'ta-chart-'+Date.now();
-  el.innerHTML = statsHtml + legend + `<canvas id="${cid}" style="width:100%;"></canvas>`;
+  el.innerHTML = statsHtml + legend + `<canvas id="${cid}" style="width:100%;"></canvas>` +
+    (ovDirTotal>0 ? `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px;">
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Direction Distribution</div>
+        <canvas id="${pieId}" style="width:100%;max-width:300px;display:block;margin:0 auto;"></canvas>
+      </div>` : '');
 
   requestAnimationFrame(()=>{
     const canvas=document.getElementById(cid); if(!canvas)return;
@@ -3907,6 +3930,8 @@ function renderTrickAnalytics() {
       ctx.fillText(p.att+'×',xs[i],H-pad.b+28);
     });
   });
+
+  if(ovDirTotal>0) requestAnimationFrame(()=>drawSessionDirRadar(pieId, ovDirCntFinal, OV_DIRS, OV_DIR_COL));
 }
 
 function updateQualityChart() {
