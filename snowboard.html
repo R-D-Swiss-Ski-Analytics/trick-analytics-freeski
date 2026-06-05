@@ -4883,7 +4883,8 @@ function renderSbSessionPerformance() {
   el.innerHTML = `
     <div style="font-size:11px;color:var(--muted);margin-bottom:14px;display:flex;flex-direction:column;gap:3px;">
       <span>All recorded tricks per athlete, grouped by direction</span>
-      <span>Ampel: (✓ landed + ⭐ stomped) / total &nbsp; 🟢 ≥70% &nbsp; 🟡 ≥50% &nbsp; 🔴 &lt;50%</span>
+      <span>Ampel: (✓ landed + ⭐ stomped) / total</span>
+      <span>🟢 ≥70% &nbsp;&nbsp; 🟡 ≥50% &nbsp;&nbsp; 🔴 &lt;50%</span>
     </div>
     <div>
       ${athList.map(athlet => {

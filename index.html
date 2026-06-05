@@ -2020,7 +2020,7 @@ function renderSessionPerformance() {
   el.innerHTML = `
     <div style="font-size:11px;color:var(--muted);margin-bottom:14px;display:flex;flex-direction:column;gap:3px;">
       <span>All recorded tricks per athlete, grouped by direction</span>
-      <span>🟢 land ≥70% <b>and</b> quality ≥70% &nbsp; 🟡 one ≥50% &nbsp; 🔴 both &lt;50%</span>
+      <span>🟢 land ≥70% &amp; quality ≥70% &nbsp;&nbsp; 🟡 one ≥50% &nbsp;&nbsp; 🔴 both &lt;50%</span>
     </div>
     <div>
       ${athList.map((athlet, i) => {
