@@ -2447,6 +2447,13 @@ function startSession() {
   renderLiveSession();
 }
 
+let sessActiveSbAthlete = '';
+
+function selectSessAthlete(name) {
+  sessActiveSbAthlete = name;
+  renderLiveSession();
+}
+
 function sbSetTrick(name, val) {
   sessAthleteData[name].currentTrick = val;
 }
@@ -2454,55 +2461,66 @@ function sbSetTrick(name, val) {
 function renderLiveSession() {
   const cols = document.getElementById('sess-athlete-cols');
   if (!sessSelectedAthletes.length) { cols.innerHTML=''; return; }
-  const n = sessSelectedAthletes.length;
-  cols.style.gridTemplateColumns = n===1?'1fr':n<=4?'repeat(2,1fr)':'repeat(3,1fr)';
+  cols.style.gridTemplateColumns = '';
 
-  cols.innerHTML = sessSelectedAthletes.map(name => {
-    const d = sessAthleteData[name] || {tricks:[],currentTrick:'',stats:{attempts:0,landed:0,perfect:0}};
-    const s = d.stats;
-    const pct = s.attempts ? Math.round((s.landed+s.perfect)/s.attempts*100) : 0;
-    const sid = name.replace(/\s/g,'_');
-    const lastEntry = sessLog.find(e => e.name === name);
-    const lastDot = lastEntry ? (lastEntry.result==='miss'?'🔴':lastEntry.result==='perfect'?'⭐':'🟢') : '';
+  if (!sessActiveSbAthlete || !sessSelectedAthletes.includes(sessActiveSbAthlete)) {
+    sessActiveSbAthlete = sessSelectedAthletes[0];
+  }
 
-    // Trick dropdown options from standort
-    const trickOptions = (d.tricks||[]).map(t => {
-      const lbl = (t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim();
-      const sel = lbl === d.currentTrick ? 'selected' : '';
-      return `<option value="${lbl}" ${sel}>${lbl}${t.status==='goal'?' 🎯':''}</option>`;
-    }).join('');
+  // Tabs
+  const tabsHtml = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+    ${sessSelectedAthletes.map(name => {
+      const last = sessLog.find(e => e.name === name);
+      const dot = last ? (last.result==='miss'?'🔴':last.result==='perfect'?'⭐':'🟢') : '';
+      const active = name === sessActiveSbAthlete;
+      return `<button onclick="selectSessAthlete('${name}')" style="padding:10px 18px;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;background:${active?'rgba(57,195,212,0.2)':'var(--surface2)'};border:2px solid ${active?'#39c3d4':'var(--border)'};color:${active?'#39c3d4':'var(--muted)'};">${dot} ${shortName(name)}</button>`;
+    }).join('')}
+  </div>`;
 
-    return `<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px;" id="sess-col-${sid}">
-      <div style="font-size:18px;font-weight:800;color:#39c3d4;text-align:center;">${lastDot} ${shortName(name)}</div>
-      <div>
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Working on</div>
-        <select onchange="sbSetTrick('${name}',this.value)"
-          style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
-          <option value="">— select trick —</option>
-          ${trickOptions}
-        </select>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;">
-        <div style="background:var(--surface2);border-radius:8px;padding:8px 2px;">
-          <div style="font-size:22px;font-weight:800;color:var(--text);">${s.attempts}</div>
-          <div style="font-size:10px;color:var(--muted);">Att.</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:8px 2px;">
-          <div style="font-size:22px;font-weight:800;color:#2d8a4e;">${s.landed+s.perfect}</div>
-          <div style="font-size:10px;color:var(--muted);">Land</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:8px 2px;">
-          <div style="font-size:22px;font-weight:800;color:#39c3d4;">${pct}%</div>
-          <div style="font-size:10px;color:var(--muted);">Rate</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
-        <button onclick="logAttempt('${name}','miss')"    style="padding:20px 2px;background:rgba(226,0,26,0.1);border:2px solid #e2001a;color:#e2001a;border-radius:10px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;line-height:1.5;-webkit-tap-highlight-color:transparent;">✗<br>FAILED</button>
-        <button onclick="logAttempt('${name}','landed')"  style="padding:20px 2px;background:rgba(45,138,78,0.1);border:2px solid #2d8a4e;color:#2d8a4e;border-radius:10px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;line-height:1.5;-webkit-tap-highlight-color:transparent;">✓<br>LANDED</button>
-        <button onclick="logAttempt('${name}','perfect')" style="padding:20px 2px;background:rgba(57,195,212,0.1);border:2px solid #39c3d4;color:#39c3d4;border-radius:10px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;line-height:1.5;-webkit-tap-highlight-color:transparent;">⭐<br>STOMPED</button>
-      </div>
-    </div>`;
+  // Active athlete card
+  const name = sessActiveSbAthlete;
+  const d = sessAthleteData[name] || {tricks:[],currentTrick:'',stats:{attempts:0,landed:0,perfect:0}};
+  const s = d.stats;
+  const pct = s.attempts ? Math.round((s.landed+s.perfect)/s.attempts*100) : 0;
+  const sid = name.replace(/\s/g,'_');
+
+  const trickOptions = (d.tricks||[]).map(t => {
+    const lbl = (t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim();
+    return `<option value="${lbl}" ${lbl===d.currentTrick?'selected':''}>${lbl}${t.status==='goal'?' 🎯':''}</option>`;
   }).join('');
+
+  const cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${sid}">
+    <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:16px;text-align:center;">${shortName(name)}</div>
+    <div style="margin-bottom:20px;">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Working on</div>
+      <select onchange="sbSetTrick('${name}',this.value)"
+        style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+        <option value="">— select trick —</option>
+        ${trickOptions}
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;text-align:center;">
+      <div style="background:var(--surface2);border-radius:8px;padding:12px 4px;">
+        <div style="font-size:28px;font-weight:800;color:var(--text);">${s.attempts}</div>
+        <div style="font-size:10px;color:var(--muted);">Attempts</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:12px 4px;">
+        <div style="font-size:28px;font-weight:800;color:#2d8a4e;">${s.landed+s.perfect}</div>
+        <div style="font-size:10px;color:var(--muted);">Landed</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:12px 4px;">
+        <div style="font-size:28px;font-weight:800;color:#39c3d4;">${pct}%</div>
+        <div style="font-size:10px;color:var(--muted);">Rate</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <button onclick="logAttempt('${name}','miss')"    style="padding:28px 4px;background:rgba(226,0,26,0.1);border:2px solid #e2001a;color:#e2001a;border-radius:12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;line-height:1.6;-webkit-tap-highlight-color:transparent;">✗<br>FAILED</button>
+      <button onclick="logAttempt('${name}','landed')"  style="padding:28px 4px;background:rgba(45,138,78,0.1);border:2px solid #2d8a4e;color:#2d8a4e;border-radius:12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;line-height:1.6;-webkit-tap-highlight-color:transparent;">✓<br>LANDED</button>
+      <button onclick="logAttempt('${name}','perfect')" style="padding:28px 4px;background:rgba(57,195,212,0.1);border:2px solid #39c3d4;color:#39c3d4;border-radius:12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;line-height:1.6;-webkit-tap-highlight-color:transparent;">⭐<br>STOMPED</button>
+    </div>
+  </div>`;
+
+  cols.innerHTML = tabsHtml + cardHtml;
 }
 
 function sessSetTrick(name, trick) { sessAthleteData[name].currentTrick = trick; }
