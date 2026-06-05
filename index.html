@@ -1797,8 +1797,7 @@ function renderSessionPerformance() {
     </td>`;
   }
 
-  // Direction shorthand for buttons
-  const DIR_SHORT = {'Left':'L','Right':'R','Switch Left':'SL','Switch Right':'SR'};
+  const DIRS = ['Left','Right','Switch Left','Switch Right'];
 
   // Build per-athlete, per-trick summary (all tricks, not just best per dir)
   const athTricks = {};
@@ -1817,44 +1816,64 @@ function renderSessionPerformance() {
   // Sort athletes alphabetically (no ranking)
   const athList = Object.keys(athTricks).sort();
 
-  function trickButton(trick, s) {
-    const landPct = s.att ? Math.round(s.land/s.att*100) : 0;
-    const avgQ    = s.qualVals.length ? Math.round(s.qualVals.reduce((a,b)=>a+b,0)/s.qualVals.length) : 0;
-    const st      = status(landPct, avgQ);
-    const dirShort = s.dir ? DIR_SHORT[s.dir]||s.dir : '?';
-    const colMap  = {'🟢':'rgba(45,138,78,0.2)','🟡':'rgba(245,158,11,0.2)','🔴':'rgba(226,0,26,0.15)'};
-    const borMap  = {'🟢':'#2d8a4e','🟡':'#f59e0b','🔴':'#e2001a'};
-    const txtMap  = {'🟢':'#2d8a4e','🟡':'#f59e0b','🔴':'#e2001a'};
-    const bg  = colMap[st.icon];
-    const bor = borMap[st.icon];
-    const txt = txtMap[st.icon];
-    const label = `${dirShort} ${s.rot||'?'}°`;
-    const tooltip = `${trick}\n${landPct}% landed · ${avgQ}% quality · ${s.att} att.`;
-    return `<span title="${tooltip}" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;border:1px solid ${bor};background:${bg};font-size:11px;font-weight:700;color:${txt};white-space:nowrap;cursor:default;">
-      ${st.icon} ${label}
-      <span style="font-weight:400;opacity:.8;">${landPct}%↓ ${avgQ}%★</span>
-    </span>`;
-  }
+  const bkg  = {'🟢':'rgba(45,138,78,0.12)','🟡':'rgba(245,158,11,0.1)','🔴':'rgba(226,0,26,0.08)'};
+  const brd  = {'🟢':'rgba(45,138,78,0.4)', '🟡':'rgba(245,158,11,0.4)','🔴':'rgba(226,0,26,0.3)'};
+  const txt  = {'🟢':'#2d8a4e','🟡':'#f59e0b','🔴':'#e2001a'};
 
   el.innerHTML = `
     <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
-      All recorded tricks per athlete &nbsp;·&nbsp;
+      All recorded tricks per athlete, grouped by direction &nbsp;·&nbsp;
       🟢 land ≥70% <b>and</b> quality ≥70% &nbsp;&nbsp; 🟡 one ≥50% &nbsp;&nbsp; 🔴 both &lt;50%
     </div>
-    <div style="display:flex;flex-direction:column;gap:0;">
-      ${athList.map((athlet,i) => {
+    <div>
+      ${athList.map((athlet, i) => {
         const tricks = athTricks[athlet];
-        // Sort: green first, then yellow, then red; within group by rotation desc
-        const sorted = Object.entries(tricks).sort(([,a],[,b]) => {
-          const stA = status(a.att?Math.round(a.land/a.att*100):0, a.qualVals.length?Math.round(a.qualVals.reduce((x,y)=>x+y,0)/a.qualVals.length):0);
-          const stB = status(b.att?Math.round(b.land/b.att*100):0, b.qualVals.length?Math.round(b.qualVals.reduce((x,y)=>x+y,0)/b.qualVals.length):0);
-          const rank = {'🟢':0,'🟡':1,'🔴':2};
-          return (rank[stA.icon]||0)-(rank[stB.icon]||0) || b.rot-a.rot;
+
+        // Group tricks by direction
+        const byDir = {};
+        DIRS.forEach(d => byDir[d] = []);
+        Object.entries(tricks).forEach(([trick, s]) => {
+          const d = s.dir || 'Other';
+          if (!byDir[d]) byDir[d] = [];
+          byDir[d].push([trick, s]);
         });
-        return `<div style="padding:14px 0;border-bottom:1px solid var(--border);${i===0?'border-top:1px solid var(--border);':''}">
-          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">${athlet}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;">
-            ${sorted.map(([trick,s]) => trickButton(trick, s)).join('')}
+
+        // Sort within each direction: green first, then by rotation desc
+        DIRS.forEach(d => {
+          byDir[d].sort(([,a],[,b]) => {
+            const lA = a.att?Math.round(a.land/a.att*100):0, qA = a.qualVals.length?Math.round(a.qualVals.reduce((x,y)=>x+y,0)/a.qualVals.length):0;
+            const lB = b.att?Math.round(b.land/b.att*100):0, qB = b.qualVals.length?Math.round(b.qualVals.reduce((x,y)=>x+y,0)/b.qualVals.length):0;
+            const rank = {'🟢':0,'🟡':1,'🔴':2};
+            return (rank[status(lA,qA).icon]||0)-(rank[status(lB,qB).icon]||0) || b.rot-a.rot;
+          });
+        });
+
+        const dirBlocks = DIRS.map(d => {
+          const entries = byDir[d];
+          return `<div style="flex:1;min-width:200px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${DIR_COL[d]};margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid ${DIR_COL[d]}33;">${d}</div>
+            ${entries.length ? entries.map(([trick, s]) => {
+              const landPct = s.att ? Math.round(s.land/s.att*100) : 0;
+              const avgQ    = s.qualVals.length ? Math.round(s.qualVals.reduce((a,b)=>a+b,0)/s.qualVals.length) : 0;
+              const st      = status(landPct, avgQ);
+              return `<div style="background:${bkg[st.icon]};border:1px solid ${brd[st.icon]};border-radius:8px;padding:6px 10px;margin-bottom:5px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                  <span style="font-size:12px;color:var(--text);flex:1;">${st.icon} ${trick}</span>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:4px;font-size:11px;font-weight:700;">
+                  <span style="color:${landPct>=70?'#2d8a4e':landPct>=50?'#f59e0b':'#e2001a'};">${landPct}% landed</span>
+                  <span style="color:${avgQ>=70?'#2d8a4e':avgQ>=50?'#f59e0b':'#e2001a'};">${avgQ}% quality</span>
+                  <span style="color:var(--muted);font-weight:400;">${s.att} att.</span>
+                </div>
+              </div>`;
+            }).join('') : `<div style="color:var(--muted);font-size:11px;padding:6px 0;">—</div>`}
+          </div>`;
+        }).join('');
+
+        return `<div style="padding:16px 0;border-bottom:1px solid var(--border);${i===0?'border-top:1px solid var(--border);':''}">
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;">${athlet}</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+            ${dirBlocks}
           </div>
         </div>`;
       }).join('')}
