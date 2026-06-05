@@ -3782,8 +3782,8 @@ function renderTrickAnalytics() {
       (radarTotal > 0 ? `
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
           <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
-          <div style="display:flex;align-items:center;gap:20px;">
-            <div style="flex:1;">${sessionDirLegendHtml(dirCnt,SESS_DIRS,SESS_DIR_COL)}</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:32px;">
+            <div>${sessionDirLegendHtml(dirCnt,SESS_DIRS,SESS_DIR_COL)}</div>
             <div style="width:160px;height:160px;flex-shrink:0;min-width:160px;">
               <canvas id="sess-dir-radar" style="display:block;width:160px;height:160px;"></canvas>
             </div>
@@ -3865,8 +3865,8 @@ function renderTrickAnalytics() {
     (ovDirTotal>0 ? `
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px;">
         <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
-        <div style="display:flex;align-items:center;gap:20px;">
-          <div style="flex:1;">${sessionDirLegendHtml(ovDirCntFinal,OV_DIRS,OV_DIR_COL)}</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:32px;">
+          <div>${sessionDirLegendHtml(ovDirCntFinal,OV_DIRS,OV_DIR_COL)}</div>
           <div style="width:160px;height:160px;flex-shrink:0;min-width:160px;">
             <canvas id="${pieId}" style="display:block;width:160px;height:160px;"></canvas>
           </div>
