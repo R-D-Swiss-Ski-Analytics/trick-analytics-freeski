@@ -3105,19 +3105,23 @@ async function loadEntwicklung() {
     fRow.id = 'ev-type-filter';
     fRow.style.cssText = 'display:none;gap:6px;flex-wrap:wrap;margin-bottom:10px;';
     fRow.innerHTML = `
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-        <span style="font-size:11px;color:var(--muted);align-self:center;margin-right:2px;">Filter:</span>
-        <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
-        <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
-        <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
-        <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;">
-        <span style="font-size:11px;color:var(--muted);">Period:</span>
-        <input type="date" id="ev-date-from" onchange="setDateRange()" style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:Poppins,sans-serif;">
-        <span style="font-size:11px;color:var(--muted);">→</span>
-        <input type="date" id="ev-date-to"   onchange="setDateRange()" style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:Poppins,sans-serif;">
-        <button onclick="clearDateRange()" style="padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕ Reset</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:11px;color:var(--muted);">Filter:</span>
+          <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
+          <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
+          <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
+          <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:var(--muted);white-space:nowrap;">Period:</span>
+          <input type="date" id="ev-date-from" onchange="setDateRange()" placeholder="From"
+            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:130px;">
+          <span style="font-size:11px;color:var(--muted);">→</span>
+          <input type="date" id="ev-date-to" onchange="setDateRange()" placeholder="To"
+            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:130px;">
+          <button onclick="clearDateRange()" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
+        </div>
       </div>`;
     modeDiv.after(fRow);
   })();
@@ -3768,11 +3772,11 @@ function setStatsMode(mode) {
 function setDateRange() {
   _taDateFrom = document.getElementById('ev-date-from')?.value || '';
   _taDateTo   = document.getElementById('ev-date-to')?.value   || '';
-  // Highlight inputs if active
+  // Highlight inputs when active
   ['ev-date-from','ev-date-to'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
-    el.style.borderColor = (el.value) ? '#39c3d4' : 'var(--border)';
-    el.style.color = (el.value) ? '#39c3d4' : 'var(--text)';
+    el.style.borderColor = el.value ? '#39c3d4' : 'var(--border)';
+    el.style.color       = el.value ? '#39c3d4' : 'var(--muted)';
   });
   renderTrickAnalytics();
 }
