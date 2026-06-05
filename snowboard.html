@@ -1780,17 +1780,17 @@ function renderDBRankings() {
     return null;
   }
   // Also normalize rotation: strip non-numeric suffix for comparison, keep original for display
-  const dirMap = { 'Forward Left': {}, 'Forward Right': {}, 'Switch Left': {}, 'Switch Right': {} };
+  const dirMap = { 'Frontside': {}, 'Backside': {}, 'Cab': {}, 'Switch Backside': {} };
   // Only include standort entries with status 'mastered' in rotation ranking
   allForRot.filter(t => t.drehrichtung && t.rotation && t.athlet && (t._quelle === 'session' || t.status === 'mastered')).forEach(t => {
     const dir = normalizeDir(t.drehrichtung);
     if (!dir) return;
     const curDeg  = extractDeg(t.rotation);
-    const prevDeg = extractDeg(dirMap[dir][t.athlet]);
-    if (curDeg > prevDeg) dirMap[dir][t.athlet] = String(curDeg); // store clean number
+    const prevDeg = extractDeg(dirMap[dir]?.[t.athlet]);
+    if (curDeg > prevDeg) dirMap[dir][t.athlet] = String(curDeg);
   });
   const rotOrder = ['180','270','360','450','540','630','720','810','900','1080'];
-  const dirColors = { 'Forward Left':'#3b82f6','Forward Right':'#06b6d4','Switch Left':'#a78bfa','Switch Right':'#f59e0b' };
+  const dirColors = { 'Frontside':'#39c3d4','Backside':'#f59e0b','Cab':'#a78bfa','Switch Backside':'#3b82f6' };
   document.getElementById('rank-rotation').innerHTML = Object.entries(dirMap).map(([dir, athMap]) => {
     const entries = Object.entries(athMap).sort((a,b) => extractDeg(b[1]) - extractDeg(a[1]));
     const col = dirColors[dir] || '#3b82f6';
@@ -1805,25 +1805,24 @@ function renderDBRankings() {
   }).join('');
 
   // ── 3. Direction Balance per Athlete (all 4 directions) ──
-  const DIRS4 = ['Frontside','Backside','Cab','Switch Backside']; // Forward/Switch excluded from balance chart
-  const DIR4_COLORS = { 'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b' };
+  const DIRS4 = ['Frontside','Backside','Cab','Switch Backside'];
+  const DIR4_COLORS = { 'Frontside':'#39c3d4','Backside':'#f59e0b','Cab':'#a78bfa','Switch Backside':'#3b82f6' };
   const balMap = {};
 
   function dirTo4(t) {
-    // Parse from trickaufbau first (new session format)
     const tb = t.trickaufbau || '';
-    const fromTb = ['Switch Right','Switch Left','Right','Left'].find(d => tb.startsWith(d+' ') || tb.startsWith(d+' —')) || null;
+    const fromTb = ['Switch Backside','Frontside','Backside','Cab'].find(d => tb.startsWith(d+' ') || tb.startsWith(d+' —')) || null;
     const raw = fromTb || t.drehrichtung || '';
     const s = raw.trim();
+    if (s === 'Switch Backside') return 'Switch Backside';
     if (s === 'Frontside') return 'Frontside';
     if (s === 'Backside') return 'Backside';
     if (s === 'Cab') return 'Cab';
-    if (s === 'Switch Backside') return 'Switch Backside';
     return null;
   }
 
   allForRot.filter(t => t.athlet && (t._quelle === 'session' || t.status === 'mastered')).forEach(t => {
-    if (!balMap[t.athlet]) balMap[t.athlet] = {'Left':0,'Right':0,'Switch Left':0,'Switch Right':0};
+    if (!balMap[t.athlet]) balMap[t.athlet] = {'Frontside':0,'Backside':0,'Cab':0,'Switch Backside':0};
     const dir = dirTo4(t);
     if (dir) balMap[t.athlet][dir]++;
   });
