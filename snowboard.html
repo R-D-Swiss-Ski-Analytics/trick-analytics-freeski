@@ -2801,7 +2801,6 @@ async function logAttempt(name, result) {
 function deleteSessLogEntry(idx) {
   const e = sessLog[idx];
   if (!e) return;
-  // Undo stats
   const d = sessAthleteData[e.name];
   if (d) {
     d.stats.attempts = Math.max(0, d.stats.attempts-1);
@@ -2814,6 +2813,24 @@ function deleteSessLogEntry(idx) {
   if (e.dbId) db.from('tricks').delete().eq('id', e.dbId).then(()=>{});
 }
 
+function editSbLogEntry(idx) {
+  const e = sessLog[idx];
+  if (!e) return;
+  if (e.dbId) db.from('tricks').delete().eq('id', e.dbId).then(()=>{});
+  const d = sessAthleteData[e.name];
+  if (d) {
+    d.stats.attempts = Math.max(0, d.stats.attempts-1);
+    if (e.result!=='miss') d.stats.landed = Math.max(0, d.stats.landed-1);
+    if (e.result==='perfect') d.stats.perfect = Math.max(0, d.stats.perfect-1);
+    if (e.trick) d.currentTrick = e.trick;
+  }
+  sessLog.splice(idx, 1);
+  sessActiveSbAthlete = e.name;
+  showToast('Edit mode — re-rate the attempt for ' + shortName(e.name), 'success');
+  renderLiveSession();
+  renderSessionLog();
+}
+
 function renderSessionLog() {
   const el = document.getElementById('sess-log');
   if (!el) return;
@@ -2821,12 +2838,13 @@ function renderSessionLog() {
   el.innerHTML = sessLog.slice(0,30).map((e,i)=>{
     const icon = e.result==='miss'?'✗':e.result==='landed'?'✓':'⭐';
     const c = e.result==='miss'?'#e2001a':e.result==='landed'?'#2d8a4e':'#39c3d4';
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;">
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;">
       <span style="color:${c};font-weight:800;font-size:15px;min-width:16px;">${icon}</span>
-      <span style="color:#39c3d4;font-weight:600;min-width:65px;">${shortName(e.name)}</span>
-      <span style="flex:1;color:var(--text);">${normSbTrick(e.trick||'—')}</span>
+      <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
+      <span style="flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${normSbTrick(e.trick||'—')}</span>
       <span style="color:var(--muted);font-size:11px;">${e.time}</span>
-      ${i===0?`<button onclick="deleteSessLogEntry(0)" style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;">🗑</button>`:''}
+      <button onclick="editSbLogEntry(${i})" title="Edit" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">✏️</button>
+      ${i===0?`<button onclick="deleteSessLogEntry(0)" style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;flex-shrink:0;">🗑</button>`:''}
     </div>`;
   }).join('');
 }
