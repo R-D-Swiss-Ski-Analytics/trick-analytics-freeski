@@ -3097,6 +3097,22 @@ async function loadEntwicklung() {
     </div>
     <div id="ev-raw-wrap" style="margin-top:16px;"></div>`;
 
+  // inject type filter row (not in static HTML, only in dynamic)
+  (() => {
+    const modeDiv = document.querySelector('#ev-mode-trick')?.parentElement;
+    if (!modeDiv || document.getElementById('ev-type-filter')) return;
+    const fRow = document.createElement('div');
+    fRow.id = 'ev-type-filter';
+    fRow.style.cssText = 'display:none;gap:6px;flex-wrap:wrap;margin-bottom:10px;';
+    fRow.innerHTML = `
+      <span style="font-size:11px;color:var(--muted);align-self:center;margin-right:2px;">Filter:</span>
+      <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
+      <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
+      <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Jump</button>
+      <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>`;
+    modeDiv.after(fRow);
+  })();
+
   // ── Normalise standort entries to same shape as tricks
   // standort has: drehrichtung, rotation, achse, grab, flips, disziplin, status
   // We tag each entry with its source
@@ -3393,6 +3409,7 @@ async function loadEntwicklung() {
 
 // ── TRICK ANALYTICS ──────────────────────────────────────────────────
 let _taData = [];
+let _taTypeFilter = ''; // '', 'Landing Bag', 'Jump On-Snow', 'Big Air Competition'
 
 function initTrickAnalytics(tricks) {
   _taData = tricks.filter(t => t.trickaufbau);
@@ -3728,9 +3745,25 @@ function setStatsMode(mode) {
   // Show/hide dropdowns
   if(trickSel) trickSel.style.display = mode==='trick' ? '' : 'none';
   if(dateSel)  dateSel.style.display  = mode==='session' ? '' : 'none';
+  // Show/hide type filter (not for session mode)
+  const fRow = document.getElementById('ev-type-filter');
+  if(fRow) fRow.style.display = mode==='session' ? 'none' : 'flex';
   // Reset values when switching mode
   if(mode!=='trick'  && trickSel) trickSel.value='';
   if(mode!=='session' && dateSel)  dateSel.value='';
+  renderTrickAnalytics();
+}
+
+function setTypeFilter(typ) {
+  _taTypeFilter = typ;
+  // Update button styles
+  const map = {'':'ev-tf-all','Landing Bag':'ev-tf-bag','Jump On-Snow':'ev-tf-jump','Big Air Competition':'ev-tf-comp'};
+  Object.values(map).forEach(id=>{
+    const b=document.getElementById(id); if(!b) return;
+    b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
+  });
+  const active = document.getElementById(map[typ]||'ev-tf-all');
+  if(active){active.style.background='rgba(57,195,212,0.2)';active.style.borderColor='#39c3d4';active.style.color='#39c3d4';}
   renderTrickAnalytics();
 }
 
@@ -3743,6 +3776,10 @@ function renderTrickAnalytics() {
   const sel = document.getElementById('ev-trick-sel');
   const dateSel = document.getElementById('ev-date-sel');
   const chosen = sel ? sel.value : '';
+  // Apply session-type filter (only for trick/overall views, not session view)
+  const baseData = (_taTypeFilter && dateSel?.style.display==='none')
+    ? _taData.filter(t => t.typ === _taTypeFilter)
+    : _taData;
   const dateKey = dateSel ? dateSel.value : '';
 
   // Show nothing until selection is made (for trick and session modes)
@@ -3851,7 +3888,7 @@ function renderTrickAnalytics() {
   }
 
   // ── VIEW 1 & 2: Trend chart (all tricks or specific trick) ─────────────
-  const chartData = chosen ? _taData.filter(t=>t.trickaufbau===chosen) : _taData;
+  const chartData = chosen ? baseData.filter(t=>t.trickaufbau===chosen) : baseData;
   if (!chartData.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No session data yet.</div>'; return; }
 
   // Build per-date stats
@@ -3990,10 +4027,11 @@ function renderTrickAnalytics() {
   if(!chosen && ovDirTotal>0) requestAnimationFrame(()=>drawSessionDirRadar(pieId, ovDirCntFinal, OV_DIRS, OV_DIR_COL));
 
   // Raw entries: filter by chosen trick or show all
+  const filterLabel = _taTypeFilter ? _taTypeFilter : 'all types';
   if (chosen) {
-    renderRawEntries(chartData, chosen.length > 40 ? chosen.slice(0,40)+'…' : chosen);
+    renderRawEntries(chartData, (chosen.length > 40 ? chosen.slice(0,40)+'…' : chosen) + (filterLabel!=='all types' ? ' · '+filterLabel : ''));
   } else {
-    renderRawEntries(_taData, 'all entries');
+    renderRawEntries(baseData, filterLabel);
   }
 }
 
