@@ -2790,15 +2790,15 @@ function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
   if (!canvas) return;
   const total = dirs.reduce((s,d)=>s+dirCnt[d].att,0) || 1;
   const dpr = window.devicePixelRatio || 1;
-  const size = Math.min((canvas.parentElement?.offsetWidth||280)-16, 260);
+  const size = 160;
   canvas.style.width = size+'px'; canvas.style.height = size+'px';
   canvas.width = size*dpr; canvas.height = size*dpr;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr,dpr);
-  const W=size, H=size, cx=W/2, cy=H/2-10, r=Math.min(W,H)/2-52;
-  ctx.clearRect(0,0,W,H);
+  const cx=size/2, cy=size/2, r=size/2-4;
+  ctx.clearRect(0,0,size,size);
 
-  // Draw pie slices — based on attempts
+  // Pie slices only — legend is HTML
   let startAngle = -Math.PI/2;
   dirs.forEach(d=>{
     const slice = dirCnt[d].att/total * 2*Math.PI;
@@ -2807,36 +2807,28 @@ function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
     ctx.moveTo(cx,cy);
     ctx.arc(cx,cy,r,startAngle,startAngle+slice);
     ctx.closePath();
-    ctx.fillStyle=dirColors[d];
-    ctx.fill();
-    ctx.strokeStyle='#0b1929';
-    ctx.lineWidth=2;
-    ctx.stroke();
-    // Percentage inside slice
+    ctx.fillStyle=dirColors[d]; ctx.fill();
+    ctx.strokeStyle='#0b1929'; ctx.lineWidth=2; ctx.stroke();
     const pct = Math.round(dirCnt[d].att/total*100);
-    if(pct>=12){
+    if(pct>=10){
       const midA = startAngle+slice/2;
-      ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.font='bold 13px Poppins,sans-serif';ctx.fillStyle='rgba(255,255,255,0.95)';
-      ctx.fillText(pct+'%', cx+Math.cos(midA)*r*0.62, cy+Math.sin(midA)*r*0.62);
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.font='bold 12px Poppins,sans-serif'; ctx.fillStyle='rgba(255,255,255,0.95)';
+      ctx.fillText(pct+'%', cx+Math.cos(midA)*r*0.63, cy+Math.sin(midA)*r*0.63);
     }
     startAngle += slice;
   });
+}
 
-  // Legend below
-  const active = dirs.filter(d=>dirCnt[d].att>0);
-  const rowH = 18, legendTop = cy+r+12;
-  const cols = active.length <= 2 ? 1 : 2;
-  const colW = W/cols;
-  active.forEach((d,i)=>{
-    const col=i%cols, row=Math.floor(i/cols);
-    const lx=col*colW+10, ly=legendTop+row*rowH;
-    ctx.fillStyle=dirColors[d];
-    ctx.fillRect(lx,ly+2,10,10);
-    ctx.textAlign='left';ctx.textBaseline='top';
-    ctx.font='10px Poppins,sans-serif';ctx.fillStyle='#e8edf2';
-    ctx.fillText(d+' — '+dirCnt[d].tricks+' trick'+(dirCnt[d].tricks!==1?'s':'')+', '+dirCnt[d].att+' att.', lx+14, ly+2);
-  });
+function sessionDirLegendHtml(dirCnt, dirs, dirColors) {
+  return dirs.filter(d=>dirCnt[d].att>0).map(d=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div style="width:12px;height:12px;border-radius:3px;background:${dirColors[d]};flex-shrink:0;"></div>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);">${d}</div>
+        <div style="font-size:11px;color:var(--muted);">${dirCnt[d].tricks} trick${dirCnt[d].tricks!==1?'s':''} &middot; ${dirCnt[d].att} att.</div>
+      </div>
+    </div>`).join('');
 }
 
 function renderStandort() {
@@ -3790,8 +3782,11 @@ function renderTrickAnalytics() {
       `<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">📅 ${label} — ${sd.length} attempts, ${Object.keys(tmap).length} tricks</div>` +
       (radarTotal > 0 ? `
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
-          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Direction Distribution</div>
-          <canvas id="sess-dir-radar" style="width:100%;max-width:300px;display:block;margin:0 auto;"></canvas>
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
+          <div style="display:flex;align-items:center;gap:20px;">
+            <div style="flex:1;">${sessionDirLegendHtml(dirCnt,SESS_DIRS,SESS_DIR_COL)}</div>
+            <canvas id="sess-dir-radar" style="flex-shrink:0;"></canvas>
+          </div>
         </div>` : '') +
       cardsHtml;
 
@@ -3868,8 +3863,11 @@ function renderTrickAnalytics() {
   el.innerHTML = statsHtml + legend + `<canvas id="${cid}" style="width:100%;"></canvas>` +
     (ovDirTotal>0 ? `
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px;">
-        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Direction Distribution</div>
-        <canvas id="${pieId}" style="width:100%;max-width:300px;display:block;margin:0 auto;"></canvas>
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
+        <div style="display:flex;align-items:center;gap:20px;">
+          <div style="flex:1;">${sessionDirLegendHtml(ovDirCntFinal,OV_DIRS,OV_DIR_COL)}</div>
+          <canvas id="${pieId}" style="flex-shrink:0;"></canvas>
+        </div>
       </div>` : '');
 
   requestAnimationFrame(()=>{
