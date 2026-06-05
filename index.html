@@ -3775,8 +3775,9 @@ function renderTrickAnalytics() {
 
     el.innerHTML =
       `<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">📅 ${label} — ${sd.length} attempts, ${Object.keys(tmap).length} tricks</div>` +
+      cardsHtml +
       (radarTotal > 0 ? `
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:8px;">
           <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
           <div style="display:flex;align-items:center;justify-content:center;gap:32px;">
             <div>${sessionDirLegendHtml(dirCnt,SESS_DIRS,SESS_DIR_COL,radarTotal)}</div>
@@ -3784,8 +3785,7 @@ function renderTrickAnalytics() {
               <canvas id="sess-dir-radar" style="display:block;width:160px;height:160px;"></canvas>
             </div>
           </div>
-        </div>` : '') +
-      cardsHtml;
+        </div>` : '');
 
     if (radarTotal > 0) requestAnimationFrame(() => drawSessionDirRadar('sess-dir-radar', dirCnt, SESS_DIRS, SESS_DIR_COL));
     return;
