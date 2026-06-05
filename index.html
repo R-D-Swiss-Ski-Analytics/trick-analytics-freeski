@@ -2768,14 +2768,17 @@ function renderSbDirRadar() {
   ctx.clearRect(0,0,W,H);
   const angles = DIRS.map((_,i)=>i*2*Math.PI/4 - Math.PI/4);
 
-  // Grid
+  // Grid — outer fill first, then rings
+  ctx.beginPath();
+  angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.closePath();ctx.fillStyle='rgba(57,195,212,0.07)';ctx.fill();
+
   [0.25,0.5,0.75,1].forEach(f=>{
     ctx.beginPath();
     angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*f,y=cy+Math.sin(a)*r*f;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;ctx.stroke();
-    ctx.fillStyle='rgba(10,12,15,0.25)';ctx.fill();
+    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();
   });
-  angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;ctx.stroke();});
+  angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();});
 
   // Goals polygon (orange dashed)
   if(goals.length){
