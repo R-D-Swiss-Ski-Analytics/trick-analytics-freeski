@@ -4785,15 +4785,17 @@ function renderSbSessionPerformance() {
           return `<div style="flex:1;min-width:200px;">
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${DIR_COL[d]};margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid ${DIR_COL[d]}33;">${d}</div>
             ${entries.length ? entries.map(([trick, s]) => {
-              const landPct = s.att ? Math.round(s.land/s.att*100) : 0;
-              const st = sbPerfStatus(landPct);
+              const landPct    = s.att ? Math.round(s.land/s.att*100) : 0;
+              const landedOnly = s.land - s.stomped;
+              const st  = sbPerfStatus(landPct);
               const colL = landPct>=70?'#2d8a4e':landPct>=50?'#f59e0b':'#e2001a';
               return `<div style="background:${bkg[st.icon]};border:1px solid ${brd[st.icon]};border-radius:8px;padding:6px 10px;margin-bottom:5px;">
                 <div style="font-size:12px;color:var(--text);">${st.icon} ${normSbTrick(trick)}</div>
-                <div style="display:flex;gap:10px;margin-top:4px;font-size:11px;font-weight:700;">
-                  <span style="color:${colL};">${landPct}% landed</span>
-                  ${s.stomped>0?`<span style="color:#39c3d4;font-weight:400;">⭐ ${s.stomped}× stomped</span>`:''}
-                  <span style="color:var(--muted);font-weight:400;">${s.att} att.</span>
+                <div style="display:flex;gap:8px;margin-top:4px;font-size:11px;font-weight:700;flex-wrap:wrap;">
+                  <span style="color:${colL};">${landPct}%</span>
+                  <span style="color:#2d8a4e;">✓${landedOnly}</span>
+                  <span style="color:#39c3d4;">⭐${s.stomped}</span>
+                  <span style="color:var(--muted);font-weight:400;">/ ${s.att}</span>
                 </div>
               </div>`;
             }).join('') : `<div style="color:var(--muted);font-size:11px;padding:6px 0;">—</div>`}
