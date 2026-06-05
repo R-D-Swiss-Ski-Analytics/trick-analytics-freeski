@@ -1258,7 +1258,7 @@
       <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">📋 Team Overview — Assessment</div>
       <div style="display:flex;gap:8px;">
         <button onclick="realityCheck()" style="padding:7px 14px;border-radius:8px;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
-        <button class="btn-secondary" onclick="downloadRanking()" style="white-space:nowrap;">⬇ Export</button>
+        
       </div>
     </div>
     <div style="margin-bottom:20px;">
@@ -1315,7 +1315,7 @@
           <option value="standort">Nur Assessment</option>
         </select>
         <button class="btn-secondary" onclick="openTeamPdfReport()" style="white-space:nowrap;">📄 Team Report</button>
-        <button class="btn-secondary" onclick="downloadExcel()" style="white-space:nowrap;">⬇ CSV</button>
+        
       </div>
     </div>
     <div class="table-wrap">
@@ -2400,28 +2400,23 @@ function renderDBRankings() {
 }
 
 function openTeamPdfReport() {
-  if (!dbAllTricks || !dbAllTricks.length) { showToast('No data to export', 'error'); return; }
   const filterAthlet = document.getElementById('db-filter-athlet')?.value || '';
-  const data = filterAthlet ? dbAllTricks.filter(t=>t.athlet===filterAthlet) : dbAllTricks;
-  if (!data.length) { showToast('No data to export', 'error'); return; }
+  const sessData  = filterAthlet ? (dbAllTricks||[]).filter(t=>t.athlet===filterAthlet) : (dbAllTricks||[]);
+  const assData   = filterAthlet ? (dbAllStandort||[]).filter(t=>t.athlet===filterAthlet) : (dbAllStandort||[]);
+  if (!sessData.length && !assData.length) { showToast('No data to export', 'error'); return; }
 
   function fmtDate(d) { if(!d) return '—'; const p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); }
-  function pr(k,t){ const m=(t.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
 
-  // Group by athlete
-  const byAthlet = {};
-  data.forEach(t => {
-    if (!t.athlet) return;
-    if (!byAthlet[t.athlet]) byAthlet[t.athlet] = [];
-    byAthlet[t.athlet].push(t);
-  });
+  // Collect all athletes from both sources
+  const athletes = [...new Set([...sessData.map(t=>t.athlet), ...assData.map(t=>t.athlet)])].filter(Boolean).sort();
 
-  const athleteSections = Object.entries(byAthlet).sort(([a],[b])=>a.localeCompare(b)).map(([athlet, tricks]) => {
-    const totalAtt = tricks.length;
+  const athleteSections = athletes.map(athlet => {
+    // ── Session data ──
+    const tricks = sessData.filter(t=>t.athlet===athlet);
+    const totalAtt  = tricks.length;
     const totalLand = tricks.filter(t=>t.gelandet==='Yes').length;
-    const landPct = totalAtt ? Math.round(totalLand/totalAtt*100) : 0;
+    const landPct   = totalAtt ? Math.round(totalLand/totalAtt*100) : 0;
 
-    // Group by trick
     const byTrick = {};
     tricks.forEach(t => {
       const key = t.trickaufbau||'—';
@@ -2431,19 +2426,27 @@ function openTeamPdfReport() {
       if(t.datum) byTrick[key].dates.add(fmtDate(t.datum));
       if(t.typ) byTrick[key].type.add(t.typ);
     });
+    const sessRows = Object.entries(byTrick).sort((a,b)=>b[1].att-a[1].att).map(([trick,s]) => {
+      const lp = s.att ? Math.round(s.land/s.att*100) : 0;
+      const typeStr = [...s.type].map(t=>({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[t]||t)).join(', ');
+      return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center">${s.land}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#2d8a4e':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:11px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
+    }).join('');
 
-    const trickRows = Object.entries(byTrick)
-      .sort((a,b)=>b[1].att-a[1].att)
-      .map(([trick,s]) => {
-        const lp = s.att ? Math.round(s.land/s.att*100) : 0;
-        const typeStr = [...s.type].map(t=>({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[t]||t)).join(', ');
-        return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center">${s.land}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#2d8a4e':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:11px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
-      }).join('');
+    // ── Assessment data ──
+    const mastered = assData.filter(t=>t.athlet===athlet&&t.status==='mastered');
+    const goals    = assData.filter(t=>t.athlet===athlet&&t.status==='goal');
+    const mastRows = mastered.map(e=>`<tr><td>${e.trick_label||'—'}</td><td>${e.disziplin||'—'}</td><td style="color:#2d8a4e;font-weight:600">Mastered</td></tr>`).join('');
+    const goalRows = goals.map(e=>`<tr><td>${e.trick_label||'—'}</td><td>${e.disziplin||'—'}</td><td style="color:#f59e0b;font-weight:600">Goal</td></tr>`).join('');
 
     return `<div class="ath-block">
       <div class="ath-name">${athlet}</div>
+      ${totalAtt>0?`
+      <div class="section-title">Session Performance</div>
       <div class="ath-sum">${totalAtt} attempts &nbsp;·&nbsp; ${totalLand} landed &nbsp;·&nbsp; ${landPct}%</div>
-      <table><thead><tr><th>Trick</th><th>Type</th><th>Att.</th><th>Landed</th><th>Rate</th><th>Sessions</th></tr></thead><tbody>${trickRows}</tbody></table>
+      <table><thead><tr><th>Trick</th><th>Type</th><th>Att.</th><th>Landed</th><th>Rate</th><th>Sessions</th></tr></thead><tbody>${sessRows||'<tr><td colspan="6" style="color:#aaa">No session data</td></tr>'}</tbody></table>` : ''}
+      ${(mastRows||goalRows)?`
+      <div class="section-title">Assessment</div>
+      <table><thead><tr><th>Trick</th><th>Discipline</th><th>Status</th></tr></thead><tbody>${mastRows}${goalRows}</tbody></table>` : ''}
     </div>`;
   }).join('');
 
@@ -2463,6 +2466,7 @@ function openTeamPdfReport() {
   table{width:100%;border-collapse:collapse;}
   th{background:#f0f0f0;padding:6px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#666;}
   td{padding:6px 10px;border-top:1px solid #eee;font-size:12px;}
+  .section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#777;padding:8px 12px 4px;background:#fafafa;border-top:1px solid #e0e0e0;border-bottom:1px solid #eee;}
   footer{margin-top:28px;border-top:1px solid #ddd;padding-top:10px;font-size:11px;color:#aaa;display:flex;justify-content:space-between;}
   @media print{.print-btn{display:none;} body{padding:16px;}}
 </style></head><body>
