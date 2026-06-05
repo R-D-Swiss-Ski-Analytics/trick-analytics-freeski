@@ -1821,7 +1821,6 @@ function renderSessionPerformance() {
           <tr style="border-bottom:1px solid var(--border);">
             <td style="padding:14px 12px;vertical-align:middle;">
               <div style="font-size:14px;font-weight:700;color:var(--text);">${medal(i)} ${shortName(athlet)}</div>
-              <div style="font-size:10px;color:var(--muted);margin-top:2px;">${totalAtt} attempts</div>
             </td>
             ${DIRS.map(d => {
               const b = dirs[d];
@@ -1829,17 +1828,15 @@ function renderSessionPerformance() {
               const st = status(b.landPct, b.avgQ);
               const colL = b.landPct>=70?'#2d8a4e':b.landPct>=50?'#f59e0b':'#e2001a';
               const colQ = b.avgQ>=70?'#2d8a4e':b.avgQ>=50?'#f59e0b':'#e2001a';
-              const tip = `${b.trick} | ${b.att} attempts`;
-              return `<td style="${cellBase}cursor:default;"
-                onmouseenter="showPerfTip(event,\`${tip.replace(/`/g,"'")}\`)"
-                onmouseleave="hidePerfTip()">
+              return `<td style="${cellBase}">
                 <div style="font-size:20px;line-height:1;">${st.icon}</div>
                 <div style="font-size:14px;font-weight:800;color:${DIR_COL[d]};margin-top:4px;">${b.rot||'?'}°</div>
                 <div style="display:flex;justify-content:center;gap:6px;margin-top:5px;font-size:10px;font-weight:700;">
-                  <span style="color:${colL};" title="Landing rate">${b.landPct}%↓</span>
+                  <span style="color:${colL};">${b.landPct}%↓</span>
                   <span style="color:var(--muted);">·</span>
-                  <span style="color:${colQ};" title="Quality">${b.avgQ}%★</span>
+                  <span style="color:${colQ};">${b.avgQ}%★</span>
                 </div>
+                <div style="font-size:10px;color:var(--muted);margin-top:3px;">${b.att} att.</div>
               </td>`;
             }).join('')}
           </tr>`).join('')}
