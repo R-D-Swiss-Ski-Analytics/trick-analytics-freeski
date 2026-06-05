@@ -2018,9 +2018,9 @@ function renderSessionPerformance() {
   const txt  = {'🟢':'#2d8a4e','🟡':'#f59e0b','🔴':'#e2001a'};
 
   el.innerHTML = `
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
-      All recorded tricks per athlete, grouped by direction &nbsp;·&nbsp;
-      🟢 land ≥70% <b>and</b> quality ≥70% &nbsp;&nbsp; 🟡 one ≥50% &nbsp;&nbsp; 🔴 both &lt;50%
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;display:flex;flex-direction:column;gap:3px;">
+      <span>All recorded tricks per athlete, grouped by direction</span>
+      <span>🟢 land ≥70% <b>and</b> quality ≥70% &nbsp; 🟡 one ≥50% &nbsp; 🔴 both &lt;50%</span>
     </div>
     <div>
       ${athList.map((athlet, i) => {
@@ -2260,30 +2260,23 @@ function renderSessionReports() {
   const el = document.getElementById('session-reports-list');
   if (!el) return;
   if (!dbSessionReports.length) { el.innerHTML = '<div style="color:var(--muted);padding:12px;font-size:13px;">No session reports yet.</div>'; return; }
-  el.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr>
-      <th>Date</th><th>Type</th><th>Athletes</th><th>Duration</th><th>Conditions</th><th></th>
-    </tr></thead>
-    <tbody>
-      ${dbSessionReports.map(r => {
-        const dateStr = r.datum ? (() => { const p=r.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
-        const condStars = r.conditions ? '★'.repeat(r.conditions)+'☆'.repeat(5-r.conditions) : '—';
-        const athStr = Array.isArray(r.athletes) ? r.athletes.map(a=>shortName(a)).join(', ') : '';
-        const durStr = r.duration_min ? r.duration_min+'min' : '—';
-        return `<tr>
-          <td>${dateStr}</td>
-          <td>${r.session_type||'—'}</td>
-          <td style="font-size:12px;">${athStr}</td>
-          <td>${durStr}</td>
-          <td style="color:#f59e0b;">${condStars}</td>
-          <td style="display:flex;gap:6px;">
-            <button onclick="openReportPrint(window._srReports[${dbSessionReports.indexOf(r)}])" style="padding:5px 12px;border-radius:6px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">View</button>
-            <button onclick="deleteSessionReport(${r.id})" style="padding:5px 8px;border-radius:6px;background:none;border:1px solid #e2001a33;color:#e2001a;font-size:13px;cursor:pointer;">🗑</button>
-          </td>
-        </tr>`;
-      }).join('')}
-    </tbody>
-  </table></div>`;
+  el.innerHTML = dbSessionReports.map((r,idx) => {
+    const dateStr = r.datum ? (() => { const p=r.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+    const condStars = r.conditions ? '★'.repeat(r.conditions)+'☆'.repeat(5-r.conditions) : '';
+    const athStr = Array.isArray(r.athletes) ? r.athletes.map(a=>shortName(a)).join(', ') : '';
+    const durStr = r.duration_min ? (r.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
+    const typeShort = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[r.session_type]||r.session_type||'—';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);">${dateStr} &nbsp;<span style="color:var(--muted);font-weight:400;font-size:12px;">${typeShort} · ${durStr}</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${athStr}${condStars?' · '+condStars:''}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button onclick="openReportPrint(window._srReports[${idx}])" style="padding:6px 12px;border-radius:6px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">View</button>
+        <button onclick="deleteSessionReport(${r.id})" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a33;color:#e2001a;font-size:13px;cursor:pointer;">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
   window._srReports = dbSessionReports;
 }
 
