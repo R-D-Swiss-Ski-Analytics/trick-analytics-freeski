@@ -2115,6 +2115,14 @@ async function loadDB() {
   renderDBTable();
 }
 
+async function deleteSessionReport(id) {
+  if (!confirm('Delete this session report? This cannot be undone.')) return;
+  const {error} = await db.from('session_reports').delete().eq('id', id);
+  if (error) { showToast('Error: '+error.message, 'error'); return; }
+  showToast('Session report deleted', 'success');
+  loadDB();
+}
+
 function renderSessionReports() {
   const el = document.getElementById('session-reports-list');
   if (!el) return;
@@ -2135,7 +2143,10 @@ function renderSessionReports() {
           <td style="font-size:12px;">${athStr}</td>
           <td>${durStr}</td>
           <td style="color:#f59e0b;">${condStars}</td>
-          <td><button onclick="openReportPrint(window._srReports[${dbSessionReports.indexOf(r)}])" style="padding:5px 12px;border-radius:6px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">View</button></td>
+          <td style="display:flex;gap:6px;">
+            <button onclick="openReportPrint(window._srReports[${dbSessionReports.indexOf(r)}])" style="padding:5px 12px;border-radius:6px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">View</button>
+            <button onclick="deleteSessionReport(${r.id})" style="padding:5px 8px;border-radius:6px;background:none;border:1px solid #e2001a33;color:#e2001a;font-size:13px;cursor:pointer;">🗑</button>
+          </td>
         </tr>`;
       }).join('')}
     </tbody>
@@ -3011,6 +3022,7 @@ function sessPickTrick(name, trick, btn) {
 
 async function logAttempt(name, result) {
   const d = sessAthleteData[name];
+  if (!d.currentTrick) { showToast('Please select a trick first', 'error'); return; }
   d.stats.attempts++;
   if (result==='landed') d.stats.landed++;
   if (result==='perfect') d.stats.perfect++;
@@ -3165,7 +3177,7 @@ function endSession() {
     </div>
     <div style="display:flex;gap:10px;margin-top:20px;">
       <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
-      <button onclick="document.getElementById('sess-report-modal').remove();resetSession();" style="padding:13px 18px;background:#112236;border:1px solid #1a3450;color:#6b8299;border-radius:8px;font-family:'Poppins',sans-serif;font-size:14px;cursor:pointer;">Skip</button>
+      
     </div>
   </div>`;
   document.body.appendChild(modal);

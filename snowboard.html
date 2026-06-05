@@ -857,33 +857,6 @@
       </div>
     </div>
 
-    <!-- Row 2: Achsen + Grabs -->
-    <div class="chart-grid">
-      <div class="chart-card">
-        <div class="chart-title">⚙️ Achsen</div>
-        <div id="bars-achse"></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">✋ Grabs</div>
-        <div id="bars-grab"></div>
-      </div>
-    </div>
-
-    <!-- Row 5: Repertoire Development Over Time -->
-    <div class="chart-grid single">
-      <div class="chart-card">
-        <div class="chart-title">📅 Repertoire Development Over Time <span style="font-size:11px;color:var(--muted);font-family:'Poppins',sans-serif;letter-spacing:0;">(Assessment — mastered tricks only)</span></div>
-        <div id="ev-verlauf"></div>
-      </div>
-    </div>
-
-    <!-- Row 6: Trick + Grab Session Stats -->
-    <div class="chart-grid single">
-      <div class="chart-card">
-        <div class="chart-title">🎯 Session Stats — Trick &amp; Grab</div>
-        <div id="ev-trick-stats"></div>
-      </div>
-    </div>
 
   </div>
 </div>
@@ -1766,12 +1739,23 @@ function renderSessionReports() {
           <td style="font-size:12px;">${athStr}</td>
           <td>${durStr}</td>
           <td style="color:#f59e0b;">${condStars}</td>
-          <td><button onclick="openReportPrint(window._srReports[${idx}])" style="padding:5px 12px;border-radius:6px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">View</button></td>
+          <td style="display:flex;gap:6px;">
+            <button onclick="openReportPrint(window._srReports[${idx}])" style="padding:5px 12px;border-radius:6px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">View</button>
+            <button onclick="deleteSessionReport(${r.id})" style="padding:5px 8px;border-radius:6px;background:none;border:1px solid #e2001a33;color:#e2001a;font-size:13px;cursor:pointer;">🗑</button>
+          </td>
         </tr>`;
       }).join('')}
     </tbody>
   </table></div>`;
   window._srReports = dbSessionReports;
+}
+
+async function deleteSessionReport(id) {
+  if (!confirm('Delete this session report? This cannot be undone.')) return;
+  const {error} = await db.from('session_reports').delete().eq('id', id);
+  if (error) { showToast('Error: '+error.message, 'error'); return; }
+  showToast('Session report deleted', 'success');
+  loadDB();
 }
 
 function shortName(full) {
@@ -2599,6 +2583,7 @@ function sessPickTrick(name, trick, btn) {
 
 async function logAttempt(name, result) {
   const d = sessAthleteData[name];
+  if (!d.currentTrick) { showToast('Please select a trick first', 'error'); return; }
   d.stats.attempts++;
   if (result==='landed') d.stats.landed++;
   if (result==='perfect') d.stats.perfect++;
@@ -2625,10 +2610,27 @@ async function logAttempt(name, result) {
   }).then(({error})=>{ if(error) console.error('Save error:',error); });
 }
 
+function deleteSessLogEntry(idx) {
+  const e = sessLog[idx];
+  if (!e) return;
+  // Undo stats
+  const d = sessAthleteData[e.name];
+  if (d) {
+    d.stats.attempts = Math.max(0, d.stats.attempts-1);
+    if (e.result!=='miss') d.stats.landed = Math.max(0, d.stats.landed-1);
+    if (e.result==='perfect') d.stats.perfect = Math.max(0, d.stats.perfect-1);
+  }
+  sessLog.splice(idx, 1);
+  renderLiveSession();
+  renderSessionLog();
+  if (e.dbId) db.from('tricks').delete().eq('id', e.dbId).then(()=>{});
+}
+
 function renderSessionLog() {
   const el = document.getElementById('sess-log');
-  if (!sessLog.length) return;
-  el.innerHTML = sessLog.slice(0,30).map(e=>{
+  if (!el) return;
+  if (!sessLog.length) { el.innerHTML=''; return; }
+  el.innerHTML = sessLog.slice(0,30).map((e,i)=>{
     const icon = e.result==='miss'?'✗':e.result==='landed'?'✓':'⭐';
     const c = e.result==='miss'?'#e2001a':e.result==='landed'?'#2d8a4e':'#39c3d4';
     return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;">
@@ -2636,6 +2638,7 @@ function renderSessionLog() {
       <span style="color:#39c3d4;font-weight:600;min-width:65px;">${shortName(e.name)}</span>
       <span style="flex:1;color:var(--text);">${normSbTrick(e.trick||'—')}</span>
       <span style="color:var(--muted);font-size:11px;">${e.time}</span>
+      ${i===0?`<button onclick="deleteSessLogEntry(0)" style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;">🗑</button>`:''}
     </div>`;
   }).join('');
 }
@@ -2684,7 +2687,7 @@ function endSession() {
     </div>
     <div style="display:flex;gap:10px;margin-top:20px;">
       <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
-      <button onclick="document.getElementById('sess-report-modal').remove();resetSession();" style="padding:13px 18px;background:#112236;border:1px solid #1a3450;color:#6b8299;border-radius:8px;font-family:'Poppins',sans-serif;font-size:14px;cursor:pointer;">Skip</button>
+      
     </div>
   </div>`;
   document.body.appendChild(modal);
