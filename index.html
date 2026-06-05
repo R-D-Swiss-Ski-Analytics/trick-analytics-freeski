@@ -1092,7 +1092,7 @@
           <button id="pf-comp" onclick="setPerfFilter('Big Air Competition')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
         </div>
         <select id="pf-season" onchange="onPfSeasonChange()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:Poppins,sans-serif;">
-          <option value="current">Current season (May–Apr)</option>
+          <option value="current">Current season</option>
           <option value="last">Last season</option>
           <option value="all">All time</option>
           <option value="custom">Custom period…</option>
@@ -2038,7 +2038,21 @@ async function applyRealityCheckSelected(flagged, btn) {
   loadDB();
 }
 
+function updateSeasonLabels() {
+  const now = new Date();
+  const yr = now.getFullYear();
+  const mo = now.getMonth() + 1; // 1–12
+  // Season: May–April. If month >= 5, current season started this year.
+  const s = mo >= 5 ? yr : yr - 1;
+  const fmt = (a, b) => `${String(a).slice(2)}/${String(b).slice(2)}`;
+  const sel = document.getElementById('pf-season');
+  if (!sel) return;
+  sel.options[0].text = `Current season ${fmt(s, s+1)}`;
+  sel.options[1].text = `Last season ${fmt(s-1, s)}`;
+}
+
 async function loadDB() {
+  updateSeasonLabels();
   // Show spinners
   ['rank-mastered','rank-rotation','rank-balance'].forEach(id => {
     document.getElementById(id).innerHTML = '<div class="loading"><span class="spinner"></span></div>';
