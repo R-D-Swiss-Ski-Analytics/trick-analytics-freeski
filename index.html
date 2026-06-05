@@ -2791,7 +2791,6 @@ function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
   const total = dirs.reduce((s,d)=>s+dirCnt[d].att,0) || 1;
   const dpr = window.devicePixelRatio || 1;
   const size = 160;
-  canvas.style.width = size+'px'; canvas.style.height = size+'px';
   canvas.width = size*dpr; canvas.height = size*dpr;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr,dpr);
@@ -3785,7 +3784,9 @@ function renderTrickAnalytics() {
           <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
           <div style="display:flex;align-items:center;gap:20px;">
             <div style="flex:1;">${sessionDirLegendHtml(dirCnt,SESS_DIRS,SESS_DIR_COL)}</div>
-            <canvas id="sess-dir-radar" style="width:160px;height:160px;flex-shrink:0;"></canvas>
+            <div style="width:160px;height:160px;flex-shrink:0;min-width:160px;">
+              <canvas id="sess-dir-radar" style="display:block;width:160px;height:160px;"></canvas>
+            </div>
           </div>
         </div>` : '') +
       cardsHtml;
@@ -3866,7 +3867,9 @@ function renderTrickAnalytics() {
         <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
         <div style="display:flex;align-items:center;gap:20px;">
           <div style="flex:1;">${sessionDirLegendHtml(ovDirCntFinal,OV_DIRS,OV_DIR_COL)}</div>
-          <canvas id="${pieId}" style="width:160px;height:160px;flex-shrink:0;"></canvas>
+          <div style="width:160px;height:160px;flex-shrink:0;min-width:160px;">
+            <canvas id="${pieId}" style="display:block;width:160px;height:160px;"></canvas>
+          </div>
         </div>
       </div>` : '');
 
