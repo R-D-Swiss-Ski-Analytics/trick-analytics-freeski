@@ -3785,7 +3785,7 @@ function renderTrickAnalytics() {
           <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
           <div style="display:flex;align-items:center;gap:20px;">
             <div style="flex:1;">${sessionDirLegendHtml(dirCnt,SESS_DIRS,SESS_DIR_COL)}</div>
-            <canvas id="sess-dir-radar" style="flex-shrink:0;"></canvas>
+            <canvas id="sess-dir-radar" style="width:160px;height:160px;flex-shrink:0;"></canvas>
           </div>
         </div>` : '') +
       cardsHtml;
@@ -3866,7 +3866,7 @@ function renderTrickAnalytics() {
         <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
         <div style="display:flex;align-items:center;gap:20px;">
           <div style="flex:1;">${sessionDirLegendHtml(ovDirCntFinal,OV_DIRS,OV_DIR_COL)}</div>
-          <canvas id="${pieId}" style="flex-shrink:0;"></canvas>
+          <canvas id="${pieId}" style="width:160px;height:160px;flex-shrink:0;"></canvas>
         </div>
       </div>` : '');
 
