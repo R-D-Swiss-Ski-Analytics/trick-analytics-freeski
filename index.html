@@ -2724,20 +2724,32 @@ async function loadStandort() {
 function renderSbDirRadar() {
   const wrap = document.getElementById('sb-dir-radar-wrap');
   if (!wrap) return;
+
   const mastered = sbData.filter(e => e.status === 'mastered');
-  if (!mastered.length) { wrap.style.display = 'none'; return; }
+  const goals    = sbData.filter(e => e.status === 'goal');
+  if (!mastered.length && !goals.length) { wrap.style.display = 'none'; return; }
   wrap.style.display = 'block';
 
   const DIRS = ['Left','Right','Switch Left','Switch Right'];
-  const DIR_COLORS = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
-  const counts = {}; DIRS.forEach(d => counts[d] = 0);
-  mastered.forEach(e => {
-    const raw = (e.drehrichtung||'').trim();
-    const d = (raw==='Left'||raw==='Forward Left')?'Left':(raw==='Right'||raw==='Forward Right')?'Right':raw==='Switch Left'?'Switch Left':raw==='Switch Right'?'Switch Right':null;
-    if (d) counts[d]++;
-  });
-  const total = DIRS.reduce((s,d) => s+counts[d], 0) || 1;
-  const vals = DIRS.map(d => counts[d]/total);
+  const getDir = raw => {
+    raw = (raw||'').trim();
+    if(raw==='Left'||raw==='Forward Left') return 'Left';
+    if(raw==='Right'||raw==='Forward Right') return 'Right';
+    if(raw==='Switch Left') return 'Switch Left';
+    if(raw==='Switch Right') return 'Switch Right';
+    return null;
+  };
+
+  const mastC = {}; DIRS.forEach(d => mastC[d] = 0);
+  mastered.forEach(e => { const d=getDir(e.drehrichtung); if(d) mastC[d]++; });
+
+  const goalC = {}; DIRS.forEach(d => goalC[d] = 0);
+  goals.forEach(e => { const d=getDir(e.drehrichtung); if(d) goalC[d]++; });
+
+  const mastTotal = DIRS.reduce((s,d)=>s+mastC[d],0) || 1;
+  const goalTotal = DIRS.reduce((s,d)=>s+goalC[d],0) || 1;
+  const mastVals  = DIRS.map(d => mastC[d]/mastTotal);
+  const goalVals  = DIRS.map(d => goalC[d]/goalTotal);
 
   let canvas = document.getElementById('sb-dir-radar');
   if (!canvas) {
@@ -2748,40 +2760,61 @@ function renderSbDirRadar() {
   }
   const dpr = window.devicePixelRatio || 1;
   const size = Math.min(wrap.querySelector('.card')?.offsetWidth-16 || 420, 420);
-  canvas.style.width = size + 'px'; canvas.style.height = size + 'px';
-  canvas.width = size * dpr; canvas.height = size * dpr;
+  canvas.style.width = size+'px'; canvas.style.height = size+'px';
+  canvas.width = size*dpr; canvas.height = size*dpr;
   const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  const W=size, H=size, cx=W/2, cy=H/2, r=Math.min(W,H)/2-90;
+  ctx.scale(dpr,dpr);
+  const W=size,H=size,cx=W/2,cy=H/2,r=Math.min(W,H)/2-90;
   ctx.clearRect(0,0,W,H);
-  const angles = DIRS.map((_,i) => i*2*Math.PI/4 - Math.PI/4);
+  const angles = DIRS.map((_,i)=>i*2*Math.PI/4 - Math.PI/4);
 
-  [0.25,0.5,0.75,1].forEach(f => {
+  // Grid
+  [0.25,0.5,0.75,1].forEach(f=>{
     ctx.beginPath();
-    angles.forEach((a,i)=>{ const x=cx+Math.cos(a)*r*f, y=cy+Math.sin(a)*r*f; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
-    ctx.closePath(); ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.stroke();
-    ctx.fillStyle='rgba(10,12,15,0.25)'; ctx.fill();
+    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*f,y=cy+Math.sin(a)*r*f;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='rgba(10,12,15,0.25)';ctx.fill();
   });
-  angles.forEach(a=>{ ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r); ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.stroke(); });
+  angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;ctx.stroke();});
 
-  ctx.beginPath();
-  angles.forEach((a,i)=>{ const x=cx+Math.cos(a)*r*vals[i], y=cy+Math.sin(a)*r*vals[i]; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
-  ctx.closePath(); ctx.fillStyle='rgba(245,158,11,0.18)'; ctx.fill();
-  ctx.strokeStyle='#f59e0b'; ctx.lineWidth=2.5; ctx.stroke();
+  // Goals polygon (orange)
+  if(goals.length){
+    ctx.beginPath();
+    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*goalVals[i],y=cy+Math.sin(a)*r*goalVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath();ctx.fillStyle='rgba(245,158,11,0.12)';ctx.fill();
+    ctx.strokeStyle='#f59e0b';ctx.lineWidth=2.5;ctx.setLineDash([6,3]);ctx.stroke();ctx.setLineDash([]);
+  }
 
+  // Mastered polygon (green)
+  if(mastered.length){
+    ctx.beginPath();
+    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*mastVals[i],y=cy+Math.sin(a)*r*mastVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath();ctx.fillStyle='rgba(45,138,78,0.18)';ctx.fill();
+    ctx.strokeStyle='#2d8a4e';ctx.lineWidth=2.5;ctx.stroke();
+  }
+
+  // Labels per axis
   angles.forEach((a,i)=>{
-    const vx=cx+Math.cos(a)*r*vals[i], vy=cy+Math.sin(a)*r*vals[i];
-    ctx.beginPath(); ctx.arc(vx,vy,5,0,2*Math.PI); ctx.fillStyle=DIR_COLORS[DIRS[i]]; ctx.fill();
-    const lx=cx+Math.cos(a)*(r+50), ly=cy+Math.sin(a)*(r+50);
+    const lx=cx+Math.cos(a)*(r+52), ly=cy+Math.sin(a)*(r+52);
     const align=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center';
     ctx.textAlign=align; ctx.textBaseline='middle';
     ctx.font='bold 12px Poppins,sans-serif'; ctx.fillStyle='#e8edf2';
-    ctx.fillText(DIRS[i], lx, ly-11);
-    ctx.font='bold 15px Poppins,sans-serif'; ctx.fillStyle=DIR_COLORS[DIRS[i]];
-    ctx.fillText(counts[DIRS[i]]+' tricks', lx, ly+5);
-    ctx.font='11px Poppins,sans-serif'; ctx.fillStyle='rgba(255,255,255,0.45)';
-    ctx.fillText(Math.round(vals[i]*100)+'%', lx, ly+20);
+    ctx.fillText(DIRS[i], lx, ly-14);
+    ctx.font='bold 13px Poppins,sans-serif'; ctx.fillStyle='#2d8a4e';
+    ctx.fillText('✓ '+mastC[DIRS[i]], lx, ly+2);
+    ctx.font='bold 13px Poppins,sans-serif'; ctx.fillStyle='#f59e0b';
+    ctx.fillText('◎ '+goalC[DIRS[i]], lx, ly+17);
   });
+
+  // Legend
+  const legY = H-18;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='#2d8a4e'; ctx.font='bold 11px Poppins,sans-serif';
+  ctx.fillText('— Mastered', cx-52, legY);
+  ctx.fillStyle='#f59e0b';
+  ctx.setLineDash([5,3]);
+  ctx.fillText('- - Goals', cx+52, legY);
+  ctx.setLineDash([]);
 }
 
 
