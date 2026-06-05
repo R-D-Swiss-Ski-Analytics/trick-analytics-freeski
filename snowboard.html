@@ -2634,8 +2634,8 @@ function renderSbDirRadar() {
   if (!mastered.length && !goals.length) { wrap.style.display='none'; return; }
   wrap.style.display = 'block';
 
-  // Clockwise from top-left: Backside(TL), Frontside(TR), Switch Backside(BR), Cab(BL)
-  const DIRS = ['Frontside','Switch Backside','Cab','Backside'];
+  // Clockwise from top-left: Frontside(TL), Backside(TR), Cab(BR), Switch Backside(BL)
+  const DIRS = ['Backside','Cab','Switch Backside','Frontside'];
   const getDir = raw => {
     const s = (raw||'').trim();
     if(s==='Frontside') return 'Frontside';
