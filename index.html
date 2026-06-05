@@ -1797,27 +1797,47 @@ function renderSessionPerformance() {
     </td>`;
   }
 
+  const borderL = 'border-left:1px solid var(--border);';
+  const cellBase = `text-align:center;padding:14px 8px;vertical-align:middle;${borderL}`;
+
   el.innerHTML = `
-    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
       Best trick per direction (by score) &nbsp;·&nbsp;
-      🟢 land ≥70% <b>and</b> quality ≥70% &nbsp; 🟡 one ≥50% &nbsp; 🔴 both &lt;50% &nbsp;·&nbsp; Hover for details
+      🟢 land ≥70% <b>and</b> quality ≥70% &nbsp;&nbsp; 🟡 one ≥50% &nbsp;&nbsp; 🔴 both &lt;50% &nbsp;·&nbsp; Hover for details
     </div>
-    <div class="table-wrap"><table>
-      <thead><tr>
-        <th>Athlete</th>
-        ${DIRS.map(d=>`<th style="text-align:center;color:${DIR_COL[d]};">${d}</th>`).join('')}
-      </tr></thead>
+    <table style="width:100%;table-layout:fixed;border-collapse:collapse;">
+      <colgroup>
+        <col style="width:22%">
+        <col style="width:19.5%"><col style="width:19.5%"><col style="width:19.5%"><col style="width:19.5%">
+      </colgroup>
+      <thead>
+        <tr style="border-bottom:2px solid var(--border);">
+          <th style="padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);">Athlete</th>
+          ${DIRS.map(d=>`<th style="padding:10px 8px;text-align:center;font-size:12px;font-weight:700;letter-spacing:.04em;color:${DIR_COL[d]};${borderL}">${d}</th>`).join('')}
+        </tr>
+      </thead>
       <tbody>
         ${athletes.map(({athlet, dirs, totalAtt}, i) => `
-          <tr>
-            <td style="white-space:nowrap;vertical-align:middle;">
-              <strong>${medal(i)} ${shortName(athlet)}</strong>
-              <div style="font-size:10px;color:var(--muted);">${totalAtt} att.</div>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:14px 12px;vertical-align:middle;">
+              <div style="font-size:14px;font-weight:700;color:var(--text);">${medal(i)} ${shortName(athlet)}</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px;">${totalAtt} attempts</div>
             </td>
-            ${DIRS.map(d => dirCell(dirs[d], d)).join('')}
+            ${DIRS.map(d => {
+              const b = dirs[d];
+              if (!b) return `<td style="${cellBase}"><span style="color:var(--muted);font-size:20px;">—</span></td>`;
+              const st = status(b.landPct, b.avgQ);
+              const tip = `${b.trick} | ${b.landPct}% landed · ${b.avgQ}% quality · ${b.att} attempts`;
+              return `<td style="${cellBase}cursor:default;"
+                onmouseenter="showPerfTip(event,\`${tip.replace(/`/g,"'")}\`)"
+                onmouseleave="hidePerfTip()">
+                <div style="font-size:22px;line-height:1;">${st.icon}</div>
+                <div style="font-size:13px;font-weight:800;color:${DIR_COL[d]};margin-top:4px;">${b.rot||'?'}°</div>
+              </td>`;
+            }).join('')}
           </tr>`).join('')}
       </tbody>
-    </table></div>`;
+    </table>`;
 }
 
 async function realityCheck() {
