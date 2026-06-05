@@ -2789,46 +2789,53 @@ function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const total = dirs.reduce((s,d)=>s+dirCnt[d].tricks,0) || 1;
-  const vals = dirs.map(d=>dirCnt[d].tricks/total);
   const dpr = window.devicePixelRatio || 1;
-  const size = Math.min((canvas.parentElement?.offsetWidth||300)-32, 300);
+  const size = Math.min((canvas.parentElement?.offsetWidth||280)-16, 260);
   canvas.style.width = size+'px'; canvas.style.height = size+'px';
   canvas.width = size*dpr; canvas.height = size*dpr;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr,dpr);
-  const W=size,H=size,cx=W/2,cy=H/2,r=Math.min(W,H)/2-70;
+  const W=size, H=size, cx=W/2, cy=H/2-10, r=Math.min(W,H)/2-52;
   ctx.clearRect(0,0,W,H);
-  const angles = dirs.map((_,i)=>i*2*Math.PI/dirs.length - Math.PI/2);
 
-  // Grid rings
-  [0.25,0.5,0.75,1].forEach(f=>{
+  // Draw pie slices
+  let startAngle = -Math.PI/2;
+  dirs.forEach(d=>{
+    const slice = dirCnt[d].tricks/total * 2*Math.PI;
+    if(slice===0) return;
     ctx.beginPath();
-    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*f,y=cy+Math.sin(a)*r*f;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;ctx.stroke();
-    ctx.fillStyle='rgba(10,12,15,0.2)';ctx.fill();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,startAngle,startAngle+slice);
+    ctx.closePath();
+    ctx.fillStyle=dirColors[d];
+    ctx.fill();
+    ctx.strokeStyle='#0b1929';
+    ctx.lineWidth=2;
+    ctx.stroke();
+    // Percentage inside slice
+    const pct = Math.round(dirCnt[d].tricks/total*100);
+    if(pct>=12){
+      const midA = startAngle+slice/2;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font='bold 13px Poppins,sans-serif';ctx.fillStyle='rgba(255,255,255,0.95)';
+      ctx.fillText(pct+'%', cx+Math.cos(midA)*r*0.62, cy+Math.sin(midA)*r*0.62);
+    }
+    startAngle += slice;
   });
-  // Axes
-  angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;ctx.stroke();});
 
-  // Filled polygon
-  ctx.beginPath();
-  angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*Math.max(vals[i],0.02),y=cy+Math.sin(a)*r*Math.max(vals[i],0.02);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-  ctx.closePath();ctx.fillStyle='rgba(57,195,212,0.15)';ctx.fill();
-  ctx.strokeStyle='#39c3d4';ctx.lineWidth=2;ctx.stroke();
-
-  // Dots + labels
-  angles.forEach((a,i)=>{
-    const vx=cx+Math.cos(a)*r*Math.max(vals[i],0.02),vy=cy+Math.sin(a)*r*Math.max(vals[i],0.02);
-    ctx.beginPath();ctx.arc(vx,vy,5,0,2*Math.PI);ctx.fillStyle=dirColors[dirs[i]];ctx.fill();
-    const lx=cx+Math.cos(a)*(r+48),ly=cy+Math.sin(a)*(r+48);
-    const align=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center';
-    ctx.textAlign=align;ctx.textBaseline='middle';
-    ctx.font='bold 11px Poppins,sans-serif';ctx.fillStyle='#e8edf2';
-    ctx.fillText(dirs[i],lx,ly-10);
-    ctx.font='bold 13px Poppins,sans-serif';ctx.fillStyle=dirColors[dirs[i]];
-    ctx.fillText(dirCnt[dirs[i]].tricks+' trick'+(dirCnt[dirs[i]].tricks!==1?'s':''),lx,ly+5);
-    ctx.font='10px Poppins,sans-serif';ctx.fillStyle='rgba(255,255,255,0.4)';
-    ctx.fillText(dirCnt[dirs[i]].att+' att.',lx,ly+19);
+  // Legend below
+  const active = dirs.filter(d=>dirCnt[d].tricks>0);
+  const rowH = 18, legendTop = cy+r+12;
+  const cols = active.length <= 2 ? 1 : 2;
+  const colW = W/cols;
+  active.forEach((d,i)=>{
+    const col=i%cols, row=Math.floor(i/cols);
+    const lx=col*colW+10, ly=legendTop+row*rowH;
+    ctx.fillStyle=dirColors[d];
+    ctx.fillRect(lx,ly+2,10,10);
+    ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.font='10px Poppins,sans-serif';ctx.fillStyle='#e8edf2';
+    ctx.fillText(d+' — '+dirCnt[d].tricks+' trick'+(dirCnt[d].tricks!==1?'s':'')+', '+dirCnt[d].att+' att.', lx+14, ly+2);
   });
 }
 
