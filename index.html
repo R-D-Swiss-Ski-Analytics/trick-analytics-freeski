@@ -499,7 +499,7 @@
         <div style="color:var(--muted);font-size:12px;" id="sess-live-date"></div>
       </div>
       <div style="display:flex;gap:10px;">
-        <button onclick="pauseSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">⏸ Pause</button>
+        <button onclick="pauseSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">+ Add Athlete or Trick</button>
         <button onclick="endSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✓ End Session</button>
       </div>
     </div>
@@ -2565,7 +2565,7 @@ function renderSessionLog() {
       <span style="flex:1;color:var(--text);">${e.trick||'—'}${ratings}</span>
       <span style="color:var(--muted);font-size:11px;">${e.time}</span>
       <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">✏️</button>
-      ${i===0?`<button onclick="undoLastEntry()" title="Undo" style="background:none;border:1px solid #e2001a;border-radius:6px;color:#e2001a;cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">↩</button>`:''}
+      ${i===0?`<button onclick="undoLastEntry()" title="Delete last entry" style="background:none;border:1px solid #e2001a;border-radius:6px;color:#e2001a;cursor:pointer;padding:2px 7px;font-size:13px;flex-shrink:0;">🗑</button>`:''}
     </div>`;
   }).join('');
 }
