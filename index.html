@@ -2788,7 +2788,7 @@ function renderSbDirRadar() {
 function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
-  const total = dirs.reduce((s,d)=>s+dirCnt[d].tricks,0) || 1;
+  const total = dirs.reduce((s,d)=>s+dirCnt[d].att,0) || 1;
   const dpr = window.devicePixelRatio || 1;
   const size = Math.min((canvas.parentElement?.offsetWidth||280)-16, 260);
   canvas.style.width = size+'px'; canvas.style.height = size+'px';
@@ -2798,10 +2798,10 @@ function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
   const W=size, H=size, cx=W/2, cy=H/2-10, r=Math.min(W,H)/2-52;
   ctx.clearRect(0,0,W,H);
 
-  // Draw pie slices
+  // Draw pie slices — based on attempts
   let startAngle = -Math.PI/2;
   dirs.forEach(d=>{
-    const slice = dirCnt[d].tricks/total * 2*Math.PI;
+    const slice = dirCnt[d].att/total * 2*Math.PI;
     if(slice===0) return;
     ctx.beginPath();
     ctx.moveTo(cx,cy);
@@ -2813,7 +2813,7 @@ function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
     ctx.lineWidth=2;
     ctx.stroke();
     // Percentage inside slice
-    const pct = Math.round(dirCnt[d].tricks/total*100);
+    const pct = Math.round(dirCnt[d].att/total*100);
     if(pct>=12){
       const midA = startAngle+slice/2;
       ctx.textAlign='center';ctx.textBaseline='middle';
@@ -2824,7 +2824,7 @@ function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
   });
 
   // Legend below
-  const active = dirs.filter(d=>dirCnt[d].tricks>0);
+  const active = dirs.filter(d=>dirCnt[d].att>0);
   const rowH = 18, legendTop = cy+r+12;
   const cols = active.length <= 2 ? 1 : 2;
   const colW = W/cols;
@@ -3756,7 +3756,7 @@ function renderTrickAnalytics() {
       else if(trick.includes('Right')) dir='Right';
       if(dir){dirCnt[dir].tricks++;dirCnt[dir].att+=s.att;}
     });
-    const radarTotal = SESS_DIRS.reduce((s,d)=>s+dirCnt[d].tricks,0);
+    const radarTotal = SESS_DIRS.reduce((s,d)=>s+dirCnt[d].att,0);
 
     const cardsHtml = Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
         const hasComp = s.grab.length>0;
