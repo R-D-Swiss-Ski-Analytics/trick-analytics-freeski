@@ -1080,42 +1080,52 @@
 
 <div class="page" id="page-datenbank">
 
-  <!-- TEAM RANKING -->
+  <!-- ── SECTION 1: SESSION PERFORMANCE ─────────────────────────── -->
   <div class="card" style="margin-bottom:20px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent);">Team Overview</div>
-      <div style="display:flex;gap:8px;">
+      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent);">📊 Session Performance</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div style="display:flex;gap:4px;">
+          <button id="pf-all"  onclick="setPerfFilter('')"                    style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
+          <button id="pf-bag"  onclick="setPerfFilter('Landing Bag')"         style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
+          <button id="pf-jump" onclick="setPerfFilter('Jump On-Snow')"        style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
+          <button id="pf-comp" onclick="setPerfFilter('Big Air Competition')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
+        </div>
+        <select id="pf-season" onchange="renderSessionPerformance()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:Poppins,sans-serif;">
+          <option value="current">Current season (May–Apr)</option>
+          <option value="last">Last season</option>
+          <option value="all">All time</option>
+        </select>
         <button class="btn-secondary" onclick="loadDB()">↻ Refresh</button>
-        <button class="btn-secondary" onclick="downloadRanking()" style="white-space:nowrap;">⬇ Team Export</button>
       </div>
     </div>
+    <div id="perf-table"><div class="loading"><span class="spinner"></span></div></div>
+  </div>
 
-    <!-- Ranking: Mastered Tricks -->
+  <!-- ── SECTION 2: TEAM ASSESSMENT ─────────────────────────────── -->
+  <div class="card" style="margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">📋 Team Assessment</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="realityCheck()" style="padding:7px 14px;border-radius:8px;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
+        <button class="btn-secondary" onclick="downloadRanking()" style="white-space:nowrap;">⬇ Export</button>
+      </div>
+    </div>
     <div style="margin-bottom:20px;">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Mastered Tricks per Athlete (Assessment)</div>
-      <div id="rank-mastered" style="display:flex;flex-wrap:wrap;gap:8px;">
-        <div class="loading"><span class="spinner"></span></div>
-      </div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Mastered Tricks per Athlete</div>
+      <div id="rank-mastered" style="display:flex;flex-wrap:wrap;gap:8px;"><div class="loading"><span class="spinner"></span></div></div>
     </div>
-
-    <!-- Ranking: Höchste Rotation pro Drehrichtung -->
     <div style="margin-bottom:20px;">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Highest Rotation per Direction (Session + Assessment)</div>
-      <div id="rank-rotation" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
-        <div class="loading"><span class="spinner"></span></div>
-      </div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Highest Rotation per Direction (Assessment)</div>
+      <div id="rank-rotation" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;"><div class="loading"><span class="spinner"></span></div></div>
     </div>
-
-    <!-- Forward vs Switch Balance -->
     <div>
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Direction Balance — All 4 Directions (Session + Assessment)</div>
-      <div id="rank-balance" style="display:flex;flex-wrap:wrap;gap:10px;">
-        <div class="loading"><span class="spinner"></span></div>
-      </div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Direction Balance</div>
+      <div id="rank-balance" style="display:flex;flex-wrap:wrap;gap:10px;"><div class="loading"><span class="spinner"></span></div></div>
     </div>
   </div>
 
-  <!-- ALLE TRICKS TABELLE -->
+  <!-- ── SECTION 3: ALL ENTRIES ──────────────────────────────────── -->
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
       <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">
@@ -1634,12 +1644,227 @@ async function renderCockpit() {
 let dbAllTricks = [];    // session tricks
 let dbAllStandort = [];  // standort tricks
 
+let _perfTypeFilter = '';
+
+function setPerfFilter(typ) {
+  _perfTypeFilter = typ;
+  const map = {'':'pf-all','Landing Bag':'pf-bag','Jump On-Snow':'pf-jump','Big Air Competition':'pf-comp'};
+  Object.values(map).forEach(id=>{
+    const b=document.getElementById(id); if(!b) return;
+    b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
+  });
+  const act=document.getElementById(map[typ]||'pf-all');
+  if(act){act.style.background='rgba(57,195,212,0.2)';act.style.borderColor='#39c3d4';act.style.color='#39c3d4';}
+  renderSessionPerformance();
+}
+
+function getSeasonRange() {
+  const sel = document.getElementById('pf-season')?.value || 'current';
+  const now = new Date();
+  const yr = now.getFullYear();
+  const mo = now.getMonth()+1; // 1-12
+  // Season runs May–April: if current month >= 5, season start = this year May; else last year May
+  const seasonStart = mo >= 5 ? yr : yr-1;
+  if (sel === 'current') return { from: `${seasonStart}-05-01`, to: `${seasonStart+1}-04-30` };
+  if (sel === 'last')    return { from: `${seasonStart-1}-05-01`, to: `${seasonStart}-04-30` };
+  return { from: '', to: '' }; // all time
+}
+
+function extractRotation(name) {
+  if (!name) return 0;
+  const m = name.match(/\b(180|270|360|450|540|630|720|810|900|1080|1260|1440)\b/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+function extractQuality(kommentar) {
+  if (!kommentar) return null;
+  const score = {perfect:100, okay:50, miss:0};
+  const vals = ['Grab','Trick','Landing'].map(k => {
+    const m = kommentar.match(new RegExp(k+':(\\w+)'));
+    return (m && score[m[1]] !== undefined) ? score[m[1]] : null;
+  }).filter(v => v !== null);
+  return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : null;
+}
+
+function renderSessionPerformance() {
+  const el = document.getElementById('perf-table');
+  if (!el || !dbAllTricks) return;
+
+  const { from, to } = getSeasonRange();
+  let data = dbAllTricks.filter(t => t.trickaufbau && t.athlet);
+  if (_perfTypeFilter) data = data.filter(t => t.typ === _perfTypeFilter);
+  if (from) data = data.filter(t => t.datum && t.datum >= from);
+  if (to)   data = data.filter(t => t.datum && t.datum <= to);
+
+  if (!data.length) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">No session data for this period / filter.</div>';
+    return;
+  }
+
+  // Per athlete, per trick: aggregate
+  const athMap = {};
+  data.forEach(t => {
+    const a = t.athlet;
+    const trick = t.trickaufbau;
+    if (!athMap[a]) athMap[a] = {};
+    if (!athMap[a][trick]) athMap[a][trick] = { att:0, land:0, qualVals:[], rot: extractRotation(trick) };
+    const s = athMap[a][trick];
+    s.att++;
+    if (t.gelandet==='Yes') s.land++;
+    const q = extractQuality(t.kommentar);
+    if (q !== null) s.qualVals.push(q);
+  });
+
+  // Per athlete: find best trick by competition score
+  const athletes = Object.entries(athMap).map(([athlet, tricks]) => {
+    let best = null, bestScore = -1;
+    Object.entries(tricks).forEach(([trick, s]) => {
+      const landRate = s.att ? s.land/s.att : 0;
+      const avgQ = s.qualVals.length ? s.qualVals.reduce((a,b)=>a+b,0)/s.qualVals.length : 50;
+      const rotW = s.rot ? s.rot/360 : 0;
+      const score = rotW * landRate * (avgQ/100);
+      if (score > bestScore) {
+        bestScore = score;
+        best = { trick, ...s, landRate, avgQ: Math.round(avgQ), rotW, score };
+      }
+    });
+    return { athlet, best, totalAtt: Object.values(tricks).reduce((s,t)=>s+t.att,0) };
+  }).filter(a => a.best).sort((a,b) => b.best.score - a.best.score);
+
+  if (!athletes.length) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;">No data with quality ratings in this period.</div>';
+    return;
+  }
+
+  const maxScore = athletes[0].best.score || 1;
+  const statusIcon = s => s >= 1.4 ? '🟢' : s >= 0.7 ? '🟡' : '🔴';
+  const statusLabel = s => s >= 1.4 ? 'Ready' : s >= 0.7 ? 'Developing' : 'Not ready';
+  const medal = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+  const colPct = v => v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
+
+  el.innerHTML = `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">
+      Competition Score = Rotation Weight × Landing Rate × Avg Quality &nbsp;·&nbsp;
+      🟢 ≥1.4 Ready &nbsp; 🟡 0.7–1.4 Developing &nbsp; 🔴 &lt;0.7 Not ready
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Athlete</th>
+        <th>Best Trick (by Score)</th>
+        <th style="text-align:center;">Rotation</th>
+        <th style="text-align:center;">Landing%</th>
+        <th style="text-align:center;">Ø Quality</th>
+        <th style="text-align:center;">Score</th>
+        <th style="text-align:center;">Status</th>
+      </tr></thead>
+      <tbody>
+        ${athletes.map(({athlet, best, totalAtt}, i) => `
+          <tr>
+            <td><strong>${medal(i)} ${shortName(athlet)}</strong><br><span style="font-size:10px;color:var(--muted);">${totalAtt} attempts</span></td>
+            <td style="font-size:12px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${best.trick}">${best.trick}</td>
+            <td style="text-align:center;font-weight:700;color:var(--accent);">${best.rot || '—'}°</td>
+            <td style="text-align:center;font-weight:700;color:${colPct(Math.round(best.landRate*100))};">${Math.round(best.landRate*100)}%</td>
+            <td style="text-align:center;font-weight:700;color:${colPct(best.avgQ)};">${best.avgQ}%</td>
+            <td style="text-align:center;">
+              <div style="font-weight:800;font-size:16px;color:var(--text);">${best.score.toFixed(2)}</div>
+              <div style="background:var(--border);border-radius:3px;height:4px;margin-top:3px;">
+                <div style="background:#39c3d4;width:${Math.min(100,Math.round(best.score/maxScore*100))}%;height:4px;border-radius:3px;"></div>
+              </div>
+            </td>
+            <td style="text-align:center;font-size:18px;" title="${statusLabel(best.score)}">${statusIcon(best.score)}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+async function realityCheck() {
+  if (!dbAllTricks || !dbAllStandort) { showToast('Load data first', 'error'); return; }
+
+  // Season range: last 12 months (May last year – April this year)
+  const { from } = getSeasonRange();
+  const seasonFrom = from || new Date(Date.now()-365*24*3600*1000).toISOString().split('T')[0];
+
+  const mastered = dbAllStandort.filter(t => t.status === 'mastered' && t.athlet);
+  const flagged = [];
+
+  mastered.forEach(s => {
+    // Find session entries for this athlete with this direction+rotation in the past season
+    const dir = s.drehrichtung?.trim();
+    const rot = s.rotation ? String(s.rotation).match(/\d+/)?.[0] : null;
+    if (!dir || !rot) return;
+
+    const sessions = dbAllTricks.filter(t =>
+      t.athlet === s.athlet &&
+      t.datum >= seasonFrom &&
+      t.trickaufbau &&
+      t.trickaufbau.includes(rot)
+    );
+
+    if (!sessions.length) {
+      // Never attempted in current season
+      flagged.push({ ...s, reason: 'Not attempted this season', avgQ: null, sessions: 0 });
+      return;
+    }
+
+    const quals = sessions.map(t => extractQuality(t.kommentar)).filter(v => v !== null);
+    if (!quals.length) return; // no quality data
+    const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
+
+    if (avgQ < 70) {
+      const landRate = Math.round(sessions.filter(t=>t.gelandet==='Yes').length/sessions.length*100);
+      flagged.push({ ...s, reason: `Avg quality ${avgQ}% (<70%)`, avgQ, sessions: sessions.length, landRate });
+    }
+  });
+
+  if (!flagged.length) {
+    showToast('✅ All mastered tricks are validated — no downgrades needed!', 'success');
+    return;
+  }
+
+  // Show modal preview
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `
+    <div style="background:#0d1f33;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:600px;width:100%;max-height:80vh;overflow-y:auto;">
+      <div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">🔍 Reality Check Preview</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+        Based on session data since ${seasonFrom.split('-').reverse().join('.')} — ${flagged.length} trick${flagged.length!==1?'s':''} would be moved from <strong style="color:#2d8a4e;">Mastered</strong> → <strong style="color:#f59e0b;">Goal</strong>:
+      </div>
+      <div style="margin-bottom:16px;">
+        ${flagged.map(f=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:8px;margin-bottom:6px;gap:8px;">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);">${shortName(f.athlet)}</div>
+              <div style="font-size:11px;color:var(--muted);">${f.drehrichtung||''} ${f.rotation||''}° ${f.grab||''}</div>
+            </div>
+            <div style="text-align:right;font-size:11px;color:#f59e0b;">${f.reason}</div>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="this.closest('[style*=inset]').remove()" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Cancel</button>
+        <button onclick="applyRealityCheck(${JSON.stringify(flagged.map(f=>f.id))},this)" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply (${flagged.length} changes)</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function applyRealityCheck(ids, btn) {
+  btn.textContent = 'Applying…'; btn.disabled = true;
+  const { error } = await db.from('standort').update({status:'goal'}).in('id', ids);
+  if (error) { showToast('Error: '+error.message, 'error'); btn.textContent='Error'; return; }
+  btn.closest('[style*=inset]').remove();
+  showToast(`✅ ${ids.length} trick${ids.length!==1?'s':''} moved from Mastered → Goal`, 'success');
+  loadDB();
+}
+
 async function loadDB() {
   // Show spinners
   ['rank-mastered','rank-rotation','rank-balance'].forEach(id => {
     document.getElementById(id).innerHTML = '<div class="loading"><span class="spinner"></span></div>';
   });
   document.getElementById('db-tbody').innerHTML = '<tr><td colspan="7"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr>';
+  const perfEl = document.getElementById('perf-table');
+  if (perfEl) perfEl.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
 
   const [{ data: tricks, error: e1 }, { data: standort, error: e2 }] = await Promise.all([
     db.from('tricks').select('*').order('datum', { ascending: false }),
@@ -1654,6 +1879,7 @@ async function loadDB() {
   dbAllTricks   = (tricks   || []).map(t => ({ ...t, _quelle: 'session' }));
   dbAllStandort = (standort || []).map(t => ({ ...t, _quelle: 'standort' }));
 
+  renderSessionPerformance();
   renderDBRankings();
   renderDBTable();
 }
