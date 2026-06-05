@@ -268,6 +268,51 @@
   .tu-avg-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
   .tu-avg-chip{background:#112236;border:1px solid #f59e0b33;border-radius:20px;padding:4px 12px;font-size:12px;color:#6b8299;}
   .tu-avg-chip span{color:#f59e0b;font-weight:700;margin-left:4px;}
+
+  /* ── MOBILE RESPONSIVE ──────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    body { overflow-x: hidden; }
+
+    /* Nav: scrollable, no wrap */
+    .nav-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; padding-bottom: 2px; scrollbar-width: none; }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tab { white-space: nowrap; flex-shrink: 0; font-size: 12px !important; padding: 6px 12px !important; }
+
+    /* Cards & chart cards */
+    .card { padding: 14px 12px; }
+    .chart-card { padding: 14px 12px; }
+
+    /* Chart grids: always 1 col */
+    .chart-grid { grid-template-columns: 1fr !important; }
+
+    /* Tables scroll inside wrapper */
+    table { min-width: 520px; }
+
+    /* Session */
+    #sess-athlete-cols { grid-template-columns: 1fr !important; }
+
+    /* Assessment columns */
+    .sb-columns { grid-template-columns: 1fr !important; }
+
+    /* Direction performance grid 4→2 cols */
+    .perf-dir-grid { grid-template-columns: repeat(2,1fr) !important; }
+
+    /* Select / input full width */
+    select, input[type="text"], input[type="date"], textarea { max-width: 100%; }
+
+    /* Radar max width */
+    .radar-wrap { max-width: 100%; }
+    canvas { max-width: 100% !important; }
+
+    /* Filter row wraps */
+    #ev-type-filter > div:first-child { flex-wrap: wrap; }
+
+    /* Pie chart centered */
+    #sess-dir-radar, #sb-dir-radar { max-width: 100% !important; }
+
+    /* Tab mode buttons */
+    #ev-analytics-card div[style*="display:flex"][style*="gap:8px"] { flex-wrap: wrap; }
+  }
 </style>
 </head>
 <body>
@@ -1936,7 +1981,7 @@ function renderSessionPerformance() {
 
         return `<div style="padding:16px 0;border-bottom:1px solid var(--border);${i===0?'border-top:1px solid var(--border);':''}">
           <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;">${athlet}</div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+          <div class="perf-dir-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
             ${dirBlocks}
           </div>
         </div>`;

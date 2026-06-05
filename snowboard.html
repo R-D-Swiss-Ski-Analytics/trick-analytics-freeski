@@ -268,6 +268,30 @@
   .tu-avg-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
   .tu-avg-chip{background:#112236;border:1px solid #f59e0b33;border-radius:20px;padding:4px 12px;font-size:12px;color:#6b8299;}
   .tu-avg-chip span{color:#f59e0b;font-weight:700;margin-left:4px;}
+
+  /* ── MOBILE RESPONSIVE ──────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    body { overflow-x: hidden; }
+
+    .nav-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; padding-bottom: 2px; scrollbar-width: none; }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tab { white-space: nowrap; flex-shrink: 0; font-size: 12px !important; padding: 6px 12px !important; }
+
+    .card { padding: 14px 12px; }
+    .chart-card { padding: 14px 12px; }
+    .chart-grid { grid-template-columns: 1fr !important; }
+
+    table { min-width: 520px; }
+    #sess-athlete-cols { grid-template-columns: 1fr !important; }
+    .sb-columns { grid-template-columns: 1fr !important; }
+    .perf-dir-grid { grid-template-columns: repeat(2,1fr) !important; }
+
+    select, input[type="text"], input[type="date"], textarea { max-width: 100%; }
+    canvas { max-width: 100% !important; }
+    .radar-wrap { max-width: 100%; }
+
+    #ev-type-filter > div:first-child { flex-wrap: wrap; }
+  }
 </style>
 </head>
 <body>
@@ -4823,7 +4847,7 @@ function renderSbSessionPerformance() {
 
         return `<div style="padding:16px 0;border-bottom:1px solid var(--border);">
           <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;">${athlet}</div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+          <div class="perf-dir-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
             ${dirBlocks}
           </div>
         </div>`;
