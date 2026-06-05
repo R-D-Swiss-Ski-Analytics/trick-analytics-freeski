@@ -2819,15 +2819,18 @@ function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
   });
 }
 
-function sessionDirLegendHtml(dirCnt, dirs, dirColors) {
-  return dirs.filter(d=>dirCnt[d].att>0).map(d=>`
+function sessionDirLegendHtml(dirCnt, dirs, dirColors, total) {
+  return dirs.filter(d=>dirCnt[d].att>0).map(d=>{
+    const pct = total ? Math.round(dirCnt[d].att/total*100) : 0;
+    return `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
       <div style="width:12px;height:12px;border-radius:3px;background:${dirColors[d]};flex-shrink:0;"></div>
       <div>
-        <div style="font-size:12px;font-weight:600;color:var(--text);">${d}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);">${d} <span style="font-weight:800;color:${dirColors[d]};">${pct}%</span></div>
         <div style="font-size:11px;color:var(--muted);">${dirCnt[d].tricks} trick${dirCnt[d].tricks!==1?'s':''} &middot; ${dirCnt[d].att} att.</div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderStandort() {
@@ -3783,7 +3786,7 @@ function renderTrickAnalytics() {
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
           <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
           <div style="display:flex;align-items:center;justify-content:center;gap:32px;">
-            <div>${sessionDirLegendHtml(dirCnt,SESS_DIRS,SESS_DIR_COL)}</div>
+            <div>${sessionDirLegendHtml(dirCnt,SESS_DIRS,SESS_DIR_COL,radarTotal)}</div>
             <div style="width:160px;height:160px;flex-shrink:0;min-width:160px;">
               <canvas id="sess-dir-radar" style="display:block;width:160px;height:160px;"></canvas>
             </div>
@@ -3866,7 +3869,7 @@ function renderTrickAnalytics() {
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px;">
         <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:32px;">
-          <div>${sessionDirLegendHtml(ovDirCntFinal,OV_DIRS,OV_DIR_COL)}</div>
+          <div>${sessionDirLegendHtml(ovDirCntFinal,OV_DIRS,OV_DIR_COL,ovDirTotal)}</div>
           <div style="width:160px;height:160px;flex-shrink:0;min-width:160px;">
             <canvas id="${pieId}" style="display:block;width:160px;height:160px;"></canvas>
           </div>
