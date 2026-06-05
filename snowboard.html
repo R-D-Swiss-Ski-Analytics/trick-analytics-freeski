@@ -4378,8 +4378,14 @@ function renderSbTrickAnalytics() {
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
           <span style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${normSbTrick(trick)}${s.perf>0?` <span style="font-size:11px;color:#39c3d4;font-weight:400;">⭐ ${s.perf}×</span>`:''}</span>
           <div style="text-align:right;flex-shrink:0;">
-            <span style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${s.land} / ${s.att}</span>
-            <span style="font-size:10px;color:var(--muted);display:block;">landed</span>
+            <div style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${s.land} / ${s.att}</div>
+            <div style="font-size:10px;color:var(--muted);">landed+stomped</div>
+            <div style="font-size:11px;margin-top:2px;">
+              <span style="color:#2d8a4e;font-weight:700;">${s.landed_n}✓</span>
+              <span style="color:var(--muted);margin:0 2px;">·</span>
+              <span style="color:#39c3d4;font-weight:700;">⭐${s.stomped}</span>
+              <span style="color:var(--muted);"> / ${s.att}</span>
+            </div>
           </div>
         </div>
         <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;">
@@ -4425,30 +4431,32 @@ function renderSbTrickAnalytics() {
   const chartData = chosen ? baseData.filter(t=>t.trickaufbau===chosen) : baseData;
   if (!chartData.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No session data yet.</div>'; renderSbRawEntries(baseData,'all entries'); return; }
 
-  // Per-date stats using sbExtractQuality
+  // Per-date stats
   const byDate={};
   chartData.forEach(t=>{
     if(!t.datum)return;
-    if(!byDate[t.datum])byDate[t.datum]={att:0,land:0,qualVals:[]};
+    if(!byDate[t.datum])byDate[t.datum]={att:0,land:0,stomped:0};
     byDate[t.datum].att++;
     if(t.gelandet==='Yes')byDate[t.datum].land++;
-    const q=sbExtractQuality(t);
-    if(q!==null)byDate[t.datum].qualVals.push(q);
+    if((t.gesamt||0)>=10)byDate[t.datum].stomped++;
   });
   const dates=Object.keys(byDate).sort();
   const pts=dates.map(d=>({d,att:byDate[d].att,
     landPct:Math.round(byDate[d].land/byDate[d].att*100),
-    quality:avg(byDate[d].qualVals)}));
+    stomped:byDate[d].stomped}));
 
   // Overall stats
-  const totAtt=chartData.length, totLand=chartData.filter(t=>t.gelandet==='Yes').length;
-  const allQual=chartData.map(t=>sbExtractQuality(t)).filter(v=>v!==null);
-  const qualAvgAll=avg(allQual);
+  const totAtt=chartData.length;
+  const totLand=chartData.filter(t=>t.gelandet==='Yes').length;
+  const totStomped=chartData.filter(t=>(t.gesamt||0)>=10).length;
+  const totLandedOnly=totLand-totStomped;
+  const landRate=totAtt?Math.round(totLand/totAtt*100):0;
 
-  const statsHtml = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;text-align:center;">
-    <div><div style="font-size:26px;font-weight:800;color:var(--text);">${totAtt}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
-    <div><div style="font-size:26px;font-weight:800;color:#2d8a4e;">${totLand}</div><div style="font-size:11px;color:var(--muted);">Landed</div></div>
-    <div><div style="font-size:26px;font-weight:800;color:${colQ(totAtt?Math.round(totLand/totAtt*100):0)};">${totAtt?Math.round(totLand/totAtt*100)+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Success</div></div>
+  const statsHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;text-align:center;">
+    <div><div style="font-size:22px;font-weight:800;color:var(--text);">${totAtt}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
+    <div><div style="font-size:22px;font-weight:800;color:#2d8a4e;">${totLandedOnly}</div><div style="font-size:11px;color:var(--muted);">✓ Landed</div></div>
+    <div><div style="font-size:22px;font-weight:800;color:#39c3d4;">${totStomped}</div><div style="font-size:11px;color:var(--muted);">⭐ Stomped</div></div>
+    <div><div style="font-size:22px;font-weight:800;color:${colQ(landRate)};">${landRate}%</div><div style="font-size:11px;color:var(--muted);">Success</div></div>
   </div>`;
 
   // Direction distribution for Overall mode only (not individual trick)
