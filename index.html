@@ -1111,6 +1111,14 @@
     <div id="perf-table"><div class="loading"><span class="spinner"></span></div></div>
   </div>
 
+  <!-- ── SECTION 1b: SESSION REPORTS ───────────────────────────── -->
+  <div class="card" style="margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">📋 Session Reports</div>
+    </div>
+    <div id="session-reports-list"><div class="loading"><span class="spinner"></span></div></div>
+  </div>
+
   <!-- ── SECTION 2: TEAM ASSESSMENT ─────────────────────────────── -->
   <div class="card" style="margin-bottom:20px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
@@ -1652,6 +1660,7 @@ async function renderCockpit() {
 // ── DATENBANK ─────────────────────────────────────────────────────
 let dbAllTricks = [];    // session tricks
 let dbAllStandort = [];  // standort tricks
+let dbSessionReports = [];
 
 let _perfTypeFilter = '';
 
@@ -2085,9 +2094,10 @@ async function loadDB() {
   const perfEl = document.getElementById('perf-table');
   if (perfEl) perfEl.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
 
-  const [{ data: tricks, error: e1 }, { data: standort, error: e2 }] = await Promise.all([
+  const [{ data: tricks, error: e1 }, { data: standort, error: e2 }, { data: reports }] = await Promise.all([
     db.from('tricks').select('*').order('datum', { ascending: false }),
     db.from('standort').select('*').order('created_at', { ascending: false }),
+    db.from('session_reports').select('*').eq('app','freeski').order('datum',{ascending:false}).limit(50),
   ]);
 
   if (e1 || e2) {
@@ -2097,10 +2107,40 @@ async function loadDB() {
 
   dbAllTricks   = (tricks   || []).map(t => ({ ...t, _quelle: 'session' }));
   dbAllStandort = (standort || []).map(t => ({ ...t, _quelle: 'standort' }));
+  dbSessionReports = reports || [];
 
   renderSessionPerformance();
+  renderSessionReports();
   renderDBRankings();
   renderDBTable();
+}
+
+function renderSessionReports() {
+  const el = document.getElementById('session-reports-list');
+  if (!el) return;
+  if (!dbSessionReports.length) { el.innerHTML = '<div style="color:var(--muted);padding:12px;font-size:13px;">No session reports yet.</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr>
+      <th>Date</th><th>Type</th><th>Athletes</th><th>Duration</th><th>Conditions</th><th></th>
+    </tr></thead>
+    <tbody>
+      ${dbSessionReports.map(r => {
+        const dateStr = r.datum ? (() => { const p=r.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+        const condStars = r.conditions ? '★'.repeat(r.conditions)+'☆'.repeat(5-r.conditions) : '—';
+        const athStr = Array.isArray(r.athletes) ? r.athletes.map(a=>shortName(a)).join(', ') : '';
+        const durStr = r.duration_min ? r.duration_min+'min' : '—';
+        return `<tr>
+          <td>${dateStr}</td>
+          <td>${r.session_type||'—'}</td>
+          <td style="font-size:12px;">${athStr}</td>
+          <td>${durStr}</td>
+          <td style="color:#f59e0b;">${condStars}</td>
+          <td><button onclick="openReportPrint(window._srReports[${dbSessionReports.indexOf(r)}])" style="padding:5px 12px;border-radius:6px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">View</button></td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`;
+  window._srReports = dbSessionReports;
 }
 
 function shortName(full) {
@@ -2505,6 +2545,7 @@ let sessAthleteData = {};
 let sessActiveTricks = {};
 let sessLog = [];
 let sessType = '';
+let sessStartTime = 0;
 
 function selectSessType(btn, type) {
   document.querySelectorAll('.sess-type-btn').forEach(b => b.classList.remove('active'));
@@ -2813,6 +2854,7 @@ function startSession() {
     sessAthleteData[name].stats = {attempts:0,landed:0,perfect:0};
   });
   sessLog = [];
+  sessStartTime = Date.now();
   document.getElementById('sess-setup').style.display = 'none';
   document.getElementById('sess-live').style.display = 'block';
   document.getElementById('sess-live-date').textContent =
@@ -3094,10 +3136,188 @@ function resetSession() {
 }
 
 function endSession() {
-  const total=sessLog.length;
-  const landed=sessLog.filter(e=>e.result!=='miss').length;
-  showToast(`Session done! ${total} attempts, ${landed} landed.`,'success');
-  resetSession();
+  const rawMin = Math.round((Date.now() - sessStartTime) / 1000 / 60 / 30) * 30;
+  const duration = Math.max(30, rawMin);
+  // Show post-session report modal
+  let existingModal = document.getElementById('sess-report-modal');
+  if (existingModal) existingModal.remove();
+  const modal = document.createElement('div');
+  modal.id = 'sess-report-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:28px;max-width:480px;width:100%;">
+    <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;color:#39c3d4;margin-bottom:4px;">Session Complete</div>
+    <div style="font-size:13px;color:#6b8299;margin-bottom:20px;">${sessLog.length} attempts logged · ${duration} min</div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Location</label>
+        <input id="sr-location" type="text" placeholder="e.g. Laax Kicker Park" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Conditions</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="sr-cond-btns">
+          ${[['1','Poor'],['2','Below Avg'],['3','Average'],['4','Good'],['5','Excellent']].map(([v,l])=>`<button onclick="setSrCondition(${v},this)" data-val="${v}" style="padding:7px 12px;border-radius:8px;border:2px solid #1a3450;background:#112236;color:#6b8299;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">${v} — ${l}</button>`).join('')}
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Comments</label>
+        <textarea id="sr-comments" placeholder="Coach notes, observations…" rows="3" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
+      <button onclick="document.getElementById('sess-report-modal').remove();resetSession();" style="padding:13px 18px;background:#112236;border:1px solid #1a3450;color:#6b8299;border-radius:8px;font-family:'Poppins',sans-serif;font-size:14px;cursor:pointer;">Skip</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+let _srCondition = 0;
+function setSrCondition(val, btn) {
+  _srCondition = val;
+  document.querySelectorAll('#sr-cond-btns button').forEach(b => {
+    const active = b === btn;
+    b.style.borderColor = active ? '#39c3d4' : '#1a3450';
+    b.style.color = active ? '#39c3d4' : '#6b8299';
+    b.style.background = active ? 'rgba(57,195,212,0.15)' : '#112236';
+  });
+}
+
+async function submitSessionReport(duration) {
+  const location = (document.getElementById('sr-location')?.value||'').trim();
+  const comments = (document.getElementById('sr-comments')?.value||'').trim();
+  const conditions = _srCondition || null;
+  document.getElementById('sess-report-modal')?.remove();
+  await saveSessionReport(duration, location, conditions, comments);
+}
+
+async function saveSessionReport(duration, location, conditions, comments) {
+  // Build trick_data from sessLog
+  const athleteMap = {};
+  sessLog.forEach(e => {
+    if (!athleteMap[e.name]) athleteMap[e.name] = {};
+    const trick = e.trick || '—';
+    if (!athleteMap[e.name][trick]) athleteMap[e.name][trick] = {att:0,land:0,perf:0};
+    athleteMap[e.name][trick].att++;
+    if (e.result !== 'miss') athleteMap[e.name][trick].land++;
+    if (e.result === 'perfect') athleteMap[e.name][trick].perf++;
+  });
+  const trickData = Object.entries(athleteMap).map(([name, tricks]) => {
+    const trickList = Object.entries(tricks).map(([trick, s]) => ({trick, att:s.att, land:s.land, perf:s.perf}));
+    const totalAtt = trickList.reduce((a,t)=>a+t.att,0);
+    const totalLand = trickList.reduce((a,t)=>a+t.land,0);
+    return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList};
+  });
+
+  const {error} = await db.from('session_reports').insert({
+    datum: new Date().toISOString().split('T')[0],
+    session_type: sessType,
+    app: 'freeski',
+    athletes: sessSelectedAthletes,
+    duration_min: duration,
+    location,
+    conditions,
+    comments,
+    trick_data: trickData
+  });
+
+  if (error) { showToast('Error saving report: ' + error.message, 'error'); }
+  else {
+    showToast('Session report saved', 'success');
+    const savedAthletes = [...sessSelectedAthletes];
+    const savedSessLog = [...sessLog];
+    resetSession();
+    // Offer to view report
+    setTimeout(async () => {
+      const {data} = await db.from('session_reports').select('*').eq('app','freeski').order('created_at',{ascending:false}).limit(1);
+      if (data && data[0]) {
+        const toastEl = document.getElementById('toast');
+        if (toastEl) {
+          toastEl.innerHTML = `Session report saved. <a href="#" onclick="event.preventDefault();openReportPrint(window._lastReport)" style="color:#fff;text-decoration:underline;">View</a>`;
+          window._lastReport = data[0];
+        }
+      }
+    }, 500);
+  }
+}
+
+async function loadLastSessionReport() {
+  const {data} = await db.from('session_reports').select('*').eq('app','freeski').order('created_at',{ascending:false}).limit(1);
+  if (data && data[0]) openReportPrint(data[0]);
+}
+
+function openReportPrint(report) {
+  const d = report;
+  const dateStr = d.datum ? (() => { const p=d.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+  const durH = d.duration_min ? (d.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
+  const condStars = d.conditions ? '★'.repeat(d.conditions)+'☆'.repeat(5-d.conditions) : '—';
+  const athletes = Array.isArray(d.athletes) ? d.athletes.join(', ') : (d.athletes||'');
+  const tricks = Array.isArray(d.trick_data) ? d.trick_data : [];
+
+  const athleteSections = tricks.map(a => {
+    const pct = a.totalAtt ? Math.round(a.totalLand/a.totalAtt*100) : 0;
+    const rows = (a.tricks||[]).map(t => {
+      const lp = t.att ? Math.round(t.land/t.att*100) : 0;
+      return `<tr><td>${t.trick}</td><td style="text-align:center;">${t.att}</td><td style="text-align:center;">${t.land}</td><td style="text-align:center;">${lp}%</td><td style="text-align:center;">${t.perf||0}</td></tr>`;
+    }).join('');
+    return `<div class="athlete-section">
+      <div class="athlete-name">${a.athlet}</div>
+      <div class="athlete-stats">${a.totalAtt} attempts · ${a.totalLand} landed (${pct}%)</div>
+      <table><thead><tr><th>Trick</th><th>Att</th><th>Land</th><th>%</th><th>Perf</th></tr></thead><tbody>${rows}</tbody></table>
+    </div>`;
+  }).join('');
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Session Report ${dateStr}</title>
+<style>
+  body{font-family:'Helvetica Neue',Arial,sans-serif;color:#111;background:#fff;margin:0;padding:24px;max-width:800px;margin:0 auto;}
+  h1{font-size:28px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+  .meta{color:#555;font-size:14px;margin-bottom:20px;}
+  .meta span{margin-right:20px;}
+  .no-print{margin-bottom:20px;}
+  .athlete-section{border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:16px;}
+  .athlete-name{font-size:18px;font-weight:700;margin-bottom:4px;}
+  .athlete-stats{font-size:13px;color:#555;margin-bottom:12px;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:#f0f0f0;padding:8px 10px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
+  td{padding:7px 10px;border-top:1px solid #eee;font-size:13px;}
+  .comments-box{background:#f8f8f8;border:1px solid #ddd;border-radius:8px;padding:14px;margin-bottom:20px;}
+  @media print{.no-print{display:none;}}
+</style></head><body>
+  <div class="no-print"><button onclick="window.print()" style="padding:10px 20px;background:#004877;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">🖨️ Print / Save as PDF</button></div>
+  <h1>Session Report</h1>
+  <div class="meta">
+    <span>📅 ${dateStr}</span>
+    <span>🏷️ ${d.session_type||'Training'}</span>
+    <span>⏱️ ${durH}</span>
+    <span>📍 ${d.location||'—'}</span>
+    <span>⛷️ Conditions: ${condStars}</span>
+  </div>
+  ${d.comments ? `<div class="comments-box"><strong>Coach Comments:</strong><br>${d.comments.replace(/\n/g,'<br>')}</div>` : ''}
+  <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Athletes: ${athletes}</div>
+  ${athleteSections || '<div style="color:#888;">No trick data recorded.</div>'}
+</body></html>`);
+  win.document.close();
+}
+
+async function viewSessionReportByDate(date) {
+  const {data, error} = await db.from('session_reports').select('*').eq('datum', date).eq('app','freeski');
+  if (error || !data || data.length === 0) { showToast('No session report found for this date', 'error'); return; }
+  if (data.length === 1) { openReportPrint(data[0]); return; }
+  // Multiple reports: show picker
+  let existingModal = document.getElementById('sr-pick-modal');
+  if (existingModal) existingModal.remove();
+  const modal = document.createElement('div');
+  modal.id = 'sr-pick-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:24px;max-width:400px;width:100%;">
+    <div style="font-size:16px;font-weight:700;color:#39c3d4;margin-bottom:16px;">Multiple reports for ${date}</div>
+    ${data.map((r,i)=>`<button onclick="document.getElementById('sr-pick-modal').remove();openReportPrint(window._srPickData[${i}])" style="display:block;width:100%;text-align:left;padding:10px 14px;margin-bottom:8px;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;">
+      ${r.session_type||'Training'} · ${(r.athletes||[]).map(a=>a.split(' ')[0]).join(', ')} · ${r.duration_min}min
+    </button>`).join('')}
+    <button onclick="document.getElementById('sr-pick-modal').remove()" style="padding:8px 16px;background:none;border:1px solid #1a3450;border-radius:8px;color:#6b8299;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;margin-top:4px;">Cancel</button>
+  </div>`;
+  window._srPickData = data;
+  document.body.appendChild(modal);
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -4467,6 +4687,14 @@ function renderTrickAnalytics() {
         </div>` : '');
 
     if (radarTotal > 0) requestAnimationFrame(() => drawSessionDirRadar('sess-dir-radar', dirCnt, SESS_DIRS, SESS_DIR_COL));
+
+    // Add "View Session Report" button for individual sessions
+    const sessionDate = filterDate;
+    const reportBtnDiv = document.createElement('div');
+    reportBtnDiv.style.cssText = 'margin-top:12px;text-align:center;';
+    reportBtnDiv.innerHTML = `<button onclick="viewSessionReportByDate('${sessionDate}')" style="padding:10px 22px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">📄 View Session Report</button>`;
+    el.appendChild(reportBtnDiv);
+
     renderRawEntries(sd, label);
     return;
   }
