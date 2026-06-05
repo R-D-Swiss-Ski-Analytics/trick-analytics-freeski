@@ -1091,11 +1091,20 @@
           <button id="pf-jump" onclick="setPerfFilter('Jump On-Snow')"        style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
           <button id="pf-comp" onclick="setPerfFilter('Big Air Competition')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
         </div>
-        <select id="pf-season" onchange="renderSessionPerformance()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:Poppins,sans-serif;">
+        <select id="pf-season" onchange="onPfSeasonChange()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:Poppins,sans-serif;">
           <option value="current">Current season (May–Apr)</option>
           <option value="last">Last season</option>
           <option value="all">All time</option>
+          <option value="custom">Custom period…</option>
         </select>
+        <div id="pf-custom-range" style="display:none;align-items:center;gap:4px;">
+          <input type="text" id="pf-from" placeholder="TT.MM.JJ" oninput="setPerfDateRange()"
+            style="width:82px;padding:3px 7px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;">
+          <span style="font-size:11px;color:var(--muted);">→</span>
+          <input type="text" id="pf-to" placeholder="TT.MM.JJ" oninput="setPerfDateRange()"
+            style="width:82px;padding:3px 7px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;">
+          <button onclick="clearPerfDateRange()" style="padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
+        </div>
         <button class="btn-secondary" onclick="loadDB()">↻ Refresh</button>
       </div>
     </div>
@@ -1679,12 +1688,57 @@ function setPerfFilter(typ) {
   renderSessionPerformance();
 }
 
+let _pfCustomFrom = '', _pfCustomTo = '';
+
+function onPfSeasonChange() {
+  const sel = document.getElementById('pf-season')?.value;
+  const rangeDiv = document.getElementById('pf-custom-range');
+  if (rangeDiv) rangeDiv.style.display = sel === 'custom' ? 'flex' : 'none';
+  if (sel !== 'custom') { _pfCustomFrom = ''; _pfCustomTo = ''; }
+  renderSessionPerformance();
+}
+
+function setPerfDateRange() {
+  const f = document.getElementById('pf-from')?.value || '';
+  const t = document.getElementById('pf-to')?.value   || '';
+  _pfCustomFrom = parsePerfDate(f);
+  _pfCustomTo   = parsePerfDate(t);
+  // Highlight active inputs
+  [['pf-from',_pfCustomFrom],['pf-to',_pfCustomTo]].forEach(([id,parsed])=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.style.borderColor = parsed ? '#39c3d4' : 'var(--border)';
+    el.style.color       = parsed ? '#39c3d4' : 'var(--muted)';
+  });
+  renderSessionPerformance();
+}
+
+function clearPerfDateRange() {
+  _pfCustomFrom = ''; _pfCustomTo = '';
+  ['pf-from','pf-to'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.value=''; el.style.borderColor='var(--border)'; el.style.color='var(--muted)';
+  });
+  renderSessionPerformance();
+}
+
+function parsePerfDate(val) {
+  if (!val) return '';
+  const m = val.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+  if (m) {
+    const d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0');
+    const y=m[3].length===2?'20'+m[3]:m[3];
+    return `${y}-${mo}-${d}`;
+  }
+  return '';
+}
+
 function getSeasonRange() {
   const sel = document.getElementById('pf-season')?.value || 'current';
+  // Custom date range takes priority
+  if (sel === 'custom') return { from: _pfCustomFrom, to: _pfCustomTo };
   const now = new Date();
   const yr = now.getFullYear();
-  const mo = now.getMonth()+1; // 1-12
-  // Season runs May–April: if current month >= 5, season start = this year May; else last year May
+  const mo = now.getMonth()+1;
   const seasonStart = mo >= 5 ? yr : yr-1;
   if (sel === 'current') return { from: `${seasonStart}-05-01`, to: `${seasonStart+1}-04-30` };
   if (sel === 'last')    return { from: `${seasonStart-1}-05-01`, to: `${seasonStart}-04-30` };
