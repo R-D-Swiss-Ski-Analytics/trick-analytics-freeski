@@ -3326,7 +3326,7 @@ async function loadEntwicklung() {
 
   // ── 9. Trick Analytics ───────────────────────────────────────────────
   initTrickAnalytics(tricks);
-  renderRawEntries(tricks);
+  renderRawEntries(tricks, 'all entries');
 
   // ── 9b. Trick + Grab Session Stats ───────────────────────────────────
   const statsEl = document.getElementById('ev-trick-stats');
@@ -3661,25 +3661,26 @@ function renderSessionSummary(data, sessionLabel) {
 }
 
 
-function renderRawEntries(tricks) {
+function renderRawEntries(entries, subtitle) {
   const wrap = document.getElementById('ev-raw-wrap');
   if (!wrap) return;
-  const entries = [...tricks].sort((a,b)=>(b.datum||'').localeCompare(a.datum||'') || (b.id||0)-(a.id||0));
+  const wasOpen = document.getElementById('ev-raw-list')?.style.display !== 'none';
+  const sorted = [...entries].sort((a,b)=>(b.datum||'').localeCompare(a.datum||'') || (b.id||0)-(a.id||0));
 
   const fmtDate = d => { if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
   const fmtKom  = k => { if(!k) return ''; return k.replace(/Grab:/,'G:').replace(/Trick:/,' T:').replace(/Landing:/,' L:'); };
   const typShort = t => t==='Landing Bag'?'Bag':t==='Jump On-Snow'?'Jump':t==='Big Air Competition'?'Comp':t||'—';
-  const colGest  = v => v>=10?'#39c3d4':v>=7?'#2d8a4e':v>=3?'#f59e0b':'var(--muted)';
+  const open = wasOpen;
 
   wrap.innerHTML = `
     <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;">
-      <button onclick="(function(b,c){c.style.display=c.style.display==='none'?'block':'none';b.querySelector('span').textContent=c.style.display==='none'?'▶':'▼';})(this,document.getElementById('ev-raw-list'))"
+      <button onclick="(function(b,c){c.style.display=c.style.display==='none'?'block':'none';b.querySelector('.raw-arrow').textContent=c.style.display==='none'?'▶':'▼';})(this,document.getElementById('ev-raw-list'))"
         style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border:none;cursor:pointer;font-family:Poppins,sans-serif;color:var(--muted);font-size:12px;font-weight:600;">
-        <span style="display:flex;align-items:center;gap:8px;"><span>▶</span> Raw Entries (${entries.length})</span>
-        <span style="font-size:11px;opacity:.6;">Expand to inspect or delete entries</span>
+        <span style="display:flex;align-items:center;gap:8px;"><span class="raw-arrow">${open?'▼':'▶'}</span> Raw Entries (${sorted.length})${subtitle?` <span style="font-weight:400;opacity:.7;">— ${subtitle}</span>`:''}</span>
+        <span style="font-size:11px;opacity:.6;">Inspect or delete entries</span>
       </button>
-      <div id="ev-raw-list" style="display:none;max-height:420px;overflow-y:auto;">
-        ${entries.map(e=>`
+      <div id="ev-raw-list" style="display:${open?'block':'none'};max-height:420px;overflow-y:auto;">
+        ${sorted.length ? sorted.map(e=>`
           <div id="ev-raw-row-${e.id}" style="display:grid;grid-template-columns:60px 48px 1fr 52px 1fr 32px;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--border);font-size:11px;">
             <span style="color:var(--muted);">${fmtDate(e.datum)}</span>
             <span style="color:var(--muted);font-size:10px;">${typShort(e.typ)}</span>
@@ -3688,7 +3689,8 @@ function renderRawEntries(tricks) {
             <span style="color:var(--muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${fmtKom(e.kommentar)}</span>
             <button onclick="deleteRawEntry(${e.id})" title="Delete entry"
               style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;line-height:1;">🗑</button>
-          </div>`).join('')}
+          </div>`).join('')
+        : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">No entries for this selection.</div>'}
       </div>
     </div>`;
 }
@@ -3748,10 +3750,12 @@ function renderTrickAnalytics() {
   const sessionVisible = dateSel && dateSel.style.display !== 'none';
   if (trickVisible && !chosen) {
     el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px;">Select a trick to view its progression.</div>';
+    renderRawEntries(_taData, 'all entries');
     return;
   }
   if (sessionVisible && !dateKey) {
     el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px;">Select a session to view its tricks.</div>';
+    renderRawEntries(_taData, 'all entries');
     return;
   }
 
@@ -3842,6 +3846,7 @@ function renderTrickAnalytics() {
         </div>` : '');
 
     if (radarTotal > 0) requestAnimationFrame(() => drawSessionDirRadar('sess-dir-radar', dirCnt, SESS_DIRS, SESS_DIR_COL));
+    renderRawEntries(sd, label);
     return;
   }
 
@@ -3983,6 +3988,13 @@ function renderTrickAnalytics() {
   });
 
   if(!chosen && ovDirTotal>0) requestAnimationFrame(()=>drawSessionDirRadar(pieId, ovDirCntFinal, OV_DIRS, OV_DIR_COL));
+
+  // Raw entries: filter by chosen trick or show all
+  if (chosen) {
+    renderRawEntries(chartData, chosen.length > 40 ? chosen.slice(0,40)+'…' : chosen);
+  } else {
+    renderRawEntries(_taData, 'all entries');
+  }
 }
 
 function updateQualityChart() {
