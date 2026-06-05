@@ -3115,11 +3115,11 @@ async function loadEntwicklung() {
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-size:11px;color:var(--muted);white-space:nowrap;">Period:</span>
-          <input type="date" id="ev-date-from" onchange="setDateRange()" placeholder="From"
-            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:130px;">
+          <input type="text" id="ev-date-from" oninput="setDateRange()" placeholder="TT.MM.JJ"
+            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
           <span style="font-size:11px;color:var(--muted);">→</span>
-          <input type="date" id="ev-date-to" onchange="setDateRange()" placeholder="To"
-            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:130px;">
+          <input type="text" id="ev-date-to" oninput="setDateRange()" placeholder="TT.MM.JJ"
+            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
           <button onclick="clearDateRange()" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
         </div>
       </div>`;
@@ -3769,14 +3769,28 @@ function setStatsMode(mode) {
   renderTrickAnalytics();
 }
 
+function parseDateInput(val) {
+  if (!val) return '';
+  // DD.MM.JJ or DD.MM.JJJJ
+  const m = val.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+  if (m) {
+    const d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0');
+    const y=m[3].length===2?'20'+m[3]:m[3];
+    return `${y}-${mo}-${d}`;
+  }
+  return '';
+}
+
 function setDateRange() {
-  _taDateFrom = document.getElementById('ev-date-from')?.value || '';
-  _taDateTo   = document.getElementById('ev-date-to')?.value   || '';
-  // Highlight inputs when active
-  ['ev-date-from','ev-date-to'].forEach(id=>{
-    const el=document.getElementById(id); if(!el) return;
-    el.style.borderColor = el.value ? '#39c3d4' : 'var(--border)';
-    el.style.color       = el.value ? '#39c3d4' : 'var(--muted)';
+  const fromEl = document.getElementById('ev-date-from');
+  const toEl   = document.getElementById('ev-date-to');
+  _taDateFrom = parseDateInput(fromEl?.value);
+  _taDateTo   = parseDateInput(toEl?.value);
+  // Highlight inputs when a valid date was parsed
+  [[fromEl,_taDateFrom],[toEl,_taDateTo]].forEach(([el,parsed])=>{
+    if(!el) return;
+    el.style.borderColor = parsed ? '#39c3d4' : 'var(--border)';
+    el.style.color       = parsed ? '#39c3d4' : 'var(--muted)';
   });
   renderTrickAnalytics();
 }
@@ -3784,8 +3798,8 @@ function setDateRange() {
 function clearDateRange() {
   _taDateFrom = ''; _taDateTo = '';
   const f=document.getElementById('ev-date-from'), t=document.getElementById('ev-date-to');
-  if(f){f.value='';f.style.borderColor='var(--border)';f.style.color='var(--text)';}
-  if(t){t.value='';t.style.borderColor='var(--border)';t.style.color='var(--text)';}
+  if(f){f.value='';f.style.borderColor='var(--border)';f.style.color='var(--muted)';}
+  if(t){t.value='';t.style.borderColor='var(--border)';t.style.color='var(--muted)';}
   renderTrickAnalytics();
 }
 
