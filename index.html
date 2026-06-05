@@ -1690,6 +1690,25 @@ function renderSessionPerformance() {
   const el = document.getElementById('perf-table');
   if (!el || !dbAllTricks) return;
 
+  const DIRS = ['Left','Right','Switch Left','Switch Right'];
+  const DIR_COL = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
+
+  // Status based on Landing% AND Quality% independently
+  function status(landPct, avgQ) {
+    if (landPct >= 70 && avgQ >= 70) return {icon:'🟢', label:'Ready', color:'#2d8a4e'};
+    if (landPct >= 50 || avgQ  >= 50) return {icon:'🟡', label:'Developing', color:'#f59e0b'};
+    return {icon:'🔴', label:'Not ready', color:'#e2001a'};
+  }
+
+  function trickDir(name) {
+    if (!name) return null;
+    if (name.includes('Switch Left'))  return 'Switch Left';
+    if (name.includes('Switch Right')) return 'Switch Right';
+    if (name.includes('Left'))  return 'Left';
+    if (name.includes('Right')) return 'Right';
+    return null;
+  }
+
   const { from, to } = getSeasonRange();
   let data = dbAllTricks.filter(t => t.trickaufbau && t.athlet);
   if (_perfTypeFilter) data = data.filter(t => t.typ === _perfTypeFilter);
@@ -1701,77 +1720,82 @@ function renderSessionPerformance() {
     return;
   }
 
-  // Per athlete, per trick: aggregate
+  // Build: athMap[athlete][direction][trick] = {att, land, qualVals, rot}
   const athMap = {};
   data.forEach(t => {
-    const a = t.athlet;
+    const dir = trickDir(t.trickaufbau);
+    if (!dir) return;
+    if (!athMap[t.athlet]) athMap[t.athlet] = {};
+    if (!athMap[t.athlet][dir]) athMap[t.athlet][dir] = {};
     const trick = t.trickaufbau;
-    if (!athMap[a]) athMap[a] = {};
-    if (!athMap[a][trick]) athMap[a][trick] = { att:0, land:0, qualVals:[], rot: extractRotation(trick) };
-    const s = athMap[a][trick];
+    if (!athMap[t.athlet][dir][trick]) athMap[t.athlet][dir][trick] = {att:0, land:0, qualVals:[], rot:extractRotation(trick)};
+    const s = athMap[t.athlet][dir][trick];
     s.att++;
     if (t.gelandet==='Yes') s.land++;
     const q = extractQuality(t.kommentar);
     if (q !== null) s.qualVals.push(q);
   });
 
-  // Per athlete: find best trick by competition score
-  const athletes = Object.entries(athMap).map(([athlet, tricks]) => {
+  // Per athlete per direction: find best trick by score (rotW × landRate × quality)
+  function bestInDir(tricks) {
+    if (!tricks) return null;
     let best = null, bestScore = -1;
     Object.entries(tricks).forEach(([trick, s]) => {
       const landRate = s.att ? s.land/s.att : 0;
-      const avgQ = s.qualVals.length ? s.qualVals.reduce((a,b)=>a+b,0)/s.qualVals.length : 50;
-      const rotW = s.rot ? s.rot/360 : 0;
-      const score = rotW * landRate * (avgQ/100);
+      const avgQ = s.qualVals.length ? s.qualVals.reduce((a,b)=>a+b,0)/s.qualVals.length : 0;
+      const score = (s.rot/360) * landRate * (avgQ/100);
       if (score > bestScore) {
         bestScore = score;
-        best = { trick, ...s, landRate, avgQ: Math.round(avgQ), rotW, score };
+        best = {trick, att:s.att, land:s.land, landPct:Math.round(landRate*100), avgQ:Math.round(avgQ), rot:s.rot, score};
       }
     });
-    return { athlet, best, totalAtt: Object.values(tricks).reduce((s,t)=>s+t.att,0) };
-  }).filter(a => a.best).sort((a,b) => b.best.score - a.best.score);
-
-  if (!athletes.length) {
-    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;">No data with quality ratings in this period.</div>';
-    return;
+    return best;
   }
 
-  const maxScore = athletes[0].best.score || 1;
-  const statusIcon = s => s >= 1.4 ? '🟢' : s >= 0.7 ? '🟡' : '🔴';
-  const statusLabel = s => s >= 1.4 ? 'Ready' : s >= 0.7 ? 'Developing' : 'Not ready';
+  // Build athlete rows, sort by number of 🟢 directions desc, then total score
+  const athletes = Object.entries(athMap).map(([athlet, dirMap]) => {
+    const dirs = {};
+    DIRS.forEach(d => { dirs[d] = bestInDir(dirMap[d]); });
+    const greenCount = DIRS.filter(d => dirs[d] && status(dirs[d].landPct, dirs[d].avgQ).icon==='🟢').length;
+    const totalScore = DIRS.reduce((s,d) => s + (dirs[d]?.score||0), 0);
+    const totalAtt   = DIRS.reduce((s,d) => s + (dirs[d]?.att||0), 0);
+    return {athlet, dirs, greenCount, totalScore, totalAtt};
+  }).sort((a,b) => b.greenCount-a.greenCount || b.totalScore-a.totalScore);
+
   const medal = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-  const colPct = v => v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
+
+  function dirCell(b, dir) {
+    if (!b) return `<td style="text-align:center;color:var(--muted);font-size:13px;">—</td>`;
+    const st = status(b.landPct, b.avgQ);
+    const shortTrick = b.trick.length > 35 ? b.trick.slice(0,34)+'…' : b.trick;
+    return `<td style="padding:6px 10px;vertical-align:top;" title="${b.trick}">
+      <div style="font-size:18px;text-align:center;">${st.icon}</div>
+      <div style="font-size:11px;font-weight:700;color:${DIR_COL[dir]};text-align:center;">${b.rot||'?'}°</div>
+      <div style="font-size:10px;color:var(--muted);text-align:center;">${b.landPct}% land · ${b.avgQ}% qual</div>
+      <div style="font-size:10px;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;">${shortTrick}</div>
+    </td>`;
+  }
 
   el.innerHTML = `
     <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">
-      Competition Score = Rotation Weight × Landing Rate × Avg Quality &nbsp;·&nbsp;
-      🟢 ≥1.4 Ready &nbsp; 🟡 0.7–1.4 Developing &nbsp; 🔴 &lt;0.7 Not ready
+      Best trick per direction · Score = Rotation × Landing × Quality &nbsp;·&nbsp;
+      🟢 land ≥70% <b>und</b> qual ≥70% &nbsp; 🟡 eines ≥50% &nbsp; 🔴 beides &lt;50%
     </div>
     <div class="table-wrap"><table>
       <thead><tr>
         <th>Athlete</th>
-        <th>Best Trick (by Score)</th>
-        <th style="text-align:center;">Rotation</th>
-        <th style="text-align:center;">Landing%</th>
-        <th style="text-align:center;">Ø Quality</th>
-        <th style="text-align:center;">Score</th>
-        <th style="text-align:center;">Status</th>
+        ${DIRS.map(d=>`<th style="text-align:center;color:${DIR_COL[d]};">${d}</th>`).join('')}
+        <th style="text-align:center;">🟢</th>
       </tr></thead>
       <tbody>
-        ${athletes.map(({athlet, best, totalAtt}, i) => `
+        ${athletes.map(({athlet, dirs, greenCount, totalAtt}, i) => `
           <tr>
-            <td><strong>${medal(i)} ${shortName(athlet)}</strong><br><span style="font-size:10px;color:var(--muted);">${totalAtt} attempts</span></td>
-            <td style="font-size:12px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${best.trick}">${best.trick}</td>
-            <td style="text-align:center;font-weight:700;color:var(--accent);">${best.rot || '—'}°</td>
-            <td style="text-align:center;font-weight:700;color:${colPct(Math.round(best.landRate*100))};">${Math.round(best.landRate*100)}%</td>
-            <td style="text-align:center;font-weight:700;color:${colPct(best.avgQ)};">${best.avgQ}%</td>
-            <td style="text-align:center;">
-              <div style="font-weight:800;font-size:16px;color:var(--text);">${best.score.toFixed(2)}</div>
-              <div style="background:var(--border);border-radius:3px;height:4px;margin-top:3px;">
-                <div style="background:#39c3d4;width:${Math.min(100,Math.round(best.score/maxScore*100))}%;height:4px;border-radius:3px;"></div>
-              </div>
+            <td style="white-space:nowrap;vertical-align:middle;">
+              <strong>${medal(i)} ${shortName(athlet)}</strong>
+              <div style="font-size:10px;color:var(--muted);">${totalAtt} att.</div>
             </td>
-            <td style="text-align:center;font-size:18px;" title="${statusLabel(best.score)}">${statusIcon(best.score)}</td>
+            ${DIRS.map(d => dirCell(dirs[d], d)).join('')}
+            <td style="text-align:center;vertical-align:middle;font-size:18px;font-weight:800;color:${greenCount>=3?'#2d8a4e':greenCount>=1?'#f59e0b':'#e2001a'};">${greenCount}/4</td>
           </tr>`).join('')}
       </tbody>
     </table></div>`;
