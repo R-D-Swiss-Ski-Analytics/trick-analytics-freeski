@@ -270,17 +270,18 @@
   .tu-avg-chip span{color:#f59e0b;font-weight:700;margin-left:4px;}
 
   /* ── MOBILE RESPONSIVE ──────────────────────────────────────────── */
+  /* Hide mobile nav on desktop */
+  .mobile-nav { display: none; }
+
   @media (max-width: 768px) {
     body { overflow-x: hidden; }
 
-    /* Header: compact on mobile */
-    header { padding: 0 12px; height: 52px; gap: 8px; }
-    header h1 { font-size: 16px !important; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+    /* Hide top nav on mobile */
+    .nav-tabs { display: none !important; }
 
-    /* Nav: scrollable */
-    .nav-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; padding-bottom: 2px; scrollbar-width: none; flex-shrink: 0; }
-    .nav-tabs::-webkit-scrollbar { display: none; }
-    .nav-tab { white-space: nowrap; flex-shrink: 0; font-size: 11px !important; padding: 5px 10px !important; }
+    /* Compact header - just title */
+    header { justify-content: flex-start; padding: 0 16px; }
+    header h1 { font-size: 18px; max-width: none; }
 
     .card { padding: 14px 12px; }
     .chart-card { padding: 14px 12px; }
@@ -296,6 +297,88 @@
     .radar-wrap { max-width: 100%; }
 
     #ev-type-filter > div:first-child { flex-wrap: wrap; }
+
+    /* Larger touch targets for session buttons */
+    .sess-type-btn { min-height: 48px !important; font-size: 14px !important; }
+
+    /* Athlete checkbox cards bigger */
+    .sess-ath-card { padding: 14px !important; }
+
+    /* Assessment save buttons */
+    .sb-form-btns button { min-height: 48px; font-size: 14px; }
+
+    /* Wider content on mobile */
+    .page { padding: 12px !important; }
+
+    /* Filter buttons wrap */
+    #ev-type-filter { flex-wrap: wrap; }
+
+    /* Form inputs: prevent zoom on iOS (min 16px) */
+    input, select, textarea { font-size: 16px !important; }
+
+    /* Better spacing for trick cards */
+    .sb-trick-row { padding: 10px 12px; }
+
+    /* Bottom nav bar */
+    .mobile-nav {
+      display: flex !important;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #0b1929;
+      border-top: 1px solid #1a3450;
+      z-index: 200;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      height: calc(56px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .mobile-nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 8px 4px;
+      color: rgba(255,255,255,0.5);
+      font-family: 'Poppins', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      transition: color .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-nav-btn.active {
+      color: #39c3d4;
+    }
+
+    .mobile-nav-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Push page content up so it doesn't hide behind bottom nav */
+    .page { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important; }
+
+    /* Main content area needs top padding adjustment */
+    main, .content-wrap { padding-bottom: 72px; }
+
+    /* Body safe area */
+    body { padding-bottom: 0; }
+  }
+
+  @media (max-width: 480px) {
+    .perf-dir-grid { grid-template-columns: 1fr !important; }
   }
 </style>
 </head>
@@ -1277,6 +1360,7 @@ function showPage(id, btn) {
   if (id === 'notebook') loadNotebook();
   if (id === 'athlete-notebook') loadAthleteNotebook();
   if (id === 'erfassen') loadSessionTricks();
+  if (typeof updateMobileNav === 'function') updateMobileNav(id);
 }
 
 const CLASSIC_ACRO_AXES_FS = new Set(['Backroll','Frontroll','Underflip','Wildcat','Tamedog']);
@@ -5163,6 +5247,35 @@ document.getElementById('f-datum').valueAsDate = new Date();
     </div>
   </div>
 </div>
+
+<nav class="mobile-nav" id="mobile-nav">
+  <button class="mobile-nav-btn" onclick="showPage('standort', this); updateMobileNav('standort')">
+    <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+    Assessment
+  </button>
+  <button class="mobile-nav-btn" onclick="showPage('erfassen', this); updateMobileNav('erfassen')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+    Session
+  </button>
+  <button class="mobile-nav-btn" onclick="showPage('entwicklung', this); updateMobileNav('entwicklung')">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Development
+  </button>
+  <button class="mobile-nav-btn" onclick="showPage('datenbank', this); updateMobileNav('datenbank')">
+    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+    Database
+  </button>
+</nav>
+
+<script>
+function updateMobileNav(pageId) {
+  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+  const idx = {'standort':0,'erfassen':1,'entwicklung':2,'datenbank':3};
+  const btns = document.querySelectorAll('.mobile-nav-btn');
+  if (btns[idx[pageId]] !== undefined) btns[idx[pageId]].classList.add('active');
+}
+document.addEventListener('DOMContentLoaded', () => updateMobileNav('standort'));
+</script>
 
 </body>
 </html>
