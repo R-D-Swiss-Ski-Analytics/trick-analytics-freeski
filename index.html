@@ -632,6 +632,7 @@
       </div>
       <div style="display:flex;gap:10px;">
         <button onclick="pauseSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">+ Add Athlete or Trick</button>
+        <button onclick="cancelSession()" style="padding:9px 16px;background:none;border:1px solid #e2001a;border-radius:8px;color:#e2001a;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✕ Cancel</button>
         <button onclick="endSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✓ End Session</button>
       </div>
     </div>
@@ -1313,7 +1314,8 @@
           <option value="session">Nur Session</option>
           <option value="standort">Nur Assessment</option>
         </select>
-        <button class="btn-secondary" onclick="downloadExcel()" style="white-space:nowrap;">⬇ Excel</button>
+        <button class="btn-secondary" onclick="openTeamPdfReport()" style="white-space:nowrap;">📄 Team Report</button>
+        <button class="btn-secondary" onclick="downloadExcel()" style="white-space:nowrap;">⬇ CSV</button>
       </div>
     </div>
     <div class="table-wrap">
@@ -2397,6 +2399,81 @@ function renderDBRankings() {
   }).join('') : '<div style="color:var(--muted);font-size:13px;">No data yet.</div>';
 }
 
+function openTeamPdfReport() {
+  if (!dbAllTricks || !dbAllTricks.length) { showToast('No data to export', 'error'); return; }
+  const filterAthlet = document.getElementById('db-filter-athlet')?.value || '';
+  const data = filterAthlet ? dbAllTricks.filter(t=>t.athlet===filterAthlet) : dbAllTricks;
+  if (!data.length) { showToast('No data to export', 'error'); return; }
+
+  function fmtDate(d) { if(!d) return '—'; const p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); }
+  function pr(k,t){ const m=(t.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
+
+  // Group by athlete
+  const byAthlet = {};
+  data.forEach(t => {
+    if (!t.athlet) return;
+    if (!byAthlet[t.athlet]) byAthlet[t.athlet] = [];
+    byAthlet[t.athlet].push(t);
+  });
+
+  const athleteSections = Object.entries(byAthlet).sort(([a],[b])=>a.localeCompare(b)).map(([athlet, tricks]) => {
+    const totalAtt = tricks.length;
+    const totalLand = tricks.filter(t=>t.gelandet==='Yes').length;
+    const landPct = totalAtt ? Math.round(totalLand/totalAtt*100) : 0;
+
+    // Group by trick
+    const byTrick = {};
+    tricks.forEach(t => {
+      const key = t.trickaufbau||'—';
+      if (!byTrick[key]) byTrick[key] = {att:0,land:0,dates:new Set(),type:new Set()};
+      byTrick[key].att++;
+      if(t.gelandet==='Yes') byTrick[key].land++;
+      if(t.datum) byTrick[key].dates.add(fmtDate(t.datum));
+      if(t.typ) byTrick[key].type.add(t.typ);
+    });
+
+    const trickRows = Object.entries(byTrick)
+      .sort((a,b)=>b[1].att-a[1].att)
+      .map(([trick,s]) => {
+        const lp = s.att ? Math.round(s.land/s.att*100) : 0;
+        const typeStr = [...s.type].map(t=>({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[t]||t)).join(', ');
+        return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center">${s.land}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#2d8a4e':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:11px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
+      }).join('');
+
+    return `<div class="ath-block">
+      <div class="ath-name">${athlet}</div>
+      <div class="ath-sum">${totalAtt} attempts &nbsp;·&nbsp; ${totalLand} landed &nbsp;·&nbsp; ${landPct}%</div>
+      <table><thead><tr><th>Trick</th><th>Type</th><th>Att.</th><th>Landed</th><th>Rate</th><th>Sessions</th></tr></thead><tbody>${trickRows}</tbody></table>
+    </div>`;
+  }).join('');
+
+  const today = new Date().toLocaleDateString('en-GB');
+  const title = filterAthlet ? filterAthlet : 'Full Team';
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Team Report — ${title}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;padding:32px 40px;max-width:900px;margin:0 auto;font-size:13px;}
+  .print-btn{margin-bottom:24px;}
+  .print-btn button{padding:9px 22px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;}
+  h1{font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:20px;}
+  .ath-block{margin-bottom:24px;border:1px solid #e0e0e0;border-radius:4px;overflow:hidden;page-break-inside:avoid;}
+  .ath-name{background:#1a1a1a;color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;}
+  .ath-sum{background:#f9f9f9;border-bottom:1px solid #e0e0e0;padding:6px 12px;font-size:12px;color:#555;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:#f0f0f0;padding:6px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#666;}
+  td{padding:6px 10px;border-top:1px solid #eee;font-size:12px;}
+  footer{margin-top:28px;border-top:1px solid #ddd;padding-top:10px;font-size:11px;color:#aaa;display:flex;justify-content:space-between;}
+  @media print{.print-btn{display:none;} body{padding:16px;}}
+</style></head><body>
+  <div class="print-btn"><button onclick="window.print()">Print / Save as PDF</button></div>
+  <h1>Team Report — ${title}</h1>
+  ${athleteSections}
+  <footer><span>Swiss-Ski Trick Collector Freeski</span><span>Generated ${today}</span></footer>
+</body></html>`);
+  win.document.close();
+}
+
 function renderDBTable() {
   const filterAthlet = document.getElementById('db-filter-athlet').value;
   const filterQuelle = document.getElementById('db-filter-quelle').value;
@@ -3272,6 +3349,19 @@ function resetSession() {
   document.getElementById('sess-setup').style.display='block';
   document.getElementById('sess-live').style.display='none';
   initSessionSetup();
+}
+
+async function cancelSession() {
+  const confirmed = confirm(
+    'Are you sure you want to cancel this session?\n\n' +
+    'All recorded attempts will be permanently deleted and cannot be recovered.'
+  );
+  if (!confirmed) return;
+  const ids = sessLog.filter(e => e.dbId).map(e => e.dbId);
+  if (ids.length > 0) await db.from('tricks').delete().in('id', ids);
+  sessLog = [];
+  pauseSession();
+  showToast('Session cancelled — all data deleted', 'error');
 }
 
 function endSession() {
