@@ -4373,8 +4373,6 @@ function renderSbTrickAnalytics() {
 
     const cardsHtml = Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
       const landPct = s.att ? Math.round(s.land/s.att*100) : 0;
-      const qualVals = []; sd.filter(t=>normSbTrick(t.trickaufbau||'—')===trick).forEach(t=>{ const q=sbExtractQuality(t); if(q!==null)qualVals.push(q); });
-      const qualAvg = avg(qualVals);
       const total = s.att || 1;
       return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
@@ -4382,7 +4380,6 @@ function renderSbTrickAnalytics() {
           <div style="text-align:right;flex-shrink:0;">
             <span style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${s.land} / ${s.att}</span>
             <span style="font-size:10px;color:var(--muted);display:block;">landed</span>
-            ${qualAvg!==null?`<span style="font-size:11px;font-weight:700;color:#39c3d4;display:block;margin-top:2px;">${qualAvg}% quality</span>`:''}
           </div>
         </div>
         <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;">
