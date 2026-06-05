@@ -1987,41 +1987,65 @@ async function realityCheck() {
   });
   const athletes = Object.keys(byAthlet).sort();
 
-  // Show modal preview with athlete checkboxes
+  // Helper: build full trick description from standort fields
+  function rcTrickDesc(f) {
+    if (f.trick_label) return f.trick_label;
+    const parts = [f.drehrichtung, f.flips, f.rotation ? f.rotation+'°' : null, f.achse, f.grab].filter(Boolean);
+    return parts.join(' ') || '—';
+  }
+
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   modal.innerHTML = `
-    <div style="background:#0d1f33;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;">
-      <div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">🔍 Reality Check Preview</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
-        Based on session data since ${seasonFrom.split('-').reverse().join('.')} — select which athletes to apply changes to:
+    <div style="background:#0d1f33;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:660px;width:100%;max-height:88vh;display:flex;flex-direction:column;">
+      <!-- Header -->
+      <div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">🔍 Reality Check</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
+        Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} trick${flagged.length!==1?'s':''} below 70% quality · select athletes to apply
       </div>
-      <div style="margin-bottom:8px;display:flex;gap:8px;">
-        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=true)" style="padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Select all</button>
-        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=false)" style="padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Deselect all</button>
+      <!-- Search + select all -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+        <input id="rc-search" type="text" placeholder="Search athlete…" oninput="rcFilter(this.value)"
+          style="flex:1;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:Poppins,sans-serif;">
+        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=true)"  style="padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);white-space:nowrap;">✓ All</button>
+        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=false)" style="padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);white-space:nowrap;">✗ None</button>
       </div>
-      <div style="margin-bottom:16px;">
+      <!-- Athlete list -->
+      <div id="rc-list" style="overflow-y:auto;flex:1;margin-bottom:14px;">
         ${athletes.map(athlet => `
-          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:6px;">
+          <div class="rc-ath-row" data-name="${athlet.toLowerCase()}" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;">
+            <!-- Athlete header -->
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--surface2);">
               <input type="checkbox" class="rc-chk" data-athlet="${athlet}" checked
-                style="width:16px;height:16px;accent-color:#f59e0b;cursor:pointer;">
-              <span style="font-size:14px;font-weight:700;color:var(--text);">${athlet}</span>
-              <span style="font-size:11px;color:var(--muted);">${byAthlet[athlet].length} trick${byAthlet[athlet].length!==1?'s':''}</span>
+                style="width:15px;height:15px;accent-color:#f59e0b;cursor:pointer;flex-shrink:0;">
+              <span style="font-size:13px;font-weight:700;color:var(--text);flex:1;">${athlet}</span>
+              <span style="font-size:11px;color:var(--muted);">${byAthlet[athlet].length} trick${byAthlet[athlet].length!==1?'s':''} affected</span>
             </label>
+            <!-- Tricks -->
             ${byAthlet[athlet].map(f=>`
-              <div style="display:flex;justify-content:space-between;padding:4px 8px 4px 26px;font-size:11px;border-top:1px solid var(--border);">
-                <span style="color:var(--muted);">${f.drehrichtung||''} ${f.rotation||''}° ${f.grab||''}</span>
-                <span style="color:#f59e0b;">${f.reason}</span>
+              <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;padding:7px 14px 7px 38px;border-top:1px solid var(--border);">
+                <div>
+                  <div style="font-size:12px;color:var(--text);font-weight:500;">${rcTrickDesc(f)}</div>
+                  ${f.disziplin?`<div style="font-size:10px;color:var(--muted);margin-top:1px;">${f.disziplin}</div>`:''}
+                </div>
+                <span style="font-size:11px;color:#f59e0b;white-space:nowrap;font-weight:600;">${f.reason}</span>
               </div>`).join('')}
           </div>`).join('')}
       </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <!-- Footer -->
+      <div style="display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:14px;">
         <button onclick="this.closest('[style*=inset]').remove()" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Cancel</button>
-        <button id="rc-apply-btn" onclick="applyRealityCheckSelected(${JSON.stringify(flagged)},this)" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply selected</button>
+        <button onclick="applyRealityCheckSelected(${JSON.stringify(flagged)},this)" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply selected</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
+}
+
+function rcFilter(query) {
+  const q = query.toLowerCase().trim();
+  document.querySelectorAll('.rc-ath-row').forEach(row => {
+    row.style.display = (!q || row.dataset.name.includes(q)) ? '' : 'none';
+  });
 }
 
 async function applyRealityCheckSelected(flagged, btn) {
