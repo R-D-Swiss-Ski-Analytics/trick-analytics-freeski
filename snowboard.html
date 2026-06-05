@@ -489,7 +489,7 @@
         <div style="color:var(--muted);font-size:12px;" id="sess-live-date"></div>
       </div>
       <div style="display:flex;gap:10px;">
-        <button onclick="resetSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">+ Add Athlete or Trick</button>
+        <button onclick="resetSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">+ Add Athlete</button>
         <button onclick="endSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✓ End Session</button>
       </div>
     </div>
@@ -2727,7 +2727,7 @@ function renderSbDirRadar() {
   canvas.style.width=size+'px'; canvas.style.height=size+'px';
   canvas.width=size*dpr; canvas.height=size*dpr;
   const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
-  const W=size,H=size,cx=W/2,cy=H/2,r=Math.min(W,H)/2-110;
+  const W=size,H=size,cx=W/2,cy=H/2,r=Math.min(W,H)/2-130;
   ctx.clearRect(0,0,W,H);
   const angles=DIRS.map((_,i)=>i*2*Math.PI/4-Math.PI/4);
 
