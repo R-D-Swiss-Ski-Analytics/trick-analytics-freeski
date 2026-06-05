@@ -2785,6 +2785,53 @@ function renderSbDirRadar() {
 }
 
 
+function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const total = dirs.reduce((s,d)=>s+dirCnt[d].tricks,0) || 1;
+  const vals = dirs.map(d=>dirCnt[d].tricks/total);
+  const dpr = window.devicePixelRatio || 1;
+  const size = Math.min((canvas.parentElement?.offsetWidth||300)-32, 300);
+  canvas.style.width = size+'px'; canvas.style.height = size+'px';
+  canvas.width = size*dpr; canvas.height = size*dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const W=size,H=size,cx=W/2,cy=H/2,r=Math.min(W,H)/2-70;
+  ctx.clearRect(0,0,W,H);
+  const angles = dirs.map((_,i)=>i*2*Math.PI/dirs.length - Math.PI/2);
+
+  // Grid rings
+  [0.25,0.5,0.75,1].forEach(f=>{
+    ctx.beginPath();
+    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*f,y=cy+Math.sin(a)*r*f;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='rgba(10,12,15,0.2)';ctx.fill();
+  });
+  // Axes
+  angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;ctx.stroke();});
+
+  // Filled polygon
+  ctx.beginPath();
+  angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*Math.max(vals[i],0.02),y=cy+Math.sin(a)*r*Math.max(vals[i],0.02);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.closePath();ctx.fillStyle='rgba(57,195,212,0.15)';ctx.fill();
+  ctx.strokeStyle='#39c3d4';ctx.lineWidth=2;ctx.stroke();
+
+  // Dots + labels
+  angles.forEach((a,i)=>{
+    const vx=cx+Math.cos(a)*r*Math.max(vals[i],0.02),vy=cy+Math.sin(a)*r*Math.max(vals[i],0.02);
+    ctx.beginPath();ctx.arc(vx,vy,5,0,2*Math.PI);ctx.fillStyle=dirColors[dirs[i]];ctx.fill();
+    const lx=cx+Math.cos(a)*(r+48),ly=cy+Math.sin(a)*(r+48);
+    const align=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center';
+    ctx.textAlign=align;ctx.textBaseline='middle';
+    ctx.font='bold 11px Poppins,sans-serif';ctx.fillStyle='#e8edf2';
+    ctx.fillText(dirs[i],lx,ly-10);
+    ctx.font='bold 13px Poppins,sans-serif';ctx.fillStyle=dirColors[dirs[i]];
+    ctx.fillText(dirCnt[dirs[i]].tricks+' trick'+(dirCnt[dirs[i]].tricks!==1?'s':''),lx,ly+5);
+    ctx.font='10px Poppins,sans-serif';ctx.fillStyle='rgba(255,255,255,0.4)';
+    ctx.fillText(dirCnt[dirs[i]].att+' att.',lx,ly+19);
+  });
+}
+
 function renderStandort() {
   // Stats
   const mastered = sbData.filter(e => e.status === 'mastered').length;
@@ -3690,8 +3737,21 @@ function renderTrickAnalytics() {
     });
     const colQ = v=>v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
 
-    el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">📅 ${label} — ${sd.length} attempts, ${Object.keys(tmap).length} tricks</div>` +
-      Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
+    // Direction distribution for radar
+    const SESS_DIRS = ['Left','Right','Switch Left','Switch Right'];
+    const SESS_DIR_COL = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
+    const dirCnt = {}; SESS_DIRS.forEach(d=>dirCnt[d]={tricks:0,att:0});
+    Object.entries(tmap).forEach(([trick,s])=>{
+      let dir=null;
+      if(trick.includes('Switch Left')) dir='Switch Left';
+      else if(trick.includes('Switch Right')) dir='Switch Right';
+      else if(trick.includes('Left')) dir='Left';
+      else if(trick.includes('Right')) dir='Right';
+      if(dir){dirCnt[dir].tricks++;dirCnt[dir].att+=s.att;}
+    });
+    const radarTotal = SESS_DIRS.reduce((s,d)=>s+dirCnt[d].tricks,0);
+
+    const cardsHtml = Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
         const hasComp = s.grab.length>0;
         const gA=avg(s.grab),tA=avg(s.trick),lA=avg(s.land_r);
         const landPct=s.att?Math.round(s.land/s.att*100):0;
@@ -3717,7 +3777,18 @@ function renderTrickAnalytics() {
           </div>
           ${bars}
         </div>`;
-      }).join('');
+    }).join('');
+
+    el.innerHTML =
+      `<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">📅 ${label} — ${sd.length} attempts, ${Object.keys(tmap).length} tricks</div>` +
+      (radarTotal > 0 ? `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Direction Distribution</div>
+          <canvas id="sess-dir-radar" style="width:100%;max-width:300px;display:block;margin:0 auto;"></canvas>
+        </div>` : '') +
+      cardsHtml;
+
+    if (radarTotal > 0) requestAnimationFrame(() => drawSessionDirRadar('sess-dir-radar', dirCnt, SESS_DIRS, SESS_DIR_COL));
     return;
   }
 
