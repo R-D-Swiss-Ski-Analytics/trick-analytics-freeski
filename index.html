@@ -1646,6 +1646,27 @@ let dbAllStandort = [];  // standort tricks
 
 let _perfTypeFilter = '';
 
+function showPerfTip(e, text) {
+  let tt = document.getElementById('perf-tooltip');
+  if (!tt) {
+    tt = document.createElement('div');
+    tt.id = 'perf-tooltip';
+    tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:8px;padding:8px 12px;font-size:12px;font-family:Poppins,sans-serif;pointer-events:none;z-index:9999;max-width:320px;box-shadow:0 4px 16px rgba(0,0,0,0.5);';
+    document.body.appendChild(tt);
+  }
+  const parts = text.split(' | ');
+  tt.innerHTML = `<div style="font-weight:700;color:#e8edf2;margin-bottom:4px;">${parts[0]||''}</div>
+    <div style="color:var(--muted);font-size:11px;">${parts[1]||''}</div>`;
+  tt.style.display = 'block';
+  const tx = e.clientX+14, ty = e.clientY-10;
+  tt.style.left = (tx+tt.offsetWidth > window.innerWidth-10 ? e.clientX-tt.offsetWidth-14 : tx)+'px';
+  tt.style.top  = ty+'px';
+}
+function hidePerfTip() {
+  const tt = document.getElementById('perf-tooltip');
+  if (tt) tt.style.display = 'none';
+}
+
 function setPerfFilter(typ) {
   _perfTypeFilter = typ;
   const map = {'':'pf-all','Landing Bag':'pf-bag','Jump On-Snow':'pf-jump','Big Air Competition':'pf-comp'};
@@ -1765,37 +1786,35 @@ function renderSessionPerformance() {
   const medal = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
 
   function dirCell(b, dir) {
-    if (!b) return `<td style="text-align:center;color:var(--muted);font-size:13px;">—</td>`;
+    if (!b) return `<td style="text-align:center;color:var(--muted);font-size:13px;padding:12px 8px;">—</td>`;
     const st = status(b.landPct, b.avgQ);
-    const shortTrick = b.trick.length > 35 ? b.trick.slice(0,34)+'…' : b.trick;
-    return `<td style="padding:6px 10px;vertical-align:top;" title="${b.trick}">
-      <div style="font-size:18px;text-align:center;">${st.icon}</div>
-      <div style="font-size:11px;font-weight:700;color:${DIR_COL[dir]};text-align:center;">${b.rot||'?'}°</div>
-      <div style="font-size:10px;color:var(--muted);text-align:center;">${b.landPct}% land · ${b.avgQ}% qual</div>
-      <div style="font-size:10px;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;">${shortTrick}</div>
+    const tip = `${b.trick} | ${b.landPct}% landed · ${b.avgQ}% quality · ${b.att} attempts`;
+    return `<td style="text-align:center;padding:10px 8px;cursor:default;"
+      onmouseenter="showPerfTip(event,\`${tip.replace(/`/g,"'")}\`)"
+      onmouseleave="hidePerfTip()">
+      <div style="font-size:18px;">${st.icon}</div>
+      <div style="font-size:12px;font-weight:700;color:${DIR_COL[dir]};">${b.rot||'?'}°</div>
     </td>`;
   }
 
   el.innerHTML = `
     <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">
-      Best trick per direction · Score = Rotation × Landing × Quality &nbsp;·&nbsp;
-      🟢 land ≥70% <b>und</b> qual ≥70% &nbsp; 🟡 eines ≥50% &nbsp; 🔴 beides &lt;50%
+      Best trick per direction (by score) &nbsp;·&nbsp;
+      🟢 land ≥70% <b>and</b> quality ≥70% &nbsp; 🟡 one ≥50% &nbsp; 🔴 both &lt;50% &nbsp;·&nbsp; Hover for details
     </div>
     <div class="table-wrap"><table>
       <thead><tr>
         <th>Athlete</th>
         ${DIRS.map(d=>`<th style="text-align:center;color:${DIR_COL[d]};">${d}</th>`).join('')}
-        <th style="text-align:center;">🟢</th>
       </tr></thead>
       <tbody>
-        ${athletes.map(({athlet, dirs, greenCount, totalAtt}, i) => `
+        ${athletes.map(({athlet, dirs, totalAtt}, i) => `
           <tr>
             <td style="white-space:nowrap;vertical-align:middle;">
               <strong>${medal(i)} ${shortName(athlet)}</strong>
               <div style="font-size:10px;color:var(--muted);">${totalAtt} att.</div>
             </td>
             ${DIRS.map(d => dirCell(dirs[d], d)).join('')}
-            <td style="text-align:center;vertical-align:middle;font-size:18px;font-weight:800;color:${greenCount>=3?'#2d8a4e':greenCount>=1?'#f59e0b':'#e2001a'};">${greenCount}/4</td>
           </tr>`).join('')}
       </tbody>
     </table></div>`;
