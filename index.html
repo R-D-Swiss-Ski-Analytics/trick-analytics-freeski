@@ -2808,13 +2808,6 @@ function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
     ctx.closePath();
     ctx.fillStyle=dirColors[d]; ctx.fill();
     ctx.strokeStyle='#0b1929'; ctx.lineWidth=2; ctx.stroke();
-    const pct = Math.round(dirCnt[d].att/total*100);
-    if(pct>=10){
-      const midA = startAngle+slice/2;
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.font='bold 12px Poppins,sans-serif'; ctx.fillStyle='rgba(255,255,255,0.95)';
-      ctx.fillText(pct+'%', cx+Math.cos(midA)*r*0.63, cy+Math.sin(midA)*r*0.63);
-    }
     startAngle += slice;
   });
 }
