@@ -3858,7 +3858,7 @@ function renderTrickAnalytics() {
   const pieId = 'ta-pie-'+Date.now();
   const cid = 'ta-chart-'+Date.now();
   el.innerHTML = statsHtml + legend + `<canvas id="${cid}" style="width:100%;"></canvas>` +
-    (ovDirTotal>0 ? `
+    (!chosen && ovDirTotal>0 ? `
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px;">
         <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:32px;">
@@ -3928,7 +3928,7 @@ function renderTrickAnalytics() {
     });
   });
 
-  if(ovDirTotal>0) requestAnimationFrame(()=>drawSessionDirRadar(pieId, ovDirCntFinal, OV_DIRS, OV_DIR_COL));
+  if(!chosen && ovDirTotal>0) requestAnimationFrame(()=>drawSessionDirRadar(pieId, ovDirCntFinal, OV_DIRS, OV_DIR_COL));
 }
 
 function updateQualityChart() {
