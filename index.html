@@ -1991,7 +1991,7 @@ function renderSessionPerformance() {
   function dirCell(b, dir) {
     if (!b) return `<td style="text-align:center;color:var(--muted);font-size:13px;padding:12px 8px;">—</td>`;
     const st = status(b.landPct, b.avgQ);
-    const tip = `${b.trick} | ${b.landPct}% landed · ${b.avgQ}% quality · ${b.att} attempts`;
+    const tip = `${b.trick} | ${b.landPct}% landed · ${b.avgQ}% exec. quality · ${b.att} attempts`;
     return `<td style="text-align:center;padding:10px 8px;cursor:default;"
       onmouseenter="showPerfTip(event,\`${tip.replace(/`/g,"'")}\`)"
       onmouseleave="hidePerfTip()">
@@ -2063,7 +2063,7 @@ function renderSessionPerformance() {
                 </div>
                 <div style="display:flex;gap:10px;margin-top:4px;font-size:11px;font-weight:700;">
                   <span style="color:${landPct>=70?'#2d8a4e':landPct>=50?'#f59e0b':'#e2001a'};">${landPct}% landed</span>
-                  <span style="color:${avgQ>=70?'#2d8a4e':avgQ>=50?'#f59e0b':'#e2001a'};">${avgQ}% quality</span>
+                  <span style="color:${avgQ>=70?'#2d8a4e':avgQ>=50?'#f59e0b':'#e2001a'};">${avgQ}% exec. quality</span>
                   <span style="color:var(--muted);font-weight:400;">${s.att} att.</span>
                 </div>
               </div>`;
@@ -2147,7 +2147,7 @@ async function realityCheck() {
       <!-- Header -->
       <div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">🔍 Reality Check</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
-        Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} trick${flagged.length!==1?'s':''} below 70% quality · select athletes to apply
+        Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} trick${flagged.length!==1?'s':''} below 70% exec. quality · select athletes to apply
       </div>
       <!-- Search + select all -->
       <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
@@ -4651,7 +4651,7 @@ function renderSessionSummary(data, sessionLabel) {
     const hasComp = s.grab.length > 0;
     const gAvg=avg(s.grab), tAvg=avg(s.trick), lAvg=avg(s.land_r);
     const landPct = s.att ? Math.round(s.land/s.att*100) : 0;
-    // Overall quality score = average of the three component averages (where available)
+    // Execution quality = Grab + Trick only (Landing captured separately as landing rate)
     const qualVals = [gAvg, tAvg].filter(v => v !== null); // Grab+Trick only
     const qualAvg = qualVals.length ? Math.round(qualVals.reduce((a,b)=>a+b,0)/qualVals.length) : null;
 
@@ -4673,7 +4673,7 @@ function renderSessionSummary(data, sessionLabel) {
         <div style="text-align:right;flex-shrink:0;">
           <div style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${s.land} / ${s.att}</div>
           <div style="font-size:10px;color:var(--muted);">landed</div>
-          ${qualAvg!==null?`<div style="font-size:11px;font-weight:700;color:#39c3d4;margin-top:4px;">${qualAvg}% quality</div>`:''}
+          ${qualAvg!==null?`<div style="font-size:11px;font-weight:700;color:#39c3d4;margin-top:4px;">${qualAvg}% exec. quality</div>`:''}
         </div>
       </div>
       ${compBars}
@@ -4900,7 +4900,7 @@ function renderTrickAnalytics() {
         const hasComp = s.grab.length>0;
         const gA=avg(s.grab),tA=avg(s.trick),lA=avg(s.land_r);
         const landPct=s.att?Math.round(s.land/s.att*100):0;
-        const qualVals=[gA,tA,lA].filter(v=>v!==null);
+        const qualVals=[gA,tA].filter(v=>v!==null); // Grab+Trick only
         const qualAvg=qualVals.length?Math.round(qualVals.reduce((a,b)=>a+b,0)/qualVals.length):null;
         const bars = hasComp ? [['Grab',gA,'#f59e0b'],['Trick',tA,'#39c3d4'],['Landing',lA,'#2d8a4e']].map(([lbl,val,col])=>
           val!==null?`<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
@@ -4917,7 +4917,7 @@ function renderTrickAnalytics() {
             <div style="text-align:right;flex-shrink:0;">
               <span style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${s.land} / ${s.att}</span>
               <span style="font-size:10px;color:var(--muted);display:block;">landed</span>
-              ${qualAvg!==null?`<span style="font-size:11px;font-weight:700;color:#39c3d4;display:block;margin-top:2px;">${qualAvg}% quality</span>`:''}
+              ${qualAvg!==null?`<span style="font-size:11px;font-weight:700;color:#39c3d4;display:block;margin-top:2px;">${qualAvg}% exec. quality</span>`:''}
             </div>
           </div>
           ${bars}
