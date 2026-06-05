@@ -1083,7 +1083,7 @@
   <!-- ── SECTION 1: SESSION PERFORMANCE ─────────────────────────── -->
   <div class="card" style="margin-bottom:20px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent);">📊 Session Performance</div>
+      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent);">📊 Team Overview — Session Quality</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <div style="display:flex;gap:4px;">
           <button id="pf-all"  onclick="setPerfFilter('')"                    style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
@@ -1114,7 +1114,7 @@
   <!-- ── SECTION 2: TEAM ASSESSMENT ─────────────────────────────── -->
   <div class="card" style="margin-bottom:20px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">📋 Team Assessment</div>
+      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">📋 Team Overview — Assessment</div>
       <div style="display:flex;gap:8px;">
         <button onclick="realityCheck()" style="padding:7px 14px;border-radius:8px;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
         <button class="btn-secondary" onclick="downloadRanking()" style="white-space:nowrap;">⬇ Export</button>
@@ -1694,8 +1694,11 @@ function onPfSeasonChange() {
   const sel = document.getElementById('pf-season')?.value;
   const rangeDiv = document.getElementById('pf-custom-range');
   if (rangeDiv) rangeDiv.style.display = sel === 'custom' ? 'flex' : 'none';
-  if (sel !== 'custom') { _pfCustomFrom = ''; _pfCustomTo = ''; }
-  renderSessionPerformance();
+  if (sel !== 'custom') {
+    _pfCustomFrom = ''; _pfCustomTo = '';
+    renderSessionPerformance(); // re-render immediately for preset ranges
+  }
+  // For custom: wait until dates are entered via setPerfDateRange()
 }
 
 function setPerfDateRange() {
@@ -1976,39 +1979,62 @@ async function realityCheck() {
     return;
   }
 
-  // Show modal preview
+  // Group flagged by athlete for display + selection
+  const byAthlet = {};
+  flagged.forEach(f => {
+    if (!byAthlet[f.athlet]) byAthlet[f.athlet] = [];
+    byAthlet[f.athlet].push(f);
+  });
+  const athletes = Object.keys(byAthlet).sort();
+
+  // Show modal preview with athlete checkboxes
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   modal.innerHTML = `
-    <div style="background:#0d1f33;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:600px;width:100%;max-height:80vh;overflow-y:auto;">
+    <div style="background:#0d1f33;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;">
       <div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">🔍 Reality Check Preview</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
-        Based on session data since ${seasonFrom.split('-').reverse().join('.')} — ${flagged.length} trick${flagged.length!==1?'s':''} would be moved from <strong style="color:#2d8a4e;">Mastered</strong> → <strong style="color:#f59e0b;">Goal</strong>:
+        Based on session data since ${seasonFrom.split('-').reverse().join('.')} — select which athletes to apply changes to:
+      </div>
+      <div style="margin-bottom:8px;display:flex;gap:8px;">
+        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=true)" style="padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Select all</button>
+        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=false)" style="padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Deselect all</button>
       </div>
       <div style="margin-bottom:16px;">
-        ${flagged.map(f=>`
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:8px;margin-bottom:6px;gap:8px;">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text);">${shortName(f.athlet)}</div>
-              <div style="font-size:11px;color:var(--muted);">${f.drehrichtung||''} ${f.rotation||''}° ${f.grab||''}</div>
-            </div>
-            <div style="text-align:right;font-size:11px;color:#f59e0b;">${f.reason}</div>
+        ${athletes.map(athlet => `
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:6px;">
+              <input type="checkbox" class="rc-chk" data-athlet="${athlet}" checked
+                style="width:16px;height:16px;accent-color:#f59e0b;cursor:pointer;">
+              <span style="font-size:14px;font-weight:700;color:var(--text);">${athlet}</span>
+              <span style="font-size:11px;color:var(--muted);">${byAthlet[athlet].length} trick${byAthlet[athlet].length!==1?'s':''}</span>
+            </label>
+            ${byAthlet[athlet].map(f=>`
+              <div style="display:flex;justify-content:space-between;padding:4px 8px 4px 26px;font-size:11px;border-top:1px solid var(--border);">
+                <span style="color:var(--muted);">${f.drehrichtung||''} ${f.rotation||''}° ${f.grab||''}</span>
+                <span style="color:#f59e0b;">${f.reason}</span>
+              </div>`).join('')}
           </div>`).join('')}
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;">
         <button onclick="this.closest('[style*=inset]').remove()" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Cancel</button>
-        <button onclick="applyRealityCheck(${JSON.stringify(flagged.map(f=>f.id))},this)" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply (${flagged.length} changes)</button>
+        <button id="rc-apply-btn" onclick="applyRealityCheckSelected(${JSON.stringify(flagged)},this)" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply selected</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
 }
 
-async function applyRealityCheck(ids, btn) {
+async function applyRealityCheckSelected(flagged, btn) {
+  // Get selected athletes from checkboxes
+  const checked = [...document.querySelectorAll('.rc-chk:checked')].map(c => c.dataset.athlet);
+  if (!checked.length) { showToast('No athletes selected', 'error'); return; }
+  const ids = flagged.filter(f => checked.includes(f.athlet)).map(f => f.id);
+  if (!ids.length) { showToast('No entries to update', 'error'); return; }
   btn.textContent = 'Applying…'; btn.disabled = true;
   const { error } = await db.from('standort').update({status:'goal'}).in('id', ids);
-  if (error) { showToast('Error: '+error.message, 'error'); btn.textContent='Error'; return; }
+  if (error) { showToast('Error: '+error.message, 'error'); btn.textContent='Apply selected'; btn.disabled=false; return; }
   btn.closest('[style*=inset]').remove();
-  showToast(`✅ ${ids.length} trick${ids.length!==1?'s':''} moved from Mastered → Goal`, 'success');
+  showToast(`✅ ${ids.length} trick${ids.length!==1?'s':''} moved from Mastered → Goal (${checked.length} athlete${checked.length!==1?'s':''})`, 'success');
   loadDB();
 }
 
