@@ -3150,7 +3150,7 @@ function endSession() {
     <div style="display:flex;flex-direction:column;gap:14px;">
       <div>
         <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Location</label>
-        <input id="sr-location" type="text" placeholder="e.g. Laax Kicker Park" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
+        <input id="sr-location" type="text" placeholder="e.g. Laax" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
       </div>
       <div>
         <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Conditions</label>
@@ -3287,7 +3287,7 @@ function openReportPrint(report) {
   <h1>Session Report</h1>
   <div class="meta">
     <span>📅 ${dateStr}</span>
-    <span>🏷️ ${d.session_type||'Training'}</span>
+    <span>🏷️ ${({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Competition'}[d.session_type]||d.session_type||'—')}</span>
     <span>⏱️ ${durH}</span>
     <span>📍 ${d.location||'—'}</span>
     <span>⛷️ Conditions: ${condStars}</span>
@@ -3312,7 +3312,7 @@ async function viewSessionReportByDate(date) {
   modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:24px;max-width:400px;width:100%;">
     <div style="font-size:16px;font-weight:700;color:#39c3d4;margin-bottom:16px;">Multiple reports for ${date}</div>
     ${data.map((r,i)=>`<button onclick="document.getElementById('sr-pick-modal').remove();openReportPrint(window._srPickData[${i}])" style="display:block;width:100%;text-align:left;padding:10px 14px;margin-bottom:8px;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;">
-      ${r.session_type||'Training'} · ${(r.athletes||[]).map(a=>a.split(' ')[0]).join(', ')} · ${r.duration_min}min
+      ${({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Competition'}[r.session_type]||r.session_type||'—')} · ${(r.athletes||[]).map(a=>a.split(' ')[0]).join(', ')} · ${r.duration_min}min
     </button>`).join('')}
     <button onclick="document.getElementById('sr-pick-modal').remove()" style="padding:8px 16px;background:none;border:1px solid #1a3450;border-radius:8px;color:#6b8299;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;margin-top:4px;">Cancel</button>
   </div>`;
