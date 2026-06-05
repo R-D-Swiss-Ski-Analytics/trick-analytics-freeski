@@ -2634,7 +2634,8 @@ function renderSbDirRadar() {
   if (!mastered.length && !goals.length) { wrap.style.display='none'; return; }
   wrap.style.display = 'block';
 
-  const DIRS = ['Frontside','Backside','Cab','Switch Backside'];
+  // Clockwise from top-left: Backside(TL), Frontside(TR), Switch Backside(BR), Cab(BL)
+  const DIRS = ['Frontside','Switch Backside','Cab','Backside'];
   const getDir = raw => {
     const s = (raw||'').trim();
     if(s==='Frontside') return 'Frontside';
@@ -2666,7 +2667,7 @@ function renderSbDirRadar() {
   canvas.style.width=size+'px'; canvas.style.height=size+'px';
   canvas.width=size*dpr; canvas.height=size*dpr;
   const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
-  const W=size,H=size,cx=W/2,cy=H/2,r=Math.min(W,H)/2-90;
+  const W=size,H=size,cx=W/2,cy=H/2,r=Math.min(W,H)/2-110;
   ctx.clearRect(0,0,W,H);
   const angles=DIRS.map((_,i)=>i*2*Math.PI/4-Math.PI/4);
 
@@ -2711,7 +2712,7 @@ function renderSbDirRadar() {
   // Labels
   const DIR_COL={'Frontside':'#39c3d4','Backside':'#3b82f6','Cab':'#a78bfa','Switch Backside':'#f59e0b'};
   angles.forEach((a,i)=>{
-    const lx=cx+Math.cos(a)*(r+52),ly=cy+Math.sin(a)*(r+52);
+    const lx=cx+Math.cos(a)*(r+62),ly=cy+Math.sin(a)*(r+62);
     const align=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center';
     ctx.textAlign=align;ctx.textBaseline='middle';
     ctx.font='bold 12px Poppins,sans-serif';ctx.fillStyle='#e8edf2';
