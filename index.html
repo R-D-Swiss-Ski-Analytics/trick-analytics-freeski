@@ -3108,7 +3108,7 @@ async function loadEntwicklung() {
       <span style="font-size:11px;color:var(--muted);align-self:center;margin-right:2px;">Filter:</span>
       <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
       <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
-      <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Jump</button>
+      <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
       <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>`;
     modeDiv.after(fRow);
   })();
@@ -3686,7 +3686,7 @@ function renderRawEntries(entries, subtitle) {
 
   const fmtDate = d => { if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
   const fmtKom  = k => { if(!k) return ''; return k.replace(/Grab:/,'G:').replace(/Trick:/,' T:').replace(/Landing:/,' L:'); };
-  const typShort = t => t==='Landing Bag'?'Bag':t==='Jump On-Snow'?'Jump':t==='Big Air Competition'?'Comp':t||'—';
+  const typShort = t => t==='Landing Bag'?'Bag':t==='Jump On-Snow'?'On-Snow':t==='Big Air Competition'?'Comp':t||'—';
   const open = wasOpen;
 
   wrap.innerHTML = `
@@ -3764,6 +3764,18 @@ function setTypeFilter(typ) {
   });
   const active = document.getElementById(map[typ]||'ev-tf-all');
   if(active){active.style.background='rgba(57,195,212,0.2)';active.style.borderColor='#39c3d4';active.style.color='#39c3d4';}
+  // Repopulate trick dropdown with only tricks available in this filter
+  const sel = document.getElementById('ev-trick-sel');
+  if (sel) {
+    const filtered = typ ? _taData.filter(t=>t.typ===typ) : _taData;
+    const unique = [...new Set(filtered.map(t=>t.trickaufbau))].sort();
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">— Select a trick —</option>' +
+      unique.map(t=>`<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
+    // Keep selection if still available, otherwise reset
+    if (unique.includes(prev)) sel.value = prev;
+    else sel.value = '';
+  }
   renderTrickAnalytics();
 }
 
