@@ -1899,9 +1899,11 @@ function extractRotation(name) {
 }
 
 function extractQuality(kommentar) {
+  // Quality = Grab + Trick only (execution in the air)
+  // Landing is captured separately as landing rate
   if (!kommentar) return null;
   const score = {perfect:100, okay:50, miss:0};
-  const vals = ['Grab','Trick','Landing'].map(k => {
+  const vals = ['Grab','Trick'].map(k => {
     const m = kommentar.match(new RegExp(k+':(\\w+)'));
     return (m && score[m[1]] !== undefined) ? score[m[1]] : null;
   }).filter(v => v !== null);
@@ -2022,7 +2024,7 @@ function renderSessionPerformance() {
   el.innerHTML = `
     <div style="font-size:11px;color:var(--muted);margin-bottom:14px;display:flex;flex-direction:column;gap:3px;">
       <span>All recorded tricks per athlete, grouped by direction</span>
-      <span>🟢 land ≥70% &amp; quality ≥70% &nbsp;&nbsp; 🟡 one ≥50% &nbsp;&nbsp; 🔴 both &lt;50%</span>
+      <span>🟢 land ≥70% &amp; exec. quality (Grab+Trick) ≥70% &nbsp;&nbsp; 🟡 one ≥50% &nbsp;&nbsp; 🔴 both &lt;50%</span>
     </div>
     <div>
       ${athList.map((athlet, i) => {
@@ -4650,7 +4652,7 @@ function renderSessionSummary(data, sessionLabel) {
     const gAvg=avg(s.grab), tAvg=avg(s.trick), lAvg=avg(s.land_r);
     const landPct = s.att ? Math.round(s.land/s.att*100) : 0;
     // Overall quality score = average of the three component averages (where available)
-    const qualVals = [gAvg, tAvg, lAvg].filter(v => v !== null);
+    const qualVals = [gAvg, tAvg].filter(v => v !== null); // Grab+Trick only
     const qualAvg = qualVals.length ? Math.round(qualVals.reduce((a,b)=>a+b,0)/qualVals.length) : null;
 
     const compBars = hasComp ? `
