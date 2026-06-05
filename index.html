@@ -1849,7 +1849,7 @@ function renderSessionPerformance() {
           const stA = status(a.att?Math.round(a.land/a.att*100):0, a.qualVals.length?Math.round(a.qualVals.reduce((x,y)=>x+y,0)/a.qualVals.length):0);
           const stB = status(b.att?Math.round(b.land/b.att*100):0, b.qualVals.length?Math.round(b.qualVals.reduce((x,y)=>x+y,0)/b.qualVals.length):0);
           const rank = {'🟢':0,'🟡':1,'🔴':2};
-          return (rank[stA.icon]||0)-(rank[stB.icon]||0) || b[1].rot-a[1].rot;
+          return (rank[stA.icon]||0)-(rank[stB.icon]||0) || b.rot-a.rot;
         });
         return `<div style="padding:14px 0;border-bottom:1px solid var(--border);${i===0?'border-top:1px solid var(--border);':''}">
           <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">${athlet}</div>
