@@ -290,9 +290,6 @@
     <button class="nav-tab active" onclick="showPage('standort', this)">Assessment</button>
     <button class="nav-tab" onclick="showPage('erfassen', this)">Session</button>
     <button class="nav-tab" onclick="showPage('entwicklung', this)">Development</button>
-    <button class="nav-tab" onclick="showPage('athlete-notebook', this)">Notebook Athlete</button>
-    <button class="nav-tab" onclick="showPage('notebook', this)">Notebook Coach</button>
-    <button class="nav-tab" onclick="showPage('trainerurteil', this)">Coach Review</button>
     <button class="nav-tab" onclick="showPage('datenbank', this)">Database</button>
   </nav>
 </header>
@@ -492,7 +489,7 @@
         <div style="color:var(--muted);font-size:12px;" id="sess-live-date"></div>
       </div>
       <div style="display:flex;gap:10px;">
-        <button onclick="resetSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">← Setup</button>
+        <button onclick="resetSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">+ Add Athlete or Trick</button>
         <button onclick="endSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✓ End Session</button>
       </div>
     </div>
@@ -602,6 +599,17 @@
 
     <!-- Stats row -->
     <div class="sb-overview" id="sb-overview"></div>
+
+    <!-- Direction Balance Radar -->
+    <div id="sb-dir-radar-wrap" style="display:none;margin-bottom:16px;">
+      <div class="card">
+        <div class="card-title">🔄 Direction Balance</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">
+          <span style="color:#2d8a4e;font-weight:600;">— Mastered</span> &nbsp;&nbsp;
+          <span style="color:#f59e0b;font-weight:600;">- - Goals</span>
+        </div>
+      </div>
+    </div>
 
     <!-- Add-entry form (collapsible, same fields as Erfassen) -->
     <div class="card" id="sb-form-card" style="display:none;">
@@ -2183,10 +2191,12 @@ const SESS_GRABS = ['Bloody Dracula', 'Canadian Bacon', 'Chicken Salad', 'Cookie
 function tricksForDir(tricks, dir) {
   return tricks.filter(t => {
     const lbl = (t.trick_label||'').toLowerCase();
-    if (dir === 'Left')         return lbl.startsWith('left ') && !lbl.startsWith('switch');
-    if (dir === 'Right')        return lbl.startsWith('right ') && !lbl.startsWith('switch');
-    if (dir === 'Switch Left')  return lbl.startsWith('switch left');
-    if (dir === 'Switch Right') return lbl.startsWith('switch right');
+    if (dir === 'Switch Backside') return lbl.startsWith('switch backside');
+    if (dir === 'Frontside')       return lbl.startsWith('frontside');
+    if (dir === 'Backside')        return lbl.startsWith('backside') && !lbl.startsWith('switch backside');
+    if (dir === 'Cab')             return lbl.startsWith('cab');
+    if (dir === 'Forward')         return lbl.startsWith('forward');
+    if (dir === 'Switch')          return lbl.startsWith('switch ') && !lbl.startsWith('switch backside');
     return false;
   });
 }
@@ -2616,11 +2626,110 @@ async function loadStandort() {
   renderStandort();
 }
 
+function renderSbDirRadar() {
+  const wrap = document.getElementById('sb-dir-radar-wrap');
+  if (!wrap) return;
+  const mastered = sbData.filter(e => e.status === 'mastered');
+  const goals    = sbData.filter(e => e.status === 'goal');
+  if (!mastered.length && !goals.length) { wrap.style.display='none'; return; }
+  wrap.style.display = 'block';
+
+  const DIRS = ['Frontside','Backside','Cab','Switch Backside'];
+  const getDir = raw => {
+    const s = (raw||'').trim();
+    if(s==='Frontside') return 'Frontside';
+    if(s==='Backside') return 'Backside';
+    if(s==='Cab') return 'Cab';
+    if(s==='Switch Backside') return 'Switch Backside';
+    return null;
+  };
+
+  const mastC = {}; DIRS.forEach(d=>mastC[d]=0);
+  mastered.forEach(e=>{const d=getDir(e.drehrichtung);if(d)mastC[d]++;});
+  const goalC = {}; DIRS.forEach(d=>goalC[d]=0);
+  goals.forEach(e=>{const d=getDir(e.drehrichtung);if(d)goalC[d]++;});
+
+  const mastTotal=DIRS.reduce((s,d)=>s+mastC[d],0)||1;
+  const goalTotal=DIRS.reduce((s,d)=>s+goalC[d],0)||1;
+  const mastVals=DIRS.map(d=>mastC[d]/mastTotal);
+  const goalVals=DIRS.map(d=>goalC[d]/goalTotal);
+
+  let canvas = document.getElementById('sb-dir-radar');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'sb-dir-radar';
+    canvas.style.cssText = 'width:100%;max-width:420px;display:block;margin:0 auto;';
+    wrap.querySelector('.card').appendChild(canvas);
+  }
+  const dpr=window.devicePixelRatio||1;
+  const size=Math.min(wrap.querySelector('.card')?.offsetWidth-16||420,420);
+  canvas.style.width=size+'px'; canvas.style.height=size+'px';
+  canvas.width=size*dpr; canvas.height=size*dpr;
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  const W=size,H=size,cx=W/2,cy=H/2,r=Math.min(W,H)/2-90;
+  ctx.clearRect(0,0,W,H);
+  const angles=DIRS.map((_,i)=>i*2*Math.PI/4-Math.PI/4);
+
+  // Grid
+  ctx.beginPath();
+  angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.closePath();ctx.fillStyle='rgba(57,195,212,0.07)';ctx.fill();
+  [0.25,0.5,0.75,1].forEach(f=>{
+    ctx.beginPath();
+    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*f,y=cy+Math.sin(a)*r*f;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();
+  });
+  angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();});
+
+  // Goals polygon (orange dashed)
+  if(goals.length){
+    ctx.setLineDash([8,5]);ctx.strokeStyle='#f59e0b';ctx.lineWidth=1.5;
+    ctx.beginPath();
+    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*goalVals[i],y=cy+Math.sin(a)*r*goalVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath();ctx.fillStyle='rgba(245,158,11,0.35)';ctx.fill();ctx.stroke();
+    ctx.setLineDash([]);
+    angles.forEach((a,i)=>{
+      const x=cx+Math.cos(a)*r*goalVals[i],y=cy+Math.sin(a)*r*goalVals[i];
+      ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.fillStyle='#f59e0b';ctx.fill();
+      ctx.strokeStyle='#0b1929';ctx.lineWidth=1.5;ctx.stroke();
+    });
+  }
+
+  // Mastered polygon (green solid)
+  if(mastered.length){
+    ctx.setLineDash([]);ctx.strokeStyle='#2d8a4e';ctx.lineWidth=1.5;
+    ctx.beginPath();
+    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*mastVals[i],y=cy+Math.sin(a)*r*mastVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath();ctx.fillStyle='rgba(45,138,78,0.45)';ctx.fill();ctx.stroke();
+    angles.forEach((a,i)=>{
+      const x=cx+Math.cos(a)*r*mastVals[i],y=cy+Math.sin(a)*r*mastVals[i];
+      ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.fillStyle='#2d8a4e';ctx.fill();
+      ctx.strokeStyle='#0b1929';ctx.lineWidth=1.5;ctx.stroke();
+    });
+  }
+
+  // Labels
+  const DIR_COL={'Frontside':'#39c3d4','Backside':'#3b82f6','Cab':'#a78bfa','Switch Backside':'#f59e0b'};
+  angles.forEach((a,i)=>{
+    const lx=cx+Math.cos(a)*(r+52),ly=cy+Math.sin(a)*(r+52);
+    const align=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center';
+    ctx.textAlign=align;ctx.textBaseline='middle';
+    ctx.font='bold 12px Poppins,sans-serif';ctx.fillStyle='#e8edf2';
+    ctx.fillText(DIRS[i],lx,ly-14);
+    ctx.font='bold 13px Poppins,sans-serif';ctx.fillStyle='#2d8a4e';
+    ctx.fillText('✓ '+mastC[DIRS[i]],lx,ly+2);
+    ctx.font='bold 13px Poppins,sans-serif';ctx.fillStyle='#f59e0b';
+    ctx.fillText('◎ '+goalC[DIRS[i]],lx,ly+17);
+  });
+}
+
 function renderStandort() {
   // Stats
   const mastered = sbData.filter(e => e.status === 'mastered').length;
   const goale      = sbData.filter(e => e.status === 'goal').length;
   const erreicht   = sbData.filter(e => e.status === 'erreicht').length;
+
+  renderSbDirRadar();
 
   document.getElementById('sb-overview').innerHTML = `
     <div class="sb-ov-card">
