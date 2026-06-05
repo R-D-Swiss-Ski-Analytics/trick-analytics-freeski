@@ -2191,6 +2191,11 @@ async function toggleSessionAthlete(name) {
 const SESS_DIRECTIONS = ['Frontside','Backside','Cab','Switch Backside','Forward','Switch'];
 const SESS_GRABS = ['Bloody Dracula', 'Canadian Bacon', 'Chicken Salad', 'Cookie Monster', 'Crail', 'Crooked Cop', 'Cross Rocket', 'Double Tail', 'Dracula Method', 'Freshfish', 'Frontside', 'Japan', 'Lien', 'Melon', 'Method', 'Nose', 'Nuclear', 'Nuclear Method', 'Reach Around', 'Roast Beef', 'Rocket Air', 'Sad Air', 'Seat Belt', 'Slob', 'Spaghetti', 'Stalefish', 'Stelmasky', 'Stink Bug', 'Suitcase', 'Swiss Cheese', 'Tai Pan', 'Tail', 'Tuck Knee', 'Weddle (Mute)'];
 
+function extractRotFromLabel(label) {
+  const m = (label||'').match(/\b(180|270|360|450|540|630|720|810|900|1080|1260|1440|1620|1800|1980|2160)\b/);
+  return m ? parseInt(m[1]) : 0;
+}
+
 function tricksForDir(tricks, dir) {
   return tricks.filter(t => {
     const lbl = (t.trick_label||'').toLowerCase();
@@ -2340,8 +2345,9 @@ function renderSessionTrickSelection() {
       return `<div style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);">
         <div style="font-weight:700;font-size:14px;color:#39c3d4;margin-bottom:14px;">${shortName(name)}</div>
         ${SESS_DIRECTIONS.map(dir => {
-          const mastered = tricksForDir(allTricks.filter(t=>t.status==='mastered'), dir);
-          const goals    = tricksForDir(allTricks.filter(t=>t.status==='goal'), dir);
+          const rotSort = (a,b) => extractRotFromLabel(b.trick_label) - extractRotFromLabel(a.trick_label);
+          const mastered = tricksForDir(allTricks.filter(t=>t.status==='mastered'), dir).sort(rotSort);
+          const goals    = tricksForDir(allTricks.filter(t=>t.status==='goal'), dir).sort(rotSort);
           return `<div style="margin-bottom:14px;">
             <div class="sess-dir-section-${safeId}" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent2);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);">${dir}</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;">
@@ -2484,10 +2490,12 @@ function renderLiveSession() {
   const pct = s.attempts ? Math.round((s.landed+s.perfect)/s.attempts*100) : 0;
   const sid = name.replace(/\s/g,'_');
 
-  const trickOptions = (d.tricks||[]).map(t => {
-    const lbl = (t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim();
-    return `<option value="${lbl}" ${lbl===d.currentTrick?'selected':''}>${lbl}${t.status==='goal'?' 🎯':''}</option>`;
-  }).join('');
+  const trickOptions = [...(d.tricks||[])]
+    .sort((a,b) => extractRotFromLabel(b.trick_label) - extractRotFromLabel(a.trick_label))
+    .map(t => {
+      const lbl = (t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim();
+      return `<option value="${lbl}" ${lbl===d.currentTrick?'selected':''}>${lbl}${t.status==='goal'?' 🎯':''}</option>`;
+    }).join('');
 
   const cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${sid}">
     <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:16px;text-align:center;">${shortName(name)}</div>
@@ -2817,6 +2825,11 @@ function renderStandort() {
     </div>`;
   }
 
+  function extractRot(label) {
+    const m = (label||'').match(/\b(180|270|360|450|540|630|720|810|900|1080|1260|1440|1620|1800|1980|2160)\b/);
+    return m ? parseInt(m[1]) : 0;
+  }
+
   function renderList(items, emptyMsg) {
     if (!items.length) return `<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center;">${emptyMsg}</div>`;
     // Group by direction
@@ -2825,6 +2838,10 @@ function renderStandort() {
       const dir = normDir4(e.drehrichtung) || 'Other';
       if (!groups[dir]) groups[dir] = [];
       groups[dir].push(e);
+    });
+    // Sort each group: highest rotation first
+    Object.keys(groups).forEach(dir => {
+      groups[dir].sort((a,b) => extractRot(b.trick_label) - extractRot(a.trick_label));
     });
     const orderedKeys = [...DIR_ORDER.filter(d => groups[d]), ...(groups['Other'] ? ['Other'] : [])];
     return orderedKeys.map(dir => {
@@ -3045,20 +3062,6 @@ async function loadEntwicklung() {
       <div class="chart-card"><div class="chart-title">⚙️ Axis</div><div id="bars-achse"></div></div>
       <div class="chart-card"><div class="chart-title">✋ Grabs</div><div id="bars-grab"></div></div>
     </div>
-    <div class="chart-grid single">
-      <div class="chart-card"><div class="chart-title">🎿 Cork — by direction</div>
-        <div id="bars-cork"></div>
-      </div>
-      <div class="chart-card"><div class="chart-title">🌊 Bio/Misty — by direction</div>
-        <div id="bars-bio"></div>
-      </div>
-    </div>
-    </div>
-    <div class="chart-grid single">
-      <div class="chart-card">
-        <div class="chart-title">📅 Repertoire Development Over Time <span style="font-size:11px;color:var(--muted);font-family:'Poppins',sans-serif;letter-spacing:0;">(Assessment — mastered tricks only)</span></div>
-        <div id="ev-verlauf"></div>
-      </div>
     </div>`;
 
   // ── Normalise standort entries to same shape as tricks
