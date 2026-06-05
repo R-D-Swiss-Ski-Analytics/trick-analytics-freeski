@@ -4757,7 +4757,7 @@ function renderSbSessionPerformance() {
   el.innerHTML = `
     <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
       All recorded tricks per athlete, grouped by direction &nbsp;·&nbsp;
-      🟢 landed ≥70% &nbsp;&nbsp; 🟡 landed ≥50% &nbsp;&nbsp; 🔴 &lt;50% &nbsp;·&nbsp; ⭐ = stomped (info only)
+      Ampel basiert auf (✓ landed + ⭐ stomped) / total &nbsp;·&nbsp; 🟢 ≥70% &nbsp; 🟡 ≥50% &nbsp; 🔴 &lt;50%
     </div>
     <div>
       ${athList.map(athlet => {
@@ -4791,10 +4791,10 @@ function renderSbSessionPerformance() {
               const colL = landPct>=70?'#2d8a4e':landPct>=50?'#f59e0b':'#e2001a';
               return `<div style="background:${bkg[st.icon]};border:1px solid ${brd[st.icon]};border-radius:8px;padding:6px 10px;margin-bottom:5px;">
                 <div style="font-size:12px;color:var(--text);">${st.icon} ${normSbTrick(trick)}</div>
-                <div style="display:flex;gap:8px;margin-top:4px;font-size:11px;font-weight:700;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:11px;font-weight:700;">
                   <span style="color:${colL};">${landPct}%</span>
-                  <span style="color:#2d8a4e;">✓${landedOnly}</span>
-                  <span style="color:#39c3d4;">⭐${s.stomped}</span>
+                  <span style="color:#2d8a4e;">✓&nbsp;${landedOnly}</span>
+                  <span style="color:#39c3d4;font-size:11px;">&#11088;&nbsp;${s.stomped}</span>
                   <span style="color:var(--muted);font-weight:400;">/ ${s.att}</span>
                 </div>
               </div>`;
