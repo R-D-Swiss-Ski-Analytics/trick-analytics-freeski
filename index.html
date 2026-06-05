@@ -2779,21 +2779,21 @@ function renderSbDirRadar() {
 
   // Goals polygon (orange dashed)
   if(goals.length){
-    ctx.setLineDash([8,5]);
-    ctx.strokeStyle='#f59e0b'; ctx.lineWidth=3;
+    ctx.setLineDash([7,4]);
+    ctx.strokeStyle='#f59e0b'; ctx.lineWidth=1.5;
     ctx.beginPath();
     angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*goalVals[i],y=cy+Math.sin(a)*r*goalVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-    ctx.closePath(); ctx.fillStyle='rgba(245,158,11,0.10)'; ctx.fill(); ctx.stroke();
+    ctx.closePath(); ctx.fillStyle='rgba(245,158,11,0.35)'; ctx.fill(); ctx.stroke();
     ctx.setLineDash([]);
   }
 
   // Mastered polygon (green solid)
   if(mastered.length){
     ctx.setLineDash([]);
-    ctx.strokeStyle='#2d8a4e'; ctx.lineWidth=2.5;
+    ctx.strokeStyle='#2d8a4e'; ctx.lineWidth=1.5;
     ctx.beginPath();
     angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*mastVals[i],y=cy+Math.sin(a)*r*mastVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-    ctx.closePath(); ctx.fillStyle='rgba(45,138,78,0.18)'; ctx.fill(); ctx.stroke();
+    ctx.closePath(); ctx.fillStyle='rgba(45,138,78,0.45)'; ctx.fill(); ctx.stroke();
   }
 
   // Labels per axis
