@@ -3105,11 +3105,20 @@ async function loadEntwicklung() {
     fRow.id = 'ev-type-filter';
     fRow.style.cssText = 'display:none;gap:6px;flex-wrap:wrap;margin-bottom:10px;';
     fRow.innerHTML = `
-      <span style="font-size:11px;color:var(--muted);align-self:center;margin-right:2px;">Filter:</span>
-      <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
-      <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
-      <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
-      <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>`;
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span style="font-size:11px;color:var(--muted);align-self:center;margin-right:2px;">Filter:</span>
+        <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
+        <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
+        <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
+        <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <span style="font-size:11px;color:var(--muted);">Period:</span>
+        <input type="date" id="ev-date-from" onchange="setDateRange()" style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:Poppins,sans-serif;">
+        <span style="font-size:11px;color:var(--muted);">→</span>
+        <input type="date" id="ev-date-to"   onchange="setDateRange()" style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:Poppins,sans-serif;">
+        <button onclick="clearDateRange()" style="padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕ Reset</button>
+      </div>`;
     modeDiv.after(fRow);
   })();
 
@@ -3410,6 +3419,8 @@ async function loadEntwicklung() {
 // ── TRICK ANALYTICS ──────────────────────────────────────────────────
 let _taData = [];
 let _taTypeFilter = ''; // '', 'Landing Bag', 'Jump On-Snow', 'Big Air Competition'
+let _taDateFrom = '';   // YYYY-MM-DD
+let _taDateTo   = '';   // YYYY-MM-DD
 
 function initTrickAnalytics(tricks) {
   _taData = tricks.filter(t => t.trickaufbau);
@@ -3754,6 +3765,26 @@ function setStatsMode(mode) {
   renderTrickAnalytics();
 }
 
+function setDateRange() {
+  _taDateFrom = document.getElementById('ev-date-from')?.value || '';
+  _taDateTo   = document.getElementById('ev-date-to')?.value   || '';
+  // Highlight inputs if active
+  ['ev-date-from','ev-date-to'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.style.borderColor = (el.value) ? '#39c3d4' : 'var(--border)';
+    el.style.color = (el.value) ? '#39c3d4' : 'var(--text)';
+  });
+  renderTrickAnalytics();
+}
+
+function clearDateRange() {
+  _taDateFrom = ''; _taDateTo = '';
+  const f=document.getElementById('ev-date-from'), t=document.getElementById('ev-date-to');
+  if(f){f.value='';f.style.borderColor='var(--border)';f.style.color='var(--text)';}
+  if(t){t.value='';t.style.borderColor='var(--border)';t.style.color='var(--text)';}
+  renderTrickAnalytics();
+}
+
 function setTypeFilter(typ) {
   _taTypeFilter = typ;
   // Update button styles
@@ -3788,10 +3819,14 @@ function renderTrickAnalytics() {
   const sel = document.getElementById('ev-trick-sel');
   const dateSel = document.getElementById('ev-date-sel');
   const chosen = sel ? sel.value : '';
-  // Apply session-type filter (only for trick/overall views, not session view)
-  const baseData = (_taTypeFilter && dateSel?.style.display==='none')
-    ? _taData.filter(t => t.typ === _taTypeFilter)
-    : _taData;
+  // Apply session-type + date range filters (only for trick/overall views, not session view)
+  const isSessionMode = dateSel?.style.display !== 'none';
+  const baseData = isSessionMode ? _taData : _taData.filter(t => {
+    if (_taTypeFilter && t.typ !== _taTypeFilter) return false;
+    if (_taDateFrom && t.datum && t.datum < _taDateFrom) return false;
+    if (_taDateTo   && t.datum && t.datum > _taDateTo)   return false;
+    return true;
+  });
   const dateKey = dateSel ? dateSel.value : '';
 
   // Show nothing until selection is made (for trick and session modes)
