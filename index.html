@@ -2788,6 +2788,13 @@ function renderSbDirRadar() {
     angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*goalVals[i],y=cy+Math.sin(a)*r*goalVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
     ctx.closePath(); ctx.fillStyle='rgba(245,158,11,0.35)'; ctx.fill(); ctx.stroke();
     ctx.setLineDash([]);
+    // Dots at vertices
+    angles.forEach((a,i)=>{
+      const x=cx+Math.cos(a)*r*goalVals[i], y=cy+Math.sin(a)*r*goalVals[i];
+      ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI);
+      ctx.fillStyle='#f59e0b'; ctx.fill();
+      ctx.strokeStyle='#0b1929'; ctx.lineWidth=1.5; ctx.stroke();
+    });
   }
 
   // Mastered polygon (green solid)
@@ -2797,6 +2804,13 @@ function renderSbDirRadar() {
     ctx.beginPath();
     angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*mastVals[i],y=cy+Math.sin(a)*r*mastVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
     ctx.closePath(); ctx.fillStyle='rgba(45,138,78,0.45)'; ctx.fill(); ctx.stroke();
+    // Dots at vertices
+    angles.forEach((a,i)=>{
+      const x=cx+Math.cos(a)*r*mastVals[i], y=cy+Math.sin(a)*r*mastVals[i];
+      ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI);
+      ctx.fillStyle='#2d8a4e'; ctx.fill();
+      ctx.strokeStyle='#0b1929'; ctx.lineWidth=1.5; ctx.stroke();
+    });
   }
 
   // Labels per axis
@@ -2836,7 +2850,7 @@ function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
   const cx=size/2, cy=size/2, r=size/2-4;
   ctx.clearRect(0,0,size,size);
 
-  // Pie slices only — legend is HTML
+  // Pass 1: fill all slices (no stroke)
   let startAngle = -Math.PI/2;
   dirs.forEach(d=>{
     const slice = dirCnt[d].att/total * 2*Math.PI;
@@ -2846,7 +2860,18 @@ function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
     ctx.arc(cx,cy,r,startAngle,startAngle+slice);
     ctx.closePath();
     ctx.fillStyle=dirColors[d]; ctx.fill();
-    ctx.strokeStyle='#0b1929'; ctx.lineWidth=2; ctx.stroke();
+    startAngle += slice;
+  });
+  // Pass 2: thin separator lines only (avoids thick radial corners)
+  startAngle = -Math.PI/2;
+  dirs.forEach(d=>{
+    const slice = dirCnt[d].att/total * 2*Math.PI;
+    if(slice===0) return;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,startAngle,startAngle+slice);
+    ctx.closePath();
+    ctx.strokeStyle='rgba(11,25,41,0.6)'; ctx.lineWidth=1; ctx.stroke();
     startAngle += slice;
   });
 }
