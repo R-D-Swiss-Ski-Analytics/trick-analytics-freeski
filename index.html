@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trick Collector Freeski</title>
+<title>Trick Analytics Freeski</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -416,7 +416,7 @@
 </div>
 
 <header>
-  <h1>Trick Collector Freeski</h1>
+  <h1>Trick Analytics Freeski</h1>
   <nav class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('standort', this)">Assessment</button>
     <button class="nav-tab" onclick="showPage('erfassen', this)">Session</button>
@@ -2475,7 +2475,7 @@ function openTeamPdfReport() {
   <div class="print-btn"><button onclick="window.print()">Print / Save as PDF</button></div>
   <h1>Team Report — ${title}</h1>
   ${athleteSections}
-  <footer><span>Swiss-Ski Trick Collector Freeski</span><span>Generated ${today}</span></footer>
+  <footer><span>Swiss-Ski Trick Analytics Freeski</span><span>Generated ${today}</span></footer>
 </body></html>`);
   win.document.close();
 }
@@ -3544,7 +3544,7 @@ function openReportPrint(report) {
   <div class="section-label">Trick Performance by Athlete</div>
   ${athleteSections || '<div style="color:#888;padding:12px 0;">No trick data recorded.</div>'}
   <footer>
-    <span>Swiss-Ski Trick Collector</span>
+    <span>Swiss-Ski Trick Analytics</span>
     <span>Generated ${new Date().toLocaleDateString('en-GB')}</span>
   </footer>
 </body></html>`);
