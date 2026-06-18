@@ -868,41 +868,6 @@
         <button class="btn-goal"       onclick="sbSave('goal')">🎯 GOAL / IN PROGRESS</button>
       </div>
 
-      <!-- COACH SECTION -->
-      <div style="margin-top:20px;border:2px solid #3b82f6;border-radius:12px;padding:16px;background:rgba(59,130,246,0.06);">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-          <span style="font-size:18px;">🎓</span>
-          <div>
-            <div style="font-family:'Poppins',sans-serif;font-size:16px;letter-spacing:0.5px;color:#3b82f6;">COACH ASSESSMENT</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:1px;">For coaches only — not to be filled in by athletes</div>
-          </div>
-        </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Ausführung / Qualität</label>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <input type="range" id="sb-coach-rating" min="1" max="10" step="1" value="5"
-                oninput="document.getElementById('sb-coach-rating-val').textContent=this.value"
-                style="flex:1;accent-color:#f59e0b;">
-              <span id="sb-coach-rating-val" style="font-family:'Poppins',sans-serif;font-size:22px;color:#f59e0b;min-width:28px;">5</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px;">
-              <span>Not clean</span><span>Competition ready</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Videolink (Coach)</label>
-            <input type="text" id="sb-coach-video" placeholder="https://..." style="border-color:#f59e0b44;">
-          </div>
-          <div class="form-group full">
-            <label>Coach-Kommentar zur Ausführung</label>
-            <textarea id="sb-coach-kommentar" rows="2"
-              placeholder="e.g. technical tip, focus point, feedback on execution..."
-              style="border-color:#f59e0b44;"></textarea>
-          </div>
-        </div>
-      </div>
-
       <button class="btn-secondary" style="width:100%;margin-top:12px;" onclick="toggleSbForm()">Cancel</button>
     </div>
 
@@ -3282,8 +3247,6 @@ function renderStandort() {
         <span style="display:flex;gap:8px;align-items:center;margin-top:2px;">
           ${e.datum ? `<span style="font-size:10px;color:var(--muted);">📅 ${e.datum}</span>` : ''}
           ${e.notiz ? `<span style="font-size:10px;color:var(--muted);">${e.notiz}</span>` : ''}
-          ${e.coach_kommentar ? `<div style="font-size:10px;color:#f59e0b;margin-top:3px;">🎓 ${e.coach_rating ? e.coach_rating+'/10 · ' : ''}${e.coach_kommentar}</div>` : ''}
-          ${e.coach_video ? `<div style="font-size:10px;"><a href="${e.coach_video}" target="_blank" style="color:#f59e0b;">▶ Video</a></div>` : ''}
         </span>
       </span>
       <button style="background:none;border:1px solid #1a3450;border-radius:5px;color:#6b8299;cursor:pointer;padding:2px 7px;font-size:11px;margin-right:2px;" onclick="openSbEdit(${e.id})" title="Edit">✏️</button>
@@ -3343,7 +3306,6 @@ function renderStandort() {
             <span class="sb-status-erreicht" style="margin-left:6px;">✓ Erreicht</span>
           </div>
           ${e.notiz ? `<div class="timeline-meta">${e.notiz}</div>` : ''}
-          ${e.coach_kommentar ? `<div class="timeline-meta" style="color:#f59e0b;">🎓 ${e.coach_rating ? e.coach_rating+'/10 · ' : ''}${e.coach_kommentar}</div>` : ''}
           <div class="timeline-meta">Eingetragen: ${fmtDate(e.created_at)}</div>
         </div>
       </div>`).join('');
@@ -3373,9 +3335,6 @@ async function sbSave(status) {
     slidevar: fields.slidevar, inspin: fields.inspin, swap: fields.swap, outspin: fields.outspin,
     notiz,
     status,
-    coach_rating: parseInt(document.getElementById('sb-coach-rating').value) || null,
-    coach_kommentar: document.getElementById('sb-coach-kommentar').value || null,
-    coach_video: document.getElementById('sb-coach-video').value || null,
   }).select();
 
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
@@ -3385,10 +3344,8 @@ async function sbSave(status) {
   // Reset sb form fields
   ['sb-disziplin','sb-drehrichtung','sb-flips','sb-achse','sb-rotation','sb-absprung',
    'sb-grab','sb-bringback','sb-style','sb-railart','sb-slideform','sb-slidevar','sb-inspin','sb-swap','sb-outspin','sb-notiz',
-   'sb-coach-kommentar','sb-coach-video'
   ].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   toggleDisziplin('sb');
-  const rSlider = document.getElementById('sb-coach-rating'); if(rSlider){rSlider.value=5; document.getElementById('sb-coach-rating-val').textContent='5';}
 
   sbData = [data[0], ...sbData];
   renderStandort();
@@ -4341,7 +4298,7 @@ function openSbEdit(id){
   sv('sbe-bringback',e.bringback);sv('sbe-railart',e.railart);
   sv('sbe-slideform',e.slideform);sv('sbe-inspin',e.inspin);
   sv('sbe-outspin',e.outspin);sv('sbe-notiz',e.notiz);
-  sv('sbe-status',e.status);sv('sbe-coach-rating',e.coach_rating);sv('sbe-coach-kommentar',e.coach_kommentar);
+  sv('sbe-status',e.status);
   // Init sbe grab buttons
   const wrap=document.getElementById('sbe-grab-wrap');
   const hid=document.getElementById('sbe-grab');
@@ -4379,7 +4336,7 @@ async function saveSbEdit(){
     absprung:gv('sbe-absprung'),bringback:gv('sbe-bringback'),
     railart:gv('sbe-railart'),slideform:gv('sbe-slideform'),
     inspin:gv('sbe-inspin'),outspin:gv('sbe-outspin'),notiz:gv('sbe-notiz'),
-    status:gv('sbe-status'),coach_rating:gv('sbe-coach-rating')||null,coach_kommentar:gv('sbe-coach-kommentar')||null,
+    status:gv('sbe-status'),
   };
   const isK=['Jump','Halfpipe','Landing Bag'].includes(updates.disziplin);
   const bb = updates.bringback ? 'Bringback ' + updates.bringback : null;
@@ -5290,10 +5247,6 @@ document.getElementById('f-datum').valueAsDate = new Date();
           <option value="goal">Ziel / In Arbeit</option>
           <option value="erreicht">Erreicht</option>
         </select></div>
-      <div class="form-group"><label>Coach-Rating (1–10)</label>
-        <input type="number" id="sbe-coach-rating" min="1" max="10" placeholder="1–10"></div>
-      <div class="form-group full"><label>Coach-Kommentar</label>
-        <textarea id="sbe-coach-kommentar" rows="2" placeholder="Coach-Kommentar..."></textarea></div>
       <div class="form-group" style="grid-column:1/-1;"><label>Note</label>
         <textarea id="sbe-notiz" rows="2" placeholder="Optional..."></textarea></div>
     </div>
