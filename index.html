@@ -3684,7 +3684,7 @@ function renderSbDirRadar() {
   ctx.scale(dpr,dpr);
   const W=size,H=size,cx=W/2,cy=H/2,r=Math.min(W,H)/2-90;
   ctx.clearRect(0,0,W,H);
-  const angles = DIRS.map((_,i)=>i*2*Math.PI/4 - Math.PI/4);
+  const angles = DIRS.map((_,i)=>i*2*Math.PI/4 - 3*Math.PI/4);
 
   // Grid — outer fill first, then rings
   ctx.beginPath();
