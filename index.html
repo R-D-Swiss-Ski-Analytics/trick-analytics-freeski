@@ -5931,7 +5931,13 @@ function updateMobileNav(pageId) {
   const btns = document.querySelectorAll('.mobile-nav-btn');
   if (btns[idx[pageId]] !== undefined) btns[idx[pageId]].classList.add('active');
 }
-document.addEventListener('DOMContentLoaded', () => updateMobileNav('standort'));
+document.addEventListener('DOMContentLoaded', () => {
+  if(localStorage.getItem('fs_session')){
+    const sessBtn=Array.from(document.querySelectorAll('.nav-tab')).find(t=>t.textContent.trim()==='Session');
+    if(sessBtn) sessBtn.click();
+  }
+  updateMobileNav(localStorage.getItem('fs_session')?'erfassen':'standort');
+});
 </script>
 
 </body>
