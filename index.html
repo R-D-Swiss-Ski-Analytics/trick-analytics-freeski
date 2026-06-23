@@ -2767,13 +2767,66 @@ let sessLog = [];
 let sessType = '';
 let sessStartTime = 0;
 
+function saveSessionState() {
+  const state = {
+    athletes: sessSelectedAthletes,
+    log: sessLog,
+    type: sessType,
+    startTime: sessStartTime,
+    activeAthlete: sessActiveAthlete || '',
+    activeTricks: sessActiveTricks,
+    athleteState: {}
+  };
+  sessSelectedAthletes.forEach(name => {
+    const d = sessAthleteData[name];
+    if (d) state.athleteState[name] = { currentTrick: d.currentTrick, stats: {...d.stats} };
+  });
+  localStorage.setItem('fs_session', JSON.stringify(state));
+}
+
+function clearSessionStorage() {
+  localStorage.removeItem('fs_session');
+}
+
+async function restoreSessionState() {
+  const raw = localStorage.getItem('fs_session');
+  if (!raw) return false;
+  try {
+    const state = JSON.parse(raw);
+    if (!state.athletes || !state.athletes.length) { clearSessionStorage(); return false; }
+    sessSelectedAthletes = state.athletes;
+    sessLog = state.log || [];
+    sessType = state.type || '';
+    sessStartTime = state.startTime || Date.now();
+    sessActiveAthlete = state.activeAthlete || state.athletes[0];
+    sessActiveTricks = state.activeTricks || {};
+    for (const name of sessSelectedAthletes) {
+      const saved = (state.athleteState || {})[name] || {};
+      sessAthleteData[name] = { tricks: [], currentTrick: saved.currentTrick || '', stats: saved.stats || {attempts:0,landed:0,perfect:0} };
+      const {data} = await db.from('standort').select('trick_label,disziplin,status')
+        .eq('athlet', name).or('status.eq.mastered,status.eq.goal').order('trick_label');
+      if (data) sessAthleteData[name].tricks = data;
+    }
+    document.getElementById('sess-setup').style.display = 'none';
+    document.getElementById('sess-live').style.display = 'block';
+    document.getElementById('sess-live-date').textContent =
+      new Date(sessStartTime).toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'})
+      + (sessType ? '  ·  ' + sessType : '');
+    renderLiveSession();
+    renderSessionLog();
+    showToast('Session restored', 'success');
+    return true;
+  } catch(e) { clearSessionStorage(); return false; }
+}
+
 function selectSessType(btn, type) {
   document.querySelectorAll('.sess-type-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   sessType = type;
 }
 
-function initSessionSetup() {
+async function initSessionSetup() {
+  if (await restoreSessionState()) return;
   document.getElementById('sess-date-label').textContent =
     new Date().toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const grid = document.getElementById('sess-athlete-grid');
@@ -3082,6 +3135,7 @@ function startSession() {
     new Date().toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'})
     + (sessType ? '  ·  ' + sessType : '');
   renderLiveSession();
+  saveSessionState();
 }
 
 // Per-athlete rating state
@@ -3201,12 +3255,14 @@ async function autoLogAttempt(name) {
   const col = document.getElementById('sess-col-'+name.replace(/\s/g,'_'));
   if (col) { col.style.background=result==='miss'?'rgba(226,0,26,0.2)':result==='perfect'?'rgba(57,195,212,0.2)':'rgba(45,138,78,0.2)'; setTimeout(()=>{col.style.background='';},300); }
 
-  sessLog.unshift({name, trick:d.currentTrick, result, grab:r.grab, trick_r:r.trick, land:r.land,
-    time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})});
+  const logEntry = {name, trick:d.currentTrick, result, grab:r.grab, trick_r:r.trick, land:r.land,
+    time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})};
+  sessLog.unshift(logEntry);
 
   sessRatings[name]={grab:null,trick:null,land:null};
   renderLiveSession();
   renderSessionLog();
+  saveSessionState();
 
   const trickInfo=sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
   db.from('tricks').insert({
@@ -3217,7 +3273,7 @@ async function autoLogAttempt(name) {
     kommentar:`Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`
   }).select('id').then(({data,error})=>{
     if(error){console.error(error);return;}
-    if(data&&data[0]) sessLog[0].dbId = data[0].id;
+    if(data&&data[0]) { logEntry.dbId = data[0].id; saveSessionState(); }
   });
 }
 
@@ -3243,10 +3299,12 @@ async function logAttempt(name, result) {
   col.style.background = flashColor;
   setTimeout(()=>{ col.style.background=''; }, 250);
 
-  sessLog.unshift({name, trick:d.currentTrick, result,
-    time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})});
+  const logEntry = {name, trick:d.currentTrick, result,
+    time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})};
+  sessLog.unshift(logEntry);
   renderLiveSession();
   renderSessionLog();
+  saveSessionState();
 
   // Save to DB (non-blocking)
   const gesamt = result==='miss'?3:result==='landed'?7:10;
@@ -3256,7 +3314,10 @@ async function logAttempt(name, result) {
     typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
     trickaufbau:d.currentTrick, gelandet:result==='miss'?'No':'Yes',
     gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
-  }).then(({error})=>{ if(error) console.error('Save error:',error); });
+  }).select().then(({data,error})=>{
+    if(error) console.error('Save error:',error);
+    else if(data&&data[0]) { logEntry.dbId=data[0].id; saveSessionState(); }
+  });
 }
 
 function renderSessionLog() {
@@ -3296,6 +3357,7 @@ async function undoLastEntry() {
   showToast('Last entry removed', 'success');
   renderSessionLog();
   renderLiveSession();
+  saveSessionState();
 }
 
 function editLogEntry(idx) {
@@ -3320,6 +3382,7 @@ function editLogEntry(idx) {
   showToast('Edit mode — re-rate the attempt', 'success');
   renderLiveSession();
   renderSessionLog();
+  saveSessionState();
 }
 
 function clearSessionSelection() {
@@ -3350,6 +3413,7 @@ function resumeSession() {
 function resetSession() {
   sessSelectedAthletes=[]; sessAthleteData={}; sessActiveTricks={}; sessLog=[]; sessRatings && Object.keys(sessRatings).forEach(k=>delete sessRatings[k]);
   sessActiveAthlete = null;
+  clearSessionStorage();
   const bar = document.getElementById('sess-resume-bar');
   if (bar) bar.style.display = 'none';
   document.getElementById('sess-setup').style.display='block';
