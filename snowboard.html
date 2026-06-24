@@ -2902,21 +2902,27 @@ function cancelSbEdit() {
 async function saveSbLogEdit(idx, newResult) {
   const e = sessLog[idx];
   if (!e) return;
+  const commentEl = document.getElementById('sess-edit-comment');
+  const newComment = commentEl ? commentEl.value.trim() : (e.comment||'');
   const oldResult = e.result;
-  if (oldResult === newResult) { cancelSbEdit(); return; }
+  const ratingChanged = oldResult !== newResult;
+  const commentChanged = newComment !== (e.comment||'');
+  if (!ratingChanged && !commentChanged) { cancelSbEdit(); return; }
   const d = sessAthleteData[e.name];
-  if (d) {
+  if (ratingChanged && d) {
     if (oldResult!=='miss') d.stats.landed--;
     if (oldResult==='perfect') d.stats.perfect--;
     if (newResult!=='miss') d.stats.landed++;
     if (newResult==='perfect') d.stats.perfect++;
   }
   e.result = newResult;
+  e.comment = newComment;
   if (e.dbId) {
     const gesamt = newResult==='miss'?3:newResult==='landed'?7:10;
     await db.from('tricks').update({
       gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
-      gelandet:newResult==='miss'?'No':'Yes'
+      gelandet:newResult==='miss'?'No':'Yes',
+      kommentar: newComment || null
     }).eq('id', e.dbId);
   }
   sessEditIdx = -1;
@@ -2937,11 +2943,16 @@ function renderSessionLog() {
     let editRow = '';
     if (isEditing) {
       const btnStyle = (val,col,bg) => `padding:8px 14px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ${col};background:${e.result===val?col:'transparent'};color:${e.result===val?'#060f1a':col};`;
-      editRow = `<div style="display:flex;gap:8px;align-items:center;padding:8px 12px 4px 38px;flex-wrap:wrap;">
-        <button onclick="saveSbLogEdit(${i},'miss')" style="${btnStyle('miss','#e2001a','rgba(226,0,26,0.15)')}">✗ Failed</button>
-        <button onclick="saveSbLogEdit(${i},'landed')" style="${btnStyle('landed','#2d8a4e','rgba(45,138,78,0.15)')}">✓ Landed</button>
-        <button onclick="saveSbLogEdit(${i},'perfect')" style="${btnStyle('perfect','#39c3d4','rgba(57,195,212,0.15)')}">⭐ Stomped</button>
-        <button onclick="cancelSbEdit()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button>
+      editRow = `<div style="padding:8px 12px 4px 38px;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+          <button onclick="saveSbLogEdit(${i},'miss')" style="${btnStyle('miss','#e2001a','rgba(226,0,26,0.15)')}">✗ Failed</button>
+          <button onclick="saveSbLogEdit(${i},'landed')" style="${btnStyle('landed','#2d8a4e','rgba(45,138,78,0.15)')}">✓ Landed</button>
+          <button onclick="saveSbLogEdit(${i},'perfect')" style="${btnStyle('perfect','#39c3d4','rgba(57,195,212,0.15)')}">⭐ Stomped</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="sess-edit-comment" value="${(e.comment||'').replace(/"/g,'&quot;')}" placeholder="Comment (optional)" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+          <button onclick="cancelSbEdit()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button>
+        </div>
       </div>`;
     }
     return `<div style="border-radius:8px;${isEditing?'background:rgba(57,195,212,0.08);border:1px solid #39c3d433;':''}">

@@ -3365,6 +3365,7 @@ function renderSessionLog() {
         <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>${catBtn('grab','miss','Miss','#e2001a')}${catBtn('grab','okay','Okay','#2d8a4e')}${catBtn('grab','perfect','Perfect','#39c3d4')}</div>
         <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Trick</span>${catBtn('trick','miss','Miss','#e2001a')}${catBtn('trick','okay','Okay','#2d8a4e')}${catBtn('trick','perfect','Perfect','#39c3d4')}</div>
         <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Land</span>${catBtn('land','miss','Miss','#e2001a')}${catBtn('land','okay','Okay','#2d8a4e')}${catBtn('land','perfect','Perfect','#39c3d4')}</div>
+        <input type="text" id="sess-edit-comment" value="${(e.comment||'').replace(/"/g,'&quot;')}" placeholder="Comment (optional)" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
         <div style="display:flex;gap:8px;margin-top:2px;"><button onclick="saveFsLogEdit(${i})" style="padding:6px 16px;border-radius:8px;background:#39c3d4;border:none;color:#060f1a;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;">Save</button><button onclick="cancelFsEdit()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button></div>
       </div>`;
     }
@@ -3437,14 +3438,19 @@ async function saveFsLogEdit(idx) {
     if (newResult==='landed'||newResult==='perfect') d.stats.landed++;
     if (newResult==='perfect') d.stats.perfect++;
   }
+  const commentEl = document.getElementById('sess-edit-comment');
+  const newComment = commentEl ? commentEl.value.trim() : (e.comment||'');
   e.result = newResult;
   e.grab = r.grab; e.trick_r = r.trick; e.land = r.land;
+  e.comment = newComment;
   if (e.dbId) {
     const gesamt = r.land==='miss'?3:avg>=2.7?10:7;
+    const kommentarParts = [`Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`];
+    if (newComment) kommentarParts.push(newComment);
     await db.from('tricks').update({
       gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
       gelandet:r.land!=='miss'?'Yes':'No',
-      kommentar:`Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`
+      kommentar: kommentarParts.join(' | ')
     }).eq('id', e.dbId);
   }
   sessEditIdx = -1;
