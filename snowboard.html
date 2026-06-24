@@ -1542,7 +1542,15 @@ function renderSessionList() {
     return;
   }
 
-  body.innerHTML = filtered.map((t, i) => {
+  const sbDirOrd = {'Frontside':0,'Backside':1,'Cab':2,'Switch Backside':3};
+  const sbGetDir = lbl => { for (const d of ['Switch Backside','Frontside','Backside','Cab']) { if (lbl.includes(d)) return sbDirOrd[d]??4; } return 4; };
+  const sorted = [...filtered].sort((a,b) => {
+    const la = normSbTrick(a.trickaufbau||''), lb = normSbTrick(b.trickaufbau||'');
+    const da = sbGetDir(la), db = sbGetDir(lb);
+    if (da !== db) return da - db;
+    return extractRotFromLabel(la) - extractRotFromLabel(lb);
+  });
+  body.innerHTML = sorted.map((t, i) => {
     const trickName = [t.drehrichtung, t.flips && !['keine','None','none'].includes(t.flips) ? t.flips : null, t.rotation, t.achse, t.grab, t.bringback].filter(Boolean).join(' ') || t.railart || '–';
     const g = t.gesamt;
     const ratingHtml = g ? '<span class="rating-pill ' + (g>=8?'rating-high':g>=6?'rating-mid':'rating-low') + '">' + g + '</span>' : '–';
