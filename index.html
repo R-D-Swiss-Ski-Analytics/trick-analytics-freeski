@@ -3330,59 +3330,105 @@ function renderSessionLog() {
     const icon = e.result==='miss'?'✗':e.result==='perfect'?'⭐':'✓';
     const col = e.result==='miss'?'#e2001a':e.result==='perfect'?'#39c3d4':'#2d8a4e';
     const ratings = e.grab ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">[G:${e.grab} T:${e.trick_r} L:${e.land}]</span>` : '';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;">
-      <span style="color:${col};font-weight:800;font-size:15px;min-width:16px;">${icon}</span>
-      <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
-      <span style="flex:1;color:var(--text);">${e.trick||'—'}${ratings}</span>
-      <span style="color:var(--muted);font-size:11px;">${e.time}</span>
-      <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">✏️</button>
-      ${i===0?`<button onclick="undoLastEntry()" title="Delete last entry" style="background:none;border:1px solid #e2001a;border-radius:6px;color:#e2001a;cursor:pointer;padding:2px 7px;font-size:13px;flex-shrink:0;">🗑</button>`:''}
+    const isEditing = sessEditIdx === i;
+    let editRow = '';
+    if (isEditing) {
+      const r = sessEditRatings;
+      const catBtn = (cat,val,lbl,c) => {
+        const active = r[cat]===val;
+        return `<button onclick="setEditRating('${cat}','${val}')" style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:2px solid ${c};background:${active?c:'transparent'};color:${active?'#060f1a':c};font-family:'Poppins',sans-serif;">${lbl}</button>`;
+      };
+      editRow = `<div style="padding:8px 12px 8px 38px;display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>${catBtn('grab','miss','Miss','#e2001a')}${catBtn('grab','okay','Okay','#2d8a4e')}${catBtn('grab','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Trick</span>${catBtn('trick','miss','Miss','#e2001a')}${catBtn('trick','okay','Okay','#2d8a4e')}${catBtn('trick','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Land</span>${catBtn('land','miss','Miss','#e2001a')}${catBtn('land','okay','Okay','#2d8a4e')}${catBtn('land','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;gap:8px;margin-top:2px;"><button onclick="saveFsLogEdit(${i})" style="padding:6px 16px;border-radius:8px;background:#39c3d4;border:none;color:#060f1a;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;">Save</button><button onclick="cancelFsEdit()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button></div>
+      </div>`;
+    }
+    return `<div style="border-radius:8px;${isEditing?'background:rgba(57,195,212,0.08);border:1px solid #39c3d433;':''}">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;${isEditing?'':'background:var(--surface2);border-radius:8px;'}font-size:12px;">
+        <span style="color:${col};font-weight:800;font-size:15px;min-width:16px;">${icon}</span>
+        <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
+        <span style="flex:1;color:var(--text);">${e.trick||'—'}${ratings}</span>
+        <span style="color:var(--muted);font-size:11px;">${e.time}</span>
+        <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">✏️</button>
+        <button onclick="deleteLogEntry(${i})" style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;flex-shrink:0;">🗑</button>
+      </div>
+      ${editRow}
     </div>`;
   }).join('');
 }
 
-async function undoLastEntry() {
-  if (!sessLog.length) return;
-  const e = sessLog[0];
-  if (e.dbId) {
-    await db.from('tricks').delete().eq('id', e.dbId);
-  }
-  // Revert stats
-  if (sessAthleteData[e.name]) {
-    sessAthleteData[e.name].stats.attempts = Math.max(0, sessAthleteData[e.name].stats.attempts - 1);
-    if (e.result==='landed'||e.result==='perfect') sessAthleteData[e.name].stats.landed = Math.max(0, sessAthleteData[e.name].stats.landed - 1);
-    if (e.result==='perfect') sessAthleteData[e.name].stats.perfect = Math.max(0, sessAthleteData[e.name].stats.perfect - 1);
-  }
-  sessLog.shift();
-  showToast('Last entry removed', 'success');
-  renderSessionLog();
-  renderLiveSession();
-  saveSessionState();
-}
-
-function editLogEntry(idx) {
+async function deleteLogEntry(idx) {
   const e = sessLog[idx];
   if (!e) return;
-  // Switch to that athlete and pre-fill ratings
-  sessActiveAthlete = e.name;
-  if (!sessRatings[e.name]) sessRatings[e.name] = {grab:null,trick:null,land:null};
-  if (e.grab) {
-    sessRatings[e.name].grab = e.grab;
-    sessRatings[e.name].trick = e.trick_r;
-    sessRatings[e.name].land = e.land;
-  }
-  // Remove this log entry (will be re-added when re-rated)
-  if (e.dbId) db.from('tricks').delete().eq('id', e.dbId).then(()=>{});
+  if (e.dbId) await db.from('tricks').delete().eq('id', e.dbId);
   if (sessAthleteData[e.name]) {
     sessAthleteData[e.name].stats.attempts = Math.max(0, sessAthleteData[e.name].stats.attempts - 1);
     if (e.result==='landed'||e.result==='perfect') sessAthleteData[e.name].stats.landed = Math.max(0, sessAthleteData[e.name].stats.landed - 1);
     if (e.result==='perfect') sessAthleteData[e.name].stats.perfect = Math.max(0, sessAthleteData[e.name].stats.perfect - 1);
   }
   sessLog.splice(idx, 1);
-  showToast('Edit mode — re-rate the attempt', 'success');
+  sessEditIdx = -1;
+  showToast('Entry removed', 'success');
+  renderSessionLog();
+  renderLiveSession();
+  saveSessionState();
+}
+
+let sessEditIdx = -1;
+let sessEditRatings = {grab:null,trick:null,land:null};
+
+function editLogEntry(idx) {
+  if (sessEditIdx === idx) { sessEditIdx = -1; renderSessionLog(); return; }
+  const e = sessLog[idx];
+  if (!e) return;
+  sessEditIdx = idx;
+  sessEditRatings = {grab: e.grab||null, trick: e.trick_r||null, land: e.land||null};
+  renderSessionLog();
+}
+
+function setEditRating(cat, val) {
+  sessEditRatings[cat] = val;
+  renderSessionLog();
+}
+
+function cancelFsEdit() {
+  sessEditIdx = -1;
+  renderSessionLog();
+}
+
+async function saveFsLogEdit(idx) {
+  const e = sessLog[idx];
+  if (!e) return;
+  const r = sessEditRatings;
+  if (!r.grab || !r.trick || !r.land) { showToast('Please rate all 3 categories', 'error'); return; }
+  const oldResult = e.result;
+  const score = {miss:1,okay:2,perfect:3};
+  const avg = (score[r.grab]+score[r.trick]+score[r.land])/3;
+  const newResult = avg>=2.7?'perfect':avg>=1.7?'landed':'miss';
+  const d = sessAthleteData[e.name];
+  if (d) {
+    if (oldResult==='landed'||oldResult==='perfect') d.stats.landed--;
+    if (oldResult==='perfect') d.stats.perfect--;
+    if (newResult==='landed'||newResult==='perfect') d.stats.landed++;
+    if (newResult==='perfect') d.stats.perfect++;
+  }
+  e.result = newResult;
+  e.grab = r.grab; e.trick_r = r.trick; e.land = r.land;
+  if (e.dbId) {
+    const gesamt = r.land==='miss'?3:avg>=2.7?10:7;
+    await db.from('tricks').update({
+      gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
+      gelandet:r.land!=='miss'?'Yes':'No',
+      kommentar:`Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`
+    }).eq('id', e.dbId);
+  }
+  sessEditIdx = -1;
   renderLiveSession();
   renderSessionLog();
   saveSessionState();
+  showToast('Rating updated', 'success');
 }
 
 function clearSessionSelection() {
