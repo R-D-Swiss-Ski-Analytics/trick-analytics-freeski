@@ -1346,11 +1346,13 @@ function updateFwdSwBtn(prefix) {
   if (!dirSelect) return;
   if (isClassic) {
     dirSelect.style.display = 'none';
-    if (!btnWrap) {
+    const dirOptions = achse === 'Underflip' ? ['Frontside','Cab'] : ['Forward','Switch'];
+    if (btnWrap) btnWrap.remove();
+    {
       const wrap = document.createElement('div');
       wrap.id = 'fwsw-btns-' + prefix;
       wrap.style.cssText = 'display:flex;gap:8px;margin-top:2px;';
-      ['Forward','Switch'].forEach(val => {
+      dirOptions.forEach(val => {
         const btn = document.createElement('button');
         btn.type='button'; btn.textContent=val; btn.dataset.val=val;
         const isActive = dirSelect.value === val;
@@ -1367,7 +1369,7 @@ function updateFwdSwBtn(prefix) {
         wrap.appendChild(btn);
       });
       dirSelect.parentElement.appendChild(wrap);
-    } else { btnWrap.style.display = 'flex'; }
+    }
   } else {
     dirSelect.style.display = '';
     if (btnWrap) btnWrap.style.display = 'none';
