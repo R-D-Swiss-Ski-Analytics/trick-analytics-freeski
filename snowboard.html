@@ -3120,7 +3120,8 @@ async function saveSessionReport(duration, location, conditions, comments, athle
     const trickList = Object.entries(tricks).map(([trick, s]) => ({trick, att:s.att, land:s.land, stomped:s.stomped}));
     const totalAtt = trickList.reduce((a,t)=>a+t.att,0);
     const totalLand = trickList.reduce((a,t)=>a+t.land,0);
-    return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList};
+    const note = (athleteNotes||{})[shortName(name)] || '';
+    return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList, note};
   });
 
   const {error} = await db.from('session_reports').insert({
@@ -3132,8 +3133,7 @@ async function saveSessionReport(duration, location, conditions, comments, athle
     location,
     conditions,
     comments,
-    trick_data: trickData,
-    athlete_notes: athleteNotes || {}
+    trick_data: trickData
   });
 
   if (error) { showToast('Error saving report: ' + error.message, 'error'); }
