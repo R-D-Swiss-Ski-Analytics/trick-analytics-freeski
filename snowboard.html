@@ -2366,9 +2366,6 @@ async function restoreSessionState() {
     for (const name of sessSelectedAthletes) {
       const saved = (state.athleteState || {})[name] || {};
       sessAthleteData[name] = { tricks: [], currentTrick: saved.currentTrick || '', stats: saved.stats || {attempts:0,landed:0,perfect:0} };
-      const {data} = await db.from('standort').select('trick_label,disziplin,status')
-        .eq('athlet', name).or('status.eq.mastered,status.eq.goal').order('trick_label');
-      if (data) sessAthleteData[name].tricks = data;
     }
     document.getElementById('sess-setup').style.display = 'none';
     document.getElementById('sess-live').style.display = 'block';
@@ -2378,6 +2375,12 @@ async function restoreSessionState() {
     renderLiveSession();
     renderSessionLog();
     showToast('Session restored', 'success');
+    // Load tricks from DB in background, then re-render dropdown
+    Promise.all(sessSelectedAthletes.map(async name => {
+      const {data} = await db.from('standort').select('trick_label,disziplin,status')
+        .eq('athlet', name).or('status.eq.mastered,status.eq.goal').order('trick_label');
+      if (data) sessAthleteData[name].tricks = data;
+    })).then(() => renderLiveSession());
     return true;
   } catch(e) { clearSessionStorage(); return false; }
 }
