@@ -5195,8 +5195,24 @@ function renderTrickAnalytics() {
 
     if (radarTotal > 0) requestAnimationFrame(() => drawSessionDirRadar('sess-dir-radar', dirCnt, SESS_DIRS, SESS_DIR_COL));
 
-    // Add "View Session Report" button for individual sessions
+    // Load athlete notes from session report
     const sessionDate = filterDate;
+    db.from('session_reports').select('trick_data,comments').eq('app','freeski').eq('datum',sessionDate).limit(1).then(({data:reps})=>{
+      if (!reps||!reps[0]) return;
+      const rep = reps[0];
+      const notes = (rep.trick_data||[]).filter(a=>a.note).map(a=>
+        `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:4px;"><span style="font-weight:600;color:#39c3d4;min-width:70px;">${a.athlet}</span><span style="color:var(--text);font-size:12px;">${a.note}</span></div>`
+      ).join('');
+      if (notes || rep.comments) {
+        const notesDiv = document.createElement('div');
+        notesDiv.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:10px;';
+        notesDiv.innerHTML = `<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Coach Notes</div>`
+          + (rep.comments ? `<div style="color:var(--text);font-size:12px;margin-bottom:8px;padding:6px 10px;background:rgba(57,195,212,0.06);border-radius:6px;">${rep.comments}</div>` : '')
+          + notes;
+        el.appendChild(notesDiv);
+      }
+    });
+
     const reportBtnDiv = document.createElement('div');
     reportBtnDiv.style.cssText = 'margin-top:12px;text-align:center;';
     reportBtnDiv.innerHTML = `<button onclick="viewSessionReportByDate('${sessionDate}')" style="padding:10px 22px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">📄 View Session Report</button>`;
