@@ -4567,16 +4567,42 @@ let _taTypeFilter = ''; // '', 'Landing Bag', 'Jump On-Snow', 'Big Air Competiti
 let _taDateFrom = '';   // YYYY-MM-DD
 let _taDateTo   = '';   // YYYY-MM-DD
 
+function sortFsTricksByDir(tricks) {
+  const dirOrder = {'Left':0,'Right':1,'Switch Left':2,'Switch Right':3};
+  const getDir = lbl => {
+    for (const d of ['Switch Left','Switch Right','Left','Right']) if (lbl.startsWith(d)) return d;
+    return 'Other';
+  };
+  const sorted = tricks.map(t => ({name:t, dir:getDir(t), rot:extractRotFromLabel(t)}))
+    .sort((a,b) => { const da=dirOrder[a.dir]??4, db=dirOrder[b.dir]??4; return da!==db ? da-db : a.rot-b.rot; });
+  let html = '', lastDir = '';
+  sorted.forEach(t => {
+    if (t.dir !== lastDir) {
+      if (lastDir) html += '</optgroup>';
+      html += `<optgroup label="${t.dir}">`;
+      lastDir = t.dir;
+    }
+    html += `<option value="${t.name.replace(/"/g,'&quot;')}">${t.name}</option>`;
+  });
+  if (lastDir) html += '</optgroup>';
+  return html;
+}
+
+function extractRotFromLabel(label) {
+  const m = (label||'').match(/\b(180|270|360|450|540|630|720|810|900|1080|1260|1440|1620|1800|1980|2160)\b/);
+  return m ? parseInt(m[1]) : 0;
+}
+
 function initTrickAnalytics(tricks) {
   _taData = tricks.filter(t => t.trickaufbau);
   const sel = document.getElementById('ev-trick-sel');
   const dateSel = document.getElementById('ev-date-sel');
   if (!sel) return;
 
-  // Populate trick filter
-  const unique = [...new Set(_taData.map(t => t.trickaufbau))].sort();
-  sel.innerHTML = '<option value="">— All Tricks —</option>' +
-    unique.map(t => `<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
+  // Populate trick filter sorted by direction + rotation
+  const unique = [...new Set(_taData.map(t => t.trickaufbau))];
+  sel.innerHTML = '<option value="">— Select a trick —</option><option value="__ALL__">── All Tricks ──</option>' +
+    sortFsTricksByDir(unique);
 
   // Build session list: group by date, detect multiple sessions per day by time gaps
   if (dateSel) {
@@ -4957,10 +4983,10 @@ function setTypeFilter(typ) {
   const sel = document.getElementById('ev-trick-sel');
   if (sel) {
     const filtered = typ ? _taData.filter(t=>t.typ===typ) : _taData;
-    const unique = [...new Set(filtered.map(t=>t.trickaufbau))].sort();
+    const unique = [...new Set(filtered.map(t=>t.trickaufbau))];
     const prev = sel.value;
-    sel.innerHTML = '<option value="">— Select a trick —</option>' +
-      unique.map(t=>`<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
+    sel.innerHTML = '<option value="">— Select a trick —</option><option value="__ALL__">── All Tricks ──</option>' +
+      sortFsTricksByDir(unique);
     // Keep selection if still available, otherwise reset
     if (unique.includes(prev)) sel.value = prev;
     else sel.value = '';
@@ -4990,7 +5016,7 @@ function renderTrickAnalytics() {
   // Show nothing until selection is made (for trick and session modes)
   const trickVisible = sel && sel.style.display !== 'none';
   const sessionVisible = dateSel && dateSel.style.display !== 'none';
-  if (trickVisible && !chosen) {
+  if (trickVisible && !chosen && chosen !== '__ALL__') {
     el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px;">Select a trick to view its progression.</div>';
     renderRawEntries(_taData, 'all entries');
     return;
@@ -5003,6 +5029,76 @@ function renderTrickAnalytics() {
 
   function pr(k,d){ const m=(d.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
   const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  const colQ = v => v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
+
+  // ── ALL TRICKS — one chart per trick, scrollable ──────────────────
+  if (chosen === '__ALL__') {
+    const fsDirOrder = {'Left':0,'Right':1,'Switch Left':2,'Switch Right':3};
+    const getFsDir = lbl => { for (const d of ['Switch Left','Switch Right','Left','Right']) if (lbl.startsWith(d)) return d; return 'Other'; };
+    const allTricks = [...new Set(baseData.map(t=>t.trickaufbau))]
+      .map(t => ({name:t, dir:getFsDir(t), rot:extractRotFromLabel(t)}))
+      .sort((a,b) => { const da=fsDirOrder[a.dir]??4, db=fsDirOrder[b.dir]??4; return da!==db ? da-db : a.rot-b.rot; });
+    if (!allTricks.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No data.</div>'; return; }
+    let html = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${allTricks.length} tricks</div>`;
+    let lastDir = '';
+    const chartIds = [];
+    allTricks.forEach((tObj,ti) => {
+      if (tObj.dir !== lastDir) {
+        html += `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#39c3d4;margin:${lastDir?'20':'4'}px 0 8px;">${tObj.dir}</div>`;
+        lastDir = tObj.dir;
+      }
+      const td = baseData.filter(t=>t.trickaufbau===tObj.name);
+      const byDate = {};
+      td.forEach(t => { if(!t.datum) return; if(!byDate[t.datum]) byDate[t.datum]={att:0,land:0}; byDate[t.datum].att++; if(t.gelandet==='Yes') byDate[t.datum].land++; });
+      const dates = Object.keys(byDate).sort();
+      const totAtt = td.length, totLand = td.filter(t=>t.gelandet==='Yes').length;
+      const landRate = totAtt ? Math.round(totLand/totAtt*100) : 0;
+      const cid = 'ta-all-'+ti+'-'+Date.now();
+      chartIds.push({cid, dates, byDate});
+      html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:13px;font-weight:600;color:var(--text);">${tObj.name}</span>
+          <span style="font-size:16px;font-weight:800;color:${colQ(landRate)};">${totLand}/${totAtt} <span style="font-size:11px;font-weight:400;">(${landRate}%)</span></span>
+        </div>
+        <canvas id="${cid}" style="width:100%;height:100px;"></canvas>
+      </div>`;
+    });
+    el.innerHTML = html;
+    requestAnimationFrame(() => {
+      chartIds.forEach(({cid, dates, byDate}) => {
+        const canvas = document.getElementById(cid); if(!canvas) return;
+        const dpr = window.devicePixelRatio||1;
+        const W = canvas.parentElement.offsetWidth-28, H = 100;
+        canvas.style.width=W+'px'; canvas.style.height=H+'px';
+        canvas.width=W*dpr; canvas.height=H*dpr;
+        const ctx = canvas.getContext('2d'); ctx.scale(dpr,dpr);
+        const pad = {l:32,r:8,t:8,b:22};
+        const n = dates.length;
+        if (!n) return;
+        const pts = dates.map(d=>({d,pct:Math.round(byDate[d].land/byDate[d].att*100),att:byDate[d].att}));
+        const xs = pts.map((_,i) => pad.l+(n===1?(W-pad.l-pad.r)/2:i/(n-1)*(W-pad.l-pad.r)));
+        const toY = v => pad.t+(1-v/100)*(H-pad.t-pad.b);
+        [0,50,100].forEach(pct => {
+          const y=toY(pct); ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;
+          ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+        });
+        const barW = Math.max(4,Math.min(12,(W-pad.l-pad.r)/(n*4)));
+        pts.forEach((p,i) => {
+          const by=toY(p.pct), bh=H-pad.b-by;
+          ctx.fillStyle='#39c3d4cc';ctx.fillRect(xs[i]-barW/2,by,barW,bh);
+        });
+        if (pts.length >= 2) {
+          ctx.beginPath();ctx.strokeStyle='#39c3d455';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+          pts.forEach((p,i)=>{const y=toY(p.pct);i===0?ctx.moveTo(xs[i],y):ctx.lineTo(xs[i],y);});
+          ctx.stroke();ctx.setLineDash([]);
+        }
+        ctx.textAlign='center';ctx.fillStyle='#6b8299';ctx.font='9px Poppins,sans-serif';
+        pts.forEach((p,i)=>ctx.fillText(p.d.split('-')[2]+'.'+p.d.split('-')[1]+'.',xs[i],H-pad.b+12));
+      });
+    });
+    renderRawEntries(baseData, 'all entries');
+    return;
+  }
 
   // ── VIEW 3: Session selected → show tricks in that session ─────────────
   if (dateKey) {
