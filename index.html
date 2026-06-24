@@ -3591,7 +3591,8 @@ async function saveSessionReport(duration, location, conditions, comments, athle
     const trickList = Object.entries(tricks).map(([trick, s]) => ({trick, att:s.att, land:s.land, perf:s.perf}));
     const totalAtt = trickList.reduce((a,t)=>a+t.att,0);
     const totalLand = trickList.reduce((a,t)=>a+t.land,0);
-    return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList};
+    const note = (athleteNotes||{})[shortName(name)] || '';
+    return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList, note};
   });
 
   const {error} = await db.from('session_reports').insert({
@@ -3603,8 +3604,7 @@ async function saveSessionReport(duration, location, conditions, comments, athle
     location,
     conditions,
     comments,
-    trick_data: trickData,
-    athlete_notes: athleteNotes || {}
+    trick_data: trickData
   });
 
   if (error) { showToast('Error saving report: ' + error.message, 'error'); }
@@ -3648,10 +3648,12 @@ function openReportPrint(report) {
       const lp = t.att ? Math.round(t.land/t.att*100) : 0;
       return `<tr><td>${t.trick}</td><td>${t.att}</td><td>${t.land}</td><td>${lp}%</td><td>${t.perf||0}</td></tr>`;
     }).join('');
+    const noteHtml = a.note ? `<div style="padding:8px 12px;font-size:12px;color:#555;background:#fffbeb;border-top:1px solid #e0e0e0;"><strong>Note:</strong> ${a.note}</div>` : '';
     return `<div class="athlete-block">
       <div class="athlete-name">${a.athlet}</div>
       <div class="athlete-summary">${a.totalAtt} attempts &nbsp;|&nbsp; ${a.totalLand} landed &nbsp;|&nbsp; ${pct}%</div>
       <table><thead><tr><th>Trick</th><th>Att.</th><th>Landed</th><th>Rate</th><th>Perfect</th></tr></thead><tbody>${rows}</tbody></table>
+      ${noteHtml}
     </div>`;
   }).join('');
 
