@@ -2763,7 +2763,10 @@ function renderLiveSession() {
 
   const dirOrder = {'Frontside':0,'Backside':1,'Cab':2,'Switch Backside':3};
   const getDirKey = lbl => {
-    for (const d of ['Switch Backside','Frontside','Backside','Cab']) if (lbl.startsWith(d)) return dirOrder[d];
+    for (const d of ['Switch Backside','Frontside','Backside','Cab']) {
+      if (lbl.startsWith(d)) return dirOrder[d];
+      if (lbl.includes(' '+d+' ') || lbl.includes(' '+d)) return dirOrder[d];
+    }
     return 4;
   };
   const sortedTricks = [...(d.tricks||[])].map(t => ({
@@ -4577,7 +4580,10 @@ let _sbTaDateTo = '';
 function sortTricksByDir(tricks) {
   const dirOrder = {'Frontside':0,'Backside':1,'Cab':2,'Switch Backside':3};
   const getDir = lbl => {
-    for (const d of ['Switch Backside','Frontside','Backside','Cab']) if (lbl.startsWith(d)) return d;
+    for (const d of ['Switch Backside','Frontside','Backside','Cab']) {
+      if (lbl.startsWith(d)) return d;
+      if (lbl.includes(' '+d+' ') || lbl.includes(' '+d)) return d;
+    }
     return 'Other';
   };
   const sorted = tricks.map(t => ({name:t, dir:getDir(t), rot:extractRotFromLabel(t)}))
@@ -4854,7 +4860,7 @@ function renderSbTrickAnalytics() {
   // ── ALL TRICKS — one chart per trick, scrollable ──────────────────
   if (chosen === '__ALL__') {
     const dirOrder = {'Frontside':0,'Backside':1,'Cab':2,'Switch Backside':3};
-    const getDirAll = lbl => { for (const d of ['Switch Backside','Frontside','Backside','Cab']) if (lbl.startsWith(d)) return d; return 'Other'; };
+    const getDirAll = lbl => { for (const d of ['Switch Backside','Frontside','Backside','Cab']) { if (lbl.startsWith(d) || lbl.includes(' '+d+' ') || lbl.includes(' '+d)) return d; } return 'Other'; };
     const allTricks = [...new Set(baseData.map(t=>t.trickaufbau))]
       .map(t => ({name:t, dir:getDirAll(t), rot:extractRotFromLabel(t)}))
       .sort((a,b) => { const da=dirOrder[a.dir]??4, db=dirOrder[b.dir]??4; return da!==db ? da-db : a.rot-b.rot; });
