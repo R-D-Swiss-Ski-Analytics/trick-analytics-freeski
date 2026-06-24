@@ -971,7 +971,6 @@
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
             <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
             <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
-            <button id="ev-mode-overall" onclick="setStatsMode('overall')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Overall Progress</button>
           </div>
           <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
             <option value="">— Trick auswählen —</option>
@@ -4191,7 +4190,6 @@ async function loadEntwicklung() {
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
             <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
             <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
-            <button id="ev-mode-overall" onclick="setStatsMode('overall')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Overall Progress</button>
           </div>
           <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
             <option value="">— Trick auswählen —</option>
@@ -4858,12 +4856,11 @@ async function deleteRawEntry(id) {
 function setStatsMode(mode) {
   const trickSel = document.getElementById('ev-trick-sel');
   const dateSel  = document.getElementById('ev-date-sel');
-  const btnO = document.getElementById('ev-mode-overall');
   const btnT = document.getElementById('ev-mode-trick');
   const btnS = document.getElementById('ev-mode-session');
   // Reset all buttons
-  [btnO,btnT,btnS].forEach(b=>{if(b){b.style.background='var(--surface2)';b.style.borderColor='var(--border)';b.style.color='var(--muted)';}});
-  const active = mode==='trick'?btnT:mode==='session'?btnS:btnO;
+  [btnT,btnS].forEach(b=>{if(b){b.style.background='var(--surface2)';b.style.borderColor='var(--border)';b.style.color='var(--muted)';}});
+  const active = mode==='trick'?btnT:btnS;
   if(active){active.style.background='rgba(57,195,212,0.2)';active.style.borderColor='#39c3d4';active.style.color='#39c3d4';}
   // Show/hide dropdowns
   if(trickSel) trickSel.style.display = mode==='trick' ? '' : 'none';
