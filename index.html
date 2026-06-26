@@ -2883,7 +2883,10 @@ async function toggleSessionAthlete(name) {
       .eq('athlet', name).or('status.eq.mastered,status.eq.goal').order('trick_label');
     if (!error) sessAthleteData[name].tricks = data || [];
   }
-  renderSessionTrickSelection();
+  const startBtn = document.getElementById('sess-start-btn');
+  if (startBtn) startBtn.style.display = sessSelectedAthletes.length ? 'block' : 'none';
+  const trickSel = document.getElementById('sess-trick-selection');
+  if (trickSel) trickSel.style.display = 'none';
 }
 
 const SESS_DIRECTIONS = ['Left','Right','Switch Left','Switch Right','Forward','Switch'];
@@ -3138,8 +3141,8 @@ function startSession() {
   if (!sessType) { showToast('Please select a session type (Bag / On-Snow / Comp)', 'error'); return; }
   if (sessSelectedAthletes.length === 0) { showToast('Please select at least one athlete', 'error'); return; }
   sessSelectedAthletes.forEach(name => {
-    const tricks = sessActiveTricks[name] || [];
-    sessAthleteData[name].currentTrick = tricks[0] || '';
+    if (!sessAthleteData[name]) sessAthleteData[name] = {tricks:[],currentTrick:'',stats:{attempts:0,landed:0,perfect:0}};
+    sessAthleteData[name].currentTrick = sessAthleteData[name].currentTrick || '';
     sessAthleteData[name].stats = {attempts:0,landed:0,perfect:0};
   });
   sessLog = [];
@@ -3190,17 +3193,41 @@ function renderLiveSession() {
     cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${sid}">
       <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:16px;text-align:center;">${shortName(name)}</div>
 
-      <!-- Trick selection -->
+      <!-- Trick dropdown -->
       <div style="margin-bottom:20px;">
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Working on</div>
-        ${tricks.length > 0
-          ? `<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
-              ${tricks.map(t=>`<button class="sess-trick-btn${t===d.currentTrick?' active':''}"
-                onclick="sessPickTrick('${name}','${t.replace(/'/g,"\\'")}',this)"
-                style="font-size:13px;padding:8px 14px;">${t}</button>`).join('')}
-            </div>`
-          : `<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px;">No tricks selected — go back to Setup and select tricks from the assessment.</div>`
-        }
+        <select onchange="sessSetTrick('${name}',this.value)"
+          style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+          <option value="">— select trick —</option>
+          ${(() => {
+            const fsDirOrder = {'Left':0,'Right':1,'Switch Left':2,'Switch Right':3};
+            const getFsDir = lbl => {
+              for (const dd of ['Switch Left','Switch Right','Left','Right']) {
+                if (lbl.startsWith(dd)) return dd;
+                if (lbl.includes(' '+dd+' ') || lbl.includes(' '+dd)) return dd;
+              }
+              return 'Other';
+            };
+            const sorted = [...(d.tricks||[])].map(t => {
+              const lbl = (t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim();
+              return {...t, _lbl: lbl, _dir: getFsDir(lbl), _rot: extractRotFromLabel(lbl)};
+            }).sort((a,b) => {
+              const da = fsDirOrder[a._dir]??4, db = fsDirOrder[b._dir]??4;
+              return da!==db ? da-db : a._rot-b._rot;
+            });
+            let html = '', lastDir = '';
+            sorted.forEach(t => {
+              if (t._dir !== lastDir) {
+                if (lastDir) html += '</optgroup>';
+                html += '<optgroup label="'+t._dir+'">';
+                lastDir = t._dir;
+              }
+              html += '<option value="'+t._lbl.replace(/"/g,'&quot;')+'"'+(t._lbl===d.currentTrick?' selected':'')+'>'+t._lbl+(t.status==='goal'?' 🎯':'')+'</option>';
+            });
+            if (lastDir) html += '</optgroup>';
+            return html;
+          })()}
+        </select>
       </div>
 
       <!-- Rating rows -->
