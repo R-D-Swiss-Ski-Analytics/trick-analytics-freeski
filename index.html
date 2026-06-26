@@ -5066,7 +5066,6 @@ function renderTrickAnalytics() {
 
   function pr(k,d){ const m=(d.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
   const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
-  const colQ = v => v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
 
   // ── ALL TRICKS — one chart per trick, scrollable ──────────────────
   if (chosen === '__ALL__') {
