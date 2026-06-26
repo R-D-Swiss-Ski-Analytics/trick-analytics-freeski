@@ -3208,10 +3208,12 @@ function renderLiveSession() {
               }
               return 'Other';
             };
+            const seen = new Set();
             const sorted = [...(d.tricks||[])].map(t => {
-              const lbl = (t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim();
+              const lbl = baseLabel((t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim());
               return {...t, _lbl: lbl, _dir: getFsDir(lbl), _rot: extractRotFromLabel(lbl)};
-            }).sort((a,b) => {
+            }).filter(t => { if (seen.has(t._lbl)) return false; seen.add(t._lbl); return true; })
+            .sort((a,b) => {
               const da = fsDirOrder[a._dir]??4, db = fsDirOrder[b._dir]??4;
               return da!==db ? da-db : a._rot-b._rot;
             });
@@ -3230,19 +3232,30 @@ function renderLiveSession() {
         </select>
       </div>
 
-      <!-- Grab selector -->
-      <div style="margin-bottom:16px;">
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Grab</div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px;" id="sess-grabs-${sid}">
-          <button onclick="sessSelectGrab('${name}','',this)" class="sess-grab-btn${!d.currentGrab?' active':''}"
-            style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${!d.currentGrab?'#39c3d4':'var(--border)'};background:${!d.currentGrab?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${!d.currentGrab?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">No Grab</button>
-          ${SESS_GRABS.map(g => {
-            const active = d.currentGrab === g;
-            return `<button onclick="sessSelectGrab('${name}','${g.replace(/'/g,"\\'")}',this)" class="sess-grab-btn"
-              style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${active?'#39c3d4':'var(--border)'};background:${active?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${active?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">${g}</button>`;
-          }).join('')}
-        </div>
-      </div>
+      <!-- Grab selector (only grabs from assessment) -->
+      ${(() => {
+        if (!d.currentTrick) return '';
+        const baseTrick = d.currentTrick;
+        const matchingEntries = (d.tricks||[]).filter(t => baseLabel((t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim()) === baseTrick);
+        const grabSet = new Set();
+        matchingEntries.forEach(t => {
+          (t.grab||'').split(',').map(g=>g.trim()).filter(Boolean).forEach(g => grabSet.add(g));
+        });
+        const grabs = [...grabSet].sort();
+        if (!grabs.length) return '';
+        return `<div style="margin-bottom:16px;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Grab</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;" id="sess-grabs-${sid}">
+            <button onclick="sessSelectGrab('${name}','',this)" class="sess-grab-btn${!d.currentGrab?' active':''}"
+              style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${!d.currentGrab?'#39c3d4':'var(--border)'};background:${!d.currentGrab?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${!d.currentGrab?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">No Grab</button>
+            ${grabs.map(g => {
+              const active = d.currentGrab === g;
+              return '<button onclick="sessSelectGrab(\''+name+'\',\''+g.replace(/'/g,"\\'")+'\',this)" class="sess-grab-btn"'+
+                ' style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid '+(active?'#39c3d4':'var(--border)')+';background:'+(active?'rgba(57,195,212,0.18)':'var(--surface2)')+';color:'+(active?'#39c3d4':'var(--muted)')+';font-family:\'Poppins\',sans-serif;">'+g+'</button>';
+            }).join('')}
+          </div>
+        </div>`;
+      })()}
 
       <!-- Rating rows -->
       <div style="display:flex;flex-direction:column;gap:12px;">
@@ -3344,7 +3357,11 @@ async function autoLogAttempt(name) {
   });
 }
 
-function sessSetTrick(name, trick) { sessAthleteData[name].currentTrick = trick; }
+function sessSetTrick(name, trick) {
+  sessAthleteData[name].currentTrick = trick;
+  sessAthleteData[name].currentGrab = '';
+  renderLiveSession();
+}
 
 function sessSelectGrab(name, grab, btn) {
   sessAthleteData[name].currentGrab = grab;
