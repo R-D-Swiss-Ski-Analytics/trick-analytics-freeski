@@ -3581,7 +3581,7 @@ async function cancelSession() {
   const ids = sessLog.filter(e => e.dbId).map(e => e.dbId);
   if (ids.length > 0) await db.from('tricks').delete().in('id', ids);
   sessLog = [];
-  pauseSession();
+  resetSession();
   showToast('Session cancelled — all data deleted', 'error');
 }
 
