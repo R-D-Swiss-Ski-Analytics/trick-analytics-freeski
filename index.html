@@ -2792,7 +2792,7 @@ function saveSessionState() {
   };
   sessSelectedAthletes.forEach(name => {
     const d = sessAthleteData[name];
-    if (d) state.athleteState[name] = { currentTrick: d.currentTrick, stats: {...d.stats} };
+    if (d) state.athleteState[name] = { currentTrick: d.currentTrick, currentGrab: d.currentGrab||'', stats: {...d.stats} };
   });
   localStorage.setItem('fs_session', JSON.stringify(state));
 }
@@ -2815,7 +2815,7 @@ async function restoreSessionState() {
     sessActiveTricks = state.activeTricks || {};
     for (const name of sessSelectedAthletes) {
       const saved = (state.athleteState || {})[name] || {};
-      sessAthleteData[name] = { tricks: [], currentTrick: saved.currentTrick || '', stats: saved.stats || {attempts:0,landed:0,perfect:0} };
+      sessAthleteData[name] = { tricks: [], currentTrick: saved.currentTrick || '', currentGrab: saved.currentGrab || '', stats: saved.stats || {attempts:0,landed:0,perfect:0} };
     }
     document.getElementById('sess-setup').style.display = 'none';
     document.getElementById('sess-live').style.display = 'block';
@@ -2875,7 +2875,7 @@ async function toggleSessionAthlete(name) {
       return;
     }
     sessSelectedAthletes.push(name);
-    sessAthleteData[name] = { tricks: [], currentTrick: '', stats: {attempts:0,landed:0,perfect:0} };
+    sessAthleteData[name] = { tricks: [], currentTrick: '', currentGrab: '', stats: {attempts:0,landed:0,perfect:0} };
     sessActiveTricks[name] = [];
     const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
     if (card) card.style.borderColor = '#39c3d4';
@@ -3230,6 +3230,20 @@ function renderLiveSession() {
         </select>
       </div>
 
+      <!-- Grab selector -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Grab</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;" id="sess-grabs-${sid}">
+          <button onclick="sessSelectGrab('${name}','',this)" class="sess-grab-btn${!d.currentGrab?' active':''}"
+            style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${!d.currentGrab?'#39c3d4':'var(--border)'};background:${!d.currentGrab?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${!d.currentGrab?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">No Grab</button>
+          ${SESS_GRABS.map(g => {
+            const active = d.currentGrab === g;
+            return `<button onclick="sessSelectGrab('${name}','${g.replace(/'/g,"\\'")}',this)" class="sess-grab-btn"
+              style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${active?'#39c3d4':'var(--border)'};background:${active?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${active?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">${g}</button>`;
+          }).join('')}
+        </div>
+      </div>
+
       <!-- Rating rows -->
       <div style="display:flex;flex-direction:column;gap:12px;">
         ${[['grab','Grab'],['trick','Trick'],['land','Landing']].map(([cat,label]) => `
@@ -3303,7 +3317,9 @@ async function autoLogAttempt(name) {
   const comment = commentEl ? commentEl.value.trim() : '';
   if (commentEl) commentEl.value = '';
 
-  const logEntry = {name, trick:d.currentTrick, result, grab:r.grab, trick_r:r.trick, land:r.land, comment,
+  const selectedGrab = d.currentGrab || '';
+  const trickWithGrab = selectedGrab ? d.currentTrick + ' — ' + selectedGrab : d.currentTrick;
+  const logEntry = {name, trick:trickWithGrab, result, grab:r.grab, trick_r:r.trick, land:r.land, comment, selectedGrab,
     time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})};
   sessLog.unshift(logEntry);
 
@@ -3318,7 +3334,8 @@ async function autoLogAttempt(name) {
   db.from('tricks').insert({
     athlet:name, datum:new Date().toISOString().split('T')[0],
     typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
-    trickaufbau:d.currentTrick, gelandet:r.land!=='miss'?'Yes':'No',
+    trickaufbau:trickWithGrab, gelandet:r.land!=='miss'?'Yes':'No',
+    grab: selectedGrab || null,
     gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
     kommentar: kommentarParts.join(' | ')
   }).select('id').then(({data,error})=>{
@@ -3328,6 +3345,18 @@ async function autoLogAttempt(name) {
 }
 
 function sessSetTrick(name, trick) { sessAthleteData[name].currentTrick = trick; }
+
+function sessSelectGrab(name, grab, btn) {
+  sessAthleteData[name].currentGrab = grab;
+  const sid = name.replace(/\s/g,'_');
+  const wrap = document.getElementById('sess-grabs-'+sid);
+  if (wrap) wrap.querySelectorAll('.sess-grab-btn').forEach(b => {
+    const isActive = b === btn;
+    b.style.borderColor = isActive ? '#39c3d4' : 'var(--border)';
+    b.style.background = isActive ? 'rgba(57,195,212,0.18)' : 'var(--surface2)';
+    b.style.color = isActive ? '#39c3d4' : 'var(--muted)';
+  });
+}
 
 function sessPickTrick(name, trick, btn) {
   sessAthleteData[name].currentTrick = trick;
