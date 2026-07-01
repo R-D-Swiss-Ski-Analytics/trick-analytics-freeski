@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trick Analytics Snowboard</title>
+<title>Trick Analyses Snowboard</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -383,13 +383,13 @@
 </style>
 </head>
 <body>
-<div id="login-overlay" style="position:fixed;inset:0;background:linear-gradient(135deg,#001a2e 0%,#004877 100%);z-index:9999;display:none;align-items:center;justify-content:center;"><div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:40px;width:100%;max-width:420px;text-align:center;"><div style="font-family:'Poppins',sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:4px;">TRICK COLLECTOR</div><div id="login-subtitle" style="font-size:12px;color:#6b8299;margin-bottom:32px;letter-spacing:1px;"></div><div id="mode-select"><div style="font-size:13px;color:#6b8299;margin-bottom:16px;">Who are you?</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><button onclick="selectMode('coach')" style="padding:18px;background:rgba(0,72,119,0.3);border:1.5px solid #004877;border-radius:10px;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Coach</button><button onclick="selectMode('athlete')" style="padding:18px;background:rgba(45,138,78,0.15);border:1.5px solid #2d8a4e;border-radius:10px;color:#2d8a4e;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Athlete</button></div></div><div id="coach-login" style="display:none;"><div style="font-size:13px;color:#39c3d4;font-weight:600;margin-bottom:20px;">Coach Login</div><input type="password" id="coach-pw" placeholder="Coach password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;"><div id="coach-err" style="color:#e2001a;font-size:12px;margin-bottom:10px;display:none;">Incorrect password.</div><button onclick="doCoachLogin()" style="width:100%;padding:12px;background:#004877;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">Sign In</button><button onclick="showModeSelect()" style="width:100%;padding:10px;background:none;color:#6b8299;border:none;font-size:13px;cursor:pointer;margin-top:8px;">← Back</button></div><div id="athlete-login" style="display:none;"><div style="font-size:13px;color:#2d8a4e;font-weight:600;margin-bottom:20px;">Athlete Login</div><select id="login-athlet" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;"><option value="">— select your name —</option><option>Alex Lotorto</option><option>Andrina Salis</option><option>Ariane Burri</option><option>Aron Wagner</option><option>Berenice Wicki</option><option>David Hablützel</option><option>Elias Lehner</option><option>Isabelle Lötscher</option><option>Jonas Hasler</option><option>Leonardo Saraiva</option><option>Lura Wick</option><option>Mischa Zürcher</option><option>Nicolas Schütz</option><option>Reef Hasler</option>
+<div id="login-overlay" style="position:fixed;inset:0;background:linear-gradient(135deg,#001a2e 0%,#004877 100%);z-index:9999;display:none;align-items:center;justify-content:center;"><div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:40px;width:100%;max-width:420px;text-align:center;"><div style="font-family:'Poppins',sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:4px;">TRICK ANALYSES SNOWBOARD</div><div id="login-subtitle" style="font-size:12px;color:#6b8299;margin-bottom:32px;letter-spacing:1px;"></div><div id="mode-select"><div style="font-size:13px;color:#6b8299;margin-bottom:16px;">Who are you?</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><button onclick="selectMode('coach')" style="padding:18px;background:rgba(0,72,119,0.3);border:1.5px solid #004877;border-radius:10px;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Coach</button><button onclick="selectMode('athlete')" style="padding:18px;background:rgba(45,138,78,0.15);border:1.5px solid #2d8a4e;border-radius:10px;color:#2d8a4e;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Athlete</button></div></div><div id="coach-login" style="display:none;"><div style="font-size:13px;color:#39c3d4;font-weight:600;margin-bottom:20px;">Coach Login</div><input type="password" id="coach-pw" placeholder="Coach password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;"><div id="coach-err" style="color:#e2001a;font-size:12px;margin-bottom:10px;display:none;">Incorrect password.</div><button onclick="doCoachLogin()" style="width:100%;padding:12px;background:#004877;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">Sign In</button><button onclick="showModeSelect()" style="width:100%;padding:10px;background:none;color:#6b8299;border:none;font-size:13px;cursor:pointer;margin-top:8px;">← Back</button></div><div id="athlete-login" style="display:none;"><div style="font-size:13px;color:#2d8a4e;font-weight:600;margin-bottom:20px;">Athlete Login</div><select id="login-athlet" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;"><option value="">— select your name —</option><option>Alex Lotorto</option><option>Andrina Salis</option><option>Ariane Burri</option><option>Aron Wagner</option><option>Berenice Wicki</option><option>David Hablützel</option><option>Elias Lehner</option><option>Isabelle Lötscher</option><option>Jonas Hasler</option><option>Leonardo Saraiva</option><option>Lura Wick</option><option>Mischa Zürcher</option><option>Nicolas Schütz</option><option>Reef Hasler</option>
             <option>Robin Zürcher</option><option>Soha Janett</option><option>Yuna Scheidegger</option></select><input type="password" id="athlete-pin" placeholder="PIN" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;" onkeydown="if(event.key==='Enter')doAthleteLogin()"><div id="athlete-err" style="color:#e2001a;font-size:12px;margin-bottom:10px;display:none;">Incorrect PIN.</div><button onclick="doAthleteLogin()" style="width:100%;padding:12px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">Sign In</button><button onclick="showModeSelect()" style="width:100%;padding:10px;background:none;color:#6b8299;border:none;font-size:13px;cursor:pointer;margin-top:8px;">← Back</button></div><div id="change-pin-dialog" style="display:none;"><div style="font-size:13px;color:#f59e0b;font-weight:600;margin-bottom:8px;">Welcome! Please set your personal PIN.</div><div style="font-size:12px;color:#6b8299;margin-bottom:20px;">Choose a PIN of at least 4 characters.</div><input type="password" id="new-pin1" placeholder="New PIN" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:10px;outline:none;font-family:'Poppins',sans-serif;"><input type="password" id="new-pin2" placeholder="Confirm PIN" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;"><div id="pin-err" style="color:#e2001a;font-size:12px;margin-bottom:10px;display:none;"></div><button onclick="saveNewPin()" style="width:100%;padding:12px;background:#f59e0b;color:#000;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">Save PIN & Enter</button></div></div></div>
 
 <!-- APP PASSWORD OVERLAY -->
 <div id="app-overlay" style="position:fixed;inset:0;background:linear-gradient(135deg,#001a2e 0%,#004877 100%);z-index:9999;display:none;align-items:center;justify-content:center;">
   <div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:40px;max-width:360px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
-    <div style="font-family:'Poppins',sans-serif;font-size:32px;letter-spacing:1px;color:#ffffff;">TRICK COLLECTOR FREESKI</div>
+    <div style="font-family:'Poppins',sans-serif;font-size:32px;letter-spacing:1px;color:#ffffff;">TRICK ANALYSES SNOWBOARD</div>
     <div style="font-size:12px;color:#6b8299;margin-bottom:28px;letter-spacing:1px;">Swiss-Ski</div>
     <input id="app-pw-input" type="password" placeholder="Enter password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;">
     <div id="app-pw-error" style="color:#ef4444;font-size:12px;margin-bottom:10px;display:none;">Incorrect password.</div>
@@ -398,7 +398,7 @@
 </div>
 
 <header>
-  <h1>Trick Analytics Snowboard</h1>
+  <h1>Trick Analyses Snowboard</h1>
   <nav class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('standort', this)">Assessment</button>
     <button class="nav-tab" onclick="showPage('erfassen', this)">Session</button>
@@ -1949,7 +1949,7 @@ function generateAthleteReport() {
     doc.setFont('helvetica','normal');
     doc.setFontSize(9);
     doc.setTextColor(180,180,180);
-    doc.text('Swiss-Ski Trick Analytics — Snowboard', W-margin-2, y+6.8, {align:'right'});
+    doc.text('Swiss-Ski Trick Analyses — Snowboard', W-margin-2, y+6.8, {align:'right'});
     y += 14;
 
     // Meta
@@ -2316,7 +2316,7 @@ function openTeamPdfReport() {
   <div class="print-btn"><button onclick="window.print()">Print / Save as PDF</button></div>
   <h1>Team Report — ${title}</h1>
   ${athleteSections}
-  <footer><span>Swiss-Ski Trick Analytics Snowboard</span><span>Generated ${today}</span></footer>
+  <footer><span>Swiss-Ski Trick Analyses Snowboard</span><span>Generated ${today}</span></footer>
 </body></html>`);
   win.document.close();
 }
@@ -3476,7 +3476,7 @@ function openReportPrint(report) {
     doc.setFont('helvetica','normal');
     doc.setFontSize(9);
     doc.setTextColor(180,180,180);
-    doc.text('Swiss-Ski Trick Analytics — Snowboard', W-margin-2, y+6.8, {align:'right'});
+    doc.text('Swiss-Ski Trick Analyses — Snowboard', W-margin-2, y+6.8, {align:'right'});
     y += 14;
 
     // Meta grid (2 columns)
