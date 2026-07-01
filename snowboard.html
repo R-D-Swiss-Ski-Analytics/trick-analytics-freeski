@@ -1208,10 +1208,16 @@
       <select id="ar-athlete-sel" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;min-width:180px;">
         <option value="">— Select athlete —</option>
       </select>
-      <select id="ar-season-sel" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+      <select id="ar-season-sel" onchange="arSeasonChange()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
         <option value="current">Current season</option>
         <option value="all">All time</option>
+        <option value="custom">Custom date range</option>
       </select>
+      <div id="ar-date-range" style="display:none;gap:6px;align-items:center;">
+        <input type="date" id="ar-date-from" style="padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+        <span style="color:var(--muted);font-size:13px;">–</span>
+        <input type="date" id="ar-date-to" style="padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+      </div>
       <button onclick="generateAthleteReport()" style="padding:8px 18px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">↓ Generate PDF</button>
     </div>
   </div>
@@ -1850,6 +1856,12 @@ async function autoRebuildAllReports() {
   _rebuildInProgress = false;
 }
 
+function arSeasonChange() {
+  const v = document.getElementById('ar-season-sel')?.value;
+  const dr = document.getElementById('ar-date-range');
+  if (dr) dr.style.display = v === 'custom' ? 'flex' : 'none';
+}
+
 function populateAthleteReportDropdown() {
   const sel = document.getElementById('ar-athlete-sel');
   if (!sel) return;
@@ -1865,7 +1877,19 @@ function generateAthleteReport() {
 
   const { from } = getSbSeasonRange();
   let data = dbAllTricks.filter(t => t.athlet === athName && t.trickaufbau);
-  if (season === 'current' && from) data = data.filter(t => t.datum >= from);
+  let seasonLabel = 'All time';
+  if (season === 'current' && from) {
+    data = data.filter(t => t.datum >= from);
+    seasonLabel = 'Current season';
+  } else if (season === 'custom') {
+    const dateFrom = document.getElementById('ar-date-from')?.value;
+    const dateTo   = document.getElementById('ar-date-to')?.value;
+    if (!dateFrom && !dateTo) { showToast('Please select a date range', 'error'); return; }
+    if (dateFrom) data = data.filter(t => t.datum >= dateFrom);
+    if (dateTo)   data = data.filter(t => t.datum <= dateTo);
+    const fmt = d => { if (!d) return ''; const p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); };
+    seasonLabel = (dateFrom ? fmt(dateFrom) : '…') + ' – ' + (dateTo ? fmt(dateTo) : '…');
+  }
   data.sort((a,b) => (a.created_at||'').localeCompare(b.created_at||''));
 
   if (!data.length) { showToast('No session data for this athlete / period', 'error'); return; }
@@ -1907,7 +1931,6 @@ function generateAthleteReport() {
   const totalAtt  = data.length;
   const totalLand = data.filter(e=>e.gelandet==='Yes').length;
   const totalPct  = totalAtt ? Math.round(totalLand/totalAtt*100) : 0;
-  const seasonLabel = season==='all' ? 'All time' : 'Current season';
   const filename = 'Athlete_Report_'+athName.replace(/\s/g,'_')+'_'+(new Date().toISOString().split('T')[0].replace(/-/g,''))+'.pdf';
 
   function generate() {
