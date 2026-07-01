@@ -1820,7 +1820,19 @@ async function loadDB() {
   renderSessionReports();
   renderDBRankings();
   renderDBTable();
+  autoRebuildAllReports();
 }
+
+let _rebuildInProgress = false;
+async function autoRebuildAllReports() {
+  if (_rebuildInProgress || !dbSessionReports.length) return;
+  _rebuildInProgress = true;
+  for (const report of dbSessionReports) {
+    await rebuildReportFromTimestamps(report.id, true);
+  }
+  _rebuildInProgress = false;
+}
+
 
 function renderSessionReports() {
   const el = document.getElementById('session-reports-list');
@@ -1840,8 +1852,7 @@ function renderSessionReports() {
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
         <button onclick="openReportPrint(window._srReports[${idx}])" style="padding:6px 12px;border-radius:6px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">View</button>
-        <button onclick="rebuildReportFromTimestamps(${r.id})" title="Rebuild trick order from timestamps" style="padding:6px 10px;border-radius:6px;background:rgba(245,158,11,0.12);border:1px solid #f59e0b;color:#f59e0b;font-family:'Poppins',sans-serif;font-size:11px;cursor:pointer;">↺ Rebuild</button>
-        <button onclick="deleteSessionReport(${r.id},false)" title="Delete report only" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a33;color:#e2001a;font-size:13px;cursor:pointer;">🗑</button>
+<button onclick="deleteSessionReport(${r.id},false)" title="Delete report only" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a33;color:#e2001a;font-size:13px;cursor:pointer;">🗑</button>
         <button onclick="deleteSessionReport(${r.id},true)" title="Delete report + all trick data" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a;color:#e2001a;font-size:11px;cursor:pointer;font-weight:700;">🗑+</button>
       </div>
     </div>`;
@@ -1849,10 +1860,10 @@ function renderSessionReports() {
   window._srReports = dbSessionReports;
 }
 
-async function rebuildReportFromTimestamps(id) {
+async function rebuildReportFromTimestamps(id, silent=false) {
   const report = dbSessionReports.find(r => r.id === id);
   if (!report) return;
-  showToast('Rebuilding…', 'success');
+  if (!silent) showToast('Rebuilding…', 'success');
   const athletes = Array.isArray(report.athletes) ? report.athletes : [];
   const {data: entries, error} = await db.from('tricks')
     .select('athlet,trickaufbau,gelandet,gesamt,created_at')
@@ -1881,9 +1892,11 @@ async function rebuildReportFromTimestamps(id) {
   });
 
   const {error: updErr} = await db.from('session_reports').update({trick_data: trickData}).eq('id', id);
-  if (updErr) { showToast('Error saving: '+updErr.message, 'error'); return; }
-  showToast('Report rebuilt from timestamps', 'success');
-  loadDB();
+  if (updErr) { if (!silent) showToast('Error saving: '+updErr.message, 'error'); return; }
+  if (!silent) showToast('Report rebuilt from timestamps', 'success');
+  // Update local cache so the report is current without re-fetching
+  const idx = dbSessionReports.findIndex(r => r.id === id);
+  if (idx >= 0) dbSessionReports[idx].trick_data = trickData;
 }
 
 async function deleteSessionReport(id, withTricks) {
