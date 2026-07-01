@@ -3231,7 +3231,7 @@ function openReportPrint(report) {
   const dateStr = d.datum ? (() => { const p=d.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
   const durH = d.duration_min ? (d.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
   const condLabel = d.conditions ? ['','Poor','Below Average','Average','Good','Excellent'][d.conditions]||d.conditions+'/5' : '—';
-  const condDots = d.conditions ? ('●'.repeat(d.conditions)+'○'.repeat(5-d.conditions)) : '—';
+  const condDots = d.conditions ? (d.conditions+'/5') : '—';
   const typeShort = d.session_type||'—';
   const athleteStr = Array.isArray(d.athletes) ? d.athletes.map(a=>shortName(a)).join(', ') : (d.athletes||'');
   const trickData = Array.isArray(d.trick_data) ? d.trick_data : [];
