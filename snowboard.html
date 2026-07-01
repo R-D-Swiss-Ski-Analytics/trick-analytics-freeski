@@ -3662,7 +3662,7 @@ async function loadEntwicklung() {
   const standort = standortRes.data || [];
 
   if (!tricks.length && !standort.length) {
-    main.innerHTML = '<div class="empty-state"><div class="icon">📋</div>No entries yet für diese Athlete</div>';
+    main.innerHTML = '<div class="empty-state">No entries yet für diese Athlete</div>';
     return;
   }
 
