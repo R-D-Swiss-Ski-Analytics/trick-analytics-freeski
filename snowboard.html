@@ -1199,6 +1199,23 @@
     <div id="session-reports-list"><div class="loading"><span class="spinner"></span></div></div>
   </div>
 
+  <!-- SECTION 1c: ATHLETE REPORT -->
+  <div class="card" style="margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">📄 Athlete Report</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <select id="ar-athlete-sel" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;min-width:180px;">
+        <option value="">— Select athlete —</option>
+      </select>
+      <select id="ar-season-sel" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+        <option value="current">Current season</option>
+        <option value="all">All time</option>
+      </select>
+      <button onclick="generateAthleteReport()" style="padding:8px 18px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">↓ Generate PDF</button>
+    </div>
+  </div>
+
   <!-- SECTION 2: TEAM ASSESSMENT -->
   <div class="card" style="margin-bottom:20px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
@@ -1833,6 +1850,173 @@ async function autoRebuildAllReports() {
   _rebuildInProgress = false;
 }
 
+function populateAthleteReportDropdown() {
+  const sel = document.getElementById('ar-athlete-sel');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Select athlete —</option>'
+    + SESS_ALL_ATHLETES.map(a => `<option value="${a.name}" ${a.name===current?'selected':''}>${a.name}</option>`).join('');
+}
+
+function generateAthleteReport() {
+  const athName = document.getElementById('ar-athlete-sel')?.value;
+  const season  = document.getElementById('ar-season-sel')?.value || 'current';
+  if (!athName) { showToast('Please select an athlete', 'error'); return; }
+
+  const { from } = getSbSeasonRange();
+  let data = dbAllTricks.filter(t => t.athlet === athName && t.trickaufbau);
+  if (season === 'current' && from) data = data.filter(t => t.datum >= from);
+  data.sort((a,b) => (a.created_at||'').localeCompare(b.created_at||''));
+
+  if (!data.length) { showToast('No session data for this athlete / period', 'error'); return; }
+
+  showToast('Generating PDF…', 'success');
+
+  // Build per-trick summary
+  const trickMap = {};
+  data.forEach(e => {
+    const trick = normSbTrick(e.trickaufbau);
+    if (!trickMap[trick]) trickMap[trick] = {att:0,land:0,stomped:0};
+    trickMap[trick].att++;
+    if (e.gelandet==='Yes') trickMap[trick].land++;
+    if ((e.gesamt||0)>=10) trickMap[trick].stomped++;
+  });
+  const trickRows = Object.entries(trickMap)
+    .sort((a,b) => b[1].att - a[1].att)
+    .map(([trick,s]) => {
+      const lp = s.att ? Math.round(s.land/s.att*100) : 0;
+      return [trick, s.att, s.land-(s.stomped||0), s.stomped, lp+'%'];
+    });
+
+  // Build per-session breakdown
+  const sessMap = {};
+  data.forEach(e => {
+    const key = e.datum+'|'+(e.typ||'');
+    if (!sessMap[key]) sessMap[key] = {datum:e.datum, typ:e.typ||'', att:0, land:0};
+    sessMap[key].att++;
+    if (e.gelandet==='Yes') sessMap[key].land++;
+  });
+  const sessRows = Object.values(sessMap)
+    .sort((a,b) => a.datum.localeCompare(b.datum))
+    .map(s => {
+      const p=s.datum.split('-'); const d=p[2]+'.'+p[1]+'.'+p[0].slice(2);
+      const lp = s.att ? Math.round(s.land/s.att*100) : 0;
+      return [d, s.typ||'—', s.att, s.land, lp+'%'];
+    });
+
+  const totalAtt  = data.length;
+  const totalLand = data.filter(e=>e.gelandet==='Yes').length;
+  const totalPct  = totalAtt ? Math.round(totalLand/totalAtt*100) : 0;
+  const seasonLabel = season==='all' ? 'All time' : 'Current season';
+  const filename = 'Athlete_Report_'+athName.replace(/\s/g,'_')+'_'+(new Date().toISOString().split('T')[0].replace(/-/g,''))+'.pdf';
+
+  function generate() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+    const W=210, margin=16, cw=W-margin*2;
+    let y = margin;
+
+    // Header bar
+    doc.setFillColor(26,26,26);
+    doc.rect(margin, y, cw, 10, 'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.setTextColor(255,255,255);
+    doc.text('ATHLETE REPORT', margin+4, y+6.8);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(180,180,180);
+    doc.text('Swiss-Ski Trick Analytics — Snowboard', W-margin-2, y+6.8, {align:'right'});
+    y += 14;
+
+    // Meta
+    const meta = [['Athlete', athName], ['Period', seasonLabel], ['Sessions', sessRows.length+''],
+                  ['Total Attempts', totalAtt+''], ['Landed+Stomped', totalLand+''], ['Landing Rate', totalPct+'%']];
+    const col = cw/3;
+    doc.setFontSize(7.5);
+    meta.forEach(([label, val], i) => {
+      const cx = margin + (i%3)*col;
+      const cy = y + Math.floor(i/3)*11;
+      doc.setFont('helvetica','normal'); doc.setTextColor(130,130,130);
+      doc.text(label.toUpperCase(), cx, cy);
+      doc.setFont('helvetica','bold'); doc.setTextColor(26,26,26);
+      doc.text(String(val), cx, cy+4.5);
+    });
+    y += 26;
+
+    doc.setDrawColor(220,220,220);
+    doc.line(margin, y, W-margin, y);
+    y += 5;
+
+    // Trick summary table
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(130,130,130);
+    doc.text('TRICK SUMMARY', margin, y); y += 4;
+    doc.autoTable({
+      startY: y, margin:{left:margin,right:margin},
+      head:[['Trick','Att.','Landed','Stomped','Rate']],
+      body: trickRows,
+      theme:'grid',
+      styles:{fontSize:8.5,cellPadding:2.5,textColor:[34,34,34],lineColor:[230,230,230]},
+      headStyles:{fillColor:[240,240,240],textColor:[100,100,100],fontStyle:'bold',fontSize:7.5},
+      columnStyles:{0:{cellWidth:cw*0.44},1:{cellWidth:cw*0.13,halign:'center'},2:{cellWidth:cw*0.15,halign:'center'},3:{cellWidth:cw*0.13,halign:'center'},4:{cellWidth:cw*0.15,halign:'center'}},
+      didParseCell(data) {
+        if (data.column.index===4 && data.section==='body') {
+          const v=parseInt(data.cell.raw);
+          data.cell.styles.textColor=v>=70?[45,138,78]:v>=50?[180,100,0]:[200,30,30];
+          data.cell.styles.fontStyle='bold';
+        }
+      }
+    });
+    y = doc.lastAutoTable.finalY + 8;
+
+    if (y > 240) { doc.addPage(); y = margin; }
+
+    // Session breakdown table
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(130,130,130);
+    doc.text('SESSION BREAKDOWN', margin, y); y += 4;
+    doc.autoTable({
+      startY: y, margin:{left:margin,right:margin},
+      head:[['Date','Type','Attempts','Landed','Rate']],
+      body: sessRows,
+      theme:'grid',
+      styles:{fontSize:8.5,cellPadding:2.5,textColor:[34,34,34],lineColor:[230,230,230]},
+      headStyles:{fillColor:[240,240,240],textColor:[100,100,100],fontStyle:'bold',fontSize:7.5},
+      columnStyles:{0:{cellWidth:cw*0.2},1:{cellWidth:cw*0.3},2:{cellWidth:cw*0.17,halign:'center'},3:{cellWidth:cw*0.17,halign:'center'},4:{cellWidth:cw*0.16,halign:'center'}},
+      didParseCell(data) {
+        if (data.column.index===4 && data.section==='body') {
+          const v=parseInt(data.cell.raw);
+          data.cell.styles.textColor=v>=70?[45,138,78]:v>=50?[180,100,0]:[200,30,30];
+          data.cell.styles.fontStyle='bold';
+        }
+      }
+    });
+
+    // Footer
+    const pg = doc.internal.getNumberOfPages();
+    for (let i=1;i<=pg;i++) {
+      doc.setPage(i);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(170,170,170);
+      doc.text('Generated '+new Date().toLocaleDateString('de-CH'), margin, 295);
+      doc.text(i+' / '+pg, W-margin, 295, {align:'right'});
+    }
+    doc.save(filename);
+  }
+
+  function loadAndGenerate() {
+    if (window.jspdf && window.jspdf.jsPDF) { generate(); return; }
+    const s1 = document.createElement('script');
+    s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s1.onload = () => {
+      const s2 = document.createElement('script');
+      s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
+      s2.onload = generate;
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+  }
+  loadAndGenerate();
+}
+
 
 function renderSessionReports() {
   const el = document.getElementById('session-reports-list');
@@ -1858,6 +2042,7 @@ function renderSessionReports() {
     </div>`;
   }).join('');
   window._srReports = dbSessionReports;
+  populateAthleteReportDropdown();
 }
 
 async function rebuildReportFromTimestamps(id, silent=false) {
