@@ -3115,16 +3115,21 @@ async function submitSessionReport(duration) {
 
 async function saveSessionReport(duration, location, conditions, comments, athleteNotes) {
   const athleteMap = {};
-  sessLog.forEach(e => {
-    if (!athleteMap[e.name]) athleteMap[e.name] = {};
+  const trickOrder = {};
+  // Iterate chronologically (sessLog is unshifted = newest first, so reverse)
+  sessLog.slice().reverse().forEach(e => {
+    if (!athleteMap[e.name]) { athleteMap[e.name] = {}; trickOrder[e.name] = []; }
     const trick = e.trick || '—';
-    if (!athleteMap[e.name][trick]) athleteMap[e.name][trick] = {att:0,land:0,stomped:0};
+    if (!athleteMap[e.name][trick]) {
+      athleteMap[e.name][trick] = {att:0,land:0,stomped:0};
+      trickOrder[e.name].push(trick);
+    }
     athleteMap[e.name][trick].att++;
     if (e.result !== 'miss') athleteMap[e.name][trick].land++;
     if (e.result === 'perfect') athleteMap[e.name][trick].stomped++;
   });
   const trickData = Object.entries(athleteMap).map(([name, tricks]) => {
-    const trickList = Object.entries(tricks).map(([trick, s]) => ({trick, att:s.att, land:s.land, stomped:s.stomped}));
+    const trickList = (trickOrder[name] || Object.keys(tricks)).map(trick => ({trick, att:tricks[trick].att, land:tricks[trick].land, stomped:tricks[trick].stomped}));
     const totalAtt = trickList.reduce((a,t)=>a+t.att,0);
     const totalLand = trickList.reduce((a,t)=>a+t.land,0);
     const note = (athleteNotes||{})[shortName(name)] || '';
@@ -3189,27 +3194,29 @@ function openReportPrint(report) {
   win.document.write(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <title>Session Report — ${dateStr}</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1a1a;background:#fff;padding:32px 40px;max-width:860px;margin:0 auto;font-size:13px;line-height:1.5;}
+  *{box-sizing:border-box;margin:0;padding:0;print-color-adjust:exact;-webkit-print-color-adjust:exact;}
+  body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1a1a;background:#ffffff;padding:32px 40px;max-width:860px;margin:0 auto;font-size:13px;line-height:1.5;}
   .print-btn{margin-bottom:28px;}
   .print-btn button{padding:9px 22px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:.3px;}
   header{border-bottom:2px solid #1a1a1a;padding-bottom:16px;margin-bottom:20px;}
   header h1{font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;}
   .meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 16px;}
   .meta-item label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#777;margin-bottom:2px;}
-  .meta-item span{font-size:14px;font-weight:600;}
+  .meta-item span{font-size:14px;font-weight:600;color:#1a1a1a;}
   .section-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#777;margin:20px 0 8px;border-top:1px solid #e0e0e0;padding-top:12px;}
   .comments{background:#f6f6f6;border-left:3px solid #1a1a1a;padding:10px 14px;font-size:13px;color:#333;margin-bottom:16px;}
   .athlete-block{margin-bottom:20px;border:1px solid #e0e0e0;border-radius:4px;overflow:hidden;}
-  .athlete-name{background:#1a1a1a;color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;}
+  .athlete-name{background:#1a1a1a !important;color:#ffffff !important;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;}
   .athlete-summary{padding:6px 12px;font-size:12px;color:#555;background:#f9f9f9;border-bottom:1px solid #e0e0e0;}
   table{width:100%;border-collapse:collapse;}
-  th{background:#f0f0f0;padding:7px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#555;}
+  th{background:#f0f0f0 !important;padding:7px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#555;}
   td{padding:7px 12px;border-top:1px solid #eee;font-size:12px;color:#222;}
-  tr:hover td{background:#fafafa;}
+  .note-row{padding:8px 12px;font-size:12px;color:#555;background:#fffbeb;border-top:1px solid #e0e0e0;}
   footer{margin-top:32px;border-top:1px solid #ddd;padding-top:12px;font-size:11px;color:#aaa;display:flex;justify-content:space-between;}
-  @media print{.print-btn{display:none;} body{padding:20px;}}
-</style></head><body>
+  @media print{.print-btn{display:none;}body{padding:20px;}}
+</style>
+<script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>
+</head><body>
   <div class="print-btn"><button onclick="window.print()">Print / Save as PDF</button></div>
   <header>
     <h1>Session Report</h1>
@@ -3226,8 +3233,8 @@ function openReportPrint(report) {
   <div class="section-label">Trick Performance by Athlete</div>
   ${athleteSections || '<div style="color:#888;padding:12px 0;">No trick data recorded.</div>'}
   <footer>
-    <span>Swiss-Ski Trick Analytics</span>
-    <span>Generated ${new Date().toLocaleDateString('en-GB')}</span>
+    <span>Swiss-Ski Trick Analytics — Snowboard</span>
+    <span>Generated ${new Date().toLocaleDateString('de-CH')}</span>
   </footer>
 </body></html>`);
   win.document.close();
