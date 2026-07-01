@@ -2355,11 +2355,14 @@ function renderDBTable() {
     const isNewSession = !isStandort && t.trickaufbau && t.trickaufbau.includes(' — ');
     const trickDisplay = normSbTrick(isNewSession ? t.trickaufbau : (t.trickaufbau || desc));
     const sessionType  = t.typ || (t.disziplin ? badge(t.disziplin) : '–');
-    const resultBadge  = isNewSession
-      ? (t.gesamt >= 10 ? '<span style="font-size:11px;background:rgba(57,195,212,0.15);color:#39c3d4;border:1px solid #39c3d4;border-radius:4px;padding:2px 7px;font-weight:600;">⭐ PERFECT</span>'
-       : t.gesamt >= 7  ? '<span style="font-size:11px;background:rgba(45,138,78,0.15);color:#2d8a4e;border:1px solid #2d8a4e;border-radius:4px;padding:2px 7px;font-weight:600;">✓ LANDED</span>'
-       : '<span style="font-size:11px;background:rgba(226,0,26,0.12);color:#e2001a;border:1px solid #e2001a;border-radius:4px;padding:2px 7px;font-weight:600;">✗ MISS</span>')
-      : (t.gelandet === 'Yes' ? '✅' : t.gelandet === 'No' ? '❌' : '–');
+    const _pill = (lbl,bg,col,brd) => `<span style="font-size:11px;background:${bg};color:${col};border:1px solid ${brd};border-radius:4px;padding:2px 7px;font-weight:700;">${lbl}</span>`;
+    const resultBadge  = (t.gesamt >= 10)
+      ? _pill('S','rgba(57,195,212,0.15)','#39c3d4','#39c3d4')
+      : (t.gelandet === 'Yes')
+        ? _pill('L','rgba(45,138,78,0.15)','#2d8a4e','#2d8a4e')
+        : (t.gelandet === 'No')
+          ? _pill('F','rgba(226,0,26,0.12)','#e2001a','#e2001a')
+          : '–';
     return '<tr>'
       + '<td><strong>' + shortName(t.athlet) + '</strong>' + statusBadge + '</td>'
       + '<td>' + quelleBadge + '</td>'
