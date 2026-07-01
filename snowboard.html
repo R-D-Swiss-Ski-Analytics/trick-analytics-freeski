@@ -3288,7 +3288,12 @@ function openReportPrint(report) {
   }).join('');
 
   const el = document.createElement('div');
-  el.style.cssText = 'position:fixed;left:-9999px;top:0;';
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,20,40,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:14px;color:#39c3d4;letter-spacing:.5px;';
+  overlay.textContent = 'Generating PDF…';
+  document.body.appendChild(overlay);
+
+  el.style.cssText = 'position:fixed;top:0;left:0;z-index:1;background:#fff;';
   el.innerHTML = `<div style="${S.wrap}">
     <div style="${S.header}">
       <div style="${S.h1}">Session Report</div>
@@ -3320,7 +3325,7 @@ function openReportPrint(report) {
       filename,
       html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }).from(el.firstElementChild).save().then(() => { el.remove(); });
+    }).from(el.firstElementChild).save().then(() => { el.remove(); overlay.remove(); });
   }
 
   if (window.html2pdf) {
