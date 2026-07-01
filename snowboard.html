@@ -5320,8 +5320,9 @@ function renderSbSessionPerformance() {
             ${entries.length ? entries.map(([trick, s]) => {
               const landPct    = s.att ? Math.round(s.land/s.att*100) : 0;
               const landedOnly = s.land - s.stomped;
+              const st  = sbPerfStatus(landPct);
               const colL = landPct>=70?'#2d8a4e':landPct>=50?'#f59e0b':'#e2001a';
-              return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;margin-bottom:5px;">
+              return `<div style="background:${bkg[st.icon]};border:1px solid ${brd[st.icon]};border-radius:8px;padding:6px 10px;margin-bottom:5px;">
                 <div style="font-size:12px;color:var(--text);">${normSbTrick(trick)}</div>
                 <div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:11px;font-weight:700;">
                   <span style="color:${colL};">${landPct}%</span>
