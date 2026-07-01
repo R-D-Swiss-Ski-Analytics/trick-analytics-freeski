@@ -3231,111 +3231,165 @@ function openReportPrint(report) {
   const dateStr = d.datum ? (() => { const p=d.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
   const durH = d.duration_min ? (d.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
   const condLabel = d.conditions ? ['','Poor','Below Average','Average','Good','Excellent'][d.conditions]||d.conditions+'/5' : '—';
-  const condDots = d.conditions ? ('● '.repeat(d.conditions) + '○ '.repeat(5-d.conditions)).trim() : '—';
-  const typeShort = {'Landing Bag':'Landing Bag','Jump On-Snow':'Jump On-Snow','Big Air Competition':'Big Air Competition'}[d.session_type]||d.session_type||'—';
-  const athletes = Array.isArray(d.athletes) ? d.athletes.join(', ') : (d.athletes||'');
-  const tricks = Array.isArray(d.trick_data) ? d.trick_data : [];
-
-  const S = {
-    wrap: 'font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:#1a1a1a;background:#fff;padding:32px 40px;width:780px;font-size:13px;line-height:1.5;',
-    header: 'border-bottom:2px solid #1a1a1a;padding-bottom:16px;margin-bottom:20px;',
-    h1: 'font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 12px;color:#1a1a1a;',
-    metaGrid: 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px 16px;',
-    metaLabel: 'display:block;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#777;margin-bottom:2px;',
-    metaVal: 'font-size:14px;font-weight:600;color:#1a1a1a;',
-    sectionLabel: 'font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#777;margin:20px 0 8px;border-top:1px solid #e0e0e0;padding-top:12px;display:block;',
-    comments: 'background:#f6f6f6;border-left:3px solid #1a1a1a;padding:10px 14px;font-size:13px;color:#333;margin-bottom:16px;',
-    block: 'margin-bottom:20px;border:1px solid #e0e0e0;border-radius:4px;overflow:hidden;',
-    athName: 'background:#1a1a1a;color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;',
-    athSum: 'padding:6px 12px;font-size:12px;color:#555;background:#f9f9f9;border-bottom:1px solid #e0e0e0;',
-    table: 'width:100%;border-collapse:collapse;',
-    th: 'background:#f0f0f0;padding:7px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#555;',
-    td: 'padding:7px 12px;border-top:1px solid #eee;font-size:12px;color:#222;',
-    note: 'padding:8px 12px;font-size:12px;color:#555;background:#fffbeb;border-top:1px solid #e0e0e0;',
-    footer: 'margin-top:32px;border-top:1px solid #ddd;padding-top:12px;font-size:11px;color:#aaa;display:flex;justify-content:space-between;',
-  };
-
-  const athleteSections = tricks.map(a => {
-    const pct = a.totalAtt ? Math.round(a.totalLand/a.totalAtt*100) : 0;
-    const rows = (a.tricks||[]).map(t => {
-      const lp = t.att ? Math.round(t.land/t.att*100) : 0;
-      const landedOnly = t.land - (t.stomped||0);
-      const rateColor = lp>=70?'#2d8a4e':lp>=50?'#d97706':'#dc2626';
-      return `<tr>
-        <td style="${S.td}">${normSbTrick(t.trick)}</td>
-        <td style="${S.td}">${t.att}</td>
-        <td style="${S.td}">${landedOnly}</td>
-        <td style="${S.td}">${t.stomped||0}</td>
-        <td style="${S.td}font-weight:700;color:${rateColor};">${lp}%</td>
-      </tr>`;
-    }).join('');
-    const noteHtml = a.note ? `<div style="${S.note}"><strong style="color:#333;">Note:</strong> ${a.note}</div>` : '';
-    return `<div style="${S.block}">
-      <div style="${S.athName}">${a.athlet}</div>
-      <div style="${S.athSum}">${a.totalAtt} attempts &nbsp;|&nbsp; ${a.totalLand} landed+stomped &nbsp;|&nbsp; ${pct}%</div>
-      <table style="${S.table}">
-        <thead><tr>
-          <th style="${S.th}width:40%;">Trick</th>
-          <th style="${S.th}width:15%;">Att.</th>
-          <th style="${S.th}width:15%;">Landed</th>
-          <th style="${S.th}width:15%;">Stomped</th>
-          <th style="${S.th}width:15%;">Rate</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      ${noteHtml}
-    </div>`;
-  }).join('');
-
-  const el = document.createElement('div');
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,20,40,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:14px;color:#39c3d4;letter-spacing:.5px;';
-  overlay.textContent = 'Generating PDF…';
-  document.body.appendChild(overlay);
-
-  el.style.cssText = 'position:fixed;top:0;left:0;z-index:1;background:#fff;';
-  el.innerHTML = `<div style="${S.wrap}">
-    <div style="${S.header}">
-      <div style="${S.h1}">Session Report</div>
-      <div style="${S.metaGrid}">
-        <div><span style="${S.metaLabel}">Date</span><span style="${S.metaVal}">${dateStr}</span></div>
-        <div><span style="${S.metaLabel}">Session type</span><span style="${S.metaVal}">${typeShort}</span></div>
-        <div><span style="${S.metaLabel}">Duration</span><span style="${S.metaVal}">${durH}</span></div>
-        <div><span style="${S.metaLabel}">Location</span><span style="${S.metaVal}">${d.location||'—'}</span></div>
-        <div><span style="${S.metaLabel}">Conditions</span><span style="${S.metaVal}">${condDots} ${condLabel}</span></div>
-        <div><span style="${S.metaLabel}">Athletes</span><span style="${S.metaVal}">${athletes}</span></div>
-      </div>
-    </div>
-    ${d.comments ? `<span style="${S.sectionLabel}">Coach comments</span><div style="${S.comments}">${d.comments.replace(/\n/g,'<br>')}</div>` : ''}
-    <span style="${S.sectionLabel}">Trick performance by athlete</span>
-    ${athleteSections || '<div style="color:#888;padding:12px 0;">No trick data recorded.</div>'}
-    <div style="${S.footer}">
-      <span>Swiss-Ski Trick Analytics — Snowboard</span>
-      <span>Generated ${new Date().toLocaleDateString('de-CH')}</span>
-    </div>
-  </div>`;
-  document.body.appendChild(el);
-
-  showToast('Generating PDF…', 'success');
+  const condDots = d.conditions ? ('●'.repeat(d.conditions)+'○'.repeat(5-d.conditions)) : '—';
+  const typeShort = d.session_type||'—';
+  const athleteStr = Array.isArray(d.athletes) ? d.athletes.map(a=>shortName(a)).join(', ') : (d.athletes||'');
+  const trickData = Array.isArray(d.trick_data) ? d.trick_data : [];
   const filename = 'Session_Report_' + (d.datum||'').replace(/-/g,'') + '.pdf';
 
-  function doGenerate() {
-    html2pdf().set({
-      margin: 0,
-      filename,
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }).from(el.firstElementChild).save().then(() => { el.remove(); overlay.remove(); });
+  showToast('Generating PDF…', 'success');
+
+  function generate() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+    const W = 210, margin = 16, cw = W - margin*2;
+    let y = margin;
+
+    // Header bar
+    doc.setFillColor(26,26,26);
+    doc.rect(margin, y, cw, 10, 'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.setTextColor(255,255,255);
+    doc.text('SESSION REPORT', margin+4, y+6.8);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(180,180,180);
+    doc.text('Swiss-Ski Trick Analytics — Snowboard', W-margin-2, y+6.8, {align:'right'});
+    y += 14;
+
+    // Meta grid (2 columns)
+    const meta = [
+      ['Date', dateStr], ['Session Type', typeShort], ['Duration', durH],
+      ['Location', d.location||'—'], ['Conditions', condDots+' '+condLabel], ['Athletes', athleteStr]
+    ];
+    doc.setFontSize(7.5);
+    const col = cw/3;
+    meta.forEach(([label, val], i) => {
+      const cx = margin + (i%3)*col;
+      const cy = y + Math.floor(i/3)*11;
+      doc.setFont('helvetica','normal');
+      doc.setTextColor(130,130,130);
+      doc.text(label.toUpperCase(), cx, cy);
+      doc.setFont('helvetica','bold');
+      doc.setTextColor(26,26,26);
+      doc.text(String(val), cx, cy+4.5);
+    });
+    y += 26;
+
+    // Divider
+    doc.setDrawColor(220,220,220);
+    doc.line(margin, y, W-margin, y);
+    y += 5;
+
+    // Comments
+    if (d.comments) {
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(130,130,130);
+      doc.text('COACH COMMENTS', margin, y);
+      y += 4;
+      doc.setFillColor(246,246,246);
+      const lines = doc.splitTextToSize(d.comments, cw-8);
+      const bh = lines.length*4.5+5;
+      doc.rect(margin, y, cw, bh, 'F');
+      doc.setFillColor(26,26,26);
+      doc.rect(margin, y, 2, bh, 'F');
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      doc.setTextColor(60,60,60);
+      doc.text(lines, margin+5, y+4.5);
+      y += bh+5;
+    }
+
+    // Per-athlete tables
+    trickData.forEach(a => {
+      const pct = a.totalAtt ? Math.round(a.totalLand/a.totalAtt*100) : 0;
+      if (y > 250) { doc.addPage(); y = margin; }
+
+      // Athlete name bar
+      doc.setFillColor(26,26,26);
+      doc.rect(margin, y, cw, 8, 'F');
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9);
+      doc.setTextColor(255,255,255);
+      doc.text((a.athlet||'').toUpperCase(), margin+3, y+5.5);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.setTextColor(180,180,180);
+      doc.text(`${a.totalAtt} att.  |  ${a.totalLand} landed+stomped  |  ${pct}%`, W-margin-3, y+5.5, {align:'right'});
+      y += 9;
+
+      // Trick table
+      const rows = (a.tricks||[]).map(t => {
+        const lp = t.att ? Math.round(t.land/t.att*100) : 0;
+        return [normSbTrick(t.trick), t.att, t.land-(t.stomped||0), t.stomped||0, lp+'%'];
+      });
+
+      doc.autoTable({
+        startY: y,
+        margin: {left:margin, right:margin},
+        head: [['Trick','Att.','Landed','Stomped','Rate']],
+        body: rows,
+        theme: 'grid',
+        styles: {fontSize:8.5, cellPadding:2.5, textColor:[34,34,34], lineColor:[230,230,230]},
+        headStyles: {fillColor:[240,240,240], textColor:[100,100,100], fontStyle:'bold', fontSize:7.5},
+        columnStyles: {0:{cellWidth:cw*0.42}, 1:{cellWidth:cw*0.13,halign:'center'}, 2:{cellWidth:cw*0.15,halign:'center'}, 3:{cellWidth:cw*0.15,halign:'center'}, 4:{cellWidth:cw*0.15,halign:'center'}},
+        didParseCell(data) {
+          if (data.column.index===4 && data.section==='body') {
+            const v = parseInt(data.cell.raw);
+            data.cell.styles.textColor = v>=70?[45,138,78]:v>=50?[180,100,0]:[200,30,30];
+            data.cell.styles.fontStyle = 'bold';
+          }
+        }
+      });
+      y = doc.lastAutoTable.finalY + 2;
+
+      // Note
+      if (a.note) {
+        doc.setFillColor(255,251,235);
+        const noteLines = doc.splitTextToSize('Note: '+a.note, cw-8);
+        const nh = noteLines.length*4+5;
+        doc.rect(margin, y, cw, nh, 'F');
+        doc.setDrawColor(230,215,150);
+        doc.rect(margin, y, cw, nh, 'S');
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(8);
+        doc.setTextColor(100,80,20);
+        doc.text(noteLines, margin+3, y+4);
+        y += nh+2;
+      }
+      y += 4;
+    });
+
+    // Footer
+    const pg = doc.internal.getNumberOfPages();
+    for (let i=1;i<=pg;i++) {
+      doc.setPage(i);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(170,170,170);
+      doc.text('Generated '+new Date().toLocaleDateString('de-CH'), margin, 295);
+      doc.text(`${i} / ${pg}`, W-margin, 295, {align:'right'});
+    }
+
+    doc.save(filename);
   }
 
-  if (window.html2pdf) {
-    doGenerate();
-  } else {
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-    s.onload = doGenerate;
-    document.head.appendChild(s);
+  function loadAndGenerate() {
+    if (window.jspdf && window.jspdf.jsPDF) { generate(); return; }
+    const s1 = document.createElement('script');
+    s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s1.onload = () => {
+      const s2 = document.createElement('script');
+      s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
+      s2.onload = generate;
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
   }
+
+  loadAndGenerate();
 }
 
 async function viewSessionReportByDate(date) {
