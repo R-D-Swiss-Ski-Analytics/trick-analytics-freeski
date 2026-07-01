@@ -2971,12 +2971,15 @@ function cancelSbEdit() {
 async function saveSbLogEdit(idx, newResult) {
   const e = sessLog[idx];
   if (!e) return;
+  const trickEl  = document.getElementById('sess-edit-trick');
   const commentEl = document.getElementById('sess-edit-comment');
+  const newTrick  = trickEl ? trickEl.value.trim() || e.trick : e.trick;
   const newComment = commentEl ? commentEl.value.trim() : (e.comment||'');
   const oldResult = e.result;
-  const ratingChanged = oldResult !== newResult;
+  const trickChanged   = newTrick !== e.trick;
+  const ratingChanged  = oldResult !== newResult;
   const commentChanged = newComment !== (e.comment||'');
-  if (!ratingChanged && !commentChanged) { cancelSbEdit(); return; }
+  if (!ratingChanged && !commentChanged && !trickChanged) { cancelSbEdit(); return; }
   const d = sessAthleteData[e.name];
   if (ratingChanged && d) {
     if (oldResult!=='miss') d.stats.landed--;
@@ -2984,21 +2987,22 @@ async function saveSbLogEdit(idx, newResult) {
     if (newResult!=='miss') d.stats.landed++;
     if (newResult==='perfect') d.stats.perfect++;
   }
+  if (trickChanged) e.trick = newTrick;
   e.result = newResult;
   e.comment = newComment;
   if (e.dbId) {
     const gesamt = newResult==='miss'?3:newResult==='landed'?7:10;
-    await db.from('tricks').update({
-      gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
-      gelandet:newResult==='miss'?'No':'Yes',
-      kommentar: newComment || null
-    }).eq('id', e.dbId);
+    const upd = { gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
+      gelandet:newResult==='miss'?'No':'Yes', kommentar: newComment||null };
+    if (trickChanged) upd.trickaufbau = newTrick;
+    await db.from('tricks').update(upd).eq('id', e.dbId);
+    if (trickChanged) syncTrickNameLocally(e.dbId, newTrick);
   }
   sessEditIdx = -1;
   renderLiveSession();
   renderSessionLog();
   saveSessionState();
-  showToast('Rating updated', 'success');
+  showToast('Updated', 'success');
 }
 
 function renderSessionLog() {
@@ -3013,6 +3017,9 @@ function renderSessionLog() {
     if (isEditing) {
       const btnStyle = (val,col,bg) => `padding:8px 14px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ${col};background:${e.result===val?col:'transparent'};color:${e.result===val?'#060f1a':col};`;
       editRow = `<div style="padding:8px 12px 4px 38px;">
+        <div style="margin-bottom:8px;">
+          <input type="text" id="sess-edit-trick" value="${(e.trick||'').replace(/"/g,'&quot;')}" placeholder="Trick name" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+        </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
           <button onclick="saveSbLogEdit(${i},'miss')" style="${btnStyle('miss','#e2001a','rgba(226,0,26,0.15)')}">✗ Failed</button>
           <button onclick="saveSbLogEdit(${i},'landed')" style="${btnStyle('landed','#2d8a4e','rgba(45,138,78,0.15)')}">✓ Landed</button>
@@ -5257,20 +5264,82 @@ function renderSbRawEntries(entries, subtitle) {
       <div id="ev-raw-list" style="display:${wasOpen?'block':'none'};max-height:420px;overflow-y:auto;">
         ${sorted.length ? sorted.map(e=>{
           const ts = e.created_at ? new Date(e.created_at).toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Zurich'}) : '';
+          const isEditing = _sbRawEditId === e.id;
+          const curResult = (e.gesamt||0)>=10?'perfect':e.gelandet==='Yes'?'landed':'miss';
+          const editForm = isEditing ? `
+            <div style="grid-column:1/-1;padding:8px 0 4px;display:flex;flex-direction:column;gap:6px;">
+              <input id="raw-edit-trick-${e.id}" type="text" value="${(e.trickaufbau||'').replace(/"/g,'&quot;')}"
+                style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                <select id="raw-edit-result-${e.id}" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+                  <option value="miss" ${curResult==='miss'?'selected':''}>✗ Failed</option>
+                  <option value="landed" ${curResult==='landed'?'selected':''}>✓ Landed</option>
+                  <option value="perfect" ${curResult==='perfect'?'selected':''}>⭐ Stomped</option>
+                </select>
+                <button onclick="saveSbRawEdit(${e.id})" style="padding:5px 12px;border-radius:6px;background:#39c3d4;border:none;color:#060f1a;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;">Save</button>
+                <button onclick="cancelSbRawEdit()" style="padding:5px 12px;border-radius:6px;background:none;border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button>
+              </div>
+            </div>` : '';
           return `
-          <div id="ev-raw-row-${e.id}" style="display:grid;grid-template-columns:60px 36px 48px 1fr 80px 32px;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--border);font-size:11px;">
+          <div id="ev-raw-row-${e.id}" style="display:grid;grid-template-columns:60px 36px 48px 1fr 80px 28px 28px;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--border);font-size:11px;${isEditing?'background:rgba(57,195,212,0.06);':''};flex-wrap:wrap;">
             <span style="color:var(--muted);">${fmtDate(e.datum)}</span>
             <span style="color:var(--muted);font-size:10px;">${ts}</span>
             <span style="color:var(--muted);font-size:10px;">${typShort(e.typ)}</span>
             <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${normSbTrick(e.trickaufbau||'')}">${normSbTrick(e.trickaufbau||'—')}</span>
             <span>${resultBadge(e)}</span>
+            <button onclick="editSbRawEntry(${e.id})" title="Edit entry"
+              style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;font-size:11px;padding:2px 5px;line-height:1;">✏</button>
             <button onclick="deleteSbRawEntry(${e.id})" title="Delete entry"
               style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;line-height:1;">🗑</button>
+            ${editForm}
           </div>`;
         }).join('')
         : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">No entries for this selection.</div>'}
       </div>
     </div>`;
+}
+
+function syncTrickNameLocally(dbId, newTrick) {
+  const i = dbAllTricks.findIndex(t => t.id === dbId);
+  if (i >= 0) dbAllTricks[i].trickaufbau = newTrick;
+  const j = _sbTaData.findIndex(t => t.id === dbId);
+  if (j >= 0) _sbTaData[j].trickaufbau = normSbTrick(newTrick);
+  sessLog.forEach(e => { if (e.dbId === dbId) e.trick = newTrick; });
+}
+
+let _sbRawEditId = null;
+
+function editSbRawEntry(id) {
+  _sbRawEditId = _sbRawEditId === id ? null : id;
+  renderSbTrickAnalytics();
+}
+
+function cancelSbRawEdit() {
+  _sbRawEditId = null;
+  renderSbTrickAnalytics();
+}
+
+async function saveSbRawEdit(id) {
+  const trickInput = document.getElementById('raw-edit-trick-'+id);
+  const newTrick = trickInput ? trickInput.value.trim() : '';
+  const resultSel = document.getElementById('raw-edit-result-'+id);
+  const newResult = resultSel ? resultSel.value : '';
+  if (!newTrick) { showToast('Trick name cannot be empty', 'error'); return; }
+
+  const gesamt = newResult==='miss'?3:newResult==='landed'?7:10;
+  const {error} = await db.from('tricks').update({
+    trickaufbau: newTrick,
+    gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
+    gelandet: newResult==='miss'?'No':'Yes'
+  }).eq('id', id);
+  if (error) { showToast('Error: '+error.message, 'error'); return; }
+
+  syncTrickNameLocally(id, newTrick);
+  _sbRawEditId = null;
+  renderSbTrickAnalytics();
+  renderSessionLog();
+  saveSessionState();
+  showToast('Entry updated', 'success');
 }
 
 async function deleteSbRawEntry(id) {
