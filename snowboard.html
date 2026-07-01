@@ -3009,7 +3009,10 @@ function renderSessionLog() {
   const el = document.getElementById('sess-log');
   if (!el) return;
   if (!sessLog.length) { el.innerHTML=''; return; }
-  el.innerHTML = sessLog.slice(0,30).map((e,i)=>{
+  const filtered = sessActiveSbAthlete
+    ? sessLog.map((e,i)=>({...e,_i:i})).filter(e=>e.name===sessActiveSbAthlete)
+    : sessLog.map((e,i)=>({...e,_i:i}));
+  el.innerHTML = filtered.slice(0,30).map(e=>{ const i=e._i;
     const icon = e.result==='miss'?'✗':e.result==='landed'?'✓':'⭐';
     const c = e.result==='miss'?'#e2001a':e.result==='landed'?'#2d8a4e':'#39c3d4';
     const isEditing = sessEditIdx === i;
