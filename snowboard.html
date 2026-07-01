@@ -5103,15 +5103,19 @@ function renderSbRawEntries(entries, subtitle) {
         <span style="font-size:11px;opacity:.6;">Inspect or delete entries</span>
       </button>
       <div id="ev-raw-list" style="display:${wasOpen?'block':'none'};max-height:420px;overflow-y:auto;">
-        ${sorted.length ? sorted.map(e=>`
-          <div id="ev-raw-row-${e.id}" style="display:grid;grid-template-columns:60px 48px 1fr 80px 32px;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--border);font-size:11px;">
+        ${sorted.length ? sorted.map(e=>{
+          const ts = e.created_at ? new Date(e.created_at).toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Zurich'}) : '';
+          return `
+          <div id="ev-raw-row-${e.id}" style="display:grid;grid-template-columns:60px 36px 48px 1fr 80px 32px;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--border);font-size:11px;">
             <span style="color:var(--muted);">${fmtDate(e.datum)}</span>
+            <span style="color:var(--muted);font-size:10px;">${ts}</span>
             <span style="color:var(--muted);font-size:10px;">${typShort(e.typ)}</span>
             <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${normSbTrick(e.trickaufbau||'')}">${normSbTrick(e.trickaufbau||'—')}</span>
             <span>${resultBadge(e)}</span>
             <button onclick="deleteSbRawEntry(${e.id})" title="Delete entry"
               style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;line-height:1;">🗑</button>
-          </div>`).join('')
+          </div>`;
+        }).join('')
         : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">No entries for this selection.</div>'}
       </div>
     </div>`;
