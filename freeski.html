@@ -2829,7 +2829,7 @@ async function restoreSessionState() {
     renderSessionLog();
     showToast('Session restored', 'success');
     Promise.all(sessSelectedAthletes.map(async name => {
-      const {data} = await db.from('standort').select('trick_label,disziplin,status')
+      const {data} = await db.from('standort').select('trick_label,disziplin,status,grab')
         .eq('athlet', name).or('status.eq.mastered,status.eq.goal').order('trick_label');
       if (data) sessAthleteData[name].tricks = data;
     })).then(() => renderLiveSession());
@@ -2882,7 +2882,7 @@ async function toggleSessionAthlete(name) {
     sessActiveTricks[name] = [];
     const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
     if (card) card.style.borderColor = '#39c3d4';
-    const {data, error} = await db.from('standort').select('trick_label,disziplin,status')
+    const {data, error} = await db.from('standort').select('trick_label,disziplin,status,grab')
       .eq('athlet', name).or('status.eq.mastered,status.eq.goal').order('trick_label');
     if (!error) sessAthleteData[name].tricks = data || [];
   }
