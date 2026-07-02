@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trick Analyses Freeski</title>
+<title>Trick Analytics Freeski</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -268,6 +268,138 @@
   .tu-avg-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
   .tu-avg-chip{background:#112236;border:1px solid #f59e0b33;border-radius:20px;padding:4px 12px;font-size:12px;color:#6b8299;}
   .tu-avg-chip span{color:#f59e0b;font-weight:700;margin-left:4px;}
+
+  /* ── MOBILE RESPONSIVE ──────────────────────────────────────────── */
+  /* Hide mobile nav on desktop */
+  .mobile-nav { display: none; }
+
+  @media (max-width: 768px) {
+    body { overflow-x: hidden; }
+
+    /* Hide top nav on mobile */
+    .nav-tabs { display: none !important; }
+
+    /* Compact header - just title */
+    header { justify-content: flex-start; padding: 0 16px; }
+    header h1 { font-size: 18px; max-width: none; }
+
+    /* Cards & chart cards */
+    .card { padding: 14px 12px; }
+    .chart-card { padding: 14px 12px; }
+
+    /* Chart grids: always 1 col */
+    .chart-grid { grid-template-columns: 1fr !important; }
+
+    /* Tables scroll inside wrapper */
+    table { min-width: 520px; }
+
+    /* Session */
+    #sess-athlete-cols { grid-template-columns: 1fr !important; }
+
+    /* Assessment columns */
+    .sb-columns { grid-template-columns: 1fr !important; }
+
+    /* Direction performance grid 4→2 cols */
+    .perf-dir-grid { grid-template-columns: repeat(2,1fr) !important; }
+
+    /* Select / input full width */
+    select, input[type="text"], input[type="date"], textarea { max-width: 100%; }
+
+    /* Radar max width */
+    .radar-wrap { max-width: 100%; }
+    canvas { max-width: 100% !important; }
+
+    /* Filter row wraps */
+    #ev-type-filter > div:first-child { flex-wrap: wrap; }
+
+    /* Pie chart centered */
+    #sess-dir-radar, #sb-dir-radar { max-width: 100% !important; }
+
+    /* Tab mode buttons */
+    #ev-analytics-card div[style*="display:flex"][style*="gap:8px"] { flex-wrap: wrap; }
+
+    /* Larger touch targets for session buttons */
+    .sess-type-btn { min-height: 48px !important; font-size: 14px !important; }
+
+    /* Athlete checkbox cards bigger */
+    .sess-ath-card { padding: 14px !important; }
+
+    /* Assessment save buttons */
+    .sb-form-btns button { min-height: 48px; font-size: 14px; }
+
+    /* Wider content on mobile */
+    .page { padding: 12px !important; }
+
+    /* Filter buttons wrap */
+    #ev-type-filter { flex-wrap: wrap; }
+
+    /* Form inputs: prevent zoom on iOS (min 16px) */
+    input, select, textarea { font-size: 16px !important; }
+
+    /* Better spacing for trick cards */
+    .sb-trick-row { padding: 10px 12px; }
+
+    /* Bottom nav bar */
+    .mobile-nav {
+      display: flex !important;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #0b1929;
+      border-top: 1px solid #1a3450;
+      z-index: 200;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      height: calc(56px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .mobile-nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 8px 4px;
+      color: rgba(255,255,255,0.5);
+      font-family: 'Poppins', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      transition: color .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-nav-btn.active {
+      color: #39c3d4;
+    }
+
+    .mobile-nav-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Push page content up so it doesn't hide behind bottom nav */
+    .page { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important; }
+
+    /* Main content area needs top padding adjustment */
+    main, .content-wrap { padding-bottom: 72px; }
+
+    /* Body safe area */
+    body { padding-bottom: 0; }
+  }
+
+  @media (max-width: 480px) {
+    .perf-dir-grid { grid-template-columns: 1fr !important; }
+  }
 </style>
 </head>
 <body>
@@ -275,7 +407,7 @@
 <!-- APP PASSWORD OVERLAY -->
 <div id="app-overlay" style="position:fixed;inset:0;background:linear-gradient(135deg,#001a2e 0%,#004877 100%);z-index:9999;display:none;align-items:center;justify-content:center;">
   <div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:40px;max-width:360px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
-    <div style="font-family:'Poppins',sans-serif;font-size:32px;letter-spacing:1px;color:#ffffff;">TRICK ANALYSES FREESKI</div>
+    <div style="font-family:'Poppins',sans-serif;font-size:32px;letter-spacing:1px;color:#ffffff;">TRICK COLLECTOR FREESKI</div>
     <div style="font-size:12px;color:#6b8299;margin-bottom:28px;letter-spacing:1px;">Swiss-Ski</div>
     <input id="app-pw-input" type="password" placeholder="Enter password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid #1a3450;background:#112236;color:#e8edf2;font-size:15px;margin-bottom:12px;outline:none;font-family:'Poppins',sans-serif;">
     <div id="app-pw-error" style="color:#ef4444;font-size:12px;margin-bottom:10px;display:none;">Incorrect password.</div>
@@ -284,7 +416,7 @@
 </div>
 
 <header>
-  <h1>Trick Analyses Freeski</h1>
+  <h1>Trick Analytics Freeski</h1>
   <nav class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('standort', this)">Assessment</button>
     <button class="nav-tab" onclick="showPage('erfassen', this)">Session</button>
@@ -456,7 +588,10 @@
         <div style="font-weight:700;color:#2d8a4e;font-size:14px;">⏸ Session paused</div>
         <div id="sess-resume-info" style="font-size:12px;color:var(--muted);margin-top:2px;"></div>
       </div>
-      <button onclick="resumeSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;">▶ Resume</button>
+      <div style="display:flex;gap:8px;">
+        <button onclick="cancelSession()" style="padding:9px 14px;background:none;border:1px solid #e2001a;border-radius:8px;color:#e2001a;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;">✕ Cancel</button>
+        <button onclick="resumeSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;">▶ Resume</button>
+      </div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px;">
       <div>
@@ -499,7 +634,8 @@
         <div style="color:var(--muted);font-size:12px;" id="sess-live-date"></div>
       </div>
       <div style="display:flex;gap:10px;">
-        <button onclick="pauseSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">⏸ Pause</button>
+        <button onclick="pauseSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">+ Add Athlete or Trick</button>
+        <button onclick="cancelSession()" style="padding:9px 16px;background:none;border:1px solid #e2001a;border-radius:8px;color:#e2001a;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✕ Cancel</button>
         <button onclick="endSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✓ End Session</button>
       </div>
     </div>
@@ -838,7 +974,6 @@
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
             <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
             <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
-            <button id="ev-mode-overall" onclick="setStatsMode('overall')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Overall Progress</button>
           </div>
           <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
             <option value="">— Trick auswählen —</option>
@@ -1080,42 +1215,69 @@
 
 <div class="page" id="page-datenbank">
 
-  <!-- TEAM RANKING -->
+  <!-- ── SECTION 1: SESSION PERFORMANCE ─────────────────────────── -->
   <div class="card" style="margin-bottom:20px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent);">Team Overview</div>
-      <div style="display:flex;gap:8px;">
+      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent);">📊 Team Overview — Session Performance</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div style="display:flex;gap:4px;">
+          <button id="pf-all"  onclick="setPerfFilter('')"                    style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
+          <button id="pf-bag"  onclick="setPerfFilter('Landing Bag')"         style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
+          <button id="pf-jump" onclick="setPerfFilter('Jump On-Snow')"        style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
+          <button id="pf-comp" onclick="setPerfFilter('Big Air Competition')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
+        </div>
+        <select id="pf-season" onchange="onPfSeasonChange()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:Poppins,sans-serif;">
+          <option value="current">Current season</option>
+          <option value="last">Last season</option>
+          <option value="all">All time</option>
+          <option value="custom">Custom period…</option>
+        </select>
+        <div id="pf-custom-range" style="display:none;align-items:center;gap:4px;">
+          <input type="text" id="pf-from" placeholder="TT.MM.JJ" oninput="setPerfDateRange()"
+            style="width:82px;padding:3px 7px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;">
+          <span style="font-size:11px;color:var(--muted);">→</span>
+          <input type="text" id="pf-to" placeholder="TT.MM.JJ" oninput="setPerfDateRange()"
+            style="width:82px;padding:3px 7px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;">
+          <button onclick="clearPerfDateRange()" style="padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
+        </div>
         <button class="btn-secondary" onclick="loadDB()">↻ Refresh</button>
-        <button class="btn-secondary" onclick="downloadRanking()" style="white-space:nowrap;">⬇ Team Export</button>
       </div>
     </div>
+    <div id="perf-table"><div class="loading"><span class="spinner"></span></div></div>
+  </div>
 
-    <!-- Ranking: Mastered Tricks -->
+  <!-- ── SECTION 1b: SESSION REPORTS ───────────────────────────── -->
+  <div class="card" style="margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">📋 Session Reports</div>
+    </div>
+    <div id="session-reports-list"><div class="loading"><span class="spinner"></span></div></div>
+  </div>
+
+  <!-- ── SECTION 2: TEAM ASSESSMENT ─────────────────────────────── -->
+  <div class="card" style="margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">📋 Team Overview — Assessment</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="realityCheck()" style="padding:7px 14px;border-radius:8px;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
+        
+      </div>
+    </div>
     <div style="margin-bottom:20px;">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Mastered Tricks per Athlete (Assessment)</div>
-      <div id="rank-mastered" style="display:flex;flex-wrap:wrap;gap:8px;">
-        <div class="loading"><span class="spinner"></span></div>
-      </div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Mastered Tricks per Athlete</div>
+      <div id="rank-mastered" style="display:flex;flex-wrap:wrap;gap:8px;"><div class="loading"><span class="spinner"></span></div></div>
     </div>
-
-    <!-- Ranking: Höchste Rotation pro Drehrichtung -->
     <div style="margin-bottom:20px;">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Highest Rotation per Direction (Session + Assessment)</div>
-      <div id="rank-rotation" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
-        <div class="loading"><span class="spinner"></span></div>
-      </div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Highest Rotation per Direction (Assessment)</div>
+      <div id="rank-rotation" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;"><div class="loading"><span class="spinner"></span></div></div>
     </div>
-
-    <!-- Forward vs Switch Balance -->
     <div>
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Direction Balance — All 4 Directions (Session + Assessment)</div>
-      <div id="rank-balance" style="display:flex;flex-wrap:wrap;gap:10px;">
-        <div class="loading"><span class="spinner"></span></div>
-      </div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Direction Balance</div>
+      <div id="rank-balance" style="display:flex;flex-wrap:wrap;gap:10px;"><div class="loading"><span class="spinner"></span></div></div>
     </div>
   </div>
 
-  <!-- ALLE TRICKS TABELLE -->
+  <!-- ── SECTION 3: ALL ENTRIES ──────────────────────────────────── -->
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
       <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">
@@ -1154,7 +1316,8 @@
           <option value="session">Nur Session</option>
           <option value="standort">Nur Assessment</option>
         </select>
-        <button class="btn-secondary" onclick="downloadExcel()" style="white-space:nowrap;">⬇ Excel</button>
+        <button class="btn-secondary" onclick="openTeamPdfReport()" style="white-space:nowrap;">📄 Team Report</button>
+        
       </div>
     </div>
     <div class="table-wrap">
@@ -1190,6 +1353,7 @@ function showPage(id, btn) {
   if (id === 'entwicklung') loadEntwicklung();
   if (id === 'erfassen') initSessionSetup();
   if (id === 'erfassen') loadSessionTricks();
+  if (typeof updateMobileNav === 'function') updateMobileNav(id);
 }
 
 // ── DISZIPLIN TOGGLE (prefix = 'f' or 'sb') ──────────────────────
@@ -1633,17 +1797,446 @@ async function renderCockpit() {
 // ── DATENBANK ─────────────────────────────────────────────────────
 let dbAllTricks = [];    // session tricks
 let dbAllStandort = [];  // standort tricks
+let dbSessionReports = [];
+
+let _perfTypeFilter = '';
+
+function showPerfTip(e, text) {
+  let tt = document.getElementById('perf-tooltip');
+  if (!tt) {
+    tt = document.createElement('div');
+    tt.id = 'perf-tooltip';
+    tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:8px;padding:8px 12px;font-size:12px;font-family:Poppins,sans-serif;pointer-events:none;z-index:9999;max-width:320px;box-shadow:0 4px 16px rgba(0,0,0,0.5);';
+    document.body.appendChild(tt);
+  }
+  const parts = text.split(' | ');
+  tt.innerHTML = `<div style="font-weight:700;color:#e8edf2;margin-bottom:4px;">${parts[0]||''}</div>
+    <div style="color:var(--muted);font-size:11px;">${parts[1]||''}</div>`;
+  tt.style.display = 'block';
+  const tx = e.clientX+14, ty = e.clientY-10;
+  tt.style.left = (tx+tt.offsetWidth > window.innerWidth-10 ? e.clientX-tt.offsetWidth-14 : tx)+'px';
+  tt.style.top  = ty+'px';
+}
+function hidePerfTip() {
+  const tt = document.getElementById('perf-tooltip');
+  if (tt) tt.style.display = 'none';
+}
+
+function setPerfFilter(typ) {
+  _perfTypeFilter = typ;
+  const map = {'':'pf-all','Landing Bag':'pf-bag','Jump On-Snow':'pf-jump','Big Air Competition':'pf-comp'};
+  Object.values(map).forEach(id=>{
+    const b=document.getElementById(id); if(!b) return;
+    b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
+  });
+  const act=document.getElementById(map[typ]||'pf-all');
+  if(act){act.style.background='rgba(57,195,212,0.2)';act.style.borderColor='#39c3d4';act.style.color='#39c3d4';}
+  renderSessionPerformance();
+}
+
+let _pfCustomFrom = '', _pfCustomTo = '';
+
+function onPfSeasonChange() {
+  const sel = document.getElementById('pf-season')?.value;
+  const rangeDiv = document.getElementById('pf-custom-range');
+  if (rangeDiv) rangeDiv.style.display = sel === 'custom' ? 'flex' : 'none';
+  if (sel !== 'custom') {
+    _pfCustomFrom = ''; _pfCustomTo = '';
+    renderSessionPerformance(); // re-render immediately for preset ranges
+  }
+  // For custom: wait until dates are entered via setPerfDateRange()
+}
+
+function setPerfDateRange() {
+  const f = document.getElementById('pf-from')?.value || '';
+  const t = document.getElementById('pf-to')?.value   || '';
+  _pfCustomFrom = parsePerfDate(f);
+  _pfCustomTo   = parsePerfDate(t);
+  // Highlight active inputs
+  [['pf-from',_pfCustomFrom],['pf-to',_pfCustomTo]].forEach(([id,parsed])=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.style.borderColor = parsed ? '#39c3d4' : 'var(--border)';
+    el.style.color       = parsed ? '#39c3d4' : 'var(--muted)';
+  });
+  renderSessionPerformance();
+}
+
+function clearPerfDateRange() {
+  _pfCustomFrom = ''; _pfCustomTo = '';
+  ['pf-from','pf-to'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.value=''; el.style.borderColor='var(--border)'; el.style.color='var(--muted)';
+  });
+  renderSessionPerformance();
+}
+
+function parsePerfDate(val) {
+  if (!val) return '';
+  const m = val.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+  if (m) {
+    const d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0');
+    const y=m[3].length===2?'20'+m[3]:m[3];
+    return `${y}-${mo}-${d}`;
+  }
+  return '';
+}
+
+function getSeasonRange() {
+  const sel = document.getElementById('pf-season')?.value || 'current';
+  // Custom date range takes priority
+  if (sel === 'custom') return { from: _pfCustomFrom, to: _pfCustomTo };
+  const now = new Date();
+  const yr = now.getFullYear();
+  const mo = now.getMonth()+1;
+  const seasonStart = mo >= 5 ? yr : yr-1;
+  if (sel === 'current') return { from: `${seasonStart}-05-01`, to: `${seasonStart+1}-04-30` };
+  if (sel === 'last')    return { from: `${seasonStart-1}-05-01`, to: `${seasonStart}-04-30` };
+  return { from: '', to: '' }; // all time
+}
+
+function extractRotation(name) {
+  if (!name) return 0;
+  const m = name.match(/\b(180|270|360|450|540|630|720|810|900|1080|1260|1440)\b/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+function extractQuality(kommentar) {
+  // Quality = Grab + Trick only (execution in the air)
+  // Landing is captured separately as landing rate
+  if (!kommentar) return null;
+  const score = {perfect:100, okay:50, miss:0};
+  const vals = ['Grab','Trick'].map(k => {
+    const m = kommentar.match(new RegExp(k+':(\\w+)'));
+    return (m && score[m[1]] !== undefined) ? score[m[1]] : null;
+  }).filter(v => v !== null);
+  return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : null;
+}
+
+function renderSessionPerformance() {
+  const el = document.getElementById('perf-table');
+  if (!el || !dbAllTricks) return;
+
+  const DIRS = ['Left','Right','Switch Left','Switch Right'];
+  const DIR_COL = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
+
+  // Status based on Landing% AND Quality% independently
+  function status(landPct, avgQ) {
+    if (landPct >= 70 && avgQ >= 70) return {icon:'🟢', label:'Ready', color:'#2d8a4e'};
+    if (landPct >= 50 || avgQ  >= 50) return {icon:'🟡', label:'Developing', color:'#f59e0b'};
+    return {icon:'🔴', label:'Not ready', color:'#e2001a'};
+  }
+
+  function trickDir(name) {
+    if (!name) return null;
+    if (name.includes('Switch Left'))  return 'Switch Left';
+    if (name.includes('Switch Right')) return 'Switch Right';
+    if (name.includes('Left'))  return 'Left';
+    if (name.includes('Right')) return 'Right';
+    return null;
+  }
+
+  const { from, to } = getSeasonRange();
+  let data = dbAllTricks.filter(t => t.trickaufbau && t.athlet);
+  if (_perfTypeFilter) data = data.filter(t => t.typ === _perfTypeFilter);
+  if (from) data = data.filter(t => t.datum && t.datum >= from);
+  if (to)   data = data.filter(t => t.datum && t.datum <= to);
+
+  if (!data.length) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">No session data for this period / filter.</div>';
+    return;
+  }
+
+  // Build: athMap[athlete][direction][trick] = {att, land, qualVals, rot}
+  const athMap = {};
+  data.forEach(t => {
+    const dir = trickDir(t.trickaufbau);
+    if (!dir) return;
+    if (!athMap[t.athlet]) athMap[t.athlet] = {};
+    if (!athMap[t.athlet][dir]) athMap[t.athlet][dir] = {};
+    const trick = t.trickaufbau;
+    if (!athMap[t.athlet][dir][trick]) athMap[t.athlet][dir][trick] = {att:0, land:0, qualVals:[], rot:extractRotation(trick)};
+    const s = athMap[t.athlet][dir][trick];
+    s.att++;
+    if (t.gelandet==='Yes') s.land++;
+    const q = extractQuality(t.kommentar);
+    if (q !== null) s.qualVals.push(q);
+  });
+
+  // Per athlete per direction: find best trick by score (rotW × landRate × quality)
+  function bestInDir(tricks) {
+    if (!tricks) return null;
+    let best = null, bestScore = -1;
+    Object.entries(tricks).forEach(([trick, s]) => {
+      const landRate = s.att ? s.land/s.att : 0;
+      const avgQ = s.qualVals.length ? s.qualVals.reduce((a,b)=>a+b,0)/s.qualVals.length : 0;
+      const score = (s.rot/360) * landRate * (avgQ/100);
+      if (score > bestScore) {
+        bestScore = score;
+        best = {trick, att:s.att, land:s.land, landPct:Math.round(landRate*100), avgQ:Math.round(avgQ), rot:s.rot, score};
+      }
+    });
+    return best;
+  }
+
+  // Build athlete rows, sort by number of 🟢 directions desc, then total score
+  const athletes = Object.entries(athMap).map(([athlet, dirMap]) => {
+    const dirs = {};
+    DIRS.forEach(d => { dirs[d] = bestInDir(dirMap[d]); });
+    const greenCount = DIRS.filter(d => dirs[d] && status(dirs[d].landPct, dirs[d].avgQ).icon==='🟢').length;
+    const totalScore = DIRS.reduce((s,d) => s + (dirs[d]?.score||0), 0);
+    const totalAtt   = DIRS.reduce((s,d) => s + (dirs[d]?.att||0), 0);
+    return {athlet, dirs, greenCount, totalScore, totalAtt};
+  }).sort((a,b) => b.greenCount-a.greenCount || b.totalScore-a.totalScore);
+
+  const medal = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+
+  function dirCell(b, dir) {
+    if (!b) return `<td style="text-align:center;color:var(--muted);font-size:13px;padding:12px 8px;">—</td>`;
+    const st = status(b.landPct, b.avgQ);
+    const tip = `${b.trick} | ${b.landPct}% landed · ${b.avgQ}% exec. quality · ${b.att} attempts`;
+    return `<td style="text-align:center;padding:10px 8px;cursor:default;"
+      onmouseenter="showPerfTip(event,\`${tip.replace(/`/g,"'")}\`)"
+      onmouseleave="hidePerfTip()">
+      <div style="font-size:18px;">${st.icon}</div>
+      <div style="font-size:12px;font-weight:700;color:${DIR_COL[dir]};">${b.rot||'?'}°</div>
+    </td>`;
+  }
+
+  // Build per-athlete, per-trick summary (all tricks, not just best per dir)
+  const athTricks = {};
+  data.forEach(t => {
+    const a = t.athlet;
+    const trick = t.trickaufbau;
+    if (!athTricks[a]) athTricks[a] = {};
+    if (!athTricks[a][trick]) athTricks[a][trick] = {att:0, land:0, qualVals:[], rot:extractRotation(trick), dir:trickDir(trick)};
+    const s = athTricks[a][trick];
+    s.att++;
+    if (t.gelandet==='Yes') s.land++;
+    const q = extractQuality(t.kommentar);
+    if (q !== null) s.qualVals.push(q);
+  });
+
+  // Sort athletes alphabetically (no ranking)
+  const athList = Object.keys(athTricks).sort();
+
+  const bkg  = {'🟢':'rgba(45,138,78,0.12)','🟡':'rgba(245,158,11,0.1)','🔴':'rgba(226,0,26,0.08)'};
+  const brd  = {'🟢':'rgba(45,138,78,0.4)', '🟡':'rgba(245,158,11,0.4)','🔴':'rgba(226,0,26,0.3)'};
+  const txt  = {'🟢':'#2d8a4e','🟡':'#f59e0b','🔴':'#e2001a'};
+
+  el.innerHTML = `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;display:flex;flex-direction:column;gap:3px;">
+      <span>All recorded tricks per athlete, grouped by direction</span>
+      <span>🟢 land ≥70% &amp; exec. quality (Grab+Trick) ≥70% &nbsp;&nbsp; 🟡 one ≥50% &nbsp;&nbsp; 🔴 both &lt;50%</span>
+    </div>
+    <div>
+      ${athList.map((athlet, i) => {
+        const tricks = athTricks[athlet];
+
+        // Group tricks by direction
+        const byDir = {};
+        DIRS.forEach(d => byDir[d] = []);
+        Object.entries(tricks).forEach(([trick, s]) => {
+          const d = s.dir || 'Other';
+          if (!byDir[d]) byDir[d] = [];
+          byDir[d].push([trick, s]);
+        });
+
+        // Sort within each direction: green first, then by rotation desc
+        DIRS.forEach(d => {
+          byDir[d].sort(([,a],[,b]) => {
+            const lA = a.att?Math.round(a.land/a.att*100):0, qA = a.qualVals.length?Math.round(a.qualVals.reduce((x,y)=>x+y,0)/a.qualVals.length):0;
+            const lB = b.att?Math.round(b.land/b.att*100):0, qB = b.qualVals.length?Math.round(b.qualVals.reduce((x,y)=>x+y,0)/b.qualVals.length):0;
+            const rank = {'🟢':0,'🟡':1,'🔴':2};
+            return (rank[status(lA,qA).icon]||0)-(rank[status(lB,qB).icon]||0) || b.rot-a.rot;
+          });
+        });
+
+        const dirBlocks = DIRS.map(d => {
+          const entries = byDir[d];
+          return `<div style="flex:1;min-width:200px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${DIR_COL[d]};margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid ${DIR_COL[d]}33;">${d}</div>
+            ${entries.length ? entries.map(([trick, s]) => {
+              const landPct = s.att ? Math.round(s.land/s.att*100) : 0;
+              const avgQ    = s.qualVals.length ? Math.round(s.qualVals.reduce((a,b)=>a+b,0)/s.qualVals.length) : 0;
+              const st      = status(landPct, avgQ);
+              return `<div style="background:${bkg[st.icon]};border:1px solid ${brd[st.icon]};border-radius:8px;padding:6px 10px;margin-bottom:5px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                  <span style="font-size:12px;color:var(--text);flex:1;">${st.icon} ${trick}</span>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:4px;font-size:11px;font-weight:700;">
+                  <span style="color:${landPct>=70?'#2d8a4e':landPct>=50?'#f59e0b':'#e2001a'};">${landPct}% landed</span>
+                  <span style="color:${avgQ>=70?'#2d8a4e':avgQ>=50?'#f59e0b':'#e2001a'};">${avgQ}% exec. quality</span>
+                  <span style="color:var(--muted);font-weight:400;">${s.att} att.</span>
+                </div>
+              </div>`;
+            }).join('') : `<div style="color:var(--muted);font-size:11px;padding:6px 0;">—</div>`}
+          </div>`;
+        }).join('');
+
+        return `<div style="padding:16px 0;border-bottom:1px solid var(--border);${i===0?'border-top:1px solid var(--border);':''}">
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;">${athlet}</div>
+          <div class="perf-dir-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+            ${dirBlocks}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+async function realityCheck() {
+  if (!dbAllTricks || !dbAllStandort) { showToast('Load data first', 'error'); return; }
+
+  // Season range: last 12 months (May last year – April this year)
+  const { from } = getSeasonRange();
+  const seasonFrom = from || new Date(Date.now()-365*24*3600*1000).toISOString().split('T')[0];
+
+  const mastered = dbAllStandort.filter(t => t.status === 'mastered' && t.athlet);
+  const flagged = [];
+
+  mastered.forEach(s => {
+    // Find session entries for this athlete with this direction+rotation in the past season
+    const dir = s.drehrichtung?.trim();
+    const rot = s.rotation ? String(s.rotation).match(/\d+/)?.[0] : null;
+    if (!dir || !rot) return;
+
+    const sessions = dbAllTricks.filter(t =>
+      t.athlet === s.athlet &&
+      t.datum >= seasonFrom &&
+      t.trickaufbau &&
+      t.trickaufbau.includes(rot)
+    );
+
+    if (!sessions.length) {
+      // Never attempted in current season
+      flagged.push({ ...s, reason: 'Not attempted this season', avgQ: null, sessions: 0 });
+      return;
+    }
+
+    const quals = sessions.map(t => extractQuality(t.kommentar)).filter(v => v !== null);
+    if (!quals.length) return; // no quality data
+    const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
+
+    if (avgQ < 70) {
+      const landRate = Math.round(sessions.filter(t=>t.gelandet==='Yes').length/sessions.length*100);
+      flagged.push({ ...s, reason: `Avg quality ${avgQ}% (<70%)`, avgQ, sessions: sessions.length, landRate });
+    }
+  });
+
+  if (!flagged.length) {
+    showToast('✅ All mastered tricks are validated — no downgrades needed!', 'success');
+    return;
+  }
+
+  // Group flagged by athlete for display + selection
+  const byAthlet = {};
+  flagged.forEach(f => {
+    if (!byAthlet[f.athlet]) byAthlet[f.athlet] = [];
+    byAthlet[f.athlet].push(f);
+  });
+  const athletes = Object.keys(byAthlet).sort();
+
+  // Helper: build full trick description from standort fields
+  function rcTrickDesc(f) {
+    if (f.trick_label) return f.trick_label;
+    const parts = [f.drehrichtung, f.flips, f.rotation ? f.rotation+'°' : null, f.achse, f.grab].filter(Boolean);
+    return parts.join(' ') || '—';
+  }
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `
+    <div style="background:#0d1f33;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:660px;width:100%;max-height:88vh;display:flex;flex-direction:column;">
+      <!-- Header -->
+      <div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">🔍 Reality Check</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
+        Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} trick${flagged.length!==1?'s':''} below 70% exec. quality · select athletes to apply
+      </div>
+      <!-- Search + select all -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+        <input id="rc-search" type="text" placeholder="Search athlete…" oninput="rcFilter(this.value)"
+          style="flex:1;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:Poppins,sans-serif;">
+        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=true)"  style="padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);white-space:nowrap;">✓ All</button>
+        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=false)" style="padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);white-space:nowrap;">✗ None</button>
+      </div>
+      <!-- Athlete list -->
+      <div id="rc-list" style="overflow-y:auto;flex:1;margin-bottom:14px;">
+        ${athletes.map(athlet => `
+          <div class="rc-ath-row" data-name="${athlet.toLowerCase()}" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;">
+            <!-- Athlete header -->
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--surface2);">
+              <input type="checkbox" class="rc-chk" data-athlet="${athlet}" checked
+                style="width:15px;height:15px;accent-color:#f59e0b;cursor:pointer;flex-shrink:0;">
+              <span style="font-size:13px;font-weight:700;color:var(--text);flex:1;">${athlet}</span>
+              <span style="font-size:11px;color:var(--muted);">${byAthlet[athlet].length} trick${byAthlet[athlet].length!==1?'s':''} affected</span>
+            </label>
+            <!-- Tricks -->
+            ${byAthlet[athlet].map(f=>`
+              <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;padding:7px 14px 7px 38px;border-top:1px solid var(--border);">
+                <div>
+                  <div style="font-size:12px;color:var(--text);font-weight:500;">${rcTrickDesc(f)}</div>
+                  ${f.disziplin?`<div style="font-size:10px;color:var(--muted);margin-top:1px;">${f.disziplin}</div>`:''}
+                </div>
+                <span style="font-size:11px;color:#f59e0b;white-space:nowrap;font-weight:600;">${f.reason}</span>
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>
+      <!-- Footer -->
+      <div style="display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:14px;">
+        <button onclick="this.closest('[style*=inset]').remove()" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Cancel</button>
+        <button onclick="applyRealityCheckSelected(${JSON.stringify(flagged)},this)" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply selected</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function rcFilter(query) {
+  const q = query.toLowerCase().trim();
+  document.querySelectorAll('.rc-ath-row').forEach(row => {
+    row.style.display = (!q || row.dataset.name.includes(q)) ? '' : 'none';
+  });
+}
+
+async function applyRealityCheckSelected(flagged, btn) {
+  // Get selected athletes from checkboxes
+  const checked = [...document.querySelectorAll('.rc-chk:checked')].map(c => c.dataset.athlet);
+  if (!checked.length) { showToast('No athletes selected', 'error'); return; }
+  const ids = flagged.filter(f => checked.includes(f.athlet)).map(f => f.id);
+  if (!ids.length) { showToast('No entries to update', 'error'); return; }
+  btn.textContent = 'Applying…'; btn.disabled = true;
+  const { error } = await db.from('standort').update({status:'goal'}).in('id', ids);
+  if (error) { showToast('Error: '+error.message, 'error'); btn.textContent='Apply selected'; btn.disabled=false; return; }
+  btn.closest('[style*=inset]').remove();
+  showToast(`✅ ${ids.length} trick${ids.length!==1?'s':''} moved from Mastered → Goal (${checked.length} athlete${checked.length!==1?'s':''})`, 'success');
+  loadDB();
+}
+
+function updateSeasonLabels() {
+  const now = new Date();
+  const yr = now.getFullYear();
+  const mo = now.getMonth() + 1; // 1–12
+  // Season: May–April. If month >= 5, current season started this year.
+  const s = mo >= 5 ? yr : yr - 1;
+  const fmt = (a, b) => `${String(a).slice(2)}/${String(b).slice(2)}`;
+  const sel = document.getElementById('pf-season');
+  if (!sel) return;
+  sel.options[0].text = `Current season ${fmt(s, s+1)}`;
+  sel.options[1].text = `Last season ${fmt(s-1, s)}`;
+}
 
 async function loadDB() {
+  updateSeasonLabels();
   // Show spinners
   ['rank-mastered','rank-rotation','rank-balance'].forEach(id => {
     document.getElementById(id).innerHTML = '<div class="loading"><span class="spinner"></span></div>';
   });
   document.getElementById('db-tbody').innerHTML = '<tr><td colspan="7"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr>';
+  const perfEl = document.getElementById('perf-table');
+  if (perfEl) perfEl.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
 
-  const [{ data: tricks, error: e1 }, { data: standort, error: e2 }] = await Promise.all([
+  const [{ data: tricks, error: e1 }, { data: standort, error: e2 }, { data: reports }] = await Promise.all([
     db.from('tricks').select('*').order('datum', { ascending: false }),
     db.from('standort').select('*').order('created_at', { ascending: false }),
+    db.from('session_reports').select('*').eq('app','freeski').order('datum',{ascending:false}).limit(50),
   ]);
 
   if (e1 || e2) {
@@ -1653,9 +2246,58 @@ async function loadDB() {
 
   dbAllTricks   = (tricks   || []).map(t => ({ ...t, _quelle: 'session' }));
   dbAllStandort = (standort || []).map(t => ({ ...t, _quelle: 'standort' }));
+  dbSessionReports = reports || [];
 
+  renderSessionPerformance();
+  renderSessionReports();
   renderDBRankings();
   renderDBTable();
+}
+
+async function deleteSessionReport(id, withTricks) {
+  const report = dbSessionReports.find(r => r.id === id);
+  if (!withTricks) {
+    if (!confirm('Delete this session report?')) return;
+    const {error} = await db.from('session_reports').delete().eq('id', id);
+    if (error) { showToast('Error: '+error.message, 'error'); return; }
+    showToast('Session report deleted', 'success');
+  } else {
+    if (!confirm('Delete this session report AND all trick entries from this session?\n\nThis will permanently remove all data from Development and Database for this date/athletes.')) return;
+    if (report && report.datum && report.athletes) {
+      for (const ath of report.athletes) {
+        await db.from('tricks').delete().eq('athlet', ath).eq('datum', report.datum);
+      }
+    }
+    const {error} = await db.from('session_reports').delete().eq('id', id);
+    if (error) { showToast('Error: '+error.message, 'error'); return; }
+    showToast('Session + all trick entries deleted', 'success');
+  }
+  loadDB();
+}
+
+function renderSessionReports() {
+  const el = document.getElementById('session-reports-list');
+  if (!el) return;
+  if (!dbSessionReports.length) { el.innerHTML = '<div style="color:var(--muted);padding:12px;font-size:13px;">No session reports yet.</div>'; return; }
+  el.innerHTML = dbSessionReports.map((r,idx) => {
+    const dateStr = r.datum ? (() => { const p=r.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+    const condStars = r.conditions ? '★'.repeat(r.conditions)+'☆'.repeat(5-r.conditions) : '';
+    const athStr = Array.isArray(r.athletes) ? r.athletes.map(a=>shortName(a)).join(', ') : '';
+    const durStr = r.duration_min ? (r.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
+    const typeShort = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[r.session_type]||r.session_type||'—';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);">${dateStr} &nbsp;<span style="color:var(--muted);font-weight:400;font-size:12px;">${typeShort} · ${durStr}</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${athStr}${condStars?' · '+condStars:''}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button onclick="openReportPrint(window._srReports[${idx}])" style="padding:6px 12px;border-radius:6px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">View</button>
+        <button onclick="deleteSessionReport(${r.id},false)" title="Delete report only" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a33;color:#e2001a;font-size:13px;cursor:pointer;">🗑</button>
+        <button onclick="deleteSessionReport(${r.id},true)" title="Delete report + all trick data" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a;color:#e2001a;font-size:11px;cursor:pointer;font-weight:700;">🗑+</button>
+      </div>
+    </div>`;
+  }).join('');
+  window._srReports = dbSessionReports;
 }
 
 function shortName(full) {
@@ -1773,6 +2415,85 @@ function renderDBRankings() {
         }).join('')
       + '</div>';
   }).join('') : '<div style="color:var(--muted);font-size:13px;">No data yet.</div>';
+}
+
+function openTeamPdfReport() {
+  const filterAthlet = document.getElementById('db-filter-athlet')?.value || '';
+  const sessData  = filterAthlet ? (dbAllTricks||[]).filter(t=>t.athlet===filterAthlet) : (dbAllTricks||[]);
+  const assData   = filterAthlet ? (dbAllStandort||[]).filter(t=>t.athlet===filterAthlet) : (dbAllStandort||[]);
+  if (!sessData.length && !assData.length) { showToast('No data to export', 'error'); return; }
+
+  function fmtDate(d) { if(!d) return '—'; const p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); }
+
+  // Collect all athletes from both sources
+  const athletes = [...new Set([...sessData.map(t=>t.athlet), ...assData.map(t=>t.athlet)])].filter(Boolean).sort();
+
+  const athleteSections = athletes.map(athlet => {
+    // ── Session data ──
+    const tricks = sessData.filter(t=>t.athlet===athlet);
+    const totalAtt  = tricks.length;
+    const totalLand = tricks.filter(t=>t.gelandet==='Yes').length;
+    const landPct   = totalAtt ? Math.round(totalLand/totalAtt*100) : 0;
+
+    const byTrick = {};
+    tricks.forEach(t => {
+      const key = t.trickaufbau||'—';
+      if (!byTrick[key]) byTrick[key] = {att:0,land:0,dates:new Set(),type:new Set()};
+      byTrick[key].att++;
+      if(t.gelandet==='Yes') byTrick[key].land++;
+      if(t.datum) byTrick[key].dates.add(fmtDate(t.datum));
+      if(t.typ) byTrick[key].type.add(t.typ);
+    });
+    const sessRows = Object.entries(byTrick).sort((a,b)=>b[1].att-a[1].att).map(([trick,s]) => {
+      const lp = s.att ? Math.round(s.land/s.att*100) : 0;
+      const typeStr = [...s.type].map(t=>({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[t]||t)).join(', ');
+      return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center">${s.land}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#2d8a4e':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:11px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
+    }).join('');
+
+    // ── Assessment data ──
+    const mastered = assData.filter(t=>t.athlet===athlet&&t.status==='mastered');
+    const goals    = assData.filter(t=>t.athlet===athlet&&t.status==='goal');
+    const mastRows = mastered.map(e=>`<tr><td>${e.trick_label||'—'}</td><td>${e.disziplin||'—'}</td><td style="color:#2d8a4e;font-weight:600">Mastered</td></tr>`).join('');
+    const goalRows = goals.map(e=>`<tr><td>${e.trick_label||'—'}</td><td>${e.disziplin||'—'}</td><td style="color:#f59e0b;font-weight:600">Goal</td></tr>`).join('');
+
+    return `<div class="ath-block">
+      <div class="ath-name">${athlet}</div>
+      ${totalAtt>0?`
+      <div class="section-title">Session Performance</div>
+      <div class="ath-sum">${totalAtt} attempts &nbsp;·&nbsp; ${totalLand} landed &nbsp;·&nbsp; ${landPct}%</div>
+      <table><thead><tr><th>Trick</th><th>Type</th><th>Att.</th><th>Landed</th><th>Rate</th><th>Sessions</th></tr></thead><tbody>${sessRows||'<tr><td colspan="6" style="color:#aaa">No session data</td></tr>'}</tbody></table>` : ''}
+      ${(mastRows||goalRows)?`
+      <div class="section-title">Assessment</div>
+      <table><thead><tr><th>Trick</th><th>Discipline</th><th>Status</th></tr></thead><tbody>${mastRows}${goalRows}</tbody></table>` : ''}
+    </div>`;
+  }).join('');
+
+  const today = new Date().toLocaleDateString('en-GB');
+  const title = filterAthlet ? filterAthlet : 'Full Team';
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Team Report — ${title}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;padding:32px 40px;max-width:900px;margin:0 auto;font-size:13px;}
+  .print-btn{margin-bottom:24px;}
+  .print-btn button{padding:9px 22px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;}
+  h1{font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:20px;}
+  .ath-block{margin-bottom:24px;border:1px solid #e0e0e0;border-radius:4px;overflow:hidden;page-break-inside:avoid;}
+  .ath-name{background:#1a1a1a;color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;}
+  .ath-sum{background:#f9f9f9;border-bottom:1px solid #e0e0e0;padding:6px 12px;font-size:12px;color:#555;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:#f0f0f0;padding:6px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#666;}
+  td{padding:6px 10px;border-top:1px solid #eee;font-size:12px;}
+  .section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#777;padding:8px 12px 4px;background:#fafafa;border-top:1px solid #e0e0e0;border-bottom:1px solid #eee;}
+  footer{margin-top:28px;border-top:1px solid #ddd;padding-top:10px;font-size:11px;color:#aaa;display:flex;justify-content:space-between;}
+  @media print{.print-btn{display:none;} body{padding:16px;}}
+</style></head><body>
+  <div class="print-btn"><button onclick="window.print()">Print / Save as PDF</button></div>
+  <h1>Team Report — ${title}</h1>
+  ${athleteSections}
+  <footer><span>Swiss-Ski Trick Analytics Freeski</span><span>Generated ${today}</span></footer>
+</body></html>`);
+  win.document.close();
 }
 
 function renderDBTable() {
@@ -2060,6 +2781,61 @@ let sessAthleteData = {};
 let sessActiveTricks = {};
 let sessLog = [];
 let sessType = '';
+let sessStartTime = 0;
+
+function saveSessionState() {
+  const state = {
+    athletes: sessSelectedAthletes,
+    log: sessLog,
+    type: sessType,
+    startTime: sessStartTime,
+    activeAthlete: sessActiveAthlete || '',
+    activeTricks: sessActiveTricks,
+    athleteState: {}
+  };
+  sessSelectedAthletes.forEach(name => {
+    const d = sessAthleteData[name];
+    if (d) state.athleteState[name] = { currentTrick: d.currentTrick, currentGrab: d.currentGrab||'', stats: {...d.stats} };
+  });
+  localStorage.setItem('fs_session', JSON.stringify(state));
+}
+
+function clearSessionStorage() {
+  localStorage.removeItem('fs_session');
+}
+
+async function restoreSessionState() {
+  const raw = localStorage.getItem('fs_session');
+  if (!raw) return false;
+  try {
+    const state = JSON.parse(raw);
+    if (!state.athletes || !state.athletes.length) { clearSessionStorage(); return false; }
+    sessSelectedAthletes = state.athletes;
+    sessLog = state.log || [];
+    sessType = state.type || '';
+    sessStartTime = state.startTime || Date.now();
+    sessActiveAthlete = state.activeAthlete || state.athletes[0];
+    sessActiveTricks = state.activeTricks || {};
+    for (const name of sessSelectedAthletes) {
+      const saved = (state.athleteState || {})[name] || {};
+      sessAthleteData[name] = { tricks: [], currentTrick: saved.currentTrick || '', currentGrab: saved.currentGrab || '', stats: saved.stats || {attempts:0,landed:0,perfect:0} };
+    }
+    document.getElementById('sess-setup').style.display = 'none';
+    document.getElementById('sess-live').style.display = 'block';
+    document.getElementById('sess-live-date').textContent =
+      new Date(sessStartTime).toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'})
+      + (sessType ? '  ·  ' + sessType : '');
+    renderLiveSession();
+    renderSessionLog();
+    showToast('Session restored', 'success');
+    Promise.all(sessSelectedAthletes.map(async name => {
+      const {data} = await db.from('standort').select('trick_label,disziplin,status')
+        .eq('athlet', name).or('status.eq.mastered,status.eq.goal').order('trick_label');
+      if (data) sessAthleteData[name].tricks = data;
+    })).then(() => renderLiveSession());
+    return true;
+  } catch(e) { clearSessionStorage(); return false; }
+}
 
 function selectSessType(btn, type) {
   document.querySelectorAll('.sess-type-btn').forEach(b => b.classList.remove('active'));
@@ -2067,7 +2843,8 @@ function selectSessType(btn, type) {
   sessType = type;
 }
 
-function initSessionSetup() {
+async function initSessionSetup() {
+  if (await restoreSessionState()) return;
   document.getElementById('sess-date-label').textContent =
     new Date().toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const grid = document.getElementById('sess-athlete-grid');
@@ -2101,7 +2878,7 @@ async function toggleSessionAthlete(name) {
       return;
     }
     sessSelectedAthletes.push(name);
-    sessAthleteData[name] = { tricks: [], currentTrick: '', stats: {attempts:0,landed:0,perfect:0} };
+    sessAthleteData[name] = { tricks: [], currentTrick: '', currentGrab: '', stats: {attempts:0,landed:0,perfect:0} };
     sessActiveTricks[name] = [];
     const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
     if (card) card.style.borderColor = '#39c3d4';
@@ -2109,7 +2886,10 @@ async function toggleSessionAthlete(name) {
       .eq('athlet', name).or('status.eq.mastered,status.eq.goal').order('trick_label');
     if (!error) sessAthleteData[name].tricks = data || [];
   }
-  renderSessionTrickSelection();
+  const startBtn = document.getElementById('sess-start-btn');
+  if (startBtn) startBtn.style.display = sessSelectedAthletes.length ? 'block' : 'none';
+  const trickSel = document.getElementById('sess-trick-selection');
+  if (trickSel) trickSel.style.display = 'none';
 }
 
 const SESS_DIRECTIONS = ['Left','Right','Switch Left','Switch Right','Forward','Switch'];
@@ -2268,8 +3048,9 @@ function renderSessionTrickSelection() {
       return `<div style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);">
         <div style="font-weight:700;font-size:14px;color:#39c3d4;margin-bottom:14px;">${shortName(name)}</div>
         ${SESS_DIRECTIONS.map(dir => {
-          const mastered = tricksForDir(allTricks.filter(t=>t.status==='mastered'), dir);
-          const goals    = tricksForDir(allTricks.filter(t=>t.status==='goal'), dir);
+          const rotSort = (a,b) => { const m=s=>((s.trick_label||'').match(/\b(180|270|360|450|540|630|720|810|900|1080|1260|1440)\b/)||[0,0])[1]; return m(b)-m(a); };
+          const mastered = tricksForDir(allTricks.filter(t=>t.status==='mastered'), dir).sort(rotSort);
+          const goals    = tricksForDir(allTricks.filter(t=>t.status==='goal'), dir).sort(rotSort);
           return `<div style="margin-bottom:14px;">
             <div class="sess-dir-section-${safeId}" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent2);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);">${dir}</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;">
@@ -2360,19 +3141,22 @@ function toggleSessTrick(name, trick, checked) {
 }
 
 function startSession() {
-  if (sessSelectedAthletes.length === 0) return;
+  if (!sessType) { showToast('Please select a session type (Bag / On-Snow / Comp)', 'error'); return; }
+  if (sessSelectedAthletes.length === 0) { showToast('Please select at least one athlete', 'error'); return; }
   sessSelectedAthletes.forEach(name => {
-    const tricks = sessActiveTricks[name] || [];
-    sessAthleteData[name].currentTrick = tricks[0] || '';
+    if (!sessAthleteData[name]) sessAthleteData[name] = {tricks:[],currentTrick:'',stats:{attempts:0,landed:0,perfect:0}};
+    sessAthleteData[name].currentTrick = sessAthleteData[name].currentTrick || '';
     sessAthleteData[name].stats = {attempts:0,landed:0,perfect:0};
   });
   sessLog = [];
+  sessStartTime = Date.now();
   document.getElementById('sess-setup').style.display = 'none';
   document.getElementById('sess-live').style.display = 'block';
   document.getElementById('sess-live-date').textContent =
     new Date().toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'})
     + (sessType ? '  ·  ' + sessType : '');
   renderLiveSession();
+  saveSessionState();
 }
 
 // Per-athlete rating state
@@ -2412,18 +3196,69 @@ function renderLiveSession() {
     cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${sid}">
       <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:16px;text-align:center;">${shortName(name)}</div>
 
-      <!-- Trick selection -->
+      <!-- Trick dropdown -->
       <div style="margin-bottom:20px;">
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Working on</div>
-        ${tricks.length > 0
-          ? `<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
-              ${tricks.map(t=>`<button class="sess-trick-btn${t===d.currentTrick?' active':''}"
-                onclick="sessPickTrick('${name}','${t.replace(/'/g,"\\'")}',this)"
-                style="font-size:13px;padding:8px 14px;">${t}</button>`).join('')}
-            </div>`
-          : `<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px;">No tricks selected — go back to Setup and select tricks from the assessment.</div>`
-        }
+        <select onchange="sessSetTrick('${name}',this.value)"
+          style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+          <option value="">— select trick —</option>
+          ${(() => {
+            const fsDirOrder = {'Left':0,'Right':1,'Switch Left':2,'Switch Right':3};
+            const getFsDir = lbl => {
+              for (const dd of ['Switch Left','Switch Right','Left','Right']) {
+                if (lbl.startsWith(dd)) return dd;
+                if (lbl.includes(' '+dd+' ') || lbl.includes(' '+dd)) return dd;
+              }
+              return 'Other';
+            };
+            const seen = new Set();
+            const sorted = [...(d.tricks||[])].map(t => {
+              const lbl = baseLabel((t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim());
+              return {...t, _lbl: lbl, _dir: getFsDir(lbl), _rot: extractRotFromLabel(lbl)};
+            }).filter(t => { if (seen.has(t._lbl)) return false; seen.add(t._lbl); return true; })
+            .sort((a,b) => {
+              const da = fsDirOrder[a._dir]??4, db = fsDirOrder[b._dir]??4;
+              return da!==db ? da-db : a._rot-b._rot;
+            });
+            let html = '', lastDir = '';
+            sorted.forEach(t => {
+              if (t._dir !== lastDir) {
+                if (lastDir) html += '</optgroup>';
+                html += '<optgroup label="'+t._dir+'">';
+                lastDir = t._dir;
+              }
+              html += '<option value="'+t._lbl.replace(/"/g,'&quot;')+'"'+(t._lbl===d.currentTrick?' selected':'')+'>'+t._lbl+(t.status==='goal'?' 🎯':'')+'</option>';
+            });
+            if (lastDir) html += '</optgroup>';
+            return html;
+          })()}
+        </select>
       </div>
+
+      <!-- Grab selector (only grabs from assessment) -->
+      ${(() => {
+        if (!d.currentTrick) return '';
+        const baseTrick = d.currentTrick;
+        const matchingEntries = (d.tricks||[]).filter(t => baseLabel((t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim()) === baseTrick);
+        const grabSet = new Set();
+        matchingEntries.forEach(t => {
+          (t.grab||'').split(',').map(g=>g.trim()).filter(Boolean).forEach(g => grabSet.add(g));
+        });
+        const grabs = [...grabSet].sort();
+        if (!grabs.length) return '';
+        return `<div style="margin-bottom:16px;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Grab</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;" id="sess-grabs-${sid}">
+            <button onclick="sessSelectGrab('${name}','',this)" class="sess-grab-btn${!d.currentGrab?' active':''}"
+              style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${!d.currentGrab?'#39c3d4':'var(--border)'};background:${!d.currentGrab?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${!d.currentGrab?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">No Grab</button>
+            ${grabs.map(g => {
+              const active = d.currentGrab === g;
+              return '<button onclick="sessSelectGrab(\''+name+'\',\''+g.replace(/'/g,"\\'")+'\',this)" class="sess-grab-btn"'+
+                ' style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid '+(active?'#39c3d4':'var(--border)')+';background:'+(active?'rgba(57,195,212,0.18)':'var(--surface2)')+';color:'+(active?'#39c3d4':'var(--muted)')+';font-family:\'Poppins\',sans-serif;">'+g+'</button>';
+            }).join('')}
+          </div>
+        </div>`;
+      })()}
 
       <!-- Rating rows -->
       <div style="display:flex;flex-direction:column;gap:12px;">
@@ -2445,6 +3280,7 @@ function renderLiveSession() {
             </div>
           </div>`).join('')}
       </div>
+      <input type="text" id="sess-comment-${sid}" placeholder="Comment before rating (optional)" style="width:100%;margin-top:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
     </div>`;
   }
 
@@ -2489,30 +3325,58 @@ async function autoLogAttempt(name) {
   if (result==='landed'||result==='perfect') d.stats.landed++;
   if (result==='perfect') d.stats.perfect++;
 
-  const col = document.getElementById('sess-col-'+name.replace(/\s/g,'_'));
+  const sid = name.replace(/\s/g,'_');
+  const col = document.getElementById('sess-col-'+sid);
   if (col) { col.style.background=result==='miss'?'rgba(226,0,26,0.2)':result==='perfect'?'rgba(57,195,212,0.2)':'rgba(45,138,78,0.2)'; setTimeout(()=>{col.style.background='';},300); }
 
-  sessLog.unshift({name, trick:d.currentTrick, result, grab:r.grab, trick_r:r.trick, land:r.land,
-    time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})});
+  const commentEl = document.getElementById('sess-comment-'+sid);
+  const comment = commentEl ? commentEl.value.trim() : '';
+  if (commentEl) commentEl.value = '';
+
+  const selectedGrab = d.currentGrab || '';
+  const trickWithGrab = selectedGrab ? d.currentTrick + ' — ' + selectedGrab : d.currentTrick;
+  const logEntry = {name, trick:trickWithGrab, result, grab:r.grab, trick_r:r.trick, land:r.land, comment, selectedGrab,
+    time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})};
+  sessLog.unshift(logEntry);
 
   sessRatings[name]={grab:null,trick:null,land:null};
   renderLiveSession();
   renderSessionLog();
+  saveSessionState();
 
+  const kommentarParts = [`Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`];
+  if (comment) kommentarParts.push(comment);
   const trickInfo=sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
   db.from('tricks').insert({
     athlet:name, datum:new Date().toISOString().split('T')[0],
     typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
-    trickaufbau:d.currentTrick, gelandet:r.land!=='miss'?'Yes':'No',
+    trickaufbau:trickWithGrab, gelandet:r.land!=='miss'?'Yes':'No',
+    grab: selectedGrab || null,
     gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
-    kommentar:`Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`
+    kommentar: kommentarParts.join(' | ')
   }).select('id').then(({data,error})=>{
     if(error){console.error(error);return;}
-    if(data&&data[0]) sessLog[0].dbId = data[0].id;
+    if(data&&data[0]) { logEntry.dbId = data[0].id; saveSessionState(); }
   });
 }
 
-function sessSetTrick(name, trick) { sessAthleteData[name].currentTrick = trick; }
+function sessSetTrick(name, trick) {
+  sessAthleteData[name].currentTrick = trick;
+  sessAthleteData[name].currentGrab = '';
+  renderLiveSession();
+}
+
+function sessSelectGrab(name, grab, btn) {
+  sessAthleteData[name].currentGrab = grab;
+  const sid = name.replace(/\s/g,'_');
+  const wrap = document.getElementById('sess-grabs-'+sid);
+  if (wrap) wrap.querySelectorAll('.sess-grab-btn').forEach(b => {
+    const isActive = b === btn;
+    b.style.borderColor = isActive ? '#39c3d4' : 'var(--border)';
+    b.style.background = isActive ? 'rgba(57,195,212,0.18)' : 'var(--surface2)';
+    b.style.color = isActive ? '#39c3d4' : 'var(--muted)';
+  });
+}
 
 function sessPickTrick(name, trick, btn) {
   sessAthleteData[name].currentTrick = trick;
@@ -2523,6 +3387,7 @@ function sessPickTrick(name, trick, btn) {
 
 async function logAttempt(name, result) {
   const d = sessAthleteData[name];
+  if (!d.currentTrick) { showToast('Please select a trick first', 'error'); return; }
   d.stats.attempts++;
   if (result==='landed') d.stats.landed++;
   if (result==='perfect') d.stats.perfect++;
@@ -2533,10 +3398,12 @@ async function logAttempt(name, result) {
   col.style.background = flashColor;
   setTimeout(()=>{ col.style.background=''; }, 250);
 
-  sessLog.unshift({name, trick:d.currentTrick, result,
-    time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})});
+  const logEntry = {name, trick:d.currentTrick, result,
+    time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})};
+  sessLog.unshift(logEntry);
   renderLiveSession();
   renderSessionLog();
+  saveSessionState();
 
   // Save to DB (non-blocking)
   const gesamt = result==='miss'?3:result==='landed'?7:10;
@@ -2546,7 +3413,10 @@ async function logAttempt(name, result) {
     typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
     trickaufbau:d.currentTrick, gelandet:result==='miss'?'No':'Yes',
     gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
-  }).then(({error})=>{ if(error) console.error('Save error:',error); });
+  }).select().then(({data,error})=>{
+    if(error) console.error('Save error:',error);
+    else if(data&&data[0]) { logEntry.dbId=data[0].id; saveSessionState(); }
+  });
 }
 
 function renderSessionLog() {
@@ -2559,57 +3429,111 @@ function renderSessionLog() {
     const icon = e.result==='miss'?'✗':e.result==='perfect'?'⭐':'✓';
     const col = e.result==='miss'?'#e2001a':e.result==='perfect'?'#39c3d4':'#2d8a4e';
     const ratings = e.grab ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">[G:${e.grab} T:${e.trick_r} L:${e.land}]</span>` : '';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;">
-      <span style="color:${col};font-weight:800;font-size:15px;min-width:16px;">${icon}</span>
-      <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
-      <span style="flex:1;color:var(--text);">${e.trick||'—'}${ratings}</span>
-      <span style="color:var(--muted);font-size:11px;">${e.time}</span>
-      <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">✏️</button>
-      ${i===0?`<button onclick="undoLastEntry()" title="Undo" style="background:none;border:1px solid #e2001a;border-radius:6px;color:#e2001a;cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">↩</button>`:''}
+    const isEditing = sessEditIdx === i;
+    let editRow = '';
+    if (isEditing) {
+      const r = sessEditRatings;
+      const catBtn = (cat,val,lbl,c) => {
+        const active = r[cat]===val;
+        return `<button onclick="setEditRating('${cat}','${val}')" style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:2px solid ${c};background:${active?c:'transparent'};color:${active?'#060f1a':c};font-family:'Poppins',sans-serif;">${lbl}</button>`;
+      };
+      editRow = `<div style="padding:8px 12px 8px 38px;display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>${catBtn('grab','miss','Miss','#e2001a')}${catBtn('grab','okay','Okay','#2d8a4e')}${catBtn('grab','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Trick</span>${catBtn('trick','miss','Miss','#e2001a')}${catBtn('trick','okay','Okay','#2d8a4e')}${catBtn('trick','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Land</span>${catBtn('land','miss','Miss','#e2001a')}${catBtn('land','okay','Okay','#2d8a4e')}${catBtn('land','perfect','Perfect','#39c3d4')}</div>
+        <input type="text" id="sess-edit-comment" value="${(e.comment||'').replace(/"/g,'&quot;')}" placeholder="Comment (optional)" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+        <div style="display:flex;gap:8px;margin-top:2px;"><button onclick="saveFsLogEdit(${i})" style="padding:6px 16px;border-radius:8px;background:#39c3d4;border:none;color:#060f1a;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;">Save</button><button onclick="cancelFsEdit()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button></div>
+      </div>`;
+    }
+    return `<div style="border-radius:8px;${isEditing?'background:rgba(57,195,212,0.08);border:1px solid #39c3d433;':''}">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;${isEditing?'':'background:var(--surface2);border-radius:8px;'}font-size:12px;">
+        <span style="color:${col};font-weight:800;font-size:15px;min-width:16px;">${icon}</span>
+        <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
+        <span style="flex:1;color:var(--text);">${e.trick||'—'}${ratings}${e.comment?` <span style="color:var(--muted);font-size:10px;">— ${e.comment}</span>`:''}</span>
+        <span style="color:var(--muted);font-size:11px;">${e.time}</span>
+        <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">✏️</button>
+        <button onclick="deleteLogEntry(${i})" style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;flex-shrink:0;">🗑</button>
+      </div>
+      ${editRow}
     </div>`;
   }).join('');
 }
 
-async function undoLastEntry() {
-  if (!sessLog.length) return;
-  const e = sessLog[0];
-  if (e.dbId) {
-    await db.from('tricks').delete().eq('id', e.dbId);
-  }
-  // Revert stats
-  if (sessAthleteData[e.name]) {
-    sessAthleteData[e.name].stats.attempts = Math.max(0, sessAthleteData[e.name].stats.attempts - 1);
-    if (e.result==='landed'||e.result==='perfect') sessAthleteData[e.name].stats.landed = Math.max(0, sessAthleteData[e.name].stats.landed - 1);
-    if (e.result==='perfect') sessAthleteData[e.name].stats.perfect = Math.max(0, sessAthleteData[e.name].stats.perfect - 1);
-  }
-  sessLog.shift();
-  showToast('Last entry removed', 'success');
-  renderSessionLog();
-  renderLiveSession();
-}
-
-function editLogEntry(idx) {
+async function deleteLogEntry(idx) {
   const e = sessLog[idx];
   if (!e) return;
-  // Switch to that athlete and pre-fill ratings
-  sessActiveAthlete = e.name;
-  if (!sessRatings[e.name]) sessRatings[e.name] = {grab:null,trick:null,land:null};
-  if (e.grab) {
-    sessRatings[e.name].grab = e.grab;
-    sessRatings[e.name].trick = e.trick_r;
-    sessRatings[e.name].land = e.land;
-  }
-  // Remove this log entry (will be re-added when re-rated)
-  if (e.dbId) db.from('tricks').delete().eq('id', e.dbId).then(()=>{});
+  if (e.dbId) await db.from('tricks').delete().eq('id', e.dbId);
   if (sessAthleteData[e.name]) {
     sessAthleteData[e.name].stats.attempts = Math.max(0, sessAthleteData[e.name].stats.attempts - 1);
     if (e.result==='landed'||e.result==='perfect') sessAthleteData[e.name].stats.landed = Math.max(0, sessAthleteData[e.name].stats.landed - 1);
     if (e.result==='perfect') sessAthleteData[e.name].stats.perfect = Math.max(0, sessAthleteData[e.name].stats.perfect - 1);
   }
   sessLog.splice(idx, 1);
-  showToast('Edit mode — re-rate the attempt', 'success');
+  sessEditIdx = -1;
+  showToast('Entry removed', 'success');
+  renderSessionLog();
+  renderLiveSession();
+  saveSessionState();
+}
+
+let sessEditIdx = -1;
+let sessEditRatings = {grab:null,trick:null,land:null};
+
+function editLogEntry(idx) {
+  if (sessEditIdx === idx) { sessEditIdx = -1; renderSessionLog(); return; }
+  const e = sessLog[idx];
+  if (!e) return;
+  sessEditIdx = idx;
+  sessEditRatings = {grab: e.grab||null, trick: e.trick_r||null, land: e.land||null};
+  renderSessionLog();
+}
+
+function setEditRating(cat, val) {
+  sessEditRatings[cat] = val;
+  renderSessionLog();
+}
+
+function cancelFsEdit() {
+  sessEditIdx = -1;
+  renderSessionLog();
+}
+
+async function saveFsLogEdit(idx) {
+  const e = sessLog[idx];
+  if (!e) return;
+  const r = sessEditRatings;
+  if (!r.grab || !r.trick || !r.land) { showToast('Please rate all 3 categories', 'error'); return; }
+  const oldResult = e.result;
+  const score = {miss:1,okay:2,perfect:3};
+  const avg = (score[r.grab]+score[r.trick]+score[r.land])/3;
+  const newResult = avg>=2.7?'perfect':avg>=1.7?'landed':'miss';
+  const d = sessAthleteData[e.name];
+  if (d) {
+    if (oldResult==='landed'||oldResult==='perfect') d.stats.landed--;
+    if (oldResult==='perfect') d.stats.perfect--;
+    if (newResult==='landed'||newResult==='perfect') d.stats.landed++;
+    if (newResult==='perfect') d.stats.perfect++;
+  }
+  const commentEl = document.getElementById('sess-edit-comment');
+  const newComment = commentEl ? commentEl.value.trim() : (e.comment||'');
+  e.result = newResult;
+  e.grab = r.grab; e.trick_r = r.trick; e.land = r.land;
+  e.comment = newComment;
+  if (e.dbId) {
+    const gesamt = r.land==='miss'?3:avg>=2.7?10:7;
+    const kommentarParts = [`Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`];
+    if (newComment) kommentarParts.push(newComment);
+    await db.from('tricks').update({
+      gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
+      gelandet:r.land!=='miss'?'Yes':'No',
+      kommentar: kommentarParts.join(' | ')
+    }).eq('id', e.dbId);
+  }
+  sessEditIdx = -1;
   renderLiveSession();
   renderSessionLog();
+  saveSessionState();
+  showToast('Rating updated', 'success');
 }
 
 function clearSessionSelection() {
@@ -2640,6 +3564,7 @@ function resumeSession() {
 function resetSession() {
   sessSelectedAthletes=[]; sessAthleteData={}; sessActiveTricks={}; sessLog=[]; sessRatings && Object.keys(sessRatings).forEach(k=>delete sessRatings[k]);
   sessActiveAthlete = null;
+  clearSessionStorage();
   const bar = document.getElementById('sess-resume-bar');
   if (bar) bar.style.display = 'none';
   document.getElementById('sess-setup').style.display='block';
@@ -2647,11 +3572,234 @@ function resetSession() {
   initSessionSetup();
 }
 
-function endSession() {
-  const total=sessLog.length;
-  const landed=sessLog.filter(e=>e.result!=='miss').length;
-  showToast(`Session done! ${total} attempts, ${landed} landed.`,'success');
+async function cancelSession() {
+  const confirmed = confirm(
+    'Are you sure you want to cancel this session?\n\n' +
+    'All recorded attempts will be permanently deleted and cannot be recovered.'
+  );
+  if (!confirmed) return;
+  const ids = sessLog.filter(e => e.dbId).map(e => e.dbId);
+  if (ids.length > 0) await db.from('tricks').delete().in('id', ids);
+  sessLog = [];
   resetSession();
+  showToast('Session cancelled — all data deleted', 'error');
+}
+
+function endSession() {
+  const rawMin = Math.round((Date.now() - sessStartTime) / 1000 / 60 / 30) * 30;
+  const duration = Math.max(30, rawMin);
+  // Show post-session report modal
+  let existingModal = document.getElementById('sess-report-modal');
+  if (existingModal) existingModal.remove();
+  const modal = document.createElement('div');
+  modal.id = 'sess-report-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:28px;max-width:480px;width:100%;">
+    <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;color:#39c3d4;margin-bottom:4px;">Session Complete</div>
+    <div style="font-size:13px;color:#6b8299;margin-bottom:20px;">${sessLog.length} attempts logged · ${duration} min</div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Location</label>
+        <input id="sr-location" type="text" placeholder="e.g. Laax" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Conditions</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="sr-cond-btns">
+          ${[['1','Poor'],['2','Below Avg'],['3','Average'],['4','Good'],['5','Excellent']].map(([v,l])=>`<button onclick="setSrCondition(${v},this)" data-val="${v}" style="padding:7px 12px;border-radius:8px;border:2px solid #1a3450;background:#112236;color:#6b8299;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">${v} — ${l}</button>`).join('')}
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Comments</label>
+        <textarea id="sr-comments" placeholder="Coach notes, observations…" rows="2" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;resize:vertical;"></textarea>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Athlete Notes</label>
+        ${sessSelectedAthletes.map(n => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
+          <input type="text" id="sr-ath-${n.replace(/\\s/g,'_')}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;">
+        </div>`).join('')}
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
+      
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+let _srCondition = 0;
+function setSrCondition(val, btn) {
+  _srCondition = val;
+  document.querySelectorAll('#sr-cond-btns button').forEach(b => {
+    const active = b === btn;
+    b.style.borderColor = active ? '#39c3d4' : '#1a3450';
+    b.style.color = active ? '#39c3d4' : '#6b8299';
+    b.style.background = active ? 'rgba(57,195,212,0.15)' : '#112236';
+  });
+}
+
+async function submitSessionReport(duration) {
+  const location = (document.getElementById('sr-location')?.value||'').trim();
+  const comments = (document.getElementById('sr-comments')?.value||'').trim();
+  const conditions = _srCondition || null;
+  const athleteNotes = {};
+  sessSelectedAthletes.forEach(n => {
+    const v = (document.getElementById('sr-ath-'+n.replace(/\s/g,'_'))?.value||'').trim();
+    if (v) athleteNotes[shortName(n)] = v;
+  });
+  document.getElementById('sess-report-modal')?.remove();
+  await saveSessionReport(duration, location, conditions, comments, athleteNotes);
+}
+
+async function saveSessionReport(duration, location, conditions, comments, athleteNotes) {
+  // Build trick_data from sessLog
+  const athleteMap = {};
+  sessLog.forEach(e => {
+    if (!athleteMap[e.name]) athleteMap[e.name] = {};
+    const trick = e.trick || '—';
+    if (!athleteMap[e.name][trick]) athleteMap[e.name][trick] = {att:0,land:0,perf:0};
+    athleteMap[e.name][trick].att++;
+    if (e.result !== 'miss') athleteMap[e.name][trick].land++;
+    if (e.result === 'perfect') athleteMap[e.name][trick].perf++;
+  });
+  const trickData = Object.entries(athleteMap).map(([name, tricks]) => {
+    const trickList = Object.entries(tricks).map(([trick, s]) => ({trick, att:s.att, land:s.land, perf:s.perf}));
+    const totalAtt = trickList.reduce((a,t)=>a+t.att,0);
+    const totalLand = trickList.reduce((a,t)=>a+t.land,0);
+    const note = (athleteNotes||{})[shortName(name)] || '';
+    return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList, note};
+  });
+
+  const {error} = await db.from('session_reports').insert({
+    datum: new Date().toISOString().split('T')[0],
+    session_type: sessType,
+    app: 'freeski',
+    athletes: sessSelectedAthletes,
+    duration_min: duration,
+    location,
+    conditions,
+    comments,
+    trick_data: trickData
+  });
+
+  if (error) { showToast('Error saving report: ' + error.message, 'error'); }
+  else {
+    showToast('Session report saved', 'success');
+    const savedAthletes = [...sessSelectedAthletes];
+    const savedSessLog = [...sessLog];
+    resetSession();
+    // Offer to view report
+    setTimeout(async () => {
+      const {data} = await db.from('session_reports').select('*').eq('app','freeski').order('created_at',{ascending:false}).limit(1);
+      if (data && data[0]) {
+        const toastEl = document.getElementById('toast');
+        if (toastEl) {
+          toastEl.innerHTML = `Session report saved. <a href="#" onclick="event.preventDefault();openReportPrint(window._lastReport)" style="color:#fff;text-decoration:underline;">View</a>`;
+          window._lastReport = data[0];
+        }
+      }
+    }, 500);
+  }
+}
+
+async function loadLastSessionReport() {
+  const {data} = await db.from('session_reports').select('*').eq('app','freeski').order('created_at',{ascending:false}).limit(1);
+  if (data && data[0]) openReportPrint(data[0]);
+}
+
+function openReportPrint(report) {
+  const d = report;
+  const dateStr = d.datum ? (() => { const p=d.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+  const durH = d.duration_min ? (d.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
+  const condLabel = d.conditions ? ['','Poor','Below Average','Average','Good','Excellent'][d.conditions]||d.conditions+'/5' : '—';
+  const condDots = d.conditions ? ('● '.repeat(d.conditions) + '○ '.repeat(5-d.conditions)).trim() : '—';
+  const typeShort = {'Landing Bag':'Landing Bag','Jump On-Snow':'Jump On-Snow','Big Air Competition':'Big Air Competition'}[d.session_type]||d.session_type||'—';
+  const athletes = Array.isArray(d.athletes) ? d.athletes.join(', ') : (d.athletes||'');
+  const tricks = Array.isArray(d.trick_data) ? d.trick_data : [];
+
+  const athleteSections = tricks.map(a => {
+    const pct = a.totalAtt ? Math.round(a.totalLand/a.totalAtt*100) : 0;
+    const rows = (a.tricks||[]).map(t => {
+      const lp = t.att ? Math.round(t.land/t.att*100) : 0;
+      return `<tr><td>${t.trick}</td><td>${t.att}</td><td>${t.land}</td><td>${lp}%</td><td>${t.perf||0}</td></tr>`;
+    }).join('');
+    const noteHtml = a.note ? `<div style="padding:8px 12px;font-size:12px;color:#555;background:#fffbeb;border-top:1px solid #e0e0e0;"><strong>Note:</strong> ${a.note}</div>` : '';
+    return `<div class="athlete-block">
+      <div class="athlete-name">${a.athlet}</div>
+      <div class="athlete-summary">${a.totalAtt} attempts &nbsp;|&nbsp; ${a.totalLand} landed &nbsp;|&nbsp; ${pct}%</div>
+      <table><thead><tr><th>Trick</th><th>Att.</th><th>Landed</th><th>Rate</th><th>Perfect</th></tr></thead><tbody>${rows}</tbody></table>
+      ${noteHtml}
+    </div>`;
+  }).join('');
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>Session Report — ${dateStr}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1a1a;background:#fff;padding:32px 40px;max-width:860px;margin:0 auto;font-size:13px;line-height:1.5;}
+  .print-btn{margin-bottom:28px;}
+  .print-btn button{padding:9px 22px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:.3px;}
+  header{border-bottom:2px solid #1a1a1a;padding-bottom:16px;margin-bottom:20px;}
+  header h1{font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;}
+  .meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 16px;}
+  .meta-item label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#777;margin-bottom:2px;}
+  .meta-item span{font-size:14px;font-weight:600;}
+  .section-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#777;margin:20px 0 8px;border-top:1px solid #e0e0e0;padding-top:12px;}
+  .comments{background:#f6f6f6;border-left:3px solid #1a1a1a;padding:10px 14px;font-size:13px;color:#333;margin-bottom:16px;}
+  .athlete-block{margin-bottom:20px;border:1px solid #e0e0e0;border-radius:4px;overflow:hidden;}
+  .athlete-name{background:#1a1a1a;color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;}
+  .athlete-summary{padding:6px 12px;font-size:12px;color:#555;background:#f9f9f9;border-bottom:1px solid #e0e0e0;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:#f0f0f0;padding:7px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#555;}
+  td{padding:7px 12px;border-top:1px solid #eee;font-size:12px;color:#222;}
+  tr:hover td{background:#fafafa;}
+  footer{margin-top:32px;border-top:1px solid #ddd;padding-top:12px;font-size:11px;color:#aaa;display:flex;justify-content:space-between;}
+  @media print{.print-btn{display:none;} body{padding:20px;}}
+</style></head><body>
+  <div class="print-btn"><button onclick="window.print()">Print / Save as PDF</button></div>
+  <header>
+    <h1>Session Report</h1>
+    <div class="meta-grid">
+      <div class="meta-item"><label>Date</label><span>${dateStr}</span></div>
+      <div class="meta-item"><label>Session Type</label><span>${typeShort}</span></div>
+      <div class="meta-item"><label>Duration</label><span>${durH}</span></div>
+      <div class="meta-item"><label>Location</label><span>${d.location||'—'}</span></div>
+      <div class="meta-item"><label>Conditions</label><span>${condDots} &nbsp; ${condLabel}</span></div>
+      <div class="meta-item"><label>Athletes</label><span>${athletes}</span></div>
+    </div>
+  </header>
+  ${d.comments ? `<div class="section-label">Coach Comments</div><div class="comments">${d.comments.replace(/\n/g,'<br>')}</div>` : ''}
+  <div class="section-label">Trick Performance by Athlete</div>
+  ${athleteSections || '<div style="color:#888;padding:12px 0;">No trick data recorded.</div>'}
+  <footer>
+    <span>Swiss-Ski Trick Analytics</span>
+    <span>Generated ${new Date().toLocaleDateString('en-GB')}</span>
+  </footer>
+</body></html>`);
+  win.document.close();
+}
+
+async function viewSessionReportByDate(date) {
+  const {data, error} = await db.from('session_reports').select('*').eq('datum', date).eq('app','freeski');
+  if (error || !data || data.length === 0) { showToast('No session report found for this date', 'error'); return; }
+  if (data.length === 1) { openReportPrint(data[0]); return; }
+  // Multiple reports: show picker
+  let existingModal = document.getElementById('sr-pick-modal');
+  if (existingModal) existingModal.remove();
+  const modal = document.createElement('div');
+  modal.id = 'sr-pick-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:24px;max-width:400px;width:100%;">
+    <div style="font-size:16px;font-weight:700;color:#39c3d4;margin-bottom:16px;">Multiple reports for ${date}</div>
+    ${data.map((r,i)=>`<button onclick="document.getElementById('sr-pick-modal').remove();openReportPrint(window._srPickData[${i}])" style="display:block;width:100%;text-align:left;padding:10px 14px;margin-bottom:8px;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;">
+      ${({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Competition'}[r.session_type]||r.session_type||'—')} · ${(r.athletes||[]).map(a=>a.split(' ')[0]).join(', ')} · ${r.duration_min}min
+    </button>`).join('')}
+    <button onclick="document.getElementById('sr-pick-modal').remove()" style="padding:8px 16px;background:none;border:1px solid #1a3450;border-radius:8px;color:#6b8299;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;margin-top:4px;">Cancel</button>
+  </div>`;
+  window._srPickData = data;
+  document.body.appendChild(modal);
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -2724,20 +3872,32 @@ async function loadStandort() {
 function renderSbDirRadar() {
   const wrap = document.getElementById('sb-dir-radar-wrap');
   if (!wrap) return;
+
   const mastered = sbData.filter(e => e.status === 'mastered');
-  if (!mastered.length) { wrap.style.display = 'none'; return; }
+  const goals    = sbData.filter(e => e.status === 'goal');
+  if (!mastered.length && !goals.length) { wrap.style.display = 'none'; return; }
   wrap.style.display = 'block';
 
   const DIRS = ['Left','Right','Switch Left','Switch Right'];
-  const DIR_COLORS = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
-  const counts = {}; DIRS.forEach(d => counts[d] = 0);
-  mastered.forEach(e => {
-    const raw = (e.drehrichtung||'').trim();
-    const d = (raw==='Left'||raw==='Forward Left')?'Left':(raw==='Right'||raw==='Forward Right')?'Right':raw==='Switch Left'?'Switch Left':raw==='Switch Right'?'Switch Right':null;
-    if (d) counts[d]++;
-  });
-  const total = DIRS.reduce((s,d) => s+counts[d], 0) || 1;
-  const vals = DIRS.map(d => counts[d]/total);
+  const getDir = raw => {
+    raw = (raw||'').trim();
+    if(raw==='Left'||raw==='Forward Left') return 'Left';
+    if(raw==='Right'||raw==='Forward Right') return 'Right';
+    if(raw==='Switch Left') return 'Switch Left';
+    if(raw==='Switch Right') return 'Switch Right';
+    return null;
+  };
+
+  const mastC = {}; DIRS.forEach(d => mastC[d] = 0);
+  mastered.forEach(e => { const d=getDir(e.drehrichtung); if(d) mastC[d]++; });
+
+  const goalC = {}; DIRS.forEach(d => goalC[d] = 0);
+  goals.forEach(e => { const d=getDir(e.drehrichtung); if(d) goalC[d]++; });
+
+  const mastTotal = DIRS.reduce((s,d)=>s+mastC[d],0) || 1;
+  const goalTotal = DIRS.reduce((s,d)=>s+goalC[d],0) || 1;
+  const mastVals  = DIRS.map(d => mastC[d]/mastTotal);
+  const goalVals  = DIRS.map(d => goalC[d]/goalTotal);
 
   let canvas = document.getElementById('sb-dir-radar');
   if (!canvas) {
@@ -2748,42 +3908,135 @@ function renderSbDirRadar() {
   }
   const dpr = window.devicePixelRatio || 1;
   const size = Math.min(wrap.querySelector('.card')?.offsetWidth-16 || 420, 420);
-  canvas.style.width = size + 'px'; canvas.style.height = size + 'px';
-  canvas.width = size * dpr; canvas.height = size * dpr;
+  canvas.style.width = size+'px'; canvas.style.height = size+'px';
+  canvas.width = size*dpr; canvas.height = size*dpr;
   const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  const W=size, H=size, cx=W/2, cy=H/2, r=Math.min(W,H)/2-90;
+  ctx.scale(dpr,dpr);
+  const W=size,H=size,cx=W/2,cy=H/2,r=Math.min(W,H)/2-90;
   ctx.clearRect(0,0,W,H);
-  const angles = DIRS.map((_,i) => i*2*Math.PI/4 - Math.PI/4);
+  const angles = DIRS.map((_,i)=>i*2*Math.PI/4 - 3*Math.PI/4);
 
-  [0.25,0.5,0.75,1].forEach(f => {
-    ctx.beginPath();
-    angles.forEach((a,i)=>{ const x=cx+Math.cos(a)*r*f, y=cy+Math.sin(a)*r*f; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
-    ctx.closePath(); ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.stroke();
-    ctx.fillStyle='rgba(10,12,15,0.25)'; ctx.fill();
-  });
-  angles.forEach(a=>{ ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r); ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.stroke(); });
-
+  // Grid — outer fill first, then rings
   ctx.beginPath();
-  angles.forEach((a,i)=>{ const x=cx+Math.cos(a)*r*vals[i], y=cy+Math.sin(a)*r*vals[i]; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
-  ctx.closePath(); ctx.fillStyle='rgba(245,158,11,0.18)'; ctx.fill();
-  ctx.strokeStyle='#f59e0b'; ctx.lineWidth=2.5; ctx.stroke();
+  angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.closePath();ctx.fillStyle='rgba(57,195,212,0.07)';ctx.fill();
 
+  [0.25,0.5,0.75,1].forEach(f=>{
+    ctx.beginPath();
+    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*f,y=cy+Math.sin(a)*r*f;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();
+  });
+  angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();});
+
+  // Goals polygon (orange dashed)
+  if(goals.length){
+    ctx.setLineDash([7,4]);
+    ctx.strokeStyle='#f59e0b'; ctx.lineWidth=1.5;
+    ctx.beginPath();
+    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*goalVals[i],y=cy+Math.sin(a)*r*goalVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath(); ctx.fillStyle='rgba(245,158,11,0.35)'; ctx.fill(); ctx.stroke();
+    ctx.setLineDash([]);
+    // Dots at vertices
+    angles.forEach((a,i)=>{
+      const x=cx+Math.cos(a)*r*goalVals[i], y=cy+Math.sin(a)*r*goalVals[i];
+      ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI);
+      ctx.fillStyle='#f59e0b'; ctx.fill();
+      ctx.strokeStyle='#0b1929'; ctx.lineWidth=1.5; ctx.stroke();
+    });
+  }
+
+  // Mastered polygon (green solid)
+  if(mastered.length){
+    ctx.setLineDash([]);
+    ctx.strokeStyle='#2d8a4e'; ctx.lineWidth=1.5;
+    ctx.beginPath();
+    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*mastVals[i],y=cy+Math.sin(a)*r*mastVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath(); ctx.fillStyle='rgba(45,138,78,0.45)'; ctx.fill(); ctx.stroke();
+    // Dots at vertices
+    angles.forEach((a,i)=>{
+      const x=cx+Math.cos(a)*r*mastVals[i], y=cy+Math.sin(a)*r*mastVals[i];
+      ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI);
+      ctx.fillStyle='#2d8a4e'; ctx.fill();
+      ctx.strokeStyle='#0b1929'; ctx.lineWidth=1.5; ctx.stroke();
+    });
+  }
+
+  // Labels per axis
   angles.forEach((a,i)=>{
-    const vx=cx+Math.cos(a)*r*vals[i], vy=cy+Math.sin(a)*r*vals[i];
-    ctx.beginPath(); ctx.arc(vx,vy,5,0,2*Math.PI); ctx.fillStyle=DIR_COLORS[DIRS[i]]; ctx.fill();
-    const lx=cx+Math.cos(a)*(r+50), ly=cy+Math.sin(a)*(r+50);
+    const lx=cx+Math.cos(a)*(r+52), ly=cy+Math.sin(a)*(r+52);
     const align=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center';
     ctx.textAlign=align; ctx.textBaseline='middle';
     ctx.font='bold 12px Poppins,sans-serif'; ctx.fillStyle='#e8edf2';
-    ctx.fillText(DIRS[i], lx, ly-11);
-    ctx.font='bold 15px Poppins,sans-serif'; ctx.fillStyle=DIR_COLORS[DIRS[i]];
-    ctx.fillText(counts[DIRS[i]]+' tricks', lx, ly+5);
-    ctx.font='11px Poppins,sans-serif'; ctx.fillStyle='rgba(255,255,255,0.45)';
-    ctx.fillText(Math.round(vals[i]*100)+'%', lx, ly+20);
+    ctx.fillText(DIRS[i], lx, ly-14);
+    ctx.font='bold 13px Poppins,sans-serif'; ctx.fillStyle='#2d8a4e';
+    ctx.fillText('✓ '+mastC[DIRS[i]], lx, ly+2);
+    ctx.font='bold 13px Poppins,sans-serif'; ctx.fillStyle='#f59e0b';
+    ctx.fillText('◎ '+goalC[DIRS[i]], lx, ly+17);
+  });
+
+  // Legend
+  const legY = H-18;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='#2d8a4e'; ctx.font='bold 11px Poppins,sans-serif';
+  ctx.fillText('— Mastered', cx-52, legY);
+  ctx.fillStyle='#f59e0b';
+  ctx.setLineDash([5,3]);
+  ctx.fillText('- - Goals', cx+52, legY);
+  ctx.setLineDash([]);
+}
+
+
+function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const total = dirs.reduce((s,d)=>s+dirCnt[d].att,0) || 1;
+  const dpr = window.devicePixelRatio || 1;
+  const size = 160;
+  canvas.width = size*dpr; canvas.height = size*dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const cx=size/2, cy=size/2, r=size/2-4;
+  ctx.clearRect(0,0,size,size);
+
+  // Pass 1: fill all slices (no stroke)
+  let startAngle = -Math.PI/2;
+  dirs.forEach(d=>{
+    const slice = dirCnt[d].att/total * 2*Math.PI;
+    if(slice===0) return;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,startAngle,startAngle+slice);
+    ctx.closePath();
+    ctx.fillStyle=dirColors[d]; ctx.fill();
+    startAngle += slice;
+  });
+  // Pass 2: thin separator lines only (avoids thick radial corners)
+  startAngle = -Math.PI/2;
+  dirs.forEach(d=>{
+    const slice = dirCnt[d].att/total * 2*Math.PI;
+    if(slice===0) return;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,startAngle,startAngle+slice);
+    ctx.closePath();
+    ctx.strokeStyle='rgba(11,25,41,0.6)'; ctx.lineWidth=1; ctx.stroke();
+    startAngle += slice;
   });
 }
 
+function sessionDirLegendHtml(dirCnt, dirs, dirColors, total) {
+  return dirs.filter(d=>dirCnt[d].att>0).map(d=>{
+    const pct = total ? Math.round(dirCnt[d].att/total*100) : 0;
+    return `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div style="width:12px;height:12px;border-radius:3px;background:${dirColors[d]};flex-shrink:0;"></div>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);">${d} <span style="font-weight:800;color:${dirColors[d]};">${pct}%</span></div>
+        <div style="font-size:11px;color:var(--muted);">${dirCnt[d].tricks} trick${dirCnt[d].tricks!==1?'s':''} &middot; ${dirCnt[d].att} att.</div>
+      </div>
+    </div>`;
+  }).join('');
+}
 
 function renderStandort() {
   // Stats
@@ -2844,6 +4097,11 @@ function renderStandort() {
     </div>`;
   }
 
+  function extractRotFS(label) {
+    const m = (label||'').match(/\b(180|270|360|450|540|630|720|810|900|1080|1260|1440)\b/);
+    return m ? parseInt(m[1]) : 0;
+  }
+
   function renderList(items, emptyMsg) {
     if (!items.length) return `<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center;">${emptyMsg}</div>`;
     // Group by direction
@@ -2852,6 +4110,10 @@ function renderStandort() {
       const dir = normDir4(e.drehrichtung) || 'Other';
       if (!groups[dir]) groups[dir] = [];
       groups[dir].push(e);
+    });
+    // Sort each group: highest rotation first
+    Object.keys(groups).forEach(dir => {
+      groups[dir].sort((a,b) => extractRotFS(b.trick_label) - extractRotFS(a.trick_label));
     });
     const orderedKeys = [...DIR_ORDER.filter(d => groups[d]), ...(groups['Other'] ? ['Other'] : [])];
     return orderedKeys.map(dir => {
@@ -2937,6 +4199,13 @@ async function sbSave(status) {
   sbData = [data[0], ...sbData];
   renderStandort();
   toggleSbForm();
+
+  if (sessSelectedAthletes.includes(sbAthlet) && sessAthleteData[sbAthlet]) {
+    const {data:tricks} = await db.from('standort').select('trick_label,disziplin,status')
+      .eq('athlet', sbAthlet).or('status.eq.mastered,status.eq.goal').order('trick_label');
+    if (tricks) sessAthleteData[sbAthlet].tricks = tricks;
+    saveSessionState();
+  }
 }
 
 async function deleteSbEntry(id) {
@@ -3032,7 +4301,7 @@ async function loadEntwicklung() {
   main.innerHTML = `
     <div style="display:flex;gap:16px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);">
-        <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#3b82f6;"></span> Training (${tricks.length})
+        ${tricks.length} session logs
       </div>
     </div>
     <div class="chart-grid single">
@@ -3042,7 +4311,6 @@ async function loadEntwicklung() {
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
             <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
             <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
-            <button id="ev-mode-overall" onclick="setStatsMode('overall')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Overall Progress</button>
           </div>
           <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
             <option value="">— Trick auswählen —</option>
@@ -3053,7 +4321,37 @@ async function loadEntwicklung() {
         </div>
         <div id="ev-trick-analytics"></div>
       </div>
-    </div>`;
+    </div>
+    <div id="ev-raw-wrap" style="margin-top:16px;"></div>`;
+
+  // inject type filter row (not in static HTML, only in dynamic)
+  (() => {
+    const modeDiv = document.querySelector('#ev-mode-trick')?.parentElement;
+    if (!modeDiv || document.getElementById('ev-type-filter')) return;
+    const fRow = document.createElement('div');
+    fRow.id = 'ev-type-filter';
+    fRow.style.cssText = 'display:none;gap:6px;flex-wrap:wrap;margin-bottom:10px;';
+    fRow.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:11px;color:var(--muted);">Filter:</span>
+          <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
+          <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
+          <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
+          <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:var(--muted);white-space:nowrap;">Period:</span>
+          <input type="text" id="ev-date-from" oninput="setDateRange()" placeholder="TT.MM.JJ"
+            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
+          <span style="font-size:11px;color:var(--muted);">→</span>
+          <input type="text" id="ev-date-to" oninput="setDateRange()" placeholder="TT.MM.JJ"
+            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
+          <button onclick="clearDateRange()" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
+        </div>
+      </div>`;
+    modeDiv.after(fRow);
+  })();
 
   // ── Normalise standort entries to same shape as tricks
   // standort has: drehrichtung, rotation, achse, grab, flips, disziplin, status
@@ -3284,6 +4582,7 @@ async function loadEntwicklung() {
 
   // ── 9. Trick Analytics ───────────────────────────────────────────────
   initTrickAnalytics(tricks);
+  renderRawEntries(tricks, 'all entries');
 
   // ── 9b. Trick + Grab Session Stats ───────────────────────────────────
   const statsEl = document.getElementById('ev-trick-stats');
@@ -3350,6 +4649,35 @@ async function loadEntwicklung() {
 
 // ── TRICK ANALYTICS ──────────────────────────────────────────────────
 let _taData = [];
+let _taTypeFilter = ''; // '', 'Landing Bag', 'Jump On-Snow', 'Big Air Competition'
+let _taDateFrom = '';   // YYYY-MM-DD
+let _taDateTo   = '';   // YYYY-MM-DD
+
+function sortFsTricksByDir(tricks) {
+  const dirOrder = {'Left':0,'Right':1,'Switch Left':2,'Switch Right':3};
+  const getDir = lbl => {
+    for (const d of ['Switch Left','Switch Right','Left','Right']) if (lbl.startsWith(d)) return d;
+    return 'Other';
+  };
+  const sorted = tricks.map(t => ({name:t, dir:getDir(t), rot:extractRotFromLabel(t)}))
+    .sort((a,b) => { const da=dirOrder[a.dir]??4, db=dirOrder[b.dir]??4; return da!==db ? da-db : a.rot-b.rot; });
+  let html = '', lastDir = '';
+  sorted.forEach(t => {
+    if (t.dir !== lastDir) {
+      if (lastDir) html += '</optgroup>';
+      html += `<optgroup label="${t.dir}">`;
+      lastDir = t.dir;
+    }
+    html += `<option value="${t.name.replace(/"/g,'&quot;')}">${t.name}</option>`;
+  });
+  if (lastDir) html += '</optgroup>';
+  return html;
+}
+
+function extractRotFromLabel(label) {
+  const m = (label||'').match(/\b(180|270|360|450|540|630|720|810|900|1080|1260|1440|1620|1800|1980|2160)\b/);
+  return m ? parseInt(m[1]) : 0;
+}
 
 function initTrickAnalytics(tricks) {
   _taData = tricks.filter(t => t.trickaufbau);
@@ -3357,10 +4685,10 @@ function initTrickAnalytics(tricks) {
   const dateSel = document.getElementById('ev-date-sel');
   if (!sel) return;
 
-  // Populate trick filter
-  const unique = [...new Set(_taData.map(t => t.trickaufbau))].sort();
-  sel.innerHTML = '<option value="">— All Tricks —</option>' +
-    unique.map(t => `<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
+  // Populate trick filter sorted by direction + rotation
+  const unique = [...new Set(_taData.map(t => t.trickaufbau))];
+  sel.innerHTML = '<option value="">— Select a trick —</option><option value="__ALL__">── All Tricks ──</option>' +
+    sortFsTricksByDir(unique);
 
   // Build session list: group by date, detect multiple sessions per day by time gaps
   if (dateSel) {
@@ -3585,8 +4913,8 @@ function renderSessionSummary(data, sessionLabel) {
     const hasComp = s.grab.length > 0;
     const gAvg=avg(s.grab), tAvg=avg(s.trick), lAvg=avg(s.land_r);
     const landPct = s.att ? Math.round(s.land/s.att*100) : 0;
-    // Overall quality score = average of the three component averages (where available)
-    const qualVals = [gAvg, tAvg, lAvg].filter(v => v !== null);
+    // Execution quality = Grab + Trick only (Landing captured separately as landing rate)
+    const qualVals = [gAvg, tAvg].filter(v => v !== null); // Grab+Trick only
     const qualAvg = qualVals.length ? Math.round(qualVals.reduce((a,b)=>a+b,0)/qualVals.length) : null;
 
     const compBars = hasComp ? `
@@ -3607,7 +4935,7 @@ function renderSessionSummary(data, sessionLabel) {
         <div style="text-align:right;flex-shrink:0;">
           <div style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${s.land} / ${s.att}</div>
           <div style="font-size:10px;color:var(--muted);">landed</div>
-          ${qualAvg!==null?`<div style="font-size:11px;font-weight:700;color:#39c3d4;margin-top:4px;">${qualAvg}% quality</div>`:''}
+          ${qualAvg!==null?`<div style="font-size:11px;font-weight:700;color:#39c3d4;margin-top:4px;">${qualAvg}% exec. quality</div>`:''}
         </div>
       </div>
       ${compBars}
@@ -3618,22 +4946,137 @@ function renderSessionSummary(data, sessionLabel) {
 }
 
 
+function renderRawEntries(entries, subtitle) {
+  const wrap = document.getElementById('ev-raw-wrap');
+  if (!wrap) return;
+  const wasOpen = document.getElementById('ev-raw-list')?.style.display !== 'none';
+  const sorted = [...entries].sort((a,b)=>(b.datum||'').localeCompare(a.datum||'') || (b.id||0)-(a.id||0));
+
+  const fmtDate = d => { if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
+  const fmtKom  = k => { if(!k) return ''; return k.replace(/Grab:/,'G:').replace(/Trick:/,' T:').replace(/Landing:/,' L:'); };
+  const typShort = t => t==='Landing Bag'?'Bag':t==='Jump On-Snow'?'On-Snow':t==='Big Air Competition'?'Comp':t||'—';
+  const open = wasOpen;
+
+  wrap.innerHTML = `
+    <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <button onclick="(function(b,c){c.style.display=c.style.display==='none'?'block':'none';b.querySelector('.raw-arrow').textContent=c.style.display==='none'?'▶':'▼';})(this,document.getElementById('ev-raw-list'))"
+        style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border:none;cursor:pointer;font-family:Poppins,sans-serif;color:var(--muted);font-size:12px;font-weight:600;">
+        <span style="display:flex;align-items:center;gap:8px;"><span class="raw-arrow">${open?'▼':'▶'}</span> Raw Entries (${sorted.length})${subtitle?` <span style="font-weight:400;opacity:.7;">— ${subtitle}</span>`:''}</span>
+        <span style="font-size:11px;opacity:.6;">Inspect or delete entries</span>
+      </button>
+      <div id="ev-raw-list" style="display:${open?'block':'none'};max-height:420px;overflow-y:auto;">
+        ${sorted.length ? sorted.map(e=>`
+          <div id="ev-raw-row-${e.id}" style="display:grid;grid-template-columns:60px 48px 1fr 52px 1fr 32px;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--border);font-size:11px;">
+            <span style="color:var(--muted);">${fmtDate(e.datum)}</span>
+            <span style="color:var(--muted);font-size:10px;">${typShort(e.typ)}</span>
+            <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${e.trickaufbau||''}">${e.trickaufbau||'—'}</span>
+            <span style="color:${e.gelandet==='Yes'?'#2d8a4e':'#e2001a'};font-weight:700;">${e.gelandet==='Yes'?'✓ Yes':'✗ No'}</span>
+            <span style="color:var(--muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${fmtKom(e.kommentar)}</span>
+            <button onclick="deleteRawEntry(${e.id})" title="Delete entry"
+              style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;line-height:1;">🗑</button>
+          </div>`).join('')
+        : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">No entries for this selection.</div>'}
+      </div>
+    </div>`;
+}
+
+async function deleteRawEntry(id) {
+  if (!confirm('Delete this entry? This cannot be undone.')) return;
+  const row = document.getElementById('ev-raw-row-'+id);
+  if (row) row.style.opacity = '0.4';
+  const { error } = await db.from('tricks').delete().eq('id', id);
+  if (error) { alert('Error: '+error.message); if(row) row.style.opacity='1'; return; }
+  // Remove from _taData and update counters
+  _taData = _taData.filter(t => t.id !== id);
+  if (row) row.remove();
+  // Update entry count in header
+  const wrap = document.getElementById('ev-raw-wrap');
+  if (wrap) {
+    const btn = wrap.querySelector('button');
+    const remaining = wrap.querySelectorAll('[id^="ev-raw-row-"]').length;
+    if (btn) btn.querySelector('span').childNodes[1].textContent = ` Raw Entries (${remaining})`;
+  }
+  // Refresh charts
+  renderTrickAnalytics();
+}
+
 function setStatsMode(mode) {
   const trickSel = document.getElementById('ev-trick-sel');
   const dateSel  = document.getElementById('ev-date-sel');
-  const btnO = document.getElementById('ev-mode-overall');
   const btnT = document.getElementById('ev-mode-trick');
   const btnS = document.getElementById('ev-mode-session');
   // Reset all buttons
-  [btnO,btnT,btnS].forEach(b=>{if(b){b.style.background='var(--surface2)';b.style.borderColor='var(--border)';b.style.color='var(--muted)';}});
-  const active = mode==='trick'?btnT:mode==='session'?btnS:btnO;
+  [btnT,btnS].forEach(b=>{if(b){b.style.background='var(--surface2)';b.style.borderColor='var(--border)';b.style.color='var(--muted)';}});
+  const active = mode==='trick'?btnT:btnS;
   if(active){active.style.background='rgba(57,195,212,0.2)';active.style.borderColor='#39c3d4';active.style.color='#39c3d4';}
   // Show/hide dropdowns
   if(trickSel) trickSel.style.display = mode==='trick' ? '' : 'none';
   if(dateSel)  dateSel.style.display  = mode==='session' ? '' : 'none';
+  // Show/hide type filter (not for session mode)
+  const fRow = document.getElementById('ev-type-filter');
+  if(fRow) fRow.style.display = mode==='session' ? 'none' : 'flex';
   // Reset values when switching mode
   if(mode!=='trick'  && trickSel) trickSel.value='';
   if(mode!=='session' && dateSel)  dateSel.value='';
+  renderTrickAnalytics();
+}
+
+function parseDateInput(val) {
+  if (!val) return '';
+  // DD.MM.JJ or DD.MM.JJJJ
+  const m = val.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+  if (m) {
+    const d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0');
+    const y=m[3].length===2?'20'+m[3]:m[3];
+    return `${y}-${mo}-${d}`;
+  }
+  return '';
+}
+
+function setDateRange() {
+  const fromEl = document.getElementById('ev-date-from');
+  const toEl   = document.getElementById('ev-date-to');
+  _taDateFrom = parseDateInput(fromEl?.value);
+  _taDateTo   = parseDateInput(toEl?.value);
+  // Highlight inputs when a valid date was parsed
+  [[fromEl,_taDateFrom],[toEl,_taDateTo]].forEach(([el,parsed])=>{
+    if(!el) return;
+    el.style.borderColor = parsed ? '#39c3d4' : 'var(--border)';
+    el.style.color       = parsed ? '#39c3d4' : 'var(--muted)';
+  });
+  renderTrickAnalytics();
+}
+
+function clearDateRange() {
+  _taDateFrom = ''; _taDateTo = '';
+  const f=document.getElementById('ev-date-from'), t=document.getElementById('ev-date-to');
+  if(f){f.value='';f.style.borderColor='var(--border)';f.style.color='var(--muted)';}
+  if(t){t.value='';t.style.borderColor='var(--border)';t.style.color='var(--muted)';}
+  renderTrickAnalytics();
+}
+
+function setTypeFilter(typ) {
+  _taTypeFilter = typ;
+  // Update button styles
+  const map = {'':'ev-tf-all','Landing Bag':'ev-tf-bag','Jump On-Snow':'ev-tf-jump','Big Air Competition':'ev-tf-comp'};
+  Object.values(map).forEach(id=>{
+    const b=document.getElementById(id); if(!b) return;
+    b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
+  });
+  const active = document.getElementById(map[typ]||'ev-tf-all');
+  if(active){active.style.background='rgba(57,195,212,0.2)';active.style.borderColor='#39c3d4';active.style.color='#39c3d4';}
+  // Repopulate trick dropdown with only tricks available in this filter
+  const sel = document.getElementById('ev-trick-sel');
+  if (sel) {
+    const filtered = typ ? _taData.filter(t=>t.typ===typ) : _taData;
+    const unique = [...new Set(filtered.map(t=>t.trickaufbau))];
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">— Select a trick —</option><option value="__ALL__">── All Tricks ──</option>' +
+      sortFsTricksByDir(unique);
+    // Keep selection if still available, otherwise reset
+    if (unique.includes(prev)) sel.value = prev;
+    else sel.value = '';
+  }
   renderTrickAnalytics();
 }
 
@@ -3646,22 +5089,101 @@ function renderTrickAnalytics() {
   const sel = document.getElementById('ev-trick-sel');
   const dateSel = document.getElementById('ev-date-sel');
   const chosen = sel ? sel.value : '';
+  // Apply session-type + date range filters (only for trick/overall views, not session view)
+  const isSessionMode = dateSel?.style.display !== 'none';
+  const baseData = isSessionMode ? _taData : _taData.filter(t => {
+    if (_taTypeFilter && t.typ !== _taTypeFilter) return false;
+    if (_taDateFrom && t.datum && t.datum < _taDateFrom) return false;
+    if (_taDateTo   && t.datum && t.datum > _taDateTo)   return false;
+    return true;
+  });
   const dateKey = dateSel ? dateSel.value : '';
 
   // Show nothing until selection is made (for trick and session modes)
   const trickVisible = sel && sel.style.display !== 'none';
   const sessionVisible = dateSel && dateSel.style.display !== 'none';
-  if (trickVisible && !chosen) {
+  if (trickVisible && !chosen && chosen !== '__ALL__') {
     el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px;">Select a trick to view its progression.</div>';
+    renderRawEntries(_taData, 'all entries');
     return;
   }
   if (sessionVisible && !dateKey) {
     el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px;">Select a session to view its tricks.</div>';
+    renderRawEntries(_taData, 'all entries');
     return;
   }
 
   function pr(k,d){ const m=(d.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
   const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+
+  // ── ALL TRICKS — one chart per trick, scrollable ──────────────────
+  if (chosen === '__ALL__') {
+    const fsDirOrder = {'Left':0,'Right':1,'Switch Left':2,'Switch Right':3};
+    const getFsDir = lbl => { for (const d of ['Switch Left','Switch Right','Left','Right']) if (lbl.startsWith(d)) return d; return 'Other'; };
+    const allTricks = [...new Set(baseData.map(t=>t.trickaufbau))]
+      .map(t => ({name:t, dir:getFsDir(t), rot:extractRotFromLabel(t)}))
+      .sort((a,b) => { const da=fsDirOrder[a.dir]??4, db=fsDirOrder[b.dir]??4; return da!==db ? da-db : a.rot-b.rot; });
+    if (!allTricks.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No data.</div>'; return; }
+    let html = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${allTricks.length} tricks</div>`;
+    let lastDir = '';
+    const chartIds = [];
+    allTricks.forEach((tObj,ti) => {
+      if (tObj.dir !== lastDir) {
+        html += `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#39c3d4;margin:${lastDir?'20':'4'}px 0 8px;">${tObj.dir}</div>`;
+        lastDir = tObj.dir;
+      }
+      const td = baseData.filter(t=>t.trickaufbau===tObj.name);
+      const byDate = {};
+      td.forEach(t => { if(!t.datum) return; if(!byDate[t.datum]) byDate[t.datum]={att:0,land:0}; byDate[t.datum].att++; if(t.gelandet==='Yes') byDate[t.datum].land++; });
+      const dates = Object.keys(byDate).sort();
+      const totAtt = td.length, totLand = td.filter(t=>t.gelandet==='Yes').length;
+      const landRate = totAtt ? Math.round(totLand/totAtt*100) : 0;
+      const cid = 'ta-all-'+ti+'-'+Date.now();
+      chartIds.push({cid, dates, byDate});
+      html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:13px;font-weight:600;color:var(--text);">${tObj.name}</span>
+          <span style="font-size:16px;font-weight:800;color:${colQ(landRate)};">${totLand}/${totAtt} <span style="font-size:11px;font-weight:400;">(${landRate}%)</span></span>
+        </div>
+        <canvas id="${cid}" style="width:100%;height:100px;"></canvas>
+      </div>`;
+    });
+    el.innerHTML = html;
+    requestAnimationFrame(() => {
+      chartIds.forEach(({cid, dates, byDate}) => {
+        const canvas = document.getElementById(cid); if(!canvas) return;
+        const dpr = window.devicePixelRatio||1;
+        const W = canvas.parentElement.offsetWidth-28, H = 100;
+        canvas.style.width=W+'px'; canvas.style.height=H+'px';
+        canvas.width=W*dpr; canvas.height=H*dpr;
+        const ctx = canvas.getContext('2d'); ctx.scale(dpr,dpr);
+        const pad = {l:32,r:8,t:8,b:22};
+        const n = dates.length;
+        if (!n) return;
+        const pts = dates.map(d=>({d,pct:Math.round(byDate[d].land/byDate[d].att*100),att:byDate[d].att}));
+        const xs = pts.map((_,i) => pad.l+(n===1?(W-pad.l-pad.r)/2:i/(n-1)*(W-pad.l-pad.r)));
+        const toY = v => pad.t+(1-v/100)*(H-pad.t-pad.b);
+        [0,50,100].forEach(pct => {
+          const y=toY(pct); ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;
+          ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+        });
+        const barW = Math.max(4,Math.min(12,(W-pad.l-pad.r)/(n*4)));
+        pts.forEach((p,i) => {
+          const by=toY(p.pct), bh=H-pad.b-by;
+          ctx.fillStyle='#39c3d4cc';ctx.fillRect(xs[i]-barW/2,by,barW,bh);
+        });
+        if (pts.length >= 2) {
+          ctx.beginPath();ctx.strokeStyle='#39c3d455';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+          pts.forEach((p,i)=>{const y=toY(p.pct);i===0?ctx.moveTo(xs[i],y):ctx.lineTo(xs[i],y);});
+          ctx.stroke();ctx.setLineDash([]);
+        }
+        ctx.textAlign='center';ctx.fillStyle='#6b8299';ctx.font='9px Poppins,sans-serif';
+        pts.forEach((p,i)=>ctx.fillText(p.d.split('-')[2]+'.'+p.d.split('-')[1]+'.',xs[i],H-pad.b+12));
+      });
+    });
+    renderRawEntries(baseData, 'all entries');
+    return;
+  }
 
   // ── VIEW 3: Session selected → show tricks in that session ─────────────
   if (dateKey) {
@@ -3690,11 +5212,26 @@ function renderTrickAnalytics() {
     });
     const colQ = v=>v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
 
-    el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">📅 ${label} — ${sd.length} attempts, ${Object.keys(tmap).length} tricks</div>` +
-      Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
+    // Direction distribution for radar
+    const SESS_DIRS = ['Left','Right','Switch Left','Switch Right'];
+    const SESS_DIR_COL = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
+    const dirCnt = {}; SESS_DIRS.forEach(d=>dirCnt[d]={tricks:0,att:0});
+    Object.entries(tmap).forEach(([trick,s])=>{
+      let dir=null;
+      if(trick.includes('Switch Left')) dir='Switch Left';
+      else if(trick.includes('Switch Right')) dir='Switch Right';
+      else if(trick.includes('Left')) dir='Left';
+      else if(trick.includes('Right')) dir='Right';
+      if(dir){dirCnt[dir].tricks++;dirCnt[dir].att+=s.att;}
+    });
+    const radarTotal = SESS_DIRS.reduce((s,d)=>s+dirCnt[d].att,0);
+
+    const cardsHtml = Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
         const hasComp = s.grab.length>0;
         const gA=avg(s.grab),tA=avg(s.trick),lA=avg(s.land_r);
         const landPct=s.att?Math.round(s.land/s.att*100):0;
+        const qualVals=[gA,tA].filter(v=>v!==null); // Grab+Trick only
+        const qualAvg=qualVals.length?Math.round(qualVals.reduce((a,b)=>a+b,0)/qualVals.length):null;
         const bars = hasComp ? [['Grab',gA,'#f59e0b'],['Trick',tA,'#39c3d4'],['Landing',lA,'#2d8a4e']].map(([lbl,val,col])=>
           val!==null?`<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
             <span style="font-size:10px;color:var(--muted);min-width:48px;">${lbl}</span>
@@ -3706,20 +5243,62 @@ function renderTrickAnalytics() {
         ).join('') : '';
         return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-            <span style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}${s.perf>0?` <span style="font-size:11px;color:#39c3d4;font-weight:400;">⭐ ${s.perf}×</span>`:''}</span>
             <div style="text-align:right;flex-shrink:0;">
-              <span style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${landPct}%</span>
-              <span style="font-size:10px;color:var(--muted);display:block;">${s.att}× att.</span>
+              <span style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${s.land} / ${s.att}</span>
+              <span style="font-size:10px;color:var(--muted);display:block;">landed</span>
+              ${qualAvg!==null?`<span style="font-size:11px;font-weight:700;color:#39c3d4;display:block;margin-top:2px;">${qualAvg}% exec. quality</span>`:''}
             </div>
           </div>
           ${bars}
         </div>`;
-      }).join('');
+    }).join('');
+
+    el.innerHTML =
+      `<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">📅 ${label} — ${sd.length} attempts, ${Object.keys(tmap).length} tricks</div>` +
+      cardsHtml +
+      (radarTotal > 0 ? `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:8px;">
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:32px;">
+            <div>${sessionDirLegendHtml(dirCnt,SESS_DIRS,SESS_DIR_COL,radarTotal)}</div>
+            <div style="width:160px;height:160px;flex-shrink:0;min-width:160px;">
+              <canvas id="sess-dir-radar" style="display:block;width:160px;height:160px;"></canvas>
+            </div>
+          </div>
+        </div>` : '');
+
+    if (radarTotal > 0) requestAnimationFrame(() => drawSessionDirRadar('sess-dir-radar', dirCnt, SESS_DIRS, SESS_DIR_COL));
+
+    // Load athlete notes from session report
+    const sessionDate = filterDate;
+    db.from('session_reports').select('trick_data,comments').eq('app','freeski').eq('datum',sessionDate).limit(1).then(({data:reps})=>{
+      if (!reps||!reps[0]) return;
+      const rep = reps[0];
+      const notes = (rep.trick_data||[]).filter(a=>a.note).map(a=>
+        `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:4px;"><span style="font-weight:600;color:#39c3d4;min-width:70px;">${a.athlet}</span><span style="color:var(--text);font-size:12px;">${a.note}</span></div>`
+      ).join('');
+      if (notes || rep.comments) {
+        const notesDiv = document.createElement('div');
+        notesDiv.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:10px;';
+        notesDiv.innerHTML = `<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Coach Notes</div>`
+          + (rep.comments ? `<div style="color:var(--text);font-size:12px;margin-bottom:8px;padding:6px 10px;background:rgba(57,195,212,0.06);border-radius:6px;">${rep.comments}</div>` : '')
+          + notes;
+        el.appendChild(notesDiv);
+      }
+    });
+
+    const reportBtnDiv = document.createElement('div');
+    reportBtnDiv.style.cssText = 'margin-top:12px;text-align:center;';
+    reportBtnDiv.innerHTML = `<button onclick="viewSessionReportByDate('${sessionDate}')" style="padding:10px 22px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">📄 View Session Report</button>`;
+    el.appendChild(reportBtnDiv);
+
+    renderRawEntries(sd, label);
     return;
   }
 
   // ── VIEW 1 & 2: Trend chart (all tricks or specific trick) ─────────────
-  const chartData = chosen ? _taData.filter(t=>t.trickaufbau===chosen) : _taData;
+  const chartData = chosen ? baseData.filter(t=>t.trickaufbau===chosen) : baseData;
   if (!chartData.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No session data yet.</div>'; return; }
 
   // Build per-date stats
@@ -3765,8 +5344,36 @@ function renderTrickAnalytics() {
     <span style="color:#2d8a4e;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span>
   </div>` : '';
 
+  // Direction distribution for overall/trick view
+  const OV_DIRS = ['Left','Right','Switch Left','Switch Right'];
+  const OV_DIR_COL = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
+  const ovDirCnt = {}; OV_DIRS.forEach(d=>ovDirCnt[d]={tricks:new Set(),att:0});
+  chartData.forEach(t=>{
+    const name = t.trickaufbau||'';
+    let dir=null;
+    if(name.includes('Switch Left')) dir='Switch Left';
+    else if(name.includes('Switch Right')) dir='Switch Right';
+    else if(name.includes('Left')) dir='Left';
+    else if(name.includes('Right')) dir='Right';
+    if(dir){ovDirCnt[dir].tricks.add(name);ovDirCnt[dir].att++;}
+  });
+  const ovDirTotal = OV_DIRS.reduce((s,d)=>s+ovDirCnt[d].att,0);
+  // Convert Set to count for reuse in drawSessionDirRadar
+  const ovDirCntFinal = {}; OV_DIRS.forEach(d=>ovDirCntFinal[d]={tricks:ovDirCnt[d].tricks.size, att:ovDirCnt[d].att});
+
+  const pieId = 'ta-pie-'+Date.now();
   const cid = 'ta-chart-'+Date.now();
-  el.innerHTML = statsHtml + legend + `<canvas id="${cid}" style="width:100%;"></canvas>`;
+  el.innerHTML = statsHtml + legend + `<canvas id="${cid}" style="width:100%;"></canvas>` +
+    (!chosen && ovDirTotal>0 ? `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px;">
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:32px;">
+          <div>${sessionDirLegendHtml(ovDirCntFinal,OV_DIRS,OV_DIR_COL,ovDirTotal)}</div>
+          <div style="width:160px;height:160px;flex-shrink:0;min-width:160px;">
+            <canvas id="${pieId}" style="display:block;width:160px;height:160px;"></canvas>
+          </div>
+        </div>
+      </div>` : '');
 
   requestAnimationFrame(()=>{
     const canvas=document.getElementById(cid); if(!canvas)return;
@@ -3825,7 +5432,59 @@ function renderTrickAnalytics() {
       ctx.fillText(p.d.split('-')[2]+'.'+p.d.split('-')[1]+'.',xs[i],H-pad.b+14);
       ctx.fillText(p.att+'×',xs[i],H-pad.b+28);
     });
+
+    // ── Hover tooltip ────────────────────────────────────────────────
+    let tt = document.getElementById('ta-chart-tooltip');
+    if (!tt) {
+      tt = document.createElement('div');
+      tt.id = 'ta-chart-tooltip';
+      tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:10px;padding:10px 14px;font-size:12px;font-family:Poppins,sans-serif;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+      document.body.appendChild(tt);
+    }
+    const fmtD = d => { const [y,m,dd]=d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
+    const dSign = (curr,prev) => {
+      if(curr===null||prev===null||curr===undefined||prev===undefined) return '';
+      const d=curr-prev;
+      return d>0?`<span style="color:#2d8a4e;font-weight:700;"> +${d}%</span>`
+            :d<0?`<span style="color:#e2001a;font-weight:700;"> ${d}%</span>`
+            :`<span style="color:#6b8299;"> ±0%</span>`;
+    };
+
+    canvas.onmousemove = e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      let ni=-1, nd=Infinity;
+      xs.forEach((x,i)=>{ const dist=Math.abs(mx-x); if(dist<nd&&dist<Math.max(40,(xs[1]-xs[0]||80)/2)){nd=dist;ni=i;} });
+      if(ni<0){tt.style.display='none';return;}
+      const p=pts[ni], pv=ni>0?pts[ni-1]:null;
+      const isFirst = ni===0;
+      let html=`<div style="font-weight:700;color:#e8edf2;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">${fmtD(p.d)} &nbsp;·&nbsp; ${p.att}× att.</div>`;
+      if(hasComp){
+        html+=`<div style="color:#f59e0b;">Grab &nbsp;&nbsp;: <b>${p.grab??'—'}%</b>${isFirst?'':dSign(p.grab,pv?.grab)}</div>`;
+        html+=`<div style="color:#39c3d4;">Trick &nbsp;: <b>${p.trick??'—'}%</b>${isFirst?'':dSign(p.trick,pv?.trick)}</div>`;
+        html+=`<div style="color:#2d8a4e;">Landing: <b>${p.landing??'—'}%</b>${isFirst?'':dSign(p.landing,pv?.landing)}</div>`;
+      } else {
+        html+=`<div style="color:#39c3d4;">Landing: <b>${p.landPct}%</b>${isFirst?'':dSign(p.landPct,pv?.landPct)}</div>`;
+      }
+      if(isFirst) html+=`<div style="font-size:10px;color:#6b8299;margin-top:4px;">First session</div>`;
+      tt.innerHTML=html;
+      tt.style.display='block';
+      const tx = e.clientX+14, ty = e.clientY-10;
+      tt.style.left=(tx+tt.offsetWidth>window.innerWidth-10?e.clientX-tt.offsetWidth-14:tx)+'px';
+      tt.style.top=ty+'px';
+    };
+    canvas.onmouseleave = () => { tt.style.display='none'; };
   });
+
+  if(!chosen && ovDirTotal>0) requestAnimationFrame(()=>drawSessionDirRadar(pieId, ovDirCntFinal, OV_DIRS, OV_DIR_COL));
+
+  // Raw entries: filter by chosen trick or show all
+  const filterLabel = _taTypeFilter ? _taTypeFilter : 'all types';
+  if (chosen) {
+    renderRawEntries(chartData, (chosen.length > 40 ? chosen.slice(0,40)+'…' : chosen) + (filterLabel!=='all types' ? ' · '+filterLabel : ''));
+  } else {
+    renderRawEntries(baseData, filterLabel);
+  }
 }
 
 function updateQualityChart() {
@@ -4520,6 +6179,41 @@ document.getElementById('f-datum').valueAsDate = new Date();
     </div>
   </div>
 </div>
+
+<nav class="mobile-nav" id="mobile-nav">
+  <button class="mobile-nav-btn" onclick="showPage('standort', this); updateMobileNav('standort')">
+    <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+    Assessment
+  </button>
+  <button class="mobile-nav-btn" onclick="showPage('erfassen', this); updateMobileNav('erfassen')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+    Session
+  </button>
+  <button class="mobile-nav-btn" onclick="showPage('entwicklung', this); updateMobileNav('entwicklung')">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Development
+  </button>
+  <button class="mobile-nav-btn" onclick="showPage('datenbank', this); updateMobileNav('datenbank')">
+    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+    Database
+  </button>
+</nav>
+
+<script>
+function updateMobileNav(pageId) {
+  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+  const idx = {'standort':0,'erfassen':1,'entwicklung':2,'datenbank':3};
+  const btns = document.querySelectorAll('.mobile-nav-btn');
+  if (btns[idx[pageId]] !== undefined) btns[idx[pageId]].classList.add('active');
+}
+document.addEventListener('DOMContentLoaded', () => {
+  if(localStorage.getItem('fs_session')){
+    const sessBtn=Array.from(document.querySelectorAll('.nav-tab')).find(t=>t.textContent.trim()==='Session');
+    if(sessBtn) sessBtn.click();
+  }
+  updateMobileNav(localStorage.getItem('fs_session')?'erfassen':'standort');
+});
+</script>
 
 </body>
 </html>
