@@ -1,0 +1,15 @@
+name: Deploy to Netlify
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx netlify-cli@17 deploy --prod --dir=.
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: 3ec7cd00-5e2b-4858-ac07-9aac22f50906
