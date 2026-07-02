@@ -1789,27 +1789,6 @@ let dbSessionReports = [];
 
 let _perfTypeFilter = '';
 
-function showPerfTip(e, text) {
-  let tt = document.getElementById('perf-tooltip');
-  if (!tt) {
-    tt = document.createElement('div');
-    tt.id = 'perf-tooltip';
-    tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:8px;padding:8px 12px;font-size:12px;font-family:Poppins,sans-serif;pointer-events:none;z-index:9999;max-width:320px;box-shadow:0 4px 16px rgba(0,0,0,0.5);';
-    document.body.appendChild(tt);
-  }
-  const parts = text.split(' | ');
-  tt.innerHTML = `<div style="font-weight:700;color:#e8edf2;margin-bottom:4px;">${parts[0]||''}</div>
-    <div style="color:var(--muted);font-size:11px;">${parts[1]||''}</div>`;
-  tt.style.display = 'block';
-  const tx = e.clientX+14, ty = e.clientY-10;
-  tt.style.left = (tx+tt.offsetWidth > window.innerWidth-10 ? e.clientX-tt.offsetWidth-14 : tx)+'px';
-  tt.style.top  = ty+'px';
-}
-function hidePerfTip() {
-  const tt = document.getElementById('perf-tooltip');
-  if (tt) tt.style.display = 'none';
-}
-
 function setPerfFilter(typ) {
   _perfTypeFilter = typ;
   const map = {'':'pf-all','Landing Bag':'pf-bag','Jump On-Snow':'pf-jump','Big Air Competition':'pf-comp'};
@@ -1907,11 +1886,18 @@ function renderSessionPerformance() {
   const DIRS = ['Left','Right','Switch Left','Switch Right'];
   const DIR_COL = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
 
-  // Status based on Landing% AND Quality% independently
-  function status(landPct, avgQ) {
-    if (landPct >= 70 && avgQ >= 70) return {icon:'🟢', label:'Ready', color:'#2d8a4e'};
-    if (landPct >= 50 || avgQ  >= 50) return {icon:'🟡', label:'Developing', color:'#f59e0b'};
+  // Status based on Landing%, Grab% and Trick% independently
+  function status(landPct, avgGrab, avgTrick) {
+    if (landPct >= 70 && avgGrab >= 70 && avgTrick >= 70) return {icon:'🟢', label:'Ready', color:'#2d8a4e'};
+    if (landPct >= 50 || avgGrab >= 50 || avgTrick >= 50) return {icon:'🟡', label:'Developing', color:'#f59e0b'};
     return {icon:'🔴', label:'Not ready', color:'#e2001a'};
+  }
+
+  function extractSubQuality(kommentar, key) {
+    if (!kommentar) return null;
+    const score = {perfect:100, okay:50, miss:0};
+    const m = kommentar.match(new RegExp(key+':(\\w+)'));
+    return (m && score[m[1]] !== undefined) ? score[m[1]] : null;
   }
 
   function trickDir(name) {
@@ -1934,72 +1920,20 @@ function renderSessionPerformance() {
     return;
   }
 
-  // Build: athMap[athlete][direction][trick] = {att, land, qualVals, rot}
-  const athMap = {};
-  data.forEach(t => {
-    const dir = trickDir(t.trickaufbau);
-    if (!dir) return;
-    if (!athMap[t.athlet]) athMap[t.athlet] = {};
-    if (!athMap[t.athlet][dir]) athMap[t.athlet][dir] = {};
-    const trick = t.trickaufbau;
-    if (!athMap[t.athlet][dir][trick]) athMap[t.athlet][dir][trick] = {att:0, land:0, qualVals:[], rot:extractRotation(trick)};
-    const s = athMap[t.athlet][dir][trick];
-    s.att++;
-    if (t.gelandet==='Yes') s.land++;
-    const q = extractQuality(t.kommentar);
-    if (q !== null) s.qualVals.push(q);
-  });
-
-  // Per athlete per direction: find best trick by score (rotW × landRate × quality)
-  function bestInDir(tricks) {
-    if (!tricks) return null;
-    let best = null, bestScore = -1;
-    Object.entries(tricks).forEach(([trick, s]) => {
-      const landRate = s.att ? s.land/s.att : 0;
-      const avgQ = s.qualVals.length ? s.qualVals.reduce((a,b)=>a+b,0)/s.qualVals.length : 0;
-      const score = (s.rot/360) * landRate * (avgQ/100);
-      if (score > bestScore) {
-        bestScore = score;
-        best = {trick, att:s.att, land:s.land, landPct:Math.round(landRate*100), avgQ:Math.round(avgQ), rot:s.rot, score};
-      }
-    });
-    return best;
-  }
-
-  // Build athlete rows, sort by number of 🟢 directions desc, then total score
-  const athletes = Object.entries(athMap).map(([athlet, dirMap]) => {
-    const dirs = {};
-    DIRS.forEach(d => { dirs[d] = bestInDir(dirMap[d]); });
-    const greenCount = DIRS.filter(d => dirs[d] && status(dirs[d].landPct, dirs[d].avgQ).icon==='🟢').length;
-    const totalScore = DIRS.reduce((s,d) => s + (dirs[d]?.score||0), 0);
-    const totalAtt   = DIRS.reduce((s,d) => s + (dirs[d]?.att||0), 0);
-    return {athlet, dirs, greenCount, totalScore, totalAtt};
-  }).sort((a,b) => b.greenCount-a.greenCount || b.totalScore-a.totalScore);
-
-  function dirCell(b, dir) {
-    if (!b) return `<td style="text-align:center;color:var(--muted);font-size:13px;padding:12px 8px;">—</td>`;
-    const st = status(b.landPct, b.avgQ);
-    const tip = `${b.trick} | ${b.landPct}% landed · ${b.avgQ}% exec. quality · ${b.att} attempts`;
-    return `<td style="text-align:center;padding:10px 8px;cursor:default;"
-      onmouseenter="showPerfTip(event,\`${tip.replace(/`/g,"'")}\`)"
-      onmouseleave="hidePerfTip()">
-      <div style="font-size:18px;">${st.icon}</div>
-      <div style="font-size:12px;font-weight:700;color:${DIR_COL[dir]};">${b.rot||'?'}°</div>
-    </td>`;
-  }
-
   // Build per-athlete, per-trick summary (all tricks, not just best per dir)
   const athTricks = {};
   data.forEach(t => {
     const a = t.athlet;
     const trick = t.trickaufbau;
     if (!athTricks[a]) athTricks[a] = {};
-    if (!athTricks[a][trick]) athTricks[a][trick] = {att:0, land:0, qualVals:[], rot:extractRotation(trick), dir:trickDir(trick)};
+    if (!athTricks[a][trick]) athTricks[a][trick] = {att:0, land:0, grabVals:[], trickVals:[], rot:extractRotation(trick), dir:trickDir(trick)};
     const s = athTricks[a][trick];
     s.att++;
     if (t.gelandet==='Yes') s.land++;
-    const q = extractQuality(t.kommentar);
-    if (q !== null) s.qualVals.push(q);
+    const g = extractSubQuality(t.kommentar,'Grab');
+    if (g !== null) s.grabVals.push(g);
+    const tr = extractSubQuality(t.kommentar,'Trick');
+    if (tr !== null) s.trickVals.push(tr);
   });
 
   // Sort athletes alphabetically (no ranking)
@@ -2007,7 +1941,6 @@ function renderSessionPerformance() {
 
   const bkg  = {'🟢':'rgba(45,138,78,0.12)','🟡':'rgba(245,158,11,0.1)','🔴':'rgba(226,0,26,0.08)'};
   const brd  = {'🟢':'rgba(45,138,78,0.4)', '🟡':'rgba(245,158,11,0.4)','🔴':'rgba(226,0,26,0.3)'};
-  const txt  = {'🟢':'#2d8a4e','🟡':'#f59e0b','🔴':'#e2001a'};
 
   el.innerHTML = `
     <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
@@ -2027,12 +1960,13 @@ function renderSessionPerformance() {
         });
 
         // Sort within each direction: green first, then by rotation desc
+        const avgOf = arr => arr.length ? Math.round(arr.reduce((x,y)=>x+y,0)/arr.length) : 0;
         DIRS.forEach(d => {
           byDir[d].sort(([,a],[,b]) => {
-            const lA = a.att?Math.round(a.land/a.att*100):0, qA = a.qualVals.length?Math.round(a.qualVals.reduce((x,y)=>x+y,0)/a.qualVals.length):0;
-            const lB = b.att?Math.round(b.land/b.att*100):0, qB = b.qualVals.length?Math.round(b.qualVals.reduce((x,y)=>x+y,0)/b.qualVals.length):0;
+            const lA = a.att?Math.round(a.land/a.att*100):0, gA = avgOf(a.grabVals), tA = avgOf(a.trickVals);
+            const lB = b.att?Math.round(b.land/b.att*100):0, gB = avgOf(b.grabVals), tB = avgOf(b.trickVals);
             const rank = {'🟢':0,'🟡':1,'🔴':2};
-            return (rank[status(lA,qA).icon]||0)-(rank[status(lB,qB).icon]||0) || b.rot-a.rot;
+            return (rank[status(lA,gA,tA).icon]||0)-(rank[status(lB,gB,tB).icon]||0) || b.rot-a.rot;
           });
         });
 
@@ -2041,16 +1975,19 @@ function renderSessionPerformance() {
           return `<div style="flex:1;min-width:200px;">
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${DIR_COL[d]};margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid ${DIR_COL[d]}33;">${d}</div>
             ${entries.length ? entries.map(([trick, s]) => {
-              const landPct = s.att ? Math.round(s.land/s.att*100) : 0;
-              const avgQ    = s.qualVals.length ? Math.round(s.qualVals.reduce((a,b)=>a+b,0)/s.qualVals.length) : 0;
-              const st      = status(landPct, avgQ);
+              const landPct  = s.att ? Math.round(s.land/s.att*100) : 0;
+              const avgGrab  = avgOf(s.grabVals);
+              const avgTrick = avgOf(s.trickVals);
+              const st       = status(landPct, avgGrab, avgTrick);
+              const colFor   = v => v>=70?'#2d8a4e':v>=50?'#f59e0b':'#e2001a';
               return `<div style="background:${bkg[st.icon]};border:1px solid ${brd[st.icon]};border-radius:8px;padding:6px 10px;margin-bottom:5px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
                   <span style="font-size:12px;color:var(--text);flex:1;">${trick}</span>
                 </div>
-                <div style="display:flex;gap:10px;margin-top:4px;font-size:11px;font-weight:700;">
-                  <span style="color:${landPct>=70?'#2d8a4e':landPct>=50?'#f59e0b':'#e2001a'};">${landPct}% landed</span>
-                  <span style="color:${avgQ>=70?'#2d8a4e':avgQ>=50?'#f59e0b':'#e2001a'};">${avgQ}% exec. quality</span>
+                <div style="display:flex;gap:10px;margin-top:4px;font-size:11px;font-weight:700;flex-wrap:wrap;">
+                  <span style="color:${colFor(landPct)};">${landPct}% landed</span>
+                  <span style="color:${colFor(avgGrab)};">${avgGrab}% grab</span>
+                  <span style="color:${colFor(avgTrick)};">${avgTrick}% trick</span>
                   <span style="color:var(--muted);font-weight:400;">${s.att} att.</span>
                 </div>
               </div>`;
@@ -2291,11 +2228,6 @@ async function rebuildReportFromTimestamps(id, silent=false) {
   const existingNotes = {};
   (report.trick_data||[]).forEach(a => { if (a.note) existingNotes[a.athlet] = a.note; });
 
-  const parseSub = (kommentar, key) => {
-    const m = (kommentar||'').match(new RegExp(key+':(\\w+)'));
-    return m ? m[1] : null;
-  };
-
   const athleteEntries = {};
   entries.forEach(e => {
     const name = e.athlet;
@@ -2303,7 +2235,7 @@ async function rebuildReportFromTimestamps(id, silent=false) {
     const result = (e.gesamt||0) >= 10 ? 'perfect' : e.gelandet==='Yes' ? 'landed' : 'miss';
     athleteEntries[name].push({
       trick: e.trickaufbau || '—', result,
-      grab: parseSub(e.kommentar,'Grab'), trick_r: parseSub(e.kommentar,'Trick'), land: parseSub(e.kommentar,'Landing'),
+      grab: parseSubRating(e.kommentar,'Grab'), trick_r: parseSubRating(e.kommentar,'Trick'), land: parseSubRating(e.kommentar,'Landing'),
       dbId: e.id
     });
   });
@@ -2401,20 +2333,27 @@ function generateAthleteReport() {
 
   showToast('Generating PDF…', 'success');
 
-  // Build per-trick summary
+  // Build per-trick summary (Grab/Trick/Landing quality, grouped by trick name across all sessions)
   const trickMap = {};
   data.forEach(e => {
     const trick = e.trickaufbau;
-    if (!trickMap[trick]) trickMap[trick] = {att:0,land:0,perf:0};
-    trickMap[trick].att++;
-    if (e.gelandet==='Yes') trickMap[trick].land++;
-    if ((e.gesamt||0)>=10) trickMap[trick].perf++;
+    if (!trickMap[trick]) trickMap[trick] = {att:0, grabVals:[], trickVals:[], landVals:[]};
+    const s = trickMap[trick];
+    s.att++;
+    const g = parseSubRating(e.kommentar,'Grab');   if (g!==null) s.grabVals.push(g);
+    const t = parseSubRating(e.kommentar,'Trick');  if (t!==null) s.trickVals.push(t);
+    const l = parseSubRating(e.kommentar,'Landing'); if (l!==null) s.landVals.push(l);
   });
+  const avgOfRatings = arr => {
+    const score = {miss:0, okay:50, perfect:100};
+    const vals = arr.map(v=>score[v]).filter(v=>v!==undefined);
+    return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : null;
+  };
   const trickRows = Object.entries(trickMap)
     .sort((a,b) => b[1].att - a[1].att)
     .map(([trick,s]) => {
-      const lp = s.att ? Math.round(s.land/s.att*100) : 0;
-      return [trick, s.att, s.land-(s.perf||0), s.perf, lp+'%'];
+      const pctStr = v => v===null ? '—' : v+'%';
+      return [trick, s.att, pctStr(avgOfRatings(s.grabVals)), pctStr(avgOfRatings(s.trickVals)), pctStr(avgOfRatings(s.landVals))];
     });
 
   // Build per-session breakdown
@@ -2481,17 +2420,19 @@ function generateAthleteReport() {
     doc.text('TRICK SUMMARY', margin, y); y += 4;
     doc.autoTable({
       startY: y, margin:{left:margin,right:margin},
-      head:[['Trick','Att.','Landed','Perfect','Rate']],
+      head:[['Trick','Att.','Grab','Trick','Landing']],
       body: trickRows,
       theme:'grid',
       styles:{fontSize:8.5,cellPadding:2.5,textColor:[34,34,34],lineColor:[230,230,230]},
       headStyles:{fillColor:[240,240,240],textColor:[100,100,100],fontStyle:'bold',fontSize:7.5},
       columnStyles:{0:{cellWidth:cw*0.44},1:{cellWidth:cw*0.13,halign:'center'},2:{cellWidth:cw*0.15,halign:'center'},3:{cellWidth:cw*0.13,halign:'center'},4:{cellWidth:cw*0.15,halign:'center'}},
       didParseCell(data) {
-        if (data.column.index===4 && data.section==='body') {
+        if ([2,3,4].includes(data.column.index) && data.section==='body') {
           const v=parseInt(data.cell.raw);
-          data.cell.styles.textColor=v>=70?[45,138,78]:v>=50?[180,100,0]:[200,30,30];
-          data.cell.styles.fontStyle='bold';
+          if (!isNaN(v)) {
+            data.cell.styles.textColor=v>=70?[45,138,78]:v>=50?[180,100,0]:[200,30,30];
+            data.cell.styles.fontStyle='bold';
+          }
         }
       }
     });
@@ -3022,7 +2963,6 @@ const SESS_SQUADS = [
 
 let sessSelectedAthletes = [];
 let sessAthleteData = {};
-let sessActiveTricks = {};
 let sessLog = [];
 let sessType = '';
 let sessStartTime = 0;
@@ -3034,7 +2974,6 @@ function saveSessionState() {
     type: sessType,
     startTime: sessStartTime,
     activeAthlete: sessActiveAthlete || '',
-    activeTricks: sessActiveTricks,
     athleteState: {}
   };
   sessSelectedAthletes.forEach(name => {
@@ -3059,7 +2998,6 @@ async function restoreSessionState() {
     sessType = state.type || '';
     sessStartTime = state.startTime || Date.now();
     sessActiveAthlete = state.activeAthlete || state.athletes[0];
-    sessActiveTricks = state.activeTricks || {};
     for (const name of sessSelectedAthletes) {
       const saved = (state.athleteState || {})[name] || {};
       sessAthleteData[name] = { tricks: [], currentTrick: saved.currentTrick || '', currentGrab: saved.currentGrab || '', stats: saved.stats || {attempts:0,landed:0,perfect:0} };
@@ -3112,7 +3050,6 @@ async function toggleSessionAthlete(name) {
   if (sessSelectedAthletes.includes(name)) {
     sessSelectedAthletes = sessSelectedAthletes.filter(a => a !== name);
     delete sessAthleteData[name];
-    delete sessActiveTricks[name];
     const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
     if (card) card.style.borderColor = 'var(--border)';
   } else {
@@ -3123,7 +3060,6 @@ async function toggleSessionAthlete(name) {
     }
     sessSelectedAthletes.push(name);
     sessAthleteData[name] = { tricks: [], currentTrick: '', currentGrab: '', stats: {attempts:0,landed:0,perfect:0} };
-    sessActiveTricks[name] = [];
     const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
     if (card) card.style.borderColor = '#39c3d4';
     const {data, error} = await db.from('standort').select('trick_label,disziplin,status,grab')
@@ -3136,19 +3072,7 @@ async function toggleSessionAthlete(name) {
   if (trickSel) trickSel.style.display = 'none';
 }
 
-const SESS_DIRECTIONS = ['Left','Right','Switch Left','Switch Right','Forward','Switch'];
 const SESS_GRABS = ['Blunt', 'Bow and Arrow', 'Broken Arrow', 'Critical', 'Cuban', 'Double Japan', 'Esco', 'Guitar', 'High Mute', 'In and out', 'Indi-Truck', 'Inside Tail', 'Japan', 'Mute', 'Nose', 'Octo', 'Rocket', 'Safety', 'Screamin\' Seamen', 'Seatbelt', 'Seatbelt Japan', 'Stale', 'Stink Bug', 'Tail', 'Truckdriver', 'Venom'];
-
-function tricksForDir(tricks, dir) {
-  return tricks.filter(t => {
-    const lbl = (t.trick_label||'').toLowerCase();
-    if (dir === 'Left')         return lbl.startsWith('left ') && !lbl.startsWith('switch');
-    if (dir === 'Right')        return lbl.startsWith('right ') && !lbl.startsWith('switch');
-    if (dir === 'Switch Left')  return lbl.startsWith('switch left');
-    if (dir === 'Switch Right') return lbl.startsWith('switch right');
-    return false;
-  });
-}
 
 function baseLabel(label) {
   let result = ' ' + label + ' ';
@@ -3157,231 +3081,6 @@ function baseLabel(label) {
     result = result.replace(new RegExp('[, ]+' + esc + '(?=[, ]|$)', 'gi'), '');
   });
   return result.trim().replace(/\s{2,}/g,' ').replace(/[,\s]+$/, '');
-}
-
-function parseGrabsFromLabel(label) {
-  const found = SESS_GRABS.filter(g => {
-    const re = new RegExp('(^|[,\\s])' + g.replace(/[-.*+?^${}()|[\]\\]/g,'\\$&') + '($|[,\\s])', 'i');
-    return re.test(label);
-  });
-  return found.length ? found : SESS_GRABS;
-}
-
-// Double grab state: {athleteName: firstGrab}
-const doubleGrabFirst = {};
-
-function showGrabPicker(name, trickLabel, status, btn) {
-  const safeId = name.replace(/\s/g,'_');
-  document.querySelectorAll('.grab-picker-' + safeId).forEach(el => el.remove());
-  document.querySelectorAll('.trick-wrap-' + safeId).forEach(el => el.style.display = 'inline-block');
-  delete doubleGrabFirst[name]; // reset double grab state
-
-  const base = baseLabel(trickLabel);
-  const alreadySelected = (sessActiveTricks[name] || [])
-    .filter(t => t.startsWith(base + ' — '))
-    .map(t => t.slice(base.length + 3));
-
-  const grabs = parseGrabsFromLabel(trickLabel);
-  const pickerId = 'gp-' + safeId;
-  const picker = document.createElement('div');
-  picker.className = 'grab-picker-' + safeId;
-  picker.id = pickerId;
-  picker.style.cssText = 'margin-top:8px;padding:10px 14px;background:var(--surface);border:1px solid #39c3d4;border-radius:10px;width:100%;';
-  picker.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-      <span style="font-size:10px;color:#39c3d4;font-weight:700;text-transform:uppercase;letter-spacing:.8px;">Select grab(s)</span>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--muted);">
-          <input type="checkbox" id="dg-toggle-${safeId}" onchange="toggleDoubleGrab('${name}','${trickLabel.replace(/'/g,"\\'")}','${pickerId}')" style="accent-color:#f59e0b;width:15px;height:15px;">
-          <span id="dg-label-${safeId}">Double Grab</span>
-      </label>
-    </div>
-    <div id="dg-hint-${safeId}" style="display:none;font-size:11px;color:#f59e0b;margin-bottom:8px;">Select first grab →</div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;" id="dg-grabs-${safeId}">
-      ${grabs.map(g => {
-        const sel = alreadySelected.includes(g);
-        const s = sel ? 'background:rgba(57,195,212,0.18);border-color:#39c3d4;color:#39c3d4;' : 'background:var(--surface2);border-color:var(--border);color:var(--text);';
-        return `<button onclick="addTrickWithGrab('${name}','${trickLabel.replace(/'/g,"\\'")}','${g}',this)"
-          style="padding:6px 14px;${s}border-width:1.5px;border-style:solid;border-radius:7px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${g}</button>`;
-      }).join('')}
-    </div>`;
-
-  const wrapper = btn.parentElement;
-  wrapper.style.display = 'block';
-  wrapper.appendChild(picker);
-}
-
-function toggleDoubleGrab(name, trickLabel, pickerId) {
-  const safeId = name.replace(/\s/g,'_');
-  const isDouble = document.getElementById('dg-toggle-' + safeId).checked;
-  const hint = document.getElementById('dg-hint-' + safeId);
-  const grabsDiv = document.getElementById('dg-grabs-' + safeId);
-  delete doubleGrabFirst[name];
-  hint.style.display = isDouble ? 'block' : 'none';
-  // Rewire grab buttons
-  const grabs = parseGrabsFromLabel(trickLabel);
-  if (isDouble) {
-    grabsDiv.querySelectorAll('button').forEach((btn, i) => {
-      const g = grabs[i];
-      btn.onclick = () => doubleGrabClick(name, trickLabel, g, btn, safeId);
-      btn.style.background = 'var(--surface2)'; btn.style.borderColor = 'var(--border)'; btn.style.color = 'var(--text)';
-    });
-  } else {
-    grabsDiv.querySelectorAll('button').forEach((btn, i) => {
-      const g = grabs[i];
-      btn.onclick = () => addTrickWithGrab(name, trickLabel, g, btn);
-    });
-  }
-}
-
-function doubleGrabClick(name, trickLabel, grab, btn, safeId) {
-  if (!doubleGrabFirst[name]) {
-    // First grab selected
-    doubleGrabFirst[name] = grab;
-    btn.style.background = 'rgba(245,158,11,0.2)'; btn.style.borderColor = '#f59e0b'; btn.style.color = '#f59e0b';
-    const hint = document.getElementById('dg-hint-' + safeId);
-    if (hint) hint.textContent = grab + ' to → select second grab';
-  } else {
-    // Second grab — create combined
-    const combined = doubleGrabFirst[name] + ' to ' + grab;
-    delete doubleGrabFirst[name];
-    if (!sessActiveTricks[name]) sessActiveTricks[name] = [];
-    const label = baseLabel(trickLabel) + ' — ' + combined;
-    if (!sessActiveTricks[name].includes(label)) {
-      sessActiveTricks[name].push(label);
-    }
-    renderSessSelected(name);
-    // Reset all buttons
-    const grabsDiv = document.getElementById('dg-grabs-' + safeId);
-    if (grabsDiv) grabsDiv.querySelectorAll('button').forEach(b => {
-      b.style.background = 'var(--surface2)'; b.style.borderColor = 'var(--border)'; b.style.color = 'var(--text)';
-    });
-    const hint = document.getElementById('dg-hint-' + safeId);
-    if (hint) hint.textContent = 'Select first grab →';
-    showToast('Added: ' + combined, 'success');
-  }
-}
-
-function addTrickWithGrab(name, trickLabel, grab, btn) {
-  if (!sessActiveTricks[name]) sessActiveTricks[name] = [];
-  const label = baseLabel(trickLabel) + ' — ' + grab;
-  const idx = sessActiveTricks[name].indexOf(label);
-  if (idx === -1) {
-    sessActiveTricks[name].push(label);
-    btn.style.background = 'rgba(57,195,212,0.18)';
-    btn.style.borderColor = '#39c3d4';
-    btn.style.color = '#39c3d4';
-  } else {
-    sessActiveTricks[name].splice(idx, 1);
-    btn.style.background = 'var(--surface2)';
-    btn.style.borderColor = 'var(--border)';
-    btn.style.color = 'var(--text)';
-  }
-  renderSessSelected(name);
-}
-
-function renderSessionTrickSelection() {
-  const container = document.getElementById('sess-trick-selection');
-  const startBtn = document.getElementById('sess-start-btn');
-  if (sessSelectedAthletes.length === 0) { container.style.display='none'; startBtn.style.display='none'; return; }
-  container.style.display = 'block';
-  container.innerHTML = '<div class="card"><div class="card-title">Step 3 — Select tricks to work on</div>'
-    + sessSelectedAthletes.map(name => {
-      if (!sessAthleteData[name]) return ''; // race condition guard
-      const safeId = name.replace(/\s/g,'_');
-      const allTricks = sessAthleteData[name].tricks || [];
-      return `<div style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);">
-        <div style="font-weight:700;font-size:14px;color:#39c3d4;margin-bottom:14px;">${shortName(name)}</div>
-        ${SESS_DIRECTIONS.map(dir => {
-          const rotSort = (a,b) => { const m=s=>((s.trick_label||'').match(/\b(180|270|360|450|540|630|720|810|900|1080|1260|1440)\b/)||[0,0])[1]; return m(b)-m(a); };
-          const mastered = tricksForDir(allTricks.filter(t=>t.status==='mastered'), dir).sort(rotSort);
-          const goals    = tricksForDir(allTricks.filter(t=>t.status==='goal'), dir).sort(rotSort);
-          return `<div style="margin-bottom:14px;">
-            <div class="sess-dir-section-${safeId}" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent2);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);">${dir}</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;">
-              ${mastered.map(t => `<div class="trick-wrap-${safeId}" style="display:inline-block;">
-                <button
-                  class="trick-selecting-${safeId}"
-                  data-trick="${t.trick_label.replace(/"/g,'&quot;')}"
-                  onclick="showGrabPicker('${name}','${t.trick_label.replace(/'/g,"\\'")}','mastered',this)"
-                  style="padding:6px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${baseLabel(t.trick_label)}</button>
-              </div>`).join('')}
-              ${goals.map(t => `<div class="trick-wrap-${safeId}" style="display:inline-block;">
-                <button
-                  class="trick-selecting-${safeId}"
-                  data-trick="${t.trick_label.replace(/"/g,'&quot;')}"
-                  onclick="showGrabPicker('${name}','${t.trick_label.replace(/'/g,"\\'")}','goal',this)"
-                  style="padding:6px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${baseLabel(t.trick_label)}</button>
-              </div>`).join('')}
-              ${mastered.length === 0 && goals.length === 0 ? `<span style="color:var(--muted);font-size:11px;font-style:italic;">No assessment entry</span>` : ''}
-            </div>
-          </div>`;
-        }).join('')}
-        <div style="margin-top:10px;">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Selected tricks</div>
-          <div id="sess-selected-${safeId}" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;">
-            <span style="color:var(--muted);font-size:12px;">None yet</span>
-          </div>
-        </div>
-      </div>`;
-    }).join('') + '</div>';
-  startBtn.style.display = 'block';
-}
-
-function toggleSessGrab(name, dir, grab, btn) {
-  if (!sessActiveTricks[name]) sessActiveTricks[name] = [];
-  const label = dir + ' — ' + grab;
-  const idx = sessActiveTricks[name].indexOf(label);
-  if (idx === -1) {
-    sessActiveTricks[name].push(label);
-    btn.style.background = 'rgba(57,195,212,0.18)';
-    btn.style.borderColor = '#39c3d4';
-    btn.style.color = '#39c3d4';
-  } else {
-    sessActiveTricks[name].splice(idx, 1);
-    btn.style.background = 'var(--surface2)';
-    btn.style.borderColor = 'var(--border)';
-    btn.style.color = 'var(--muted)';
-  }
-  renderSessSelected(name);
-}
-
-function renderSessSelected(name) {
-  const el = document.getElementById('sess-selected-' + name.replace(/\s/g,'_'));
-  if (!el) return;
-  const tricks = sessActiveTricks[name] || [];
-  el.innerHTML = tricks.length
-    ? tricks.map((t,i) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px 4px 10px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;border-radius:6px;font-size:12px;color:#39c3d4;">
-        ${t}
-        <button onclick="removeSessTrick('${name}',${i})" style="background:none;border:none;color:#39c3d4;cursor:pointer;font-size:14px;line-height:1;padding:0;opacity:.7;" title="Remove">×</button>
-      </span>`).join('')
-    : '<span style="color:var(--muted);font-size:12px;">None yet</span>';
-}
-
-function toggleSessAssessmentTrick(name, trick, btn) {
-  if (!sessActiveTricks[name]) sessActiveTricks[name] = [];
-  const idx = sessActiveTricks[name].indexOf(trick);
-  if (idx === -1) {
-    sessActiveTricks[name].push(trick);
-    btn.style.background = 'rgba(57,195,212,0.18)';
-    btn.style.borderColor = '#39c3d4';
-    btn.style.color = '#39c3d4';
-  } else {
-    sessActiveTricks[name].splice(idx, 1);
-    btn.style.background = 'var(--surface2)';
-    btn.style.borderColor = 'var(--border)';
-    btn.style.color = 'var(--muted)';
-  }
-  renderSessSelected(name);
-}
-
-function removeSessTrick(name, idx) {
-  sessActiveTricks[name].splice(idx, 1);
-  renderSessSelected(name);
-}
-
-function toggleSessTrick(name, trick, checked) {
-  if (checked) { if (!sessActiveTricks[name].includes(trick)) sessActiveTricks[name].push(trick); }
-  else { sessActiveTricks[name] = sessActiveTricks[name].filter(t => t !== trick); }
 }
 
 function startSession() {
@@ -3435,7 +3134,6 @@ function renderLiveSession() {
   if (name && sessAthleteData[name]) {
     if (!sessRatings[name]) sessRatings[name] = {grab:null,trick:null,land:null};
     const d = sessAthleteData[name];
-    const tricks = sessActiveTricks[name] || [];
     const sid = name.replace(/\s/g,'_');
     cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${sid}">
       <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:16px;text-align:center;">${shortName(name)}</div>
@@ -3534,6 +3232,7 @@ function renderLiveSession() {
 function selectSessAthlete(name) {
   sessActiveAthlete = name;
   renderLiveSession();
+  renderSessionLog();
 }
 
 function setSessRating(name, cat, val, btn) {
@@ -3792,7 +3491,7 @@ async function saveFsLogEdit(idx) {
 }
 
 function clearSessionSelection() {
-  sessSelectedAthletes=[]; sessAthleteData={}; sessActiveTricks={};
+  sessSelectedAthletes=[]; sessAthleteData={};
   document.querySelectorAll('#sess-athlete-grid input[type=checkbox]').forEach(c => c.checked=false);
   document.querySelectorAll('#sess-athlete-grid label').forEach(c => c.style.borderColor='var(--border)');
   document.getElementById('sess-trick-selection').style.display='none';
@@ -3826,7 +3525,7 @@ function addAthleteToSession() {
 }
 
 function resetSession() {
-  sessSelectedAthletes=[]; sessAthleteData={}; sessActiveTricks={}; sessLog=[]; sessRatings && Object.keys(sessRatings).forEach(k=>delete sessRatings[k]);
+  sessSelectedAthletes=[]; sessAthleteData={}; sessLog=[]; sessRatings && Object.keys(sessRatings).forEach(k=>delete sessRatings[k]);
   sessActiveAthlete = null;
   clearSessionStorage();
   document.getElementById('sess-setup').style.display='block';
@@ -3912,6 +3611,11 @@ async function submitSessionReport(duration) {
   });
   document.getElementById('sess-report-modal')?.remove();
   await saveSessionReport(duration, location, conditions, comments, athleteNotes);
+}
+
+function parseSubRating(kommentar, key) {
+  const m = (kommentar||'').match(new RegExp(key+':(\\w+)'));
+  return m ? m[1] : null;
 }
 
 function buildFsTrickBlocks(entries) {
