@@ -3,13 +3,22 @@ name: Deploy to Netlify
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npx netlify-cli@17 deploy --prod --dir=.
+      - name: Stage unified app
+        run: mkdir -p stage && cp index.html stage/
+      - name: Deploy Freeski
+        run: npx netlify-cli@17 deploy --prod --dir=stage
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: 3ec7cd00-5e2b-4858-ac07-9aac22f50906
+      - name: Deploy Snowboard
+        run: npx netlify-cli@17 deploy --prod --dir=stage
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: c3ce99ae-488d-4c6a-9de1-1e575ee6457f
