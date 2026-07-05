@@ -10,6 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Sanity-Check (kein Deploy bei kaputtem index.html)
+        run: |
+          node -e "
+            const fs = require('fs');
+            const html = fs.readFileSync('index.html', 'utf8');
+            const m = html.match(/<script>\n([\s\S]*?)\n<\/script>/);
+            if (!m) throw new Error('Haupt-Script nicht gefunden');
+            new Function(m[1]);
+            for (const marker of ['SPORT_CONFIGS', 'SnowboardModule', 'FreeskiModule', 'bootSport', 'grab-block-placeholder']) {
+              if (!html.includes(marker)) throw new Error('Pflicht-Marker fehlt: ' + marker);
+            }
+            console.log('Sanity-Check OK — Script parsebar, alle Marker vorhanden');
+          "
       - name: Stage unified app
         run: mkdir -p stage && cp index.html stage/
       - name: Deploy Freeski
