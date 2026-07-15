@@ -23,8 +23,23 @@ jobs:
             }
             console.log('Sanity-Check OK — Script parsebar, alle Marker vorhanden');
           "
+      - name: Sanity-Check Moguls (kein Deploy bei kaputtem moguls.html)
+        run: |
+          node -e "
+            const fs = require('fs');
+            const html = fs.readFileSync('moguls.html', 'utf8');
+            const m = html.match(/<script>\n([\s\S]*?)\n<\/script>/);
+            if (!m) throw new Error('Moguls-Script nicht gefunden');
+            new Function(m[1]);
+            for (const marker of ['SUPABASE_URL', 'const TYPES', 'renderLiveSession']) {
+              if (!html.includes(marker)) throw new Error('Pflicht-Marker fehlt: ' + marker);
+            }
+            console.log('Sanity-Check Moguls OK');
+          "
       - name: Stage unified app
         run: mkdir -p stage && cp index.html stage/
+      - name: Stage moguls app
+        run: mkdir -p stage-moguls && cp moguls.html stage-moguls/index.html
       - name: Deploy Freeski
         run: npx netlify-cli@17 deploy --prod --dir=stage
         env:
@@ -35,3 +50,8 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: c3ce99ae-488d-4c6a-9de1-1e575ee6457f
+      - name: Deploy Moguls
+        run: npx netlify-cli@17 deploy --prod --dir=stage-moguls
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: 101487f5-ab31-40a0-a50b-18cbdd51c49d

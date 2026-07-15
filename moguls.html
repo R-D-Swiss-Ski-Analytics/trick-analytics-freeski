@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trick Analyses Moguls</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060f1a; --surface: #0c1a2b; --surface2: #112236;
+    --border: #1a3450; --accent: #ffffff; --accent2: #39c3d4;
+    --text: #e8edf2; --muted: #6b8299; --success: #2d8a4e; --danger: #e2001a;
+    --warn: #f59e0b;
+    --rosso: #e2001a; --arancione: #f59e0b; --verde: #2d8a4e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; font-size: 14px; min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, #001a2e 0%, #004877 100%);
+    border-bottom: 1px solid #003560;
+    padding: 0 24px; display: flex; align-items: center; gap: 16px;
+    height: 60px; position: sticky; top: 0; z-index: 100;
+  }
+  header h1 { font-family: 'Poppins', sans-serif; font-size: 26px; letter-spacing: 1px; color: #ffffff; }
+  .nav-tabs { display: flex; gap: 4px; margin-left: auto; }
+  .nav-tab {
+    padding: 7px 18px; border-radius: 6px; cursor: pointer; font-weight: 500;
+    font-size: 13px; color: rgba(255,255,255,0.6); border: none; background: none;
+    font-family: 'Poppins', sans-serif; transition: all .2s;
+  }
+  .nav-tab.active { background: rgba(255,255,255,0.15); color: #ffffff; border: 1px solid rgba(255,255,255,0.3); }
+  .nav-tab:hover:not(.active) { color: #ffffff; background: rgba(255,255,255,0.08); }
+
+  .page { display: none; padding: 24px; max-width: 960px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card-title { font-family: 'Poppins', sans-serif; font-size: 18px; letter-spacing: 0.5px; color: var(--accent2); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  select, input[type="text"], input[type="date"], textarea {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); padding: 9px 12px; font-family: 'Poppins', sans-serif;
+    font-size: 14px; outline: none; transition: border-color .2s; width: 100%;
+    -webkit-appearance: none; appearance: none; color-scheme: dark;
+  }
+  select:focus, input:focus, textarea:focus { border-color: var(--accent); }
+  option { background: #112236; }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; padding: 12px 20px;
+    border-radius: 8px; font-weight: 700; opacity: 0; transform: translateY(10px);
+    transition: all .3s; z-index: 9999; pointer-events: none; font-size: 14px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: var(--success); color: white; }
+  .toast.error { background: var(--danger); color: white; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .stat-value { font-family: 'Poppins', sans-serif; font-size: 34px; color: #ffffff; line-height: 1; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+
+  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--surface2); }
+  th { padding: 10px 14px; text-align: left; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; white-space: nowrap; }
+  td { padding: 10px 14px; border-top: 1px solid var(--border); font-size: 13px; }
+  tr:hover td { background: var(--surface2); }
+
+  .badge-typ { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; background: #1a3450; color: #ffffff; white-space: nowrap; }
+
+  .empty-state { text-align: center; padding: 48px; color: var(--muted); }
+  .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
+  .btn-del { background: none; border: 1px solid #e2001a33; border-radius: 6px; color: var(--danger); cursor: pointer; font-size: 13px; padding: 2px 6px; opacity: .7; transition: opacity .2s; }
+  .btn-del:hover { opacity: 1; }
+  .btn-secondary {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 8px 16px; font-family: 'Poppins', sans-serif;
+    font-size: 13px; cursor: pointer; transition: border-color .2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  .sess-type-btn { padding:10px 18px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s; }
+  .sess-type-btn.active { background:rgba(57,195,212,0.15);border-color:#39c3d4;color:#39c3d4; }
+
+  .rate-btn {
+    padding: 18px 8px; border-radius: 12px; font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 700; cursor: pointer; transition: all .12s;
+    -webkit-tap-highlight-color: transparent; border-style: solid;
+  }
+  .crit-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  .loading { text-align: center; padding: 40px; color: var(--muted); }
+  .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-right: 8px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .dist-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--surface2); min-width: 120px; }
+  .dist-bar > div { height: 100%; }
+
+  .mobile-nav { display: none; }
+
+  @media (max-width: 640px) {
+    header { padding: 0 16px; }
+    header h1 { font-size: 19px; }
+    .nav-tabs { display: none; }
+    .page { padding: 16px; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+
+    .mobile-nav {
+      display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+      background: #0b1929; border-top: 1px solid #1a3450; z-index: 200;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      height: calc(56px + env(safe-area-inset-bottom, 0px));
+    }
+    .mobile-nav-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; border: none; background: none; cursor: pointer; padding: 8px 4px;
+      color: rgba(255,255,255,0.5); font-family: 'Poppins', sans-serif; font-size: 10px;
+      font-weight: 500; letter-spacing: 0.3px; transition: color .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mobile-nav-btn.active { color: #39c3d4; }
+    .mobile-nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Trick Analyses Moguls</h1>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('erfassen', this)">Session</button>
+    <button class="nav-tab" onclick="showPage('auswertung', this)">Analytics</button>
+    <button class="nav-tab" onclick="showPage('datenbank', this)">Database</button>
+  </nav>
+</header>
+
+<div class="toast" id="toast"></div>
+<div id="db-warning" style="display:none;background:#2a1505;border-bottom:1px solid #f59e0b;color:#f59e0b;padding:8px 24px;font-size:12px;font-weight:600;">
+  ⚠ Supabase ist noch nicht konfiguriert — Einträge werden NICHT gespeichert. URL &amp; Key in moguls.html eintragen.
+</div>
+
+<!-- ══════════════════════════════════════════ SESSION -->
+<div class="page active" id="page-erfassen">
+
+  <!-- ── SETUP VIEW ──────────────────────────────────── -->
+  <div id="sess-setup">
+    <div style="margin-bottom:24px;">
+      <div style="font-family:'Poppins',sans-serif;font-size:26px;font-weight:800;color:var(--text);">New Session</div>
+      <div style="color:var(--muted);font-size:13px;" id="sess-date-label"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="card-title" style="margin:0;">Select Athletes (max. 8)</div>
+        <button onclick="clearSessionSelection()" style="padding:6px 14px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">Clear all</button>
+      </div>
+      <div id="sess-athlete-grid"></div>
+    </div>
+
+    <button id="sess-start-btn" onclick="startSession()" style="display:none;width:100%;padding:18px;background:#39c3d4;color:#060f1a;border:none;border-radius:12px;font-family:'Poppins',sans-serif;font-size:18px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">
+      ▶ START SESSION
+    </button>
+  </div>
+
+  <!-- ── LIVE VIEW ────────────────────────────────────── -->
+  <div id="sess-live" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:'Poppins',sans-serif;font-size:22px;font-weight:800;color:var(--text);">Live Session</div>
+        <div style="color:var(--muted);font-size:12px;" id="sess-live-date"></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button onclick="addAthleteToSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">+ Add Athlete</button>
+        <button onclick="cancelSession()" style="padding:9px 16px;background:none;border:1px solid #e2001a;border-radius:8px;color:#e2001a;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✕ Cancel</button>
+        <button onclick="endSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✓ End Session</button>
+      </div>
+    </div>
+
+    <!-- Entry type tabs -->
+    <div id="sess-type-tabs" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;"></div>
+
+    <div id="sess-athlete-cols" style="display:grid;gap:16px;margin-bottom:20px;"></div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px;">Session Log</div>
+      <div id="sess-log" style="max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
+        <div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;">No entries logged yet.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════ ANALYTICS -->
+<div class="page" id="page-auswertung">
+  <div class="card">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+      <div class="form-group"><label>Athlete</label>
+        <select id="an-athlet" onchange="renderAnalytics()"><option value="">All athletes</option></select></div>
+      <div class="form-group"><label>Type</label>
+        <select id="an-typ" onchange="renderAnalytics()"><option value="">All types</option></select></div>
+      <div class="form-group"><label>From</label>
+        <input type="date" id="an-from" onchange="renderAnalytics()"></div>
+      <div class="form-group"><label>To</label>
+        <input type="date" id="an-to" onchange="renderAnalytics()"></div>
+    </div>
+  </div>
+  <div id="an-content">
+    <div class="empty-state"><div class="icon">📊</div>Loading…</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ DATABASE -->
+<div class="page" id="page-datenbank">
+  <div class="card">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+      <div class="form-group"><label>Athlete</label>
+        <select id="db-athlet" onchange="renderDBTable()"><option value="">All athletes</option></select></div>
+      <div class="form-group"><label>Type</label>
+        <select id="db-typ" onchange="renderDBTable()"><option value="">All types</option></select></div>
+      <div class="form-group"><label>From</label>
+        <input type="date" id="db-from" onchange="renderDBTable()"></div>
+      <div class="form-group"><label>To</label>
+        <input type="date" id="db-to" onchange="renderDBTable()"></div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Athlete</th><th>Type</th><th>Jump(s)</th><th>Ratings</th><th>Comment</th><th></th></tr></thead>
+      <tbody id="db-tbody">
+        <tr><td colspan="7"><div class="loading"><span class="spinner"></span>Loading…</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ EDIT MODAL -->
+<div id="edit-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:14px;padding:24px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:#ffffff;">✏️ EDIT ENTRY</div>
+      <button onclick="closeEdit()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div id="edit-body"></div>
+    <div style="display:flex;gap:10px;margin-top:18px;">
+      <button onclick="saveEdit()" style="flex:1;padding:12px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Save</button>
+      <button onclick="closeEdit()" class="btn-secondary" style="padding:12px 20px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════ CONFIG ═══════════════
+const SUPABASE_URL = 'https://msopcnzxqxasbpgghalj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_0M9Vk_uQO4nhOcdW1DkrQg_GmqpQxVx';
+
+const ATHLETES = [
+  {name:'Enea Buzzi',      squad:'B'},
+  {name:'Martino Conedera',squad:'B'},
+  {name:'Paolo Pascarella',squad:'B'},
+  {name:'Fedro Bognuda',   squad:'C'},
+  {name:'Naele Quirici',   squad:'C'},
+  {name:'Alissa Scanzio',  squad:'C'},
+  {name:'Marco Albertalli',squad:'S'},
+];
+const SQUADS = [
+  {key:'B', label:'B-Kader',         color:'#39c3d4'},
+  {key:'C', label:'C-Kader',         color:'#f59e0b'},
+  {key:'S', label:'Sichtungskader',  color:'#a78bfa'},
+];
+
+const JUMPS_NO_GRAB = ['Strait','360','bt','Ft','bL','bp','L','360op','7op','bf','10op','bdf','14op','btf'];
+const JUMPS_GRAB    = ['360g','bg','Lg','7og','10og','14og'];
+
+// Entry types: which jump selects they need + which criteria get the traffic-light rating.
+// criteria: [column, label, abbreviation]
+const TYPES = {
+  '50/50':        { jumps:2, jumpList:'all',    criteria:[['r_jump1','Jump 1','J1'],['r_jump2','Jump 2','J2'],['r_sci','Sci','Sci']] },
+  'TTB':          { jumps:2, jumpList:'all',    criteria:[['r_jump1','Jump 1','J1'],['r_jump2','Jump 2','J2'],['r_sci','Sci','Sci']] },
+  'Solo Sci':     { jumps:0, jumpList:null,     criteria:[['r_ub','Upper Body','UB'],['r_abs','Absorption','ABS'],['r_carving','Carving','Carv']] },
+  'Jump No Grab': { jumps:1, jumpList:'nograb', criteria:[['r_asse','Asse','Asse'],['r_air','Air','Air'],['r_landing','Atterraggio','Land']] },
+  'Jump Grab':    { jumps:1, jumpList:'grab',   criteria:[['r_asse','Asse','Asse'],['r_grab','Grab','Grab'],['r_landing','Atterraggio','Land']] },
+};
+const TYPE_NAMES = Object.keys(TYPES);
+const ALL_RATING_COLS = ['r_jump1','r_jump2','r_sci','r_ub','r_abs','r_carving','r_asse','r_air','r_grab','r_landing'];
+
+// Traffic light: stored value → label + colour (coach's Rosso / Arancione / Verde)
+const LEVELS = [
+  {val:1, label:'Rosso',     color:'#e2001a', bg:'rgba(226,0,26,0.1)'},
+  {val:2, label:'Arancione', color:'#f59e0b', bg:'rgba(245,158,11,0.1)'},
+  {val:3, label:'Verde',     color:'#2d8a4e', bg:'rgba(45,138,78,0.1)'},
+];
+const levelColor = v => (LEVELS.find(l => l.val === v) || {color:'var(--muted)'}).color;
+
+const db = (SUPABASE_URL && SUPABASE_KEY) ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+// ═══════════════ HELPERS ═══════════════
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + (type || 'success');
+  clearTimeout(t._h); t._h = setTimeout(() => t.className = 'toast', 2600);
+}
+function shortName(n) { const p = n.split(' '); return p[0] + (p[1] ? ' ' + p[1][0] + '.' : ''); }
+function sid(n) { return n.replace(/\s/g,'_'); }
+function today() { return new Date().toISOString().split('T')[0]; }
+function escAttr(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function jumpOptions(listKey, selected) {
+  const opt = j => '<option value="' + escAttr(j) + '"' + (j === selected ? ' selected' : '') + '>' + j + '</option>';
+  if (listKey === 'nograb') return JUMPS_NO_GRAB.map(opt).join('');
+  if (listKey === 'grab')   return JUMPS_GRAB.map(opt).join('');
+  return '<optgroup label="No Grab">' + JUMPS_NO_GRAB.map(opt).join('') + '</optgroup>'
+       + '<optgroup label="Grab">'    + JUMPS_GRAB.map(opt).join('')    + '</optgroup>';
+}
+
+// ═══════════════ NAVIGATION ═══════════════
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  if (btn && btn.classList.contains('nav-tab')) btn.classList.add('active');
+  updateMobileNav(id);
+  if (id === 'datenbank')  loadDB();
+  if (id === 'auswertung') loadAnalytics();
+}
+function updateMobileNav(id) {
+  const order = ['erfassen','auswertung','datenbank'];
+  document.querySelectorAll('.mobile-nav-btn').forEach((b,i) => b.classList.toggle('active', order[i] === id));
+}
+
+// ═══════════════ SESSION STATE ═══════════════
+let sessSelectedAthletes = [];
+let sessAthleteData = {};   // name → { sel: {typ:{jump1,jump2}}, stats:{attempts,verde} }
+let sessLog = [];
+let sessType = '50/50';
+let sessStartTime = 0;
+let sessActiveAthlete = null;
+const sessRatings = {};     // name → { column: 1|2|3 }
+
+function saveSessionState() {
+  const state = {
+    athletes: sessSelectedAthletes, log: sessLog, type: sessType,
+    startTime: sessStartTime, activeAthlete: sessActiveAthlete || '', athleteState: {}
+  };
+  sessSelectedAthletes.forEach(name => {
+    const d = sessAthleteData[name];
+    if (d) state.athleteState[name] = { sel: d.sel, stats: {...d.stats} };
+  });
+  localStorage.setItem('mg_session', JSON.stringify(state));
+}
+function clearSessionStorage() { localStorage.removeItem('mg_session'); }
+
+function restoreSessionState() {
+  const raw = localStorage.getItem('mg_session');
+  if (!raw) return false;
+  try {
+    const state = JSON.parse(raw);
+    if (!state.athletes || !state.athletes.length) { clearSessionStorage(); return false; }
+    sessSelectedAthletes = state.athletes;
+    sessLog = state.log || [];
+    sessType = state.type || '50/50';
+    sessStartTime = state.startTime || Date.now();
+    sessActiveAthlete = state.activeAthlete || state.athletes[0];
+    for (const name of sessSelectedAthletes) {
+      const saved = (state.athleteState || {})[name] || {};
+      sessAthleteData[name] = { sel: saved.sel || {}, stats: saved.stats || {attempts:0, verde:0} };
+    }
+    enterLiveView();
+    showToast('Session restored', 'success');
+    return true;
+  } catch(e) { clearSessionStorage(); return false; }
+}
+
+function initSessionSetup() {
+  if (restoreSessionState()) return;
+  document.getElementById('sess-date-label').textContent =
+    new Date().toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  renderAthleteGrid();
+}
+
+function renderAthleteGrid() {
+  const grid = document.getElementById('sess-athlete-grid');
+  grid.innerHTML = SQUADS.map(sq => {
+    const athletes = ATHLETES.filter(a => a.squad === sq.key);
+    if (!athletes.length) return '';
+    return `<div style="margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${sq.color};margin-bottom:8px;">${sq.label}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${athletes.map(a => {
+          const checked = sessSelectedAthletes.includes(a.name);
+          return `<label style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface2);border:2px solid ${checked?'#39c3d4':'var(--border)'};border-radius:10px;cursor:pointer;transition:border-color .15s;" id="sess-ath-card-${sid(a.name)}">
+            <input type="checkbox" value="${escAttr(a.name)}" onchange="toggleSessionAthlete('${a.name}')" ${checked?'checked':''} style="width:16px;height:16px;accent-color:${sq.color};cursor:pointer;flex-shrink:0;">
+            <span style="font-weight:600;font-size:13px;color:var(--text);">${shortName(a.name)}</span>
+          </label>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('sess-start-btn').style.display = sessSelectedAthletes.length ? 'block' : 'none';
+}
+
+function toggleSessionAthlete(name) {
+  const cb = document.querySelector(`#sess-athlete-grid input[value="${CSS.escape(name)}"]`);
+  if (sessSelectedAthletes.includes(name)) {
+    sessSelectedAthletes = sessSelectedAthletes.filter(a => a !== name);
+    delete sessAthleteData[name];
+    const card = document.getElementById('sess-ath-card-' + sid(name));
+    if (card) card.style.borderColor = 'var(--border)';
+  } else {
+    if (sessSelectedAthletes.length >= 8) {
+      showToast('Max. 8 athletes per session', 'error');
+      if (cb) cb.checked = false;
+      return;
+    }
+    sessSelectedAthletes.push(name);
+    sessAthleteData[name] = { sel: {}, stats: {attempts:0, verde:0} };
+    const card = document.getElementById('sess-ath-card-' + sid(name));
+    if (card) card.style.borderColor = '#39c3d4';
+  }
+  document.getElementById('sess-start-btn').style.display = sessSelectedAthletes.length ? 'block' : 'none';
+}
+
+function clearSessionSelection() {
+  sessSelectedAthletes = []; sessAthleteData = {};
+  renderAthleteGrid();
+}
+
+function startSession() {
+  if (sessSelectedAthletes.length === 0) { showToast('Please select at least one athlete', 'error'); return; }
+  const isResume = sessStartTime > 0 && sessLog.length > 0;
+  sessSelectedAthletes.forEach(name => {
+    if (!sessAthleteData[name]) sessAthleteData[name] = { sel: {}, stats: {attempts:0, verde:0} };
+    if (!isResume) sessAthleteData[name].stats = {attempts:0, verde:0};
+  });
+  if (!isResume) { sessLog = []; sessStartTime = Date.now(); }
+  enterLiveView();
+  saveSessionState();
+}
+
+function enterLiveView() {
+  document.getElementById('sess-setup').style.display = 'none';
+  document.getElementById('sess-live').style.display = 'block';
+  document.getElementById('sess-live-date').textContent =
+    new Date(sessStartTime || Date.now()).toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  renderLiveSession();
+  renderSessionLog();
+}
+
+function addAthleteToSession() {
+  document.getElementById('sess-setup').style.display = 'block';
+  document.getElementById('sess-live').style.display = 'none';
+  renderAthleteGrid();
+}
+
+function resetSession() {
+  sessSelectedAthletes = []; sessAthleteData = {}; sessLog = [];
+  Object.keys(sessRatings).forEach(k => delete sessRatings[k]);
+  sessActiveAthlete = null; sessStartTime = 0;
+  clearSessionStorage();
+  document.getElementById('sess-setup').style.display = 'block';
+  document.getElementById('sess-live').style.display = 'none';
+  initSessionSetup();
+}
+
+async function cancelSession() {
+  const confirmed = confirm('Are you sure you want to cancel this session?\n\nAll recorded entries will be permanently deleted and cannot be recovered.');
+  if (!confirmed) return;
+  const ids = sessLog.filter(e => e.dbId).map(e => e.dbId);
+  if (ids.length > 0 && db) await db.from('entries').delete().in('id', ids);
+  sessLog = [];
+  resetSession();
+  showToast('Session cancelled — all data deleted', 'error');
+}
+
+function endSession() {
+  if (!confirm('End this session?\n\n' + sessLog.length + ' entries logged — they stay saved in the database.')) return;
+  showToast('Session complete — ' + sessLog.length + ' entries saved', 'success');
+  resetSession();
+}
+
+// ═══════════════ LIVE SESSION ═══════════════
+function setSessType(t) {
+  if (sessType === t) return;
+  sessType = t;
+  Object.keys(sessRatings).forEach(k => delete sessRatings[k]);  // in-progress ratings belong to old type
+  renderLiveSession();
+  saveSessionState();
+}
+
+function renderLiveSession() {
+  // Type tabs
+  document.getElementById('sess-type-tabs').innerHTML = TYPE_NAMES.map(t =>
+    `<button onclick="setSessType('${t}')" class="sess-type-btn${t===sessType?' active':''}">${t}</button>`
+  ).join('');
+
+  const cols = document.getElementById('sess-athlete-cols');
+  if (!sessActiveAthlete && sessSelectedAthletes.length > 0) sessActiveAthlete = sessSelectedAthletes[0];
+
+  // Athlete tabs
+  const tabsHtml = `<div style="display:flex;flex-wrap:wrap;gap:8px;">
+    ${sessSelectedAthletes.map(name => {
+      const last = sessLog.find(e => e.name === name);
+      const dot = last ? `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${levelColor(Math.round(last.avg))};margin-right:4px;"></span>` : '';
+      const isActive = name === sessActiveAthlete;
+      return `<button onclick="selectSessAthlete('${name}')" style="
+        padding:10px 18px;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;
+        background:${isActive?'rgba(57,195,212,0.2)':'var(--surface2)'};
+        border:2px solid ${isActive?'#39c3d4':'var(--border)'};
+        color:${isActive?'#39c3d4':'var(--muted)'};
+      ">${dot}${shortName(name)}</button>`;
+    }).join('')}
+  </div>`;
+
+  // Active athlete card
+  const name = sessActiveAthlete;
+  let cardHtml = '';
+  if (name && sessAthleteData[name]) {
+    if (!sessRatings[name]) sessRatings[name] = {};
+    const d = sessAthleteData[name];
+    if (!d.sel[sessType]) d.sel[sessType] = {jump1:'', jump2:''};
+    const t = TYPES[sessType];
+    const sel = d.sel[sessType];
+    const s = sid(name);
+
+    // Jump selects
+    let jumpsHtml = '';
+    if (t.jumps >= 1) {
+      const label1 = t.jumps === 2 ? 'Jump 1' : 'Jump';
+      jumpsHtml += `<div style="display:grid;grid-template-columns:${t.jumps===2?'1fr 1fr':'1fr'};gap:10px;margin-bottom:20px;">
+        <div class="form-group"><label>${label1}</label>
+          <select onchange="setSessJump('${name}','jump1',this.value)">
+            <option value="">— select —</option>${jumpOptions(t.jumpList, sel.jump1)}
+          </select></div>
+        ${t.jumps === 2 ? `<div class="form-group"><label>Jump 2</label>
+          <select onchange="setSessJump('${name}','jump2',this.value)">
+            <option value="">— select —</option>${jumpOptions(t.jumpList, sel.jump2)}
+          </select></div>` : ''}
+      </div>`;
+    }
+
+    // Criteria rows with Rosso / Arancione / Verde buttons
+    const critHtml = `<div style="display:flex;flex-direction:column;gap:12px;">
+      ${t.criteria.map(([col, label]) => `
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">${label}</div>
+          <div class="crit-row">
+            ${LEVELS.map(l => {
+              const active = sessRatings[name][col] === l.val;
+              return `<button onclick="setSessRating('${name}','${col}',${l.val})"
+                id="sr-${s}-${col}-${l.val}" class="rate-btn"
+                style="background:${l.bg};border-width:${active?'3px':'2px'};border-color:${l.color};color:${l.color};opacity:${active?1:0.55};"
+              >${l.label.toUpperCase()}</button>`;
+            }).join('')}
+          </div>
+        </div>`).join('')}
+    </div>`;
+
+    cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${s}">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+        <div style="font-size:26px;font-weight:800;color:#39c3d4;">${shortName(name)}</div>
+        <div style="font-size:12px;color:var(--muted);">${d.stats.attempts} entries · <span style="color:#2d8a4e;">${d.stats.verde} all-verde</span></div>
+      </div>
+      ${jumpsHtml}
+      ${critHtml}
+      <input type="text" id="sess-comment-${s}" placeholder="Comment before last rating (optional)" style="width:100%;margin-top:14px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+    </div>`;
+  }
+
+  cols.innerHTML = tabsHtml + cardHtml;
+}
+
+function selectSessAthlete(name) {
+  sessActiveAthlete = name;
+  renderLiveSession();
+  saveSessionState();
+}
+
+function setSessJump(name, slot, jump) {
+  sessAthleteData[name].sel[sessType][slot] = jump;
+  saveSessionState();
+}
+
+function setSessRating(name, col, val) {
+  sessRatings[name][col] = val;
+  const s = sid(name);
+  LEVELS.forEach(l => {
+    const b = document.getElementById(`sr-${s}-${col}-${l.val}`);
+    if (!b) return;
+    const active = l.val === val;
+    b.style.opacity = active ? '1' : '0.55';
+    b.style.borderWidth = active ? '3px' : '2px';
+  });
+  const t = TYPES[sessType];
+  if (t.criteria.every(([c]) => sessRatings[name][c])) autoLogEntry(name);
+}
+
+function autoLogEntry(name) {
+  const t = TYPES[sessType];
+  const d = sessAthleteData[name];
+  const sel = d.sel[sessType] || {};
+  if (t.jumps >= 1 && !sel.jump1) { showToast('Please select ' + (t.jumps===2?'Jump 1':'a jump'), 'error'); return; }
+  if (t.jumps === 2 && !sel.jump2) { showToast('Please select Jump 2', 'error'); return; }
+
+  const r = sessRatings[name];
+  const vals = t.criteria.map(([c]) => r[c]);
+  const avg = vals.reduce((a,b) => a+b, 0) / vals.length;
+
+  d.stats.attempts++;
+  if (vals.every(v => v === 3)) d.stats.verde++;
+
+  // Flash card in the avg colour
+  const col = document.getElementById('sess-col-' + sid(name));
+  if (col) {
+    col.style.background = avg >= 2.5 ? 'rgba(45,138,78,0.2)' : avg >= 1.5 ? 'rgba(245,158,11,0.2)' : 'rgba(226,0,26,0.2)';
+    setTimeout(() => { col.style.background = ''; }, 300);
+  }
+
+  const commentEl = document.getElementById('sess-comment-' + sid(name));
+  const comment = commentEl ? commentEl.value.trim() : '';
+  if (commentEl) commentEl.value = '';
+
+  const row = { athlet: name, datum: today(), typ: sessType,
+    jump1: t.jumps >= 1 ? sel.jump1 : null, jump2: t.jumps === 2 ? sel.jump2 : null,
+    kommentar: comment || null };
+  t.criteria.forEach(([c]) => row[c] = r[c]);
+
+  const logEntry = { ...row, name, avg,
+    time: new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit'}) };
+  sessLog.unshift(logEntry);
+
+  sessRatings[name] = {};
+  renderLiveSession();
+  renderSessionLog();
+  saveSessionState();
+
+  if (!db) { showToast('⚠ Not saved — Supabase not configured', 'error'); return; }
+  db.from('entries').insert(row).select('id').then(({data, error}) => {
+    if (error) { console.error(error); showToast('Save error: ' + error.message, 'error'); return; }
+    if (data && data[0]) { logEntry.dbId = data[0].id; saveSessionState(); }
+  });
+}
+
+function ratingDots(e) {
+  const t = TYPES[e.typ];
+  if (!t) return '';
+  return t.criteria.map(([col, label, abbr]) =>
+    e[col] ? `<span title="${label}" style="color:${levelColor(e[col])};font-weight:700;font-size:11px;margin-right:6px;">●&hairsp;${abbr}</span>` : ''
+  ).join('');
+}
+
+function renderSessionLog() {
+  const el = document.getElementById('sess-log');
+  if (!sessLog.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;">No entries logged yet.</div>';
+    return;
+  }
+  el.innerHTML = sessLog.slice(0, 40).map((e, i) => {
+    const jumps = [e.jump1, e.jump2].filter(Boolean).join(' + ');
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;flex-wrap:wrap;">
+      <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
+      <span class="badge-typ" style="font-size:10px;">${e.typ}</span>
+      <span style="flex:1;color:var(--text);min-width:100px;">${jumps || '—'} ${ratingDots(e)}${e.kommentar ? `<span style="color:var(--muted);font-size:10px;"> — ${e.kommentar}</span>` : ''}</span>
+      <span style="color:var(--muted);font-size:11px;">${e.time || ''}</span>
+      <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">✏️</button>
+      <button onclick="deleteLogEntry(${i})" class="btn-del" style="flex-shrink:0;">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function recalcStats(name) {
+  const d = sessAthleteData[name];
+  if (!d) return;
+  const entries = sessLog.filter(e => e.name === name);
+  d.stats.attempts = entries.length;
+  d.stats.verde = entries.filter(e => {
+    const t = TYPES[e.typ];
+    return t && t.criteria.every(([c]) => e[c] === 3);
+  }).length;
+}
+
+async function deleteLogEntry(idx) {
+  const e = sessLog[idx];
+  if (!e) return;
+  if (e.dbId && db) await db.from('entries').delete().eq('id', e.dbId);
+  sessLog.splice(idx, 1);
+  recalcStats(e.name);
+  showToast('Entry removed', 'success');
+  renderSessionLog();
+  renderLiveSession();
+  saveSessionState();
+}
+
+function editLogEntry(idx) {
+  const e = sessLog[idx];
+  if (!e) return;
+  openEdit({ ...e, id: e.dbId }, {source:'log', idx});
+}
+
+// ═══════════════ EDIT MODAL (shared: session log + database) ═══════════════
+let editCtx = null;   // { entry, meta:{source, idx} }
+
+function openEdit(entry, meta) {
+  editCtx = { entry: {...entry}, meta };
+  const t = TYPES[entry.typ];
+  if (!t) { showToast('Unknown type: ' + entry.typ, 'error'); return; }
+
+  let jumpsHtml = '';
+  if (t.jumps >= 1) {
+    jumpsHtml = `<div style="display:grid;grid-template-columns:${t.jumps===2?'1fr 1fr':'1fr'};gap:10px;margin-bottom:14px;">
+      <div class="form-group"><label>${t.jumps===2?'Jump 1':'Jump'}</label>
+        <select id="ed-jump1"><option value="">— select —</option>${jumpOptions(t.jumpList, entry.jump1)}</select></div>
+      ${t.jumps===2 ? `<div class="form-group"><label>Jump 2</label>
+        <select id="ed-jump2"><option value="">— select —</option>${jumpOptions(t.jumpList, entry.jump2)}</select></div>` : ''}
+    </div>`;
+  }
+
+  const critHtml = t.criteria.map(([col, label]) => `
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">${label}</div>
+      <div class="crit-row" id="ed-crit-${col}">
+        ${LEVELS.map(l => {
+          const active = editCtx.entry[col] === l.val;
+          return `<button onclick="setEditRating('${col}',${l.val})" data-val="${l.val}" class="rate-btn"
+            style="padding:10px 8px;font-size:11px;background:${l.bg};border-width:${active?'3px':'2px'};border-color:${l.color};color:${l.color};opacity:${active?1:0.55};"
+          >${l.label.toUpperCase()}</button>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+
+  document.getElementById('edit-body').innerHTML = `
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+      <span style="color:#39c3d4;font-weight:700;">${shortName(entry.athlet || entry.name || '')}</span>
+      &nbsp;·&nbsp;<span class="badge-typ">${entry.typ}</span>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;"><label>Date</label>
+      <input type="date" id="ed-datum" value="${escAttr(entry.datum || today())}"></div>
+    ${jumpsHtml}
+    ${critHtml}
+    <div class="form-group" style="margin-top:4px;"><label>Comment</label>
+      <input type="text" id="ed-kommentar" value="${escAttr(entry.kommentar || '')}" placeholder="Comment (optional)"></div>`;
+  document.getElementById('edit-overlay').style.display = 'flex';
+}
+
+function setEditRating(col, val) {
+  editCtx.entry[col] = val;
+  document.querySelectorAll(`#ed-crit-${col} .rate-btn`).forEach(b => {
+    const active = Number(b.dataset.val) === val;
+    b.style.opacity = active ? '1' : '0.55';
+    b.style.borderWidth = active ? '3px' : '2px';
+  });
+}
+
+function closeEdit() {
+  document.getElementById('edit-overlay').style.display = 'none';
+  editCtx = null;
+}
+
+async function saveEdit() {
+  if (!editCtx) return;
+  const e = editCtx.entry;
+  const t = TYPES[e.typ];
+  const upd = { datum: document.getElementById('ed-datum').value || e.datum, kommentar: (document.getElementById('ed-kommentar').value || '').trim() || null };
+  if (t.jumps >= 1) upd.jump1 = document.getElementById('ed-jump1').value || null;
+  if (t.jumps === 2) upd.jump2 = document.getElementById('ed-jump2').value || null;
+  t.criteria.forEach(([c]) => upd[c] = e[c] || null);
+  if (t.jumps >= 1 && !upd.jump1) { showToast('Please select a jump', 'error'); return; }
+
+  if (e.id && db) {
+    const {error} = await db.from('entries').update(upd).eq('id', e.id);
+    if (error) { showToast('Save error: ' + error.message, 'error'); return; }
+  }
+
+  const meta = editCtx.meta || {};
+  if (meta.source === 'log' && sessLog[meta.idx]) {
+    Object.assign(sessLog[meta.idx], upd);
+    const vals = t.criteria.map(([c]) => upd[c]).filter(Boolean);
+    if (vals.length) sessLog[meta.idx].avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+    recalcStats(sessLog[meta.idx].name);
+    renderSessionLog(); renderLiveSession(); saveSessionState();
+  }
+  if (meta.source === 'db') {
+    const row = dbRows.find(r => r.id === e.id);
+    if (row) Object.assign(row, upd);
+    renderDBTable();
+  }
+  closeEdit();
+  showToast('Entry updated', 'success');
+}
+
+// ═══════════════ DATABASE PAGE ═══════════════
+let dbRows = [];
+let dbLoaded = false;
+
+async function loadDB(force) {
+  const tbody = document.getElementById('db-tbody');
+  if (!db) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">⚠️</div>Supabase not configured yet.</div></td></tr>';
+    return;
+  }
+  if (dbLoaded && !force) { renderDBTable(); return; }
+  tbody.innerHTML = '<tr><td colspan="7"><div class="loading"><span class="spinner"></span>Loading…</div></td></tr>';
+  const {data, error} = await db.from('entries').select('*').order('datum', {ascending:false}).order('id', {ascending:false}).limit(2000);
+  if (error) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">Error: ' + error.message + '</div></td></tr>'; return; }
+  dbRows = data || [];
+  dbLoaded = true;
+  renderDBTable();
+}
+
+function dbFiltered(prefix) {
+  const ath = document.getElementById(prefix + '-athlet').value;
+  const typ = document.getElementById(prefix + '-typ').value;
+  const from = document.getElementById(prefix + '-from').value;
+  const to = document.getElementById(prefix + '-to').value;
+  return dbRows.filter(r =>
+    (!ath || r.athlet === ath) && (!typ || r.typ === typ) &&
+    (!from || r.datum >= from) && (!to || r.datum <= to));
+}
+
+function renderDBTable() {
+  const tbody = document.getElementById('db-tbody');
+  const rows = dbFiltered('db');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">🏔</div>No entries found.</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.slice(0, 500).map(r => {
+    const jumps = [r.jump1, r.jump2].filter(Boolean).join(' + ');
+    return `<tr>
+      <td style="white-space:nowrap;">${r.datum || ''}</td>
+      <td style="white-space:nowrap;">${shortName(r.athlet || '')}</td>
+      <td><span class="badge-typ">${r.typ}</span></td>
+      <td>${jumps || '—'}</td>
+      <td style="white-space:nowrap;">${ratingDots(r)}</td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;color:var(--muted);">${r.kommentar || ''}</td>
+      <td style="white-space:nowrap;">
+        <button onclick="editDBEntry(${r.id})" title="Edit" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 7px;font-size:11px;">✏️</button>
+        <button onclick="deleteDBEntry(${r.id})" class="btn-del">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function editDBEntry(id) {
+  const row = dbRows.find(r => r.id === id);
+  if (row) openEdit(row, {source:'db'});
+}
+
+async function deleteDBEntry(id) {
+  if (!confirm('Delete this entry permanently?')) return;
+  const {error} = await db.from('entries').delete().eq('id', id);
+  if (error) { showToast('Delete error: ' + error.message, 'error'); return; }
+  dbRows = dbRows.filter(r => r.id !== id);
+  renderDBTable();
+  showToast('Entry deleted', 'success');
+}
+
+// ═══════════════ ANALYTICS PAGE ═══════════════
+async function loadAnalytics() {
+  if (db && !dbLoaded) {
+    const {data, error} = await db.from('entries').select('*').order('datum', {ascending:false}).order('id', {ascending:false}).limit(2000);
+    if (!error) { dbRows = data || []; dbLoaded = true; }
+  }
+  renderAnalytics();
+}
+
+function distBar(counts) {
+  const total = counts[1] + counts[2] + counts[3];
+  if (!total) return '<span style="color:var(--muted);font-size:12px;">–</span>';
+  const seg = v => counts[v] ? `<div style="width:${(counts[v]/total*100)}%;background:${levelColor(v)};"></div>` : '';
+  return `<div style="display:flex;align-items:center;gap:8px;">
+    <div class="dist-bar" style="flex:1;">${seg(1)}${seg(2)}${seg(3)}</div>
+    <span style="font-size:11px;color:var(--muted);white-space:nowrap;">${counts[1]}/${counts[2]}/${counts[3]}</span>
+  </div>`;
+}
+
+function renderAnalytics() {
+  const el = document.getElementById('an-content');
+  if (!db) { el.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div>Supabase not configured yet.</div>'; return; }
+  const rows = dbFiltered('an');
+  const typ = document.getElementById('an-typ').value;
+
+  if (!rows.length) { el.innerHTML = '<div class="empty-state"><div class="icon">📊</div>No entries in this selection.</div>'; return; }
+
+  const days = new Set(rows.map(r => r.datum)).size;
+  let allVals = [];
+  rows.forEach(r => { const t = TYPES[r.typ]; if (t) t.criteria.forEach(([c]) => { if (r[c]) allVals.push(r[c]); }); });
+  const verdePct = allVals.length ? Math.round(allVals.filter(v => v === 3).length / allVals.length * 100) : 0;
+
+  let html = `<div class="stats-grid">
+    <div class="stat-card"><div class="stat-value">${rows.length}</div><div class="stat-label">Entries</div></div>
+    <div class="stat-card"><div class="stat-value">${days}</div><div class="stat-label">Training Days</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:#2d8a4e;">${verdePct}%</div><div class="stat-label">Verde Share</div></div>
+  </div>`;
+
+  if (!typ) {
+    // Overview per type
+    html += `<div class="card"><div class="card-title">Entries per Type</div><div class="table-wrap"><table>
+      <thead><tr><th>Type</th><th>Entries</th><th>Rating Distribution (R/A/V)</th></tr></thead><tbody>
+      ${TYPE_NAMES.map(tn => {
+        const tRows = rows.filter(r => r.typ === tn);
+        if (!tRows.length) return '';
+        const counts = {1:0,2:0,3:0};
+        tRows.forEach(r => TYPES[tn].criteria.forEach(([c]) => { if (r[c]) counts[r[c]]++; }));
+        return `<tr><td><span class="badge-typ">${tn}</span></td><td>${tRows.length}</td><td>${distBar(counts)}</td></tr>`;
+      }).join('')}
+      </tbody></table></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;">Select a type above for the per-criterion and per-jump breakdown.</div></div>`;
+  } else {
+    const t = TYPES[typ];
+    // Per criterion
+    html += `<div class="card"><div class="card-title">${typ} — Criteria</div><div class="table-wrap"><table>
+      <thead><tr><th>Criterion</th><th>Ø (1–3)</th><th>Distribution (R/A/V)</th></tr></thead><tbody>
+      ${t.criteria.map(([col, label]) => {
+        const vals = rows.map(r => r[col]).filter(Boolean);
+        if (!vals.length) return '';
+        const counts = {1:0,2:0,3:0}; vals.forEach(v => counts[v]++);
+        const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+        return `<tr><td>${label}</td><td style="font-weight:700;color:${levelColor(Math.round(avg))};">${avg.toFixed(2)}</td><td>${distBar(counts)}</td></tr>`;
+      }).join('')}
+      </tbody></table></div></div>`;
+
+    // Per jump
+    if (t.jumps >= 1) {
+      const jumpStats = {};   // jump → [values]
+      rows.forEach(r => {
+        if (typ === '50/50' || typ === 'TTB') {
+          if (r.jump1 && r.r_jump1) (jumpStats[r.jump1] = jumpStats[r.jump1] || []).push(r.r_jump1);
+          if (r.jump2 && r.r_jump2) (jumpStats[r.jump2] = jumpStats[r.jump2] || []).push(r.r_jump2);
+        } else if (r.jump1) {
+          const vals = t.criteria.map(([c]) => r[c]).filter(Boolean);
+          if (vals.length) (jumpStats[r.jump1] = jumpStats[r.jump1] || []).push(vals.reduce((a,b)=>a+b,0)/vals.length);
+        }
+      });
+      const jumps = Object.keys(jumpStats).sort((a,b) => jumpStats[b].length - jumpStats[a].length);
+      if (jumps.length) {
+        html += `<div class="card"><div class="card-title">${typ} — Jumps</div><div class="table-wrap"><table>
+          <thead><tr><th>Jump</th><th>Attempts</th><th>Ø (1–3)</th><th>Distribution (R/A/V)</th></tr></thead><tbody>
+          ${jumps.map(j => {
+            const vals = jumpStats[j];
+            const counts = {1:0,2:0,3:0}; vals.forEach(v => counts[Math.round(v)]++);
+            const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+            return `<tr><td style="font-weight:600;">${j}</td><td>${vals.length}</td><td style="font-weight:700;color:${levelColor(Math.round(avg))};">${avg.toFixed(2)}</td><td>${distBar(counts)}</td></tr>`;
+          }).join('')}
+          </tbody></table></div></div>`;
+      }
+    }
+  }
+  el.innerHTML = html;
+}
+
+// ═══════════════ BOOT ═══════════════
+document.addEventListener('DOMContentLoaded', function() {
+  if (!db) document.getElementById('db-warning').style.display = 'block';
+  // Fill filter dropdowns
+  const athOpts = SQUADS.map(sq => {
+    const athletes = ATHLETES.filter(a => a.squad === sq.key);
+    if (!athletes.length) return '';
+    return `<optgroup label="${sq.label}">${athletes.map(a => `<option>${a.name}</option>`).join('')}</optgroup>`;
+  }).join('');
+  const typOpts = TYPE_NAMES.map(t => `<option>${t}</option>`).join('');
+  ['db-athlet','an-athlet'].forEach(id => document.getElementById(id).insertAdjacentHTML('beforeend', athOpts));
+  ['db-typ','an-typ'].forEach(id => document.getElementById(id).insertAdjacentHTML('beforeend', typOpts));
+  initSessionSetup();
+});
+</script>
+
+<!-- Mobile bottom navigation -->
+<nav class="mobile-nav" id="mobile-nav">
+  <button class="mobile-nav-btn active" onclick="showPage('erfassen', this)">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+    Session
+  </button>
+  <button class="mobile-nav-btn" onclick="showPage('auswertung', this)">
+    <svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="20"/><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="6"/><line x1="18" y1="20" x2="18" y2="14"/></svg>
+    Analytics
+  </button>
+  <button class="mobile-nav-btn" onclick="showPage('datenbank', this)">
+    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+    Database
+  </button>
+</nav>
+
+</body>
+</html>
