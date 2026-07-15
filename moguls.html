@@ -187,7 +187,7 @@
         <div style="color:var(--muted);font-size:12px;" id="sess-live-date"></div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button onclick="addAthleteToSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">+ Add Athlete</button>
+        <button onclick="addAthleteToSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">⇄ Type / + Athlete</button>
         <button onclick="cancelSession()" style="padding:9px 16px;background:none;border:1px solid #e2001a;border-radius:8px;color:#e2001a;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✕ Cancel</button>
         <button onclick="endSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✓ End Session</button>
       </div>
@@ -465,6 +465,7 @@ function selectSessType(btn, type) {
 function startSession() {
   if (!sessType) { showToast('Please select a session type first', 'error'); return; }
   if (sessSelectedAthletes.length === 0) { showToast('Please select at least one athlete', 'error'); return; }
+  Object.keys(sessRatings).forEach(k => delete sessRatings[k]);  // angefangene Bewertungen verwerfen (Typ kann gewechselt haben)
   const isResume = sessStartTime > 0 && sessLog.length > 0;
   sessSelectedAthletes.forEach(name => {
     if (!sessAthleteData[name]) sessAthleteData[name] = { sel: {}, stats: {attempts:0, stomped:0} };
