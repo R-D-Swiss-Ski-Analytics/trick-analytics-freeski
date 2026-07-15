@@ -155,7 +155,7 @@
 
 <div class="toast" id="toast"></div>
 <div id="db-warning" style="display:none;background:#2a1505;border-bottom:1px solid #f59e0b;color:#f59e0b;padding:8px 24px;font-size:12px;font-weight:600;">
-  ⚠ Supabase ist noch nicht konfiguriert — Einträge werden NICHT gespeichert. URL &amp; Key in moguls.html eintragen.
+  ⚠ Supabase is not configured yet — entries will NOT be saved. Add URL &amp; key in moguls.html.
 </div>
 
 <!-- ══════════════════════════════════════════ ASSESSMENT -->
@@ -269,6 +269,19 @@
     </div>
   </div>
   <div id="db-overview"></div>
+  <div class="card">
+    <div class="card-title">Reports (PDF)</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Reports use the type &amp; season filters above.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+      <select id="rp-athlet" style="max-width:200px;"><option value="">— select athlete —</option></select>
+      <button class="btn-secondary" onclick="openAthleteReport()">↓ Athlete PDF</button>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+      <select id="rp-date" style="max-width:200px;"><option value="">— select session day —</option></select>
+      <button class="btn-secondary" onclick="openSessionReportPdf()">↓ Session PDF</button>
+    </div>
+    <button class="btn-secondary" onclick="openTeamReportPdf()">↓ Team PDF</button>
+  </div>
   <div class="table-wrap">
     <table>
       <thead><tr><th>Date</th><th>Athlete</th><th>Type</th><th>Jump(s)</th><th>Ratings</th><th>Comment</th><th></th></tr></thead>
@@ -445,7 +458,7 @@ function renderStandort() {
         <button onclick="addStandort('mastered')" style="padding:11px 20px;background:linear-gradient(135deg,#1a5c38,#2d8a4e);color:#fff;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✓ MASTERED</button>
         <button onclick="addStandort('goal')" style="padding:11px 20px;background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🎯 GOAL</button>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;">In der Live Session zeigt das Sprung-Dropdown nur noch diese Jumps (Goals mit 🎯).</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;">In the live session, the jump dropdown only shows these jumps (goals marked 🎯).</div>
     </div>
     <div class="sb-columns">
       <div>
@@ -1133,8 +1146,155 @@ function renderDBOverview() {
   </div>`;
 }
 
+// ═══════════════ PDF REPORTS (print window, analog Freeski/Snowboard) ═══════════════
+function reportPeriodLabel() {
+  const season = document.getElementById('db-season').value;
+  let label;
+  if (season === 'current' || season === 'last') {
+    const y = seasonStartYear() - (season === 'last' ? 1 : 0), s = v => String(v).slice(2);
+    label = 'Season ' + s(y) + '/' + s(y + 1);
+  } else if (season === 'all') {
+    label = 'All time';
+  } else {
+    const fm = document.getElementById('db-from').value, to = document.getElementById('db-to').value;
+    const f = d => d ? d.slice(8,10) + '.' + d.slice(5,7) + '.' + d.slice(2,4) : '…';
+    label = f(fm) + ' – ' + f(to);
+  }
+  if (dbTypFilter) label += ' · ' + dbTypFilter;
+  return label;
+}
+
+function openPrintWindow(title, subtitle, bodyHtml) {
+  const win = window.open('', '_blank');
+  if (!win) { showToast('Popup blocked — please allow popups', 'error'); return; }
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;padding:32px 40px;max-width:900px;margin:0 auto;font-size:13px;}
+  h1{font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:6px;}
+  .sub{color:#666;margin-bottom:20px;font-size:12px;}
+  h2{font-size:14px;font-weight:700;margin:20px 0 8px;text-transform:uppercase;letter-spacing:.5px;}
+  table{width:100%;border-collapse:collapse;margin-bottom:12px;}
+  th{font-size:10px;text-transform:uppercase;letter-spacing:.5px;text-align:left;color:#666;border-bottom:1.5px solid #1a1a1a;padding:5px 8px;}
+  td{padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;}
+  .sum{color:#444;font-size:12px;margin-bottom:8px;}
+  .print-btn{margin-bottom:24px;}
+  .print-btn button{padding:9px 22px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;}
+  .ath{margin-bottom:26px;page-break-inside:avoid;}
+  .ath-name{font-size:16px;font-weight:700;border-bottom:1px solid #ccc;padding-bottom:5px;margin-bottom:8px;}
+  @media print{.print-btn{display:none;}}
+</style></head><body>
+<div class="print-btn"><button onclick="window.print()">🖨 Print / Save as PDF</button></div>
+<h1>${title}</h1><div class="sub">${subtitle} &nbsp;·&nbsp; generated ${new Date().toLocaleDateString('en-GB')}</div>
+${bodyHtml}
+</body></html>`);
+  win.document.close();
+}
+
+// One table per session type: jump/criterion rows with Miss/Okay/Perfect counts + Ø %
+function typeReportSection(typ, rows) {
+  const mkRow = (label, vals) => {
+    if (!vals.length) return '';
+    const c = {1:0, 2:0, 3:0};
+    vals.forEach(v => c[Math.min(3, Math.max(1, Math.round(v)))]++);
+    const pct = Math.round((vals.reduce((a,b)=>a+b,0) / vals.length - 1) * 50);
+    const col = pct >= 70 ? '#2d8a4e' : pct >= 40 ? '#b45309' : '#cc0000';
+    return `<tr><td>${label}</td><td style="text-align:center">${vals.length}</td><td style="text-align:center">${c[1]}</td><td style="text-align:center">${c[2]}</td><td style="text-align:center">${c[3]}</td><td style="text-align:center;font-weight:700;color:${col}">${pct}%</td></tr>`;
+  };
+  let bodyRows = '';
+  if (typ === '50/50' || typ === 'TTB') {
+    const jumps = {};
+    rows.forEach(r => {
+      if (r.jump1 && r.r_jump1) (jumps[r.jump1] = jumps[r.jump1] || []).push(r.r_jump1);
+      if (r.jump2 && r.r_jump2) (jumps[r.jump2] = jumps[r.jump2] || []).push(r.r_jump2);
+    });
+    bodyRows = Object.keys(jumps).sort((a,b) => jumps[b].length - jumps[a].length).map(j => mkRow(j, jumps[j])).join('');
+    bodyRows += mkRow('Sci', rows.map(r => r.r_sci).filter(v => v != null));
+  } else if (typ === 'Solo Sci') {
+    bodyRows = mkRow('Upper Body', rows.map(r => r.r_ub).filter(v => v != null))
+      + mkRow('Absorption', rows.map(r => r.r_abs).filter(v => v != null))
+      + mkRow('Carving', rows.map(r => r.r_carving).filter(v => v != null));
+  } else {
+    const jumps = {};
+    rows.forEach(r => {
+      if (!r.jump1) return;
+      (critsFor(r) || []).forEach(([c]) => { if (r[c] != null) (jumps[r.jump1] = jumps[r.jump1] || []).push(r[c]); });
+    });
+    bodyRows = Object.keys(jumps).sort((a,b) => jumps[b].length - jumps[a].length).map(j => mkRow(j, jumps[j])).join('');
+  }
+  if (!bodyRows) return '';
+  return `<h2>${typ} <span style="color:#888;font-weight:400;">· ${rows.length} entries</span></h2>
+  <table><thead><tr><th>Jump / Criterion</th><th style="text-align:center">Ratings</th><th style="text-align:center">✗ Miss</th><th style="text-align:center">✓ Okay</th><th style="text-align:center">⭐ Perfect</th><th style="text-align:center">Ø</th></tr></thead><tbody>${bodyRows}</tbody></table>`;
+}
+
+function athleteSectionsHtml(rows) {
+  const byTyp = {};
+  rows.forEach(r => (byTyp[r.typ] = byTyp[r.typ] || []).push(r));
+  return Object.keys(TYPES).filter(t => byTyp[t]).map(t => typeReportSection(t, byTyp[t])).join('');
+}
+
+function reportStatLine(rows) {
+  const days = new Set(rows.map(r => r.datum)).size;
+  let vals = [];
+  rows.forEach(r => (critsFor(r) || []).forEach(([c]) => { if (r[c]) vals.push(r[c]); }));
+  const perfect = vals.length ? Math.round(vals.filter(v => v === 3).length / vals.length * 100) : 0;
+  return `<div class="sum">${rows.length} entries &nbsp;·&nbsp; ${days} training day${days !== 1 ? 's' : ''} &nbsp;·&nbsp; ${perfect}% perfect share</div>`;
+}
+
+function reportAthleteOrder(byAth) {
+  const names = ATHLETES.map(a => a.name).filter(n => byAth[n]);
+  Object.keys(byAth).forEach(n => { if (!names.includes(n)) names.push(n); });
+  return names;
+}
+
+function openAthleteReport() {
+  const ath = document.getElementById('rp-athlet').value;
+  if (!ath) { showToast('Please select an athlete', 'error'); return; }
+  const rows = dbFiltered('db').filter(r => r.athlet === ath);
+  if (!rows.length) { showToast('No data for this athlete / period', 'error'); return; }
+  openPrintWindow('Athlete Report — ' + ath, reportPeriodLabel(), reportStatLine(rows) + athleteSectionsHtml(rows));
+}
+
+function openSessionReportPdf() {
+  const day = document.getElementById('rp-date').value;
+  if (!day) { showToast('Please select a session day', 'error'); return; }
+  const rows = dbFiltered('db').filter(r => r.datum === day);
+  if (!rows.length) { showToast('No data for this day', 'error'); return; }
+  const byAth = {};
+  rows.forEach(r => (byAth[r.athlet] = byAth[r.athlet] || []).push(r));
+  const body = reportStatLine(rows) + reportAthleteOrder(byAth).map(n => {
+    const es = byAth[n].slice().sort((a,b) => (a.created_at||'').localeCompare(b.created_at||''));
+    const rowsHtml = es.map(r => {
+      const marks = (critsFor(r) || []).map(([c, label, abbr]) =>
+        r[c] ? abbr + ' ' + (r[c] === 3 ? '⭐' : r[c] === 2 ? '✓' : '✗') : '').filter(Boolean).join(' &nbsp; ');
+      return `<tr><td>${(r.created_at||'').slice(11,16)}</td><td>${r.typ}</td><td>${[r.jump1, r.jump2].filter(Boolean).join(' + ') || '—'}</td><td>${marks}</td><td style="color:#666">${r.kommentar || ''}</td></tr>`;
+    }).join('');
+    return `<div class="ath"><div class="ath-name">${n} <span style="color:#888;font-size:12px;font-weight:400;">· ${es.length} entries</span></div>
+      <table><thead><tr><th>Time</th><th>Type</th><th>Jump(s)</th><th>Ratings (✗ Miss · ✓ Okay · ⭐ Perfect)</th><th>Comment</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
+  }).join('');
+  const f = day.slice(8,10) + '.' + day.slice(5,7) + '.' + day.slice(0,4);
+  openPrintWindow('Session Report — ' + f, reportPeriodLabel(), body);
+}
+
+function openTeamReportPdf() {
+  const rows = dbFiltered('db');
+  if (!rows.length) { showToast('No data for this period', 'error'); return; }
+  const byAth = {};
+  rows.forEach(r => (byAth[r.athlet] = byAth[r.athlet] || []).push(r));
+  const body = reportAthleteOrder(byAth).map(n =>
+    `<div class="ath"><div class="ath-name">${n}</div>${reportStatLine(byAth[n])}${athleteSectionsHtml(byAth[n])}</div>`).join('');
+  openPrintWindow('Team Report', reportPeriodLabel(), body);
+}
+
 function renderDBTable() {
   renderDBOverview();
+  const dateSel = document.getElementById('rp-date');
+  if (dateSel) {
+    const cur = dateSel.value;
+    const days = [...new Set(dbFiltered('db').map(r => r.datum))].sort().reverse();
+    dateSel.innerHTML = '<option value="">— select session day —</option>'
+      + days.map(d => `<option${d === cur ? ' selected' : ''}>${d}</option>`).join('');
+  }
   const tbody = document.getElementById('db-tbody');
   const rows = dbFiltered('db');
   if (!rows.length) {
@@ -1181,25 +1341,33 @@ function toggleAnDay(d) {
   renderAnalytics();
 }
 
-// SVG line chart: Ø rating (1–3) per training day
+// SVG bar chart: success % per training day (Miss = 0% · Okay = 50% · Perfect = 100%)
 function trendChartSvg(points) {
   if (!points.length) return '<div style="color:var(--muted);font-size:13px;">No data.</div>';
-  const W = Math.max(320, Math.min(760, points.length * 60 + 70)), H = 170;
-  const padL = 26, padR = 16, padT = 12, padB = 26;
+  const W = Math.max(320, Math.min(760, points.length * 64 + 70)), H = 190;
+  const padL = 34, padR = 12, padT = 16, padB = 34;
   const iw = W - padL - padR, ih = H - padT - padB;
-  const x = i => points.length === 1 ? padL + iw / 2 : padL + i * (iw / (points.length - 1));
-  const y = v => padT + (3 - v) / 2 * ih;
-  const grid = [1, 2, 3].map(v =>
+  const x = i => padL + iw / points.length * (i + 0.5);
+  const y = p => padT + (100 - p) / 100 * ih;
+  const barW = Math.max(10, Math.min(26, iw / points.length * 0.5));
+  const grid = [0, 25, 50, 75, 100].map(v =>
     `<line x1="${padL}" y1="${y(v)}" x2="${W - padR}" y2="${y(v)}" stroke="#1a3450" stroke-dasharray="3 3"/>
-     <text x="4" y="${y(v) + 4}" fill="${levelColor(v)}" font-size="10" font-weight="700">${v}</text>`).join('');
+     <text x="4" y="${y(v) + 3}" fill="#6b8299" font-size="9">${v}%</text>`).join('');
   const line = points.length > 1
-    ? `<polyline fill="none" stroke="#39c3d4" stroke-width="2" points="${points.map((p, i) => x(i) + ',' + y(p.avg)).join(' ')}"/>` : '';
-  const dots = points.map((p, i) =>
-    `<circle cx="${x(i)}" cy="${y(p.avg)}" r="5" fill="${levelColor(Math.round(p.avg))}"><title>${p.d} — Ø ${p.avg.toFixed(2)} (${p.n} attempts)</title></circle>`).join('');
+    ? `<polyline fill="none" stroke="#39c3d466" stroke-width="1.5" stroke-dasharray="3 3" points="${points.map((p, i) => x(i) + ',' + y(p.pct)).join(' ')}"/>` : '';
+  const bars = points.map((p, i) => {
+    const c = pctColor(p.pct);
+    const title = `${p.d.slice(8,10)}.${p.d.slice(5,7)}.${p.d.slice(2,4)} — ${p.n} attempts&#10;⭐ Perfect: ${p.counts[3]}×&#10;✓ Okay: ${p.counts[2]}×&#10;✗ Miss: ${p.counts[1]}×&#10;Ø ${Math.round(p.pct)}%`;
+    return `<g><title>${title}</title>
+      <rect x="${x(i) - barW / 2}" y="${y(p.pct)}" width="${barW}" height="${Math.max(1.5, p.pct / 100 * ih)}" rx="2" fill="${c}cc"/>
+      <text x="${x(i)}" y="${y(p.pct) - 4}" fill="${c}" font-size="9" font-weight="700" text-anchor="middle">${Math.round(p.pct)}%</text>
+    </g>`;
+  }).join('');
   const step = Math.max(1, Math.ceil(points.length / 10));
   const labels = points.map((p, i) => i % step === 0
-    ? `<text x="${x(i)}" y="${H - 8}" fill="#6b8299" font-size="9" text-anchor="middle">${p.d.slice(8,10)}.${p.d.slice(5,7)}.</text>` : '').join('');
-  return `<div style="overflow-x:auto;"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${grid}${line}${dots}${labels}</svg></div>`;
+    ? `<text x="${x(i)}" y="${H - 20}" fill="#6b8299" font-size="9" text-anchor="middle">${p.d.slice(8,10)}.${p.d.slice(5,7)}.</text>
+       <text x="${x(i)}" y="${H - 8}" fill="#6b8299" font-size="9" text-anchor="middle">${p.n}×</text>` : '').join('');
+  return `<div style="overflow-x:auto;"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${grid}${line}${bars}${labels}</svg></div>`;
 }
 
 async function loadAnalytics() {
@@ -1317,7 +1485,10 @@ function renderAnalytics() {
     const byDate = jumpVals[anJump];
     const points = Object.keys(byDate).sort().map(d => {
       const v = byDate[d];
-      return { d, n: v.length, avg: v.reduce((a,b)=>a+b,0)/v.length };
+      const counts = {1:0, 2:0, 3:0};
+      v.forEach(val => counts[Math.min(3, Math.max(1, Math.round(val)))]++);
+      const avg = v.reduce((a,b)=>a+b,0)/v.length;
+      return { d, n: v.length, avg, pct: (avg - 1) * 50, counts };
     });
     html += `<div class="card"><div class="card-title">Learning Curve — per Jump</div>
       <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
@@ -1325,7 +1496,7 @@ function renderAnalytics() {
         <select style="max-width:160px;" onchange="anJump=this.value;renderAnalytics()">
           ${jumpNames.map(j => `<option${j===anJump?' selected':''}>${j}</option>`).join('')}
         </select>
-        <span style="font-size:11px;color:var(--muted);">Ø rating per training day (1 = Miss · 2 = Okay · 3 = Perfect) — follows the filters above</span>
+        <span style="font-size:11px;color:var(--muted);">Success per training day (Miss = 0% · Okay = 50% · Perfect = 100%) — follows the filters above</span>
       </div>
       ${trendChartSvg(points)}</div>`;
   }
@@ -1372,7 +1543,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!athletes.length) return '';
     return `<optgroup label="${sq.label}">${athletes.map(a => `<option>${a.name}</option>`).join('')}</optgroup>`;
   }).join('');
-  ['db-athlet','an-athlet','st-athlet'].forEach(id => document.getElementById(id).insertAdjacentHTML('beforeend', athOpts));
+  ['db-athlet','an-athlet','st-athlet','rp-athlet'].forEach(id => document.getElementById(id).insertAdjacentHTML('beforeend', athOpts));
   ['db-season','an-season'].forEach(id => document.getElementById(id).innerHTML = seasonOptionsHtml());
   const typChips = p => ['<button class="sess-type-btn active" style="padding:7px 14px;font-size:12px;" onclick="setTypFilter(\'' + p + '\',\'\',this)">All</button>']
     .concat(TYPE_NAMES.map(t => '<button class="sess-type-btn" style="padding:7px 14px;font-size:12px;" onclick="setTypFilter(\'' + p + '\',\'' + t + '\',this)">' + t + '</button>')).join('');
