@@ -7063,9 +7063,6 @@ async function sbSave(status) {
     slidevar: fields.slidevar, inspin: fields.inspin, swap: fields.swap, outspin: fields.outspin,
     notiz,
     status,
-    coach_rating: parseInt(document.getElementById('sb-coach-rating').value) || null,
-    coach_kommentar: document.getElementById('sb-coach-kommentar').value || null,
-    coach_video: document.getElementById('sb-coach-video').value || null,
   }).select();
 
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
@@ -7074,11 +7071,9 @@ async function sbSave(status) {
 
   // Reset sb form fields
   ['sb-disziplin','sb-drehrichtung','sb-flips','sb-achse','sb-rotation','sb-absprung',
-   'sb-grab','sb-bringback','sb-style','sb-railart','sb-slideform','sb-slidevar','sb-inspin','sb-swap','sb-outspin','sb-notiz',
-   'sb-coach-kommentar','sb-coach-video'
+   'sb-grab','sb-bringback','sb-style','sb-railart','sb-slideform','sb-slidevar','sb-inspin','sb-swap','sb-outspin','sb-notiz'
   ].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   toggleDisziplin('sb');
-  const rSlider = document.getElementById('sb-coach-rating'); if(rSlider){rSlider.value=5; document.getElementById('sb-coach-rating-val').textContent='5';}
 
   sbData = [data[0], ...sbData];
   renderStandort();
