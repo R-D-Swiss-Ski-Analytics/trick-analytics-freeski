@@ -1001,12 +1001,12 @@ async function loadDB(force) {
   renderDBTable();
 }
 
-// ── Saison-Filter (Skisaison = 1. Juli bis 30. Juni, analog Freeski) ──
+// ── Saison-Filter (Saison = 1. Mai bis 30. April, wie Freeski/Snowboard) ──
 let dbTypFilter = '', anTypFilter = '';
 
 function seasonStartYear() {
   const n = new Date();
-  return n.getMonth() + 1 >= 7 ? n.getFullYear() : n.getFullYear() - 1;
+  return n.getMonth() + 1 >= 5 ? n.getFullYear() : n.getFullYear() - 1;
 }
 function seasonOptionsHtml() {
   const y = seasonStartYear(), s = v => String(v).slice(2);
@@ -1017,8 +1017,8 @@ function seasonOptionsHtml() {
 }
 function seasonRange(sel) {
   const y = seasonStartYear();
-  if (sel === 'current') return [`${y}-07-01`, `${y+1}-06-30`];
-  if (sel === 'last')    return [`${y-1}-07-01`, `${y}-06-30`];
+  if (sel === 'current') return [`${y}-05-01`, `${y+1}-04-30`];
+  if (sel === 'last')    return [`${y-1}-05-01`, `${y}-04-30`];
   return [null, null];
 }
 function onSeasonChange(prefix) {
