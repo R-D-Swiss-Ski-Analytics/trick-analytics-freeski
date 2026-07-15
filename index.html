@@ -4754,7 +4754,7 @@ async function realityCheck() {
     );
 
     if (!sessions.length) {
-      flagged.push({ ...s, reason: 'Not attempted this season', avgQ: null, sessions: 0 });
+      flagged.push({ ...s, action: 'downgrade', reason: 'Not attempted this season', avgQ: null, sessions: 0 });
       return;
     }
 
@@ -4764,12 +4764,27 @@ async function realityCheck() {
 
     if (avgQ < 70) {
       const landRate = Math.round(sessions.filter(t=>t.gelandet==='Yes').length/sessions.length*100);
-      flagged.push({ ...s, reason: `Avg quality ${avgQ}% (<70%)`, avgQ, sessions: sessions.length, landRate });
+      flagged.push({ ...s, action: 'downgrade', reason: `Avg quality ${avgQ}% (<70%)`, avgQ, sessions: sessions.length, landRate });
+    }
+  });
+
+  // Upgrade candidates: goals performing ≥70% in sessions → suggest Mastered
+  dbAllStandort.filter(t => t.status === 'goal' && t.athlet).forEach(s => {
+    const rot = s.rotation ? String(s.rotation).match(/\d+/)?.[0] : null;
+    if (!s.drehrichtung?.trim() || !rot) return;
+    const sessions = dbAllTricks.filter(t =>
+      t.athlet === s.athlet && t.datum >= seasonFrom && t.trickaufbau && t.trickaufbau.includes(rot));
+    if (!sessions.length) return;
+    const quals = sessions.map(t => extractQuality(t)).filter(v => v !== null);
+    if (!quals.length) return;
+    const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
+    if (avgQ >= 70) {
+      flagged.push({ ...s, action: 'upgrade', reason: `Avg quality ${avgQ}% (≥70%) → Mastered`, avgQ, sessions: sessions.length });
     }
   });
 
   if (!flagged.length) {
-    showToast('✅ All mastered tricks are validated — no downgrades needed!', 'success');
+    showToast('✅ Assessment matches session data — nothing to change!', 'success');
     return;
   }
 
@@ -4792,7 +4807,7 @@ async function realityCheck() {
     <div style="background:#0d1f33;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:660px;width:100%;max-height:88vh;display:flex;flex-direction:column;">
       <div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">🔍 Reality Check</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
-        Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} trick${flagged.length!==1?'s':''} below 70% quality · select athletes to apply
+        Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} suggestion${flagged.length!==1?'s':''} (Mastered &lt;70% ↓ · Goals ≥70% ↑) · select athletes to apply
       </div>
       <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
         <input id="rc-search" type="text" placeholder="Search athlete…" oninput="rcFilter(this.value)"
@@ -4815,7 +4830,7 @@ async function realityCheck() {
                   <div style="font-size:12px;color:var(--text);font-weight:500;">${rcTrickDesc(f)}</div>
                   ${f.disziplin?`<div style="font-size:10px;color:var(--muted);margin-top:1px;">${f.disziplin}</div>`:''}
                 </div>
-                <span style="font-size:11px;color:#f59e0b;white-space:nowrap;font-weight:600;">${f.reason}</span>
+                <span style="font-size:11px;color:${f.action==='upgrade'?'#2d8a4e':'#f59e0b'};white-space:nowrap;font-weight:600;">${f.action==='upgrade'?'↑':'↓'} ${f.reason}</span>
               </div>`).join('')}
           </div>`).join('')}
       </div>
@@ -4830,13 +4845,17 @@ async function realityCheck() {
 async function applyRealityCheckSelected(flagged, btn) {
   const checked = [...document.querySelectorAll('.rc-chk:checked')].map(c => c.dataset.athlet);
   if (!checked.length) { showToast('No athletes selected', 'error'); return; }
-  const ids = flagged.filter(f => checked.includes(f.athlet)).map(f => f.id);
-  if (!ids.length) { showToast('No entries to update', 'error'); return; }
+  const sel = flagged.filter(f => checked.includes(f.athlet));
+  const downIds = sel.filter(f => f.action !== 'upgrade').map(f => f.id);
+  const upIds   = sel.filter(f => f.action === 'upgrade').map(f => f.id);
+  if (!downIds.length && !upIds.length) { showToast('No entries to update', 'error'); return; }
   btn.textContent = 'Applying…'; btn.disabled = true;
-  const { error } = await db.from('standort').update({status:'goal'}).in('id', ids);
+  let error = null;
+  if (downIds.length) ({ error } = await db.from('standort').update({status:'goal'}).in('id', downIds));
+  if (!error && upIds.length) ({ error } = await db.from('standort').update({status:'mastered'}).in('id', upIds));
   if (error) { showToast('Error: '+error.message, 'error'); btn.textContent='Apply selected'; btn.disabled=false; return; }
   btn.closest('[style*=inset]').remove();
-  showToast(`✅ ${ids.length} trick${ids.length!==1?'s':''} moved from Mastered → Goal (${checked.length} athlete${checked.length!==1?'s':''})`, 'success');
+  showToast(`✅ ${downIds.length} → Goal · ${upIds.length} → Mastered (${checked.length} athlete${checked.length!==1?'s':''})`, 'success');
   loadDB();
 }
 
@@ -5300,7 +5319,7 @@ async function realityCheck() {
 
     if (!sessions.length) {
       // Never attempted in current season
-      flagged.push({ ...s, reason: 'Not attempted this season', avgQ: null, sessions: 0 });
+      flagged.push({ ...s, action: 'downgrade', reason: 'Not attempted this season', avgQ: null, sessions: 0 });
       return;
     }
 
@@ -5310,12 +5329,27 @@ async function realityCheck() {
 
     if (avgQ < 70) {
       const landRate = Math.round(sessions.filter(t=>t.gelandet==='Yes').length/sessions.length*100);
-      flagged.push({ ...s, reason: `Avg quality ${avgQ}% (<70%)`, avgQ, sessions: sessions.length, landRate });
+      flagged.push({ ...s, action: 'downgrade', reason: `Avg quality ${avgQ}% (<70%)`, avgQ, sessions: sessions.length, landRate });
+    }
+  });
+
+  // Upgrade candidates: goals performing ≥70% in sessions → suggest Mastered
+  dbAllStandort.filter(t => t.status === 'goal' && t.athlet).forEach(s => {
+    const rot = s.rotation ? String(s.rotation).match(/\d+/)?.[0] : null;
+    if (!s.drehrichtung?.trim() || !rot) return;
+    const sessions = dbAllTricks.filter(t =>
+      t.athlet === s.athlet && t.datum >= seasonFrom && t.trickaufbau && t.trickaufbau.includes(rot));
+    if (!sessions.length) return;
+    const quals = sessions.map(t => extractQuality(t.kommentar)).filter(v => v !== null);
+    if (!quals.length) return;
+    const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
+    if (avgQ >= 70) {
+      flagged.push({ ...s, action: 'upgrade', reason: `Avg quality ${avgQ}% (≥70%) → Mastered`, avgQ, sessions: sessions.length });
     }
   });
 
   if (!flagged.length) {
-    showToast('✅ All mastered tricks are validated — no downgrades needed!', 'success');
+    showToast('✅ Assessment matches session data — nothing to change!', 'success');
     return;
   }
 
@@ -5341,7 +5375,7 @@ async function realityCheck() {
       <!-- Header -->
       <div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">🔍 Reality Check</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
-        Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} trick${flagged.length!==1?'s':''} below 70% exec. quality · select athletes to apply
+        Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} suggestion${flagged.length!==1?'s':''} (Mastered &lt;70% ↓ · Goals ≥70% ↑) · select athletes to apply
       </div>
       <!-- Search + select all -->
       <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
@@ -5368,7 +5402,7 @@ async function realityCheck() {
                   <div style="font-size:12px;color:var(--text);font-weight:500;">${rcTrickDesc(f)}</div>
                   ${f.disziplin?`<div style="font-size:10px;color:var(--muted);margin-top:1px;">${f.disziplin}</div>`:''}
                 </div>
-                <span style="font-size:11px;color:#f59e0b;white-space:nowrap;font-weight:600;">${f.reason}</span>
+                <span style="font-size:11px;color:${f.action==='upgrade'?'#2d8a4e':'#f59e0b'};white-space:nowrap;font-weight:600;">${f.action==='upgrade'?'↑':'↓'} ${f.reason}</span>
               </div>`).join('')}
           </div>`).join('')}
       </div>
@@ -5385,13 +5419,17 @@ async function applyRealityCheckSelected(flagged, btn) {
   // Get selected athletes from checkboxes
   const checked = [...document.querySelectorAll('.rc-chk:checked')].map(c => c.dataset.athlet);
   if (!checked.length) { showToast('No athletes selected', 'error'); return; }
-  const ids = flagged.filter(f => checked.includes(f.athlet)).map(f => f.id);
-  if (!ids.length) { showToast('No entries to update', 'error'); return; }
+  const sel = flagged.filter(f => checked.includes(f.athlet));
+  const downIds = sel.filter(f => f.action !== 'upgrade').map(f => f.id);
+  const upIds   = sel.filter(f => f.action === 'upgrade').map(f => f.id);
+  if (!downIds.length && !upIds.length) { showToast('No entries to update', 'error'); return; }
   btn.textContent = 'Applying…'; btn.disabled = true;
-  const { error } = await db.from('standort').update({status:'goal'}).in('id', ids);
+  let error = null;
+  if (downIds.length) ({ error } = await db.from('standort').update({status:'goal'}).in('id', downIds));
+  if (!error && upIds.length) ({ error } = await db.from('standort').update({status:'mastered'}).in('id', upIds));
   if (error) { showToast('Error: '+error.message, 'error'); btn.textContent='Apply selected'; btn.disabled=false; return; }
   btn.closest('[style*=inset]').remove();
-  showToast(`✅ ${ids.length} trick${ids.length!==1?'s':''} moved from Mastered → Goal (${checked.length} athlete${checked.length!==1?'s':''})`, 'success');
+  showToast(`✅ ${downIds.length} → Goal · ${upIds.length} → Mastered (${checked.length} athlete${checked.length!==1?'s':''})`, 'success');
   loadDB();
 }
 
