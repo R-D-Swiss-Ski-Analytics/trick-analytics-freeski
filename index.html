@@ -1302,12 +1302,11 @@ function renderAthleteDirBalance(wrap, dirs, colors, dirOf) {
     (wrap.querySelector('.card') || wrap).appendChild(bal);
   }
   const counts = {}; dirs.forEach(d => counts[d] = 0);
-  const src = [...sbSessTricks, ...sbData.filter(e => e.status === 'mastered')];
-  src.forEach(t => { const d = dirOf(t); if (d in counts) counts[d]++; });
+  sbSessTricks.forEach(t => { const d = dirOf(t); if (d in counts) counts[d]++; });
   const total = dirs.reduce((s,d) => s + counts[d], 0);
   if (!total) { bal.innerHTML = ''; return; }
   bal.innerHTML = '<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">'
-    + '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Direction Balance (Session + Assessment)</div>'
+    + '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Direction Balance — Session Data Only</div>'
     + dirs.map(dir => {
         const pct = Math.round(counts[dir] / total * 100);
         const col = colors[dir];
@@ -1319,6 +1318,7 @@ function renderAthleteDirBalance(wrap, dirs, colors, dirOf) {
           + '<div style="background:' + col + ';width:' + pct + '%;height:7px;border-radius:4px;transition:width .4s;"></div>'
           + '</div></div>';
       }).join('')
+    + '<div style="font-size:10px;color:var(--muted);margin-top:6px;">Based on logged session attempts only — assessment entries are not included.</div>'
     + '</div>';
 }
 

@@ -238,6 +238,8 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end;">
       <div class="form-group"><label>Athlete</label>
         <select id="an-athlet" onchange="renderAnalytics()"><option value="">All athletes</option></select></div>
+      <div class="form-group"><label>Session</label>
+        <select id="an-day" onchange="anDay=this.value;renderAnalytics()"><option value="">All sessions</option></select></div>
       <div class="form-group"><label>Season</label>
         <select id="an-season" onchange="onSeasonChange('an')"></select></div>
       <div class="form-group an-custom" style="display:none;"><label>From</label>
@@ -673,9 +675,87 @@ async function cancelSession() {
   showToast('Session cancelled — all data deleted', 'error');
 }
 
+let _srCondition = 0;
+
+function setSrCondition(val, btn) {
+  _srCondition = val;
+  document.querySelectorAll('#sr-cond-btns button').forEach(b => {
+    const active = b === btn;
+    b.style.borderColor = active ? '#39c3d4' : '#1a3450';
+    b.style.color = active ? '#39c3d4' : '#6b8299';
+    b.style.background = active ? 'rgba(57,195,212,0.12)' : '#112236';
+  });
+}
+
 function endSession() {
-  if (!confirm('End this session?\n\n' + sessLog.length + ' entries logged — they stay saved in the database.')) return;
-  showToast('Session complete — ' + sessLog.length + ' entries saved', 'success');
+  const rawMin = Math.round((Date.now() - sessStartTime) / 1000 / 60 / 30) * 30;
+  const duration = Math.max(30, rawMin);
+  _srCondition = 0;
+  document.getElementById('sess-report-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'sess-report-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
+  const lbl = 'font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;';
+  const inp = 'width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:\'Poppins\',sans-serif;font-size:14px;outline:none;';
+  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:28px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;">
+    <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;color:#39c3d4;margin-bottom:4px;">Session Complete</div>
+    <div style="font-size:13px;color:#6b8299;margin-bottom:20px;">${sessLog.length} entries logged · ${duration} min</div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="${lbl}">Location</label>
+        <input id="sr-location" type="text" placeholder="e.g. Airolo" style="${inp}">
+      </div>
+      <div>
+        <label style="${lbl}">Conditions</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="sr-cond-btns">
+          ${[['1','Poor'],['2','Below Avg'],['3','Average'],['4','Good'],['5','Excellent']].map(([v,l]) =>
+            `<button onclick="setSrCondition(${v},this)" style="padding:7px 12px;border-radius:8px;border:2px solid #1a3450;background:#112236;color:#6b8299;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">${v} — ${l}</button>`).join('')}
+        </div>
+      </div>
+      <div>
+        <label style="${lbl}">Comments</label>
+        <textarea id="sr-comments" rows="2" placeholder="Coach notes, observations…" style="${inp}resize:vertical;"></textarea>
+      </div>
+      <div>
+        <label style="${lbl}">Athlete Notes</label>
+        ${sessSelectedAthletes.map(n => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
+          <input type="text" id="sr-ath-${sid(n)}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;">
+        </div>`).join('')}
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+async function submitSessionReport(duration) {
+  const location = (document.getElementById('sr-location')?.value || '').trim();
+  const comments = (document.getElementById('sr-comments')?.value || '').trim();
+  const conditions = _srCondition || null;
+  const athleteNotes = {};
+  sessSelectedAthletes.forEach(n => {
+    const v = (document.getElementById('sr-ath-' + sid(n))?.value || '').trim();
+    if (v) athleteNotes[shortName(n)] = v;
+  });
+  document.getElementById('sess-report-modal')?.remove();
+  const entryCount = sessLog.length;
+  if (db) {
+    const {error} = await db.from('session_reports').insert({
+      datum: today(),
+      session_type: sessType || null,
+      athletes: sessSelectedAthletes,
+      duration_min: duration,
+      location: location || null,
+      conditions,
+      comments: comments || null,
+      athlete_notes: Object.keys(athleteNotes).length ? athleteNotes : null
+    });
+    if (error) showToast('Report error: ' + error.message, 'error');
+    else { showToast('Session report saved — ' + entryCount + ' entries', 'success'); reportsLoaded = false; }
+  }
   resetSession();
 }
 
@@ -1046,6 +1126,7 @@ function setTypFilter(prefix, typ, btn) {
 }
 async function reloadData(prefix) {
   dbLoaded = false;
+  reportsLoaded = false;
   if (prefix === 'db') await loadDB(true); else await loadAnalytics();
   showToast('Data refreshed', 'success');
 }
@@ -1334,11 +1415,48 @@ async function deleteDBEntry(id) {
 
 // ═══════════════ DEVELOPMENT PAGE ═══════════════
 let anJump = '';                 // selected jump for the learning curve
+let anDay = '';                  // selected single session (training day), '' = all
 const anOpenDays = new Set();    // expanded sessions
 
 function toggleAnDay(d) {
   anOpenDays.has(d) ? anOpenDays.delete(d) : anOpenDays.add(d);
   renderAnalytics();
+}
+
+// Custom hover tooltip for the learning-curve chart (like Freeski/Snowboard)
+let _anChart = null;   // { points, xs } of the currently rendered chart
+
+function anChartHover(e, wrapEl) {
+  if (!_anChart) return;
+  const svg = wrapEl.querySelector('svg');
+  if (!svg) return;
+  const rect = svg.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  let ni = -1, nd = Infinity;
+  _anChart.xs.forEach((x, i) => { const d = Math.abs(mx - x); if (d < nd && d < 40) { nd = d; ni = i; } });
+  let tt = document.getElementById('mg-chart-tooltip');
+  if (!tt) {
+    tt = document.createElement('div');
+    tt.id = 'mg-chart-tooltip';
+    tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:10px;padding:10px 14px;font-size:12px;font-family:Poppins,sans-serif;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+    document.body.appendChild(tt);
+  }
+  if (ni < 0) { tt.style.display = 'none'; return; }
+  const p = _anChart.points[ni];
+  tt.innerHTML =
+    `<div style="font-weight:700;color:#e8edf2;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">${p.d.slice(8,10)}.${p.d.slice(5,7)}.${p.d.slice(2,4)} &nbsp;·&nbsp; ${p.n} attempts</div>`
+    + `<div style="color:#39c3d4;">⭐ Perfect: <b>${p.counts[3]}×</b></div>`
+    + `<div style="color:#2d8a4e;">✓ Okay&nbsp;&nbsp;&nbsp;: <b>${p.counts[2]}×</b></div>`
+    + `<div style="color:#e2001a;">✗ Miss&nbsp;&nbsp;&nbsp;: <b>${p.counts[1]}×</b></div>`
+    + `<div style="color:#6b8299;margin-top:4px;">Success: <b style="color:#39c3d4;">${Math.round(p.pct)}%</b></div>`;
+  tt.style.display = 'block';
+  const tx = e.clientX + 14, ty = e.clientY - 10;
+  tt.style.left = (tx + tt.offsetWidth > window.innerWidth - 10 ? e.clientX - tt.offsetWidth - 14 : tx) + 'px';
+  tt.style.top = ty + 'px';
+}
+function anChartLeave() {
+  const tt = document.getElementById('mg-chart-tooltip');
+  if (tt) tt.style.display = 'none';
 }
 
 // SVG bar chart: success % per training day (Miss = 0% · Okay = 50% · Perfect = 100%)
@@ -1367,13 +1485,20 @@ function trendChartSvg(points) {
   const labels = points.map((p, i) => i % step === 0
     ? `<text x="${x(i)}" y="${H - 20}" fill="#6b8299" font-size="9" text-anchor="middle">${p.d.slice(8,10)}.${p.d.slice(5,7)}.</text>
        <text x="${x(i)}" y="${H - 8}" fill="#6b8299" font-size="9" text-anchor="middle">${p.n}×</text>` : '').join('');
-  return `<div style="overflow-x:auto;"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${grid}${line}${bars}${labels}</svg></div>`;
+  _anChart = { points, xs: points.map((_, i) => x(i)) };
+  return `<div style="overflow-x:auto;" onmousemove="anChartHover(event, this)" onmouseleave="anChartLeave()"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${grid}${line}${bars}${labels}</svg></div>`;
 }
+
+let dbReports = [], reportsLoaded = false;
 
 async function loadAnalytics() {
   if (db && !dbLoaded) {
     const {data, error} = await db.from('entries').select('*').order('datum', {ascending:false}).order('id', {ascending:false}).limit(2000);
     if (!error) { dbRows = data || []; dbLoaded = true; }
+  }
+  if (db && !reportsLoaded) {
+    const {data, error} = await db.from('session_reports').select('*').order('datum', {ascending:false}).limit(200);
+    if (!error) { dbReports = data || []; reportsLoaded = true; }
   }
   renderAnalytics();
 }
@@ -1391,7 +1516,17 @@ function distBar(counts) {
 function renderAnalytics() {
   const el = document.getElementById('an-content');
   if (!db) { el.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div>Supabase not configured yet.</div>'; return; }
-  const rows = dbFiltered('an');
+  const rowsAll = dbFiltered('an');
+  // Single-session selector (training day)
+  const daySel = document.getElementById('an-day');
+  if (daySel) {
+    const days = [...new Set(rowsAll.map(r => r.datum))].sort().reverse();
+    if (anDay && !days.includes(anDay)) anDay = '';
+    daySel.innerHTML = '<option value="">All sessions</option>'
+      + days.map(d => `<option${d === anDay ? ' selected' : ''}>${d}</option>`).join('');
+  }
+  const rows = anDay ? rowsAll.filter(r => r.datum === anDay) : rowsAll;
+  if (anDay) anOpenDays.add(anDay);
   const typ = anTypFilter;
 
   if (!rows.length) { el.innerHTML = '<div class="empty-state"><div class="icon">📊</div>No entries in this selection.</div>'; return; }
@@ -1512,7 +1647,17 @@ function renderAnalytics() {
       es.forEach(r => typCounts[r.typ] = (typCounts[r.typ] || 0) + 1);
       const open = anOpenDays.has(d);
       const badges = Object.entries(typCounts).map(([tn, c]) => `<span class="badge-typ" style="font-size:10px;">${tn} · ${c}</span>`).join(' ');
+      const reps = dbReports.filter(r => r.datum === d);
+      const repHint = reps.length
+        ? `<span style="font-size:11px;color:#39c3d4;">📋 ${[reps[0].location, reps[0].conditions ? 'Conditions ' + reps[0].conditions + '/5' : ''].filter(Boolean).join(' · ')}</span>` : '';
+      const repHtml = !open ? '' : reps.map(rep => `<div style="background:var(--surface2);border:1px solid #39c3d444;border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:6px;">
+          <div style="color:var(--text);font-weight:600;margin-bottom:4px;">📋 Session Report${rep.session_type ? ' · ' + rep.session_type : ''}${rep.duration_min ? ' · ' + rep.duration_min + ' min' : ''}</div>
+          <div style="color:var(--muted);">${[rep.location ? '📍 ' + rep.location : '', rep.conditions ? 'Conditions ' + rep.conditions + '/5' : ''].filter(Boolean).join(' · ')}</div>
+          ${rep.comments ? `<div style="color:var(--text);margin-top:4px;">${rep.comments}</div>` : ''}
+          ${rep.athlete_notes ? Object.entries(rep.athlete_notes).map(([n, note]) => `<div style="margin-top:3px;font-size:11px;"><span style="color:#39c3d4;font-weight:600;">${n}</span> <span style="color:var(--muted);">${note}</span></div>`).join('') : ''}
+        </div>`).join('');
       const entriesHtml = !open ? '' : `<div style="display:flex;flex-direction:column;gap:6px;padding:4px 0 12px;">
+        ${repHtml}
         ${es.slice(0, 200).map(r => `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);border-radius:8px;font-size:12px;flex-wrap:wrap;">
           <span style="color:var(--muted);font-size:10px;">${(r.created_at || '').slice(11, 16)}</span>
           <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(r.athlet || '')}</span>
@@ -1526,6 +1671,7 @@ function renderAnalytics() {
           <span style="font-weight:600;">${d}</span>
           <span style="font-size:11px;color:var(--muted);">${es.length} entries</span>
           <span style="display:flex;gap:6px;flex-wrap:wrap;">${badges}</span>
+          ${repHint}
         </div>${entriesHtml}
       </div>`;
     }).join('')}
