@@ -231,18 +231,20 @@
 
 </div>
 
-<!-- ══════════════════════════════════════════ ANALYTICS -->
+<!-- ══════════════════════════════════════════ DEVELOPMENT -->
 <div class="page" id="page-auswertung">
   <div class="card">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;" id="an-typ-chips"></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end;">
       <div class="form-group"><label>Athlete</label>
         <select id="an-athlet" onchange="renderAnalytics()"><option value="">All athletes</option></select></div>
-      <div class="form-group"><label>Type</label>
-        <select id="an-typ" onchange="renderAnalytics()"><option value="">All types</option></select></div>
-      <div class="form-group"><label>From</label>
+      <div class="form-group"><label>Season</label>
+        <select id="an-season" onchange="onSeasonChange('an')"></select></div>
+      <div class="form-group an-custom" style="display:none;"><label>From</label>
         <input type="date" id="an-from" onchange="renderAnalytics()"></div>
-      <div class="form-group"><label>To</label>
+      <div class="form-group an-custom" style="display:none;"><label>To</label>
         <input type="date" id="an-to" onchange="renderAnalytics()"></div>
+      <div class="form-group"><button class="btn-secondary" onclick="reloadData('an')" style="padding:9px 16px;">↻ Refresh</button></div>
     </div>
   </div>
   <div id="an-content">
@@ -253,15 +255,17 @@
 <!-- ══════════════════════════════════════════ DATABASE -->
 <div class="page" id="page-datenbank">
   <div class="card">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;" id="db-typ-chips"></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end;">
       <div class="form-group"><label>Athlete</label>
         <select id="db-athlet" onchange="renderDBTable()"><option value="">All athletes</option></select></div>
-      <div class="form-group"><label>Type</label>
-        <select id="db-typ" onchange="renderDBTable()"><option value="">All types</option></select></div>
-      <div class="form-group"><label>From</label>
+      <div class="form-group"><label>Season</label>
+        <select id="db-season" onchange="onSeasonChange('db')"></select></div>
+      <div class="form-group db-custom" style="display:none;"><label>From</label>
         <input type="date" id="db-from" onchange="renderDBTable()"></div>
-      <div class="form-group"><label>To</label>
+      <div class="form-group db-custom" style="display:none;"><label>To</label>
         <input type="date" id="db-to" onchange="renderDBTable()"></div>
+      <div class="form-group"><button class="btn-secondary" onclick="reloadData('db')" style="padding:9px 16px;">↻ Refresh</button></div>
     </div>
   </div>
   <div id="db-overview"></div>
@@ -997,11 +1001,53 @@ async function loadDB(force) {
   renderDBTable();
 }
 
+// ── Saison-Filter (Skisaison = 1. Juli bis 30. Juni, analog Freeski) ──
+let dbTypFilter = '', anTypFilter = '';
+
+function seasonStartYear() {
+  const n = new Date();
+  return n.getMonth() + 1 >= 7 ? n.getFullYear() : n.getFullYear() - 1;
+}
+function seasonOptionsHtml() {
+  const y = seasonStartYear(), s = v => String(v).slice(2);
+  return `<option value="current">Current season ${s(y)}/${s(y+1)}</option>
+          <option value="last">Last season ${s(y-1)}/${s(y)}</option>
+          <option value="all">All time</option>
+          <option value="custom">Custom period…</option>`;
+}
+function seasonRange(sel) {
+  const y = seasonStartYear();
+  if (sel === 'current') return [`${y}-07-01`, `${y+1}-06-30`];
+  if (sel === 'last')    return [`${y-1}-07-01`, `${y}-06-30`];
+  return [null, null];
+}
+function onSeasonChange(prefix) {
+  const custom = document.getElementById(prefix + '-season').value === 'custom';
+  document.querySelectorAll('.' + prefix + '-custom').forEach(el => el.style.display = custom ? '' : 'none');
+  prefix === 'db' ? renderDBTable() : renderAnalytics();
+}
+function setTypFilter(prefix, typ, btn) {
+  if (prefix === 'db') dbTypFilter = typ; else anTypFilter = typ;
+  document.querySelectorAll('#' + prefix + '-typ-chips .sess-type-btn').forEach(b => b.classList.toggle('active', b === btn));
+  prefix === 'db' ? renderDBTable() : renderAnalytics();
+}
+async function reloadData(prefix) {
+  dbLoaded = false;
+  if (prefix === 'db') await loadDB(true); else await loadAnalytics();
+  showToast('Data refreshed', 'success');
+}
+
 function dbFiltered(prefix) {
   const ath = document.getElementById(prefix + '-athlet').value;
-  const typ = document.getElementById(prefix + '-typ').value;
-  const from = document.getElementById(prefix + '-from').value;
-  const to = document.getElementById(prefix + '-to').value;
+  const typ = prefix === 'db' ? dbTypFilter : anTypFilter;
+  const season = document.getElementById(prefix + '-season').value;
+  let from, to;
+  if (season === 'custom') {
+    from = document.getElementById(prefix + '-from').value || null;
+    to = document.getElementById(prefix + '-to').value || null;
+  } else {
+    [from, to] = seasonRange(season);
+  }
   return dbRows.filter(r =>
     (!ath || r.athlet === ath) && (!typ || r.typ === typ) &&
     (!from || r.datum >= from) && (!to || r.datum <= to));
@@ -1178,7 +1224,7 @@ function renderAnalytics() {
   const el = document.getElementById('an-content');
   if (!db) { el.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div>Supabase not configured yet.</div>'; return; }
   const rows = dbFiltered('an');
-  const typ = document.getElementById('an-typ').value;
+  const typ = anTypFilter;
 
   if (!rows.length) { el.innerHTML = '<div class="empty-state"><div class="icon">📊</div>No entries in this selection.</div>'; return; }
 
@@ -1326,9 +1372,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!athletes.length) return '';
     return `<optgroup label="${sq.label}">${athletes.map(a => `<option>${a.name}</option>`).join('')}</optgroup>`;
   }).join('');
-  const typOpts = TYPE_NAMES.map(t => `<option>${t}</option>`).join('');
   ['db-athlet','an-athlet','st-athlet'].forEach(id => document.getElementById(id).insertAdjacentHTML('beforeend', athOpts));
-  ['db-typ','an-typ'].forEach(id => document.getElementById(id).insertAdjacentHTML('beforeend', typOpts));
+  ['db-season','an-season'].forEach(id => document.getElementById(id).innerHTML = seasonOptionsHtml());
+  const typChips = p => ['<button class="sess-type-btn active" style="padding:7px 14px;font-size:12px;" onclick="setTypFilter(\'' + p + '\',\'\',this)">All</button>']
+    .concat(TYPE_NAMES.map(t => '<button class="sess-type-btn" style="padding:7px 14px;font-size:12px;" onclick="setTypFilter(\'' + p + '\',\'' + t + '\',this)">' + t + '</button>')).join('');
+  document.getElementById('db-typ-chips').innerHTML = typChips('db');
+  document.getElementById('an-typ-chips').innerHTML = typChips('an');
   initSessionSetup();
 });
 </script>
