@@ -133,7 +133,7 @@
   <h1>Trick Analyses Moguls</h1>
   <nav class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('erfassen', this)">Session</button>
-    <button class="nav-tab" onclick="showPage('auswertung', this)">Analytics</button>
+    <button class="nav-tab" onclick="showPage('auswertung', this)">Development</button>
     <button class="nav-tab" onclick="showPage('datenbank', this)">Database</button>
   </nav>
 </header>
@@ -315,11 +315,11 @@ function critsFor(e) {
   return isGrabJump(e.jump1) ? GRAB_CRITERIA : NOGRAB_CRITERIA;
 }
 
-// Rating levels: stored value 1–3 → label + colour (analog Freeski/Snowboard)
+// Rating levels: stored value 1–3 → label + colour (analog Freeski)
 const LEVELS = [
-  {val:1, label:'✗ FAILED',  color:'#e2001a', bg:'rgba(226,0,26,0.1)'},
-  {val:2, label:'✓ LANDED',  color:'#2d8a4e', bg:'rgba(45,138,78,0.1)'},
-  {val:3, label:'⭐ STOMPED', color:'#39c3d4', bg:'rgba(57,195,212,0.1)'},
+  {val:1, label:'✗ MISS',    color:'#e2001a', bg:'rgba(226,0,26,0.1)'},
+  {val:2, label:'✓ OKAY',    color:'#2d8a4e', bg:'rgba(45,138,78,0.1)'},
+  {val:3, label:'⭐ PERFECT', color:'#39c3d4', bg:'rgba(57,195,212,0.1)'},
 ];
 const levelColor = v => (LEVELS.find(l => l.val === v) || {color:'var(--muted)'}).color;
 
@@ -577,7 +577,7 @@ function renderLiveSession() {
       </div>`;
     }
 
-    // Criteria rows with Failed / Landed / Stomped buttons
+    // Criteria rows with Miss / Okay / Perfect buttons
     const crits = liveCriteria(name);
     const critHtml = `<div style="display:flex;flex-direction:column;gap:12px;">
       ${crits.map(([col, label]) => `
@@ -598,7 +598,7 @@ function renderLiveSession() {
     cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${s}">
       <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
         <div style="font-size:26px;font-weight:800;color:#39c3d4;">${shortName(name)}</div>
-        <div style="font-size:12px;color:var(--muted);">${d.stats.attempts} entries · <span style="color:#39c3d4;">${d.stats.stomped} all-stomped</span></div>
+        <div style="font-size:12px;color:var(--muted);">${d.stats.attempts} entries · <span style="color:#39c3d4;">${d.stats.stomped} all-perfect</span></div>
       </div>
       ${jumpsHtml}
       ${critHtml}
@@ -905,7 +905,36 @@ async function deleteDBEntry(id) {
   showToast('Entry deleted', 'success');
 }
 
-// ═══════════════ ANALYTICS PAGE ═══════════════
+// ═══════════════ DEVELOPMENT PAGE ═══════════════
+let anJump = '';                 // selected jump for the learning curve
+const anOpenDays = new Set();    // expanded sessions
+
+function toggleAnDay(d) {
+  anOpenDays.has(d) ? anOpenDays.delete(d) : anOpenDays.add(d);
+  renderAnalytics();
+}
+
+// SVG line chart: Ø rating (1–3) per training day
+function trendChartSvg(points) {
+  if (!points.length) return '<div style="color:var(--muted);font-size:13px;">No data.</div>';
+  const W = Math.max(320, Math.min(760, points.length * 60 + 70)), H = 170;
+  const padL = 26, padR = 16, padT = 12, padB = 26;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  const x = i => points.length === 1 ? padL + iw / 2 : padL + i * (iw / (points.length - 1));
+  const y = v => padT + (3 - v) / 2 * ih;
+  const grid = [1, 2, 3].map(v =>
+    `<line x1="${padL}" y1="${y(v)}" x2="${W - padR}" y2="${y(v)}" stroke="#1a3450" stroke-dasharray="3 3"/>
+     <text x="4" y="${y(v) + 4}" fill="${levelColor(v)}" font-size="10" font-weight="700">${v}</text>`).join('');
+  const line = points.length > 1
+    ? `<polyline fill="none" stroke="#39c3d4" stroke-width="2" points="${points.map((p, i) => x(i) + ',' + y(p.avg)).join(' ')}"/>` : '';
+  const dots = points.map((p, i) =>
+    `<circle cx="${x(i)}" cy="${y(p.avg)}" r="5" fill="${levelColor(Math.round(p.avg))}"><title>${p.d} — Ø ${p.avg.toFixed(2)} (${p.n} attempts)</title></circle>`).join('');
+  const step = Math.max(1, Math.ceil(points.length / 10));
+  const labels = points.map((p, i) => i % step === 0
+    ? `<text x="${x(i)}" y="${H - 8}" fill="#6b8299" font-size="9" text-anchor="middle">${p.d.slice(8,10)}.${p.d.slice(5,7)}.</text>` : '').join('');
+  return `<div style="overflow-x:auto;"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${grid}${line}${dots}${labels}</svg></div>`;
+}
+
 async function loadAnalytics() {
   if (db && !dbLoaded) {
     const {data, error} = await db.from('entries').select('*').order('datum', {ascending:false}).order('id', {ascending:false}).limit(2000);
@@ -940,13 +969,13 @@ function renderAnalytics() {
   let html = `<div class="stats-grid">
     <div class="stat-card"><div class="stat-value">${rows.length}</div><div class="stat-label">Entries</div></div>
     <div class="stat-card"><div class="stat-value">${days}</div><div class="stat-label">Training Days</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:#39c3d4;">${stompedPct}%</div><div class="stat-label">Stomped Share</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:#39c3d4;">${stompedPct}%</div><div class="stat-label">Perfect Share</div></div>
   </div>`;
 
   if (!typ) {
     // Overview per type
     html += `<div class="card"><div class="card-title">Entries per Type</div><div class="table-wrap"><table>
-      <thead><tr><th>Type</th><th>Entries</th><th>Rating Distribution (F/L/S)</th></tr></thead><tbody>
+      <thead><tr><th>Type</th><th>Entries</th><th>Rating Distribution (M/O/P)</th></tr></thead><tbody>
       ${Object.keys(TYPES).map(tn => {
         const tRows = rows.filter(r => r.typ === tn);
         if (!tRows.length) return '';
@@ -963,7 +992,7 @@ function renderAnalytics() {
       ? [['r_asse','Asse'],['r_air','Air (No Grab)'],['r_grab','Grab'],['r_landing','Atterraggio']]
       : t.criteria;
     html += `<div class="card"><div class="card-title">${typ} — Criteria</div><div class="table-wrap"><table>
-      <thead><tr><th>Criterion</th><th>Ø (1–3)</th><th>Distribution (F/L/S)</th></tr></thead><tbody>
+      <thead><tr><th>Criterion</th><th>Ø (1–3)</th><th>Distribution (M/O/P)</th></tr></thead><tbody>
       ${critList.map(([col, label]) => {
         const vals = rows.map(r => r[col]).filter(Boolean);
         if (!vals.length) return '';
@@ -988,7 +1017,7 @@ function renderAnalytics() {
       const jumps = Object.keys(jumpStats).sort((a,b) => jumpStats[b].length - jumpStats[a].length);
       if (jumps.length) {
         html += `<div class="card"><div class="card-title">${typ} — Jumps</div><div class="table-wrap"><table>
-          <thead><tr><th>Jump</th><th>Attempts</th><th>Ø (1–3)</th><th>Distribution (F/L/S)</th></tr></thead><tbody>
+          <thead><tr><th>Jump</th><th>Attempts</th><th>Ø (1–3)</th><th>Distribution (M/O/P)</th></tr></thead><tbody>
           ${jumps.map(j => {
             const vals = jumpStats[j];
             const counts = {1:0,2:0,3:0}; vals.forEach(v => counts[Math.round(v)]++);
@@ -999,6 +1028,71 @@ function renderAnalytics() {
       }
     }
   }
+
+  // ── Learning curve per jump (respects athlete/type/date filters) ──
+  const jumpVals = {};   // jump → { datum → [ratings] }
+  rows.forEach(r => {
+    const add = (j, v) => {
+      if (!j || v == null) return;
+      (jumpVals[j] = jumpVals[j] || {});
+      (jumpVals[j][r.datum] = jumpVals[j][r.datum] || []).push(v);
+    };
+    if (r.typ === '50/50' || r.typ === 'TTB') { add(r.jump1, r.r_jump1); add(r.jump2, r.r_jump2); }
+    else if (r.jump1) {
+      const vals = (critsFor(r) || []).map(([c]) => r[c]).filter(v => v != null);
+      if (vals.length) add(r.jump1, vals.reduce((a,b)=>a+b,0)/vals.length);
+    }
+  });
+  const attemptsOf = j => Object.values(jumpVals[j]).reduce((s, v) => s + v.length, 0);
+  const jumpNames = Object.keys(jumpVals).sort((a, b) => attemptsOf(b) - attemptsOf(a));
+  if (jumpNames.length) {
+    if (!anJump || !jumpVals[anJump]) anJump = jumpNames[0];
+    const byDate = jumpVals[anJump];
+    const points = Object.keys(byDate).sort().map(d => {
+      const v = byDate[d];
+      return { d, n: v.length, avg: v.reduce((a,b)=>a+b,0)/v.length };
+    });
+    html += `<div class="card"><div class="card-title">Learning Curve — per Jump</div>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+        <label>Jump</label>
+        <select style="max-width:160px;" onchange="anJump=this.value;renderAnalytics()">
+          ${jumpNames.map(j => `<option${j===anJump?' selected':''}>${j}</option>`).join('')}
+        </select>
+        <span style="font-size:11px;color:var(--muted);">Ø rating per training day (1 = Miss · 2 = Okay · 3 = Perfect) — follows the filters above</span>
+      </div>
+      ${trendChartSvg(points)}</div>`;
+  }
+
+  // ── Sessions (one block per training day, expandable) ──
+  const byDay = {};
+  rows.forEach(r => (byDay[r.datum] = byDay[r.datum] || []).push(r));
+  const daysSorted = Object.keys(byDay).sort().reverse();
+  html += `<div class="card"><div class="card-title">Sessions</div>
+    ${daysSorted.map(d => {
+      const es = byDay[d];
+      const typCounts = {};
+      es.forEach(r => typCounts[r.typ] = (typCounts[r.typ] || 0) + 1);
+      const open = anOpenDays.has(d);
+      const badges = Object.entries(typCounts).map(([tn, c]) => `<span class="badge-typ" style="font-size:10px;">${tn} · ${c}</span>`).join(' ');
+      const entriesHtml = !open ? '' : `<div style="display:flex;flex-direction:column;gap:6px;padding:4px 0 12px;">
+        ${es.slice(0, 200).map(r => `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);border-radius:8px;font-size:12px;flex-wrap:wrap;">
+          <span style="color:var(--muted);font-size:10px;">${(r.created_at || '').slice(11, 16)}</span>
+          <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(r.athlet || '')}</span>
+          <span class="badge-typ" style="font-size:10px;">${r.typ}</span>
+          <span style="flex:1;min-width:90px;">${[r.jump1, r.jump2].filter(Boolean).join(' + ') || '—'} ${ratingDots(r)}${r.kommentar ? `<span style="color:var(--muted);font-size:10px;"> — ${r.kommentar}</span>` : ''}</span>
+        </div>`).join('')}
+      </div>`;
+      return `<div style="border-bottom:1px solid var(--border);">
+        <div onclick="toggleAnDay('${d}')" style="display:flex;align-items:center;gap:10px;padding:11px 4px;cursor:pointer;flex-wrap:wrap;">
+          <span style="color:var(--muted);width:12px;">${open ? '▾' : '▸'}</span>
+          <span style="font-weight:600;">${d}</span>
+          <span style="font-size:11px;color:var(--muted);">${es.length} entries</span>
+          <span style="display:flex;gap:6px;flex-wrap:wrap;">${badges}</span>
+        </div>${entriesHtml}
+      </div>`;
+    }).join('')}
+  </div>`;
+
   el.innerHTML = html;
 }
 
@@ -1026,7 +1120,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </button>
   <button class="mobile-nav-btn" onclick="showPage('auswertung', this)">
     <svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="20"/><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="6"/><line x1="18" y1="20" x2="18" y2="14"/></svg>
-    Analytics
+    Development
   </button>
   <button class="mobile-nav-btn" onclick="showPage('datenbank', this)">
     <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
