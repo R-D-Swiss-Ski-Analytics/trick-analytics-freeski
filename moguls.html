@@ -238,6 +238,7 @@
         <input type="date" id="db-to" onchange="renderDBTable()"></div>
     </div>
   </div>
+  <div id="db-overview"></div>
   <div class="table-wrap">
     <table>
       <thead><tr><th>Date</th><th>Athlete</th><th>Type</th><th>Jump(s)</th><th>Ratings</th><th>Comment</th><th></th></tr></thead>
@@ -867,7 +868,88 @@ function dbFiltered(prefix) {
     (!from || r.datum >= from) && (!to || r.datum <= to));
 }
 
+// ── Team Overview (Karten pro Sprung, gefärbt nach Leistung — analog Freeski/Snowboard) ──
+function ratingPct(v) { return v == null ? null : (v - 1) * 50; }   // Miss=0% · Okay=50% · Perfect=100%
+function pctColor(p) { return p >= 70 ? '#2d8a4e' : p >= 40 ? '#f59e0b' : '#e2001a'; }
+const avgArr = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+
+function statCardHtml(title, metrics, att) {
+  const valid = metrics.filter(([, p]) => p != null);
+  if (!valid.length) return '';
+  const overall = valid.reduce((s, [, p]) => s + p, 0) / valid.length;
+  const c = pctColor(overall);
+  const bg = overall >= 70 ? 'rgba(45,138,78,0.12)' : overall >= 40 ? 'rgba(245,158,11,0.10)' : 'rgba(226,0,26,0.10)';
+  return `<div style="border:1px solid ${c};background:${bg};border-radius:10px;padding:10px 12px;">
+    <div style="font-weight:600;font-size:13px;margin-bottom:6px;">${title}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11px;font-weight:700;">
+      ${valid.map(([l, p]) => `<span style="color:${pctColor(p)};">${Math.round(p)}% ${l}</span>`).join('')}
+      <span style="color:var(--muted);font-weight:500;">/ ${att} att.</span>
+    </div></div>`;
+}
+
+function typeCards(typ, rows) {
+  if (typ === '50/50' || typ === 'TTB') {
+    const jumps = {};
+    rows.forEach(r => {
+      if (r.jump1 && r.r_jump1) (jumps[r.jump1] = jumps[r.jump1] || []).push(ratingPct(r.r_jump1));
+      if (r.jump2 && r.r_jump2) (jumps[r.jump2] = jumps[r.jump2] || []).push(ratingPct(r.r_jump2));
+    });
+    let html = Object.keys(jumps).sort((a, b) => jumps[b].length - jumps[a].length)
+      .map(j => statCardHtml(j, [['quality', avgArr(jumps[j])]], jumps[j].length)).join('');
+    const sci = rows.map(r => ratingPct(r.r_sci)).filter(v => v != null);
+    if (sci.length) html += statCardHtml('Sci', [['quality', avgArr(sci)]], sci.length);
+    return html;
+  }
+  if (typ === 'Solo Sci') {
+    return statCardHtml('Solo Sci', [
+      ['UB',   avgArr(rows.map(r => ratingPct(r.r_ub)).filter(v => v != null))],
+      ['ABS',  avgArr(rows.map(r => ratingPct(r.r_abs)).filter(v => v != null))],
+      ['Carv', avgArr(rows.map(r => ratingPct(r.r_carving)).filter(v => v != null))],
+    ], rows.length);
+  }
+  // Sprung-Sessions (Water Jump / Jump on Snow) + Legacy-Typen
+  const jumps = {};
+  rows.forEach(r => {
+    if (!r.jump1) return;
+    const s = (jumps[r.jump1] = jumps[r.jump1] || { n: 0, Asse: [], Air: [], Grab: [], Land: [] });
+    s.n++;
+    if (r.r_asse    != null) s.Asse.push(ratingPct(r.r_asse));
+    if (r.r_air     != null) s.Air.push(ratingPct(r.r_air));
+    if (r.r_grab    != null) s.Grab.push(ratingPct(r.r_grab));
+    if (r.r_landing != null) s.Land.push(ratingPct(r.r_landing));
+  });
+  return Object.keys(jumps).sort((a, b) => jumps[b].n - jumps[a].n).map(j => {
+    const s = jumps[j];
+    return statCardHtml(j, [['Asse', avgArr(s.Asse)], ['Air', avgArr(s.Air)], ['Grab', avgArr(s.Grab)], ['Land', avgArr(s.Land)]], s.n);
+  }).join('');
+}
+
+function renderDBOverview() {
+  const el = document.getElementById('db-overview');
+  const rows = dbFiltered('db');
+  if (!rows.length) { el.innerHTML = ''; return; }
+  const byAth = {};
+  rows.forEach(r => (byAth[r.athlet] = byAth[r.athlet] || []).push(r));
+  const names = ATHLETES.map(a => a.name).filter(n => byAth[n]);
+  Object.keys(byAth).forEach(n => { if (!names.includes(n)) names.push(n); });
+  el.innerHTML = `<div class="card"><div class="card-title">Team Overview — Session Performance</div>
+    ${names.map((n, i) => {
+      const aRows = byAth[n];
+      const byTyp = {};
+      aRows.forEach(r => (byTyp[r.typ] = byTyp[r.typ] || []).push(r));
+      const sections = Object.keys(TYPES).filter(t => byTyp[t]).map(t =>
+        `<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#39c3d4;margin-bottom:8px;">${t}</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">${typeCards(t, byTyp[t])}</div></div>`).join('');
+      return `<div style="margin-bottom:20px;${i ? 'border-top:1px solid var(--border);padding-top:16px;' : ''}">
+        <div style="font-size:16px;font-weight:800;margin-bottom:10px;">${n}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;">${sections}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
 function renderDBTable() {
+  renderDBOverview();
   const tbody = document.getElementById('db-tbody');
   const rows = dbFiltered('db');
   if (!rows.length) {
