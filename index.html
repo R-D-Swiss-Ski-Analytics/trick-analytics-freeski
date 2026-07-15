@@ -63,18 +63,6 @@
   .section-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .hidden { display: none !important; }
 
-  .rating-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-  .rating-num { font-family: 'Poppins', sans-serif; font-size: 32px; color: var(--accent); text-align: center; line-height: 1.2; margin-top: 4px; }
-  .rating-sub { font-size: 11px; color: var(--muted); text-align: center; }
-  .gesamt-box {
-    background: linear-gradient(135deg, #1e3a5f, #1a2235);
-    border: 1px solid var(--accent); border-radius: 10px; padding: 14px; text-align: center; margin-top: 12px;
-  }
-  .gesamt-num {
-    font-family: 'Poppins', sans-serif; font-size: 48px;
-    color: #ffffff; line-height: 1;
-  }
-  .gesamt-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
 
   .btn-primary {
     background: #004877; color: white; border: none;
@@ -117,10 +105,6 @@
   .badge-rail { background: #1a3a2a; color: #34d399; }
   .badge-halfpipe { background: #3a1a3a; color: #c084fc; }
 
-  .rating-pill { display: inline-block; padding: 2px 10px; border-radius: 20px; font-family: 'Poppins', sans-serif; font-size: 15px; }
-  .rating-high { background: rgba(45,138,78,0.15); color: #2d8a4e; }
-  .rating-mid  { background: #1c2a05; color: #84cc16; }
-  .rating-low  { background: #2a1505; color: #f59e0b; }
 
   .empty-state { text-align: center; padding: 48px; color: var(--muted); }
   .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
@@ -416,103 +400,6 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- ══════════════════════════════════════════ EDIT MODAL -->
-<div id="edit-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;box-shadow:0 8px 32px rgba(0,72,119,0.1);padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">EDIT ENTRY</div>
-      <button onclick="closeEditModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
-    </div>
-    <input type="hidden" id="edit-idx">
-    <input type="hidden" id="edit-id">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <!-- Athlet / Datum / Typ / Disziplin -->
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Athlete</label>
-        <select id="edit-athlet" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">— select —</option></select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Date</label>
-        <input id="edit-datum" type="date" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;"></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Type</label>
-        <select id="edit-typ" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">— select —</option><option>Training</option><option>Competition</option>
-        </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Discipline</label>
-        <select id="edit-disziplin" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;"></select></div>
-      <!-- Baukasten Jump -->
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Direction</label>
-        <select id="edit-drehrichtung" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;"></select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Rotation</label>
-        <select id="edit-rotation" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>180</option><option>360</option><option>540</option><option>720</option><option>900</option><option>1080</option><option>1260</option><option>1440</option><option>1620</option><option>1800</option><option>1980</option><option>2160</option><option>2340</option><option>2520</option>
-        </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Flips</label>
-        <select id="edit-flips" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;"></select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Axis</label>
-        <select id="edit-achse" onchange="updateFwdSwBtn('edit')" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;"></select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Grab</label>
-        <select id="edit-grab" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;"></select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Take-off</label>
-        <select id="edit-absprung" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;"></select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Bring Back</label>
-        <select id="edit-bringback" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>180</option><option>360</option><option>540</option>
-        </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Style Element</label>
-        <select id="edit-style" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;"></select></div>
-      <!-- Rail -->
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Rail Type</label>
-        <select id="edit-railart" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;"></select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Slide Form</label>
-        <select id="edit-slideform" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>50-50</option><option>Switch 50-50</option><option>Slide</option><option>Lip On</option><option>Switch Tails On</option><option>Switch Lip On</option>
-        </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Slide Variant</label>
-        <select id="edit-slidevar" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>Back Slide</option><option>Front Slide</option>
-        </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">In-Spin</label>
-        <select id="edit-inspin" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>L 180</option><option>R 180</option><option>L 270</option><option>R 270</option><option>L 360</option><option>R 360</option><option>L 450</option><option>R 450</option><option>L 630</option><option>R 630</option><option>L 810</option><option>R 810</option>
-        </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Swap</label>
-        <select id="edit-swap" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>Front Swap</option><option>Back Swap</option><option>BS 360 Swap</option><option>FS 360 Swap</option><option>BS 540 Swap</option><option>FS 540</option><option>Front Swap - Front Swap</option><option>Front Swap - Back Swap</option><option>Back Swap - Front Swap</option><option>Back Swap - Back Swap</option>
-        </select></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Out-Spin</label>
-        <select id="edit-outspin" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">–</option><option>L 180</option><option>R 180</option><option>L 270</option><option>R 270</option><option>L 360</option><option>R 360</option><option>L 450</option><option>R 450</option><option>L 630</option><option>R 630</option><option>L 810</option><option>R 810</option>
-        </select></div>
-      <!-- Ratings -->
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Setup Rating</label>
-        <input id="edit-setup" type="number" min="1" max="10" placeholder="1–10" oninput="updateEditGesamt()" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;"></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Execution Rating</label>
-        <input id="edit-ausfuehrung" type="number" min="1" max="10" placeholder="1–10" oninput="updateEditGesamt()" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;"></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Landing Rating</label>
-        <input id="edit-landung" type="number" min="1" max="10" placeholder="1–10" oninput="updateEditGesamt()" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;"></div>
-      <div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Landed</label>
-        <select id="edit-gelandet" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-          <option value="">— select —</option><option value="Yes">✅ Yes</option><option value="No">❌ No</option>
-        </select></div>
-    </div>
-    <div style="margin-top:10px;">
-      <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Comment</label>
-      <input id="edit-kommentar" type="text" placeholder="Kommentar..." style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-    </div>
-    <div style="margin-top:10px;">
-      <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Trick Setup</label>
-      <input id="edit-trickaufbau" type="text" placeholder="Trick setup..." style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-    </div>
-    <div style="margin-top:10px;">
-      <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Video Link</label>
-      <input id="edit-videolink" type="text" placeholder="https://..." style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-    </div>
-    <div id="edit-gesamt-preview" style="margin-top:10px;font-size:13px;color:var(--accent);font-weight:600;"></div>
-    <div style="display:flex;gap:10px;margin-top:16px;">
-      <button onclick="saveEditModal()" style="flex:1;padding:12px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">SAVE</button>
-      <button onclick="closeEditModal()" style="padding:12px 20px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button>
-    </div>
-  </div>
-</div>
 
 <!-- ══════════════════════════════════════════ ERFASSEN -->
 <div class="page" id="page-erfassen">
@@ -578,33 +465,6 @@
 
 </div>
 
-<!-- ════════════════════════════════════════════ COCKPIT -->
-<div class="page" id="page-cockpit">
-  <div class="athlete-selector">
-    <label>Athlete</label>
-    <select id="cp-athlet" onchange="renderCockpit()">
-          <option value="">— select —</option></select>
-  </div>
-  <div class="stats-grid">
-    <div class="stat-card"><div class="stat-value" id="s-total">–</div><div class="stat-label">Tricks Total</div></div>
-    <div class="stat-card"><div class="stat-value" id="s-gesamt">–</div><div class="stat-label">Ø Gesamt</div></div>
-    <div class="stat-card"><div class="stat-value" id="s-setup">–</div><div class="stat-label">Ø Setup</div></div>
-    <div class="stat-card"><div class="stat-value" id="s-aus">–</div><div class="stat-label">Ø Ausführung</div></div>
-    <div class="stat-card"><div class="stat-value" id="s-land">–</div><div class="stat-label">Ø Landung</div></div>
-    <div class="stat-card"><div class="stat-value" id="s-best" style="font-size:16px;padding-top:4px;">–</div><div class="stat-label">Bester Trick</div></div>
-  </div>
-  <div class="card">
-    <div class="card-title">Trick-Liste</div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Date</th><th>Discipline</th><th>Trick</th><th>Source</th><th>Rating</th><th>Comment</th></tr></thead>
-        <tbody id="cp-tbody">
-          <tr><td colspan="6"><div class="empty-state"><div class="icon">🏔</div>Select athlete</div></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
 
 <!-- ══════════════════════════════════════════ STANDORTBESTIMMUNG -->
 <div class="page active" id="page-standort">
@@ -1129,21 +989,6 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
 
-function updateGesamt() {
-  const s = parseFloat(document.getElementById('f-setup').value);
-  const a = parseFloat(document.getElementById('f-aus').value);
-  const l = parseFloat(document.getElementById('f-land').value);
-  document.getElementById('d-setup').textContent = isNaN(s) ? '–' : s;
-  document.getElementById('d-aus').textContent   = isNaN(a) ? '–' : a;
-  document.getElementById('d-land').textContent  = isNaN(l) ? '–' : l;
-  const vals = [s,a,l].filter(x => !isNaN(x));
-  document.getElementById('d-gesamt').textContent = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : '–';
-}
-
-function getGesamt() {
-  const vals = ['f-setup','f-aus','f-land'].map(id => parseFloat(document.getElementById(id).value)).filter(x => !isNaN(x));
-  return vals.length ? parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1)) : null;
-}
 
 function val(id) { const el = document.getElementById(id); return el ? el.value || null : null; }
 
@@ -1159,170 +1004,6 @@ function readFields(prefix) {
   };
 }
 
-async function saveTrick() {
-  const athlet    = val('f-athlet');
-  const datum     = val('f-datum');
-  const disziplin = val('f-disziplin');
-  if (!athlet || !datum || !disziplin) { showToast('Please select athlete, date and discipline!', 'error'); return; }
-
-  const btn = document.getElementById('btn-save');
-  btn.disabled = true; btn.textContent = 'SAVE...';
-
-  const setup = parseFloat(document.getElementById('f-setup').value) || null;
-  const aus   = parseFloat(document.getElementById('f-aus').value)   || null;
-  const land  = parseFloat(document.getElementById('f-land').value)  || null;
-
-  const { error } = await db.from('tricks').insert({
-    athlet, datum, typ: val('f-typ'), disziplin,
-    drehrichtung: val('f-drehrichtung'), flips: val('f-flips'), achse: val('f-achse'),
-    rotation: val('f-rotation'), absprung: val('f-absprung'), grab: val('f-grab'),
-    bringback: val('f-bringback'), style: val('f-style'), railart: val('f-railart'), slideform: val('f-slideform'),
-    slidevar: val('f-slidevar'), inspin: val('f-inspin'), swap: val('f-swap'), outspin: val('f-outspin'),
-    setup, ausfuehrung: aus, landung: land, gesamt: getGesamt(),
-    kommentar: val('f-kommentar'), trickaufbau: val('f-trickaufbau'), videolink: val('f-videolink'),
-    gelandet: val('f-gelandet') || null,
-  });
-
-  btn.disabled = false; btn.textContent = 'SAVE TRICK';
-  if (error) { showToast('Error: ' + error.message, 'error'); return; }
-  // Add to session list
-  sessionTricks.unshift({
-    athlet, datum, typ: val('f-typ'), disziplin,
-    drehrichtung: val('f-drehrichtung'), flips: val('f-flips'), rotation: val('f-rotation'),
-    grab: val('f-grab'), bringback: val('f-bringback'), style: val('f-style'),
-    railart: val('f-railart'),
-    gesamt: getGesamt(), kommentar: val('f-kommentar'), gelandet: val('f-gelandet') || null,
-  });
-  renderSessionList();
-  // Sync filter to current athlete
-  const filterEl = document.getElementById('sl-filter-athlet');
-  if (filterEl && athlet) filterEl.value = athlet;
-  renderSessionList();
-
-  showToast('\u2713 Trick saved!', 'success');
-  resetForm();
-}
-
-let sessionTricks = [];
-
-async function loadSessionTricks() {
-  const { data, error } = await db.from('tricks').select('*').order('datum', { ascending: false }).order('id', { ascending: false }).limit(100);
-  if (error) { showToast('Error loading data: ' + error.message, 'error'); return; }
-  sessionTricks = data || [];
-  renderSessionList();
-}
-
-
-function openEditModal(idx) {
-  const t = sessionTricks[idx];
-  if (!t) return;
-  document.getElementById('edit-idx').value = idx;
-  document.getElementById('edit-id').value = t.id || '';
-  document.getElementById('edit-athlet').value = t.athlet || '';
-  document.getElementById('edit-datum').value = t.datum || '';
-  document.getElementById('edit-typ').value = t.typ || '';
-  document.getElementById('edit-disziplin').value = t.disziplin || '';
-  document.getElementById('edit-drehrichtung').value = t.drehrichtung || '';
-  document.getElementById('edit-rotation').value = t.rotation || '';
-  document.getElementById('edit-flips').value = t.flips || '';
-  document.getElementById('edit-achse').value = t.achse || '';
-  document.getElementById('edit-grab').value = t.grab || '';
-  document.getElementById('edit-absprung').value = t.absprung || '';
-  document.getElementById('edit-bringback').value = t.bringback || '';
-  document.getElementById('edit-style').value = t.style || '';
-  document.getElementById('edit-railart').value = t.railart || '';
-  document.getElementById('edit-slideform').value = t.slideform || '';
-  document.getElementById('edit-slidevar').value = t.slidevar || '';
-  document.getElementById('edit-inspin').value = t.inspin || '';
-  document.getElementById('edit-swap').value = t.swap || '';
-  document.getElementById('edit-outspin').value = t.outspin || '';
-  document.getElementById('edit-setup').value = t.setup || '';
-  document.getElementById('edit-ausfuehrung').value = t.ausfuehrung || '';
-  document.getElementById('edit-landung').value = t.landung || '';
-  document.getElementById('edit-gelandet').value = t.gelandet || '';
-  document.getElementById('edit-kommentar').value = t.kommentar || '';
-  document.getElementById('edit-trickaufbau').value = t.trickaufbau || '';
-  document.getElementById('edit-videolink').value = t.videolink || '';
-  updateEditGesamt();
-  document.getElementById('edit-modal-overlay').style.display = 'flex';
-}
-
-function closeEditModal() {
-  document.getElementById('edit-modal-overlay').style.display = 'none';
-}
-
-function updateEditGesamt() {
-  const s = parseFloat(document.getElementById('edit-setup').value);
-  const a = parseFloat(document.getElementById('edit-ausfuehrung').value);
-  const l = parseFloat(document.getElementById('edit-landung').value);
-  const vals = [s,a,l].filter(v => !isNaN(v));
-  const g = vals.length ? parseFloat((vals.reduce((x,y)=>x+y,0)/vals.length).toFixed(1)) : '';
-  document.getElementById('edit-gesamt-preview').textContent = g ? 'Gesamt: ' + g : '';
-}
-
-async function saveEditModal() {
-  const idx = parseInt(document.getElementById('edit-idx').value);
-  const id  = document.getElementById('edit-id').value;
-  const t   = sessionTricks[idx];
-  if (!t) return;
-
-  const s = parseFloat(document.getElementById('edit-setup').value) || null;
-  const a = parseFloat(document.getElementById('edit-ausfuehrung').value) || null;
-  const l = parseFloat(document.getElementById('edit-landung').value) || null;
-  const vals = [s,a,l].filter(v=>v!=null);
-  const g = vals.length ? parseFloat((vals.reduce((x,y)=>x+y,0)/vals.length).toFixed(1)) : null;
-
-  const updates = {
-    athlet:       document.getElementById('edit-athlet').value || null,
-    datum:        document.getElementById('edit-datum').value || null,
-    typ:          document.getElementById('edit-typ').value || null,
-    disziplin:    document.getElementById('edit-disziplin').value || null,
-    drehrichtung: document.getElementById('edit-drehrichtung').value || null,
-    rotation:     document.getElementById('edit-rotation').value || null,
-    flips:        document.getElementById('edit-flips').value || null,
-    achse:        document.getElementById('edit-achse').value || null,
-    grab:         document.getElementById('edit-grab').value || null,
-    absprung:     document.getElementById('edit-absprung').value || null,
-    bringback:    document.getElementById('edit-bringback').value || null,
-    style:        document.getElementById('edit-style').value || null,
-    railart:      document.getElementById('edit-railart').value || null,
-    slideform:    document.getElementById('edit-slideform').value || null,
-    slidevar:     document.getElementById('edit-slidevar').value || null,
-    inspin:       document.getElementById('edit-inspin').value || null,
-    swap:         document.getElementById('edit-swap').value || null,
-    outspin:      document.getElementById('edit-outspin').value || null,
-    kommentar:    document.getElementById('edit-kommentar').value || null,
-    trickaufbau:  document.getElementById('edit-trickaufbau').value || null,
-    videolink:    document.getElementById('edit-videolink').value || null,
-    setup:        s,
-    ausfuehrung:  a,
-    landung:      l,
-    gesamt:       g,
-    gelandet:     document.getElementById('edit-gelandet').value || null,
-  };
-
-  const { error } = await db.from('tricks').update(updates).eq('id', id);
-  if (error) { showToast('Fehler beim Speichern', 'error'); return; }
-
-  Object.assign(sessionTricks[idx], updates);
-  closeEditModal();
-  renderSessionList();
-  showToast('Eintrag aktualisiert ✓');
-}
-
-function resetForm() {
-  ['f-athlet','f-typ','f-disziplin','f-drehrichtung','f-flips','f-achse','f-rotation','f-absprung',
-   'f-grab','f-bringback','f-style','f-railart','f-slideform','f-slidevar','f-inspin','f-swap','f-outspin',
-   'f-kommentar','f-trickaufbau','f-videolink','f-gelandet'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-  ['f-setup','f-aus','f-land'].forEach(id => document.getElementById(id).value = '');
-  toggleDisziplin('f'); updateGesamt();
-}
-
-function ratingPill(r) {
-  if (!r) return '–';
-  const cls = r>=8?'rating-high':r>=6?'rating-mid':'rating-low';
-  return `<span class="rating-pill ${cls}">${r}</span>`;
-}
 
 function badge(d) {
   const cls = d==='Jump'||d==='Landing Bag'?'badge-kicker':d==='Rail'?'badge-rail':'badge-halfpipe';
@@ -1345,84 +1026,6 @@ function fmtDate(d) {
   try { return new Date(d).toLocaleDateString('de-CH', {day:'2-digit',month:'2-digit',year:'numeric'}); } catch { return d; }
 }
 
-async function renderCockpit() {
-  const athlet = document.getElementById('cp-athlet').value;
-  const tbody = document.getElementById('cp-tbody');
-  if (!athlet) {
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">🏔</div>Select athlete</div></td></tr>';
-    ['s-total','s-gesamt','s-setup','s-aus','s-land','s-best'].forEach(id => document.getElementById(id).textContent = '–');
-    return;
-  }
-  tbody.innerHTML = '<tr><td colspan="6"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr>';
-
-  const [tricksRes, standortRes] = await Promise.all([
-    db.from('tricks').select('*').eq('athlet', athlet).order('datum', { ascending: false }),
-    db.from('standort').select('*').eq('athlet', athlet),
-  ]);
-
-  if (tricksRes.error) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--danger);padding:20px;">Error loading data</td></tr>'; return; }
-
-  const tricks = tricksRes.data || [];
-  const standortEntries = standortRes.data || [];
-
-  // Build set of trick labels from training DB
-  const trainedLabels = new Set(tricks.map(t => trickDesc(t)));
-
-  document.getElementById('s-total').textContent  = tricks.length || '–';
-  document.getElementById('s-gesamt').textContent = avg(tricks.map(t=>t.gesamt)) ?? '–';
-  document.getElementById('s-setup').textContent  = avg(tricks.map(t=>t.setup))  ?? '–';
-  document.getElementById('s-aus').textContent    = avg(tricks.map(t=>t.ausfuehrung)) ?? '–';
-  document.getElementById('s-land').textContent   = avg(tricks.map(t=>t.landung)) ?? '–';
-  const best = tricks.filter(t=>t.gesamt).sort((a,b)=>b.gesamt-a.gesamt)[0];
-  document.getElementById('s-best').textContent   = best ? `${trickDesc(best)} (${best.gesamt})` : '–';
-
-  // Rows from training
-  const trainingRows = tricks.map(t => ({
-    datum: t.datum,
-    disziplin: t.disziplin,
-    label: trickDesc(t),
-    quelle: 'training',
-    gesamt: t.gesamt,
-    kommentar: t.kommentar,
-  }));
-
-  // Rows from Assessment that are NOT already in training
-  const standortRows = standortEntries
-    .filter(e => !trainedLabels.has(e.trick_label))
-    .map(e => ({
-      datum: null,
-      disziplin: e.disziplin,
-      label: e.trick_label,
-      quelle: e.status, // 'mastered' | 'goal' | 'erreicht'
-      gesamt: null,
-      kommentar: e.notiz,
-    }));
-
-  const allRows = [...trainingRows, ...standortRows];
-
-  if (!allRows.length) {
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">📋</div>No entries yet</div></td></tr>';
-    return;
-  }
-
-  const quelleTag = (q) => {
-    if (q === 'training') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#1e3a5f;color:#ffffff;text-transform:uppercase;letter-spacing:.5px;">Training</span>';
-    if (q === 'mastered') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:rgba(45,138,78,0.15);color:#2d8a4e;text-transform:uppercase;letter-spacing:.5px;">Assessment ✓</span>';
-    if (q === 'goal') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#1a1a05;color:#f59e0b;text-transform:uppercase;letter-spacing:.5px;">Assessment 🎯</span>';
-    if (q === 'erreicht') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;background:#0f1f38;color:#ffffff;text-transform:uppercase;letter-spacing:.5px;">Assessment ★</span>';
-    return '–';
-  };
-
-  tbody.innerHTML = allRows.map(r => `
-    <tr>
-      <td>${r.datum || '<span style="color:var(--muted);font-size:12px;">–</span>'}</td>
-      <td>${badge(r.disziplin)}</td>
-      <td>${r.label}</td>
-      <td>${quelleTag(r.quelle)}</td>
-      <td>${ratingPill(r.gesamt)}</td>
-      <td style="max-width:200px;white-space:normal;color:var(--muted)">${r.kommentar||'–'}</td>
-    </tr>`).join('');
-}
 
 let dbAllTricks = [];    // session tricks
 
@@ -2059,7 +1662,6 @@ function sbeToggle(){
 function closeSbEdit(){document.getElementById('sb-edit-overlay').style.display='none';}
 
 
-if(document.getElementById('f-datum')) document.getElementById('f-datum').valueAsDate = new Date();
 
   if(document.getElementById('sb-datum')) document.getElementById('sb-datum').valueAsDate = new Date();
 
@@ -2071,11 +1673,9 @@ function showPage(id, btn) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   btn.classList.add('active');
-  if (id === 'cockpit') renderCockpit();
   if (id === 'datenbank') loadDB();
   if (id === 'entwicklung') loadEntwicklung();
   if (id === 'erfassen') initSessionSetup();
-  if (id === 'erfassen') loadSessionTricks();
   if (typeof updateMobileNav === 'function') updateMobileNav(id);
 }
 
@@ -2186,44 +1786,6 @@ function trickDesc(t, prefix) {
   }
 }
 
-function renderSessionList() {
-  const filterAthlet = document.getElementById('sl-filter-athlet').value;
-  const filtered = filterAthlet ? sessionTricks.filter(t => t.athlet === filterAthlet) : sessionTricks;
-  const body = document.getElementById('session-list-body');
-  const countEl = document.getElementById('sl-count');
-  countEl.textContent = filtered.length + ' Trick' + (filtered.length !== 1 ? 's' : '');
-
-  if (filtered.length === 0) {
-    body.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Keine Tricks für diese Auswahl.</div>';
-    return;
-  }
-
-  const sbDirOrd = {'Frontside':0,'Backside':1,'Cab':2,'Switch Backside':3};
-  const sbGetDir = lbl => { for (const d of ['Switch Backside','Frontside','Backside','Cab']) { if (lbl.includes(d)) return sbDirOrd[d]??4; } return 4; };
-  const sorted = [...filtered].sort((a,b) => {
-    const la = normSbTrick(a.trickaufbau||''), lb = normSbTrick(b.trickaufbau||'');
-    const da = sbGetDir(la), db = sbGetDir(lb);
-    if (da !== db) return da - db;
-    return extractRotFromLabel(la) - extractRotFromLabel(lb);
-  });
-  body.innerHTML = sorted.map((t, i) => {
-    const trickName = [t.drehrichtung, t.flips && !['keine','None','none'].includes(t.flips) ? t.flips : null, t.rotation, t.achse, t.grab, t.bringback].filter(Boolean).join(' ') || t.railart || '–';
-    const g = t.gesamt;
-    const ratingHtml = g ? '<span class="rating-pill ' + (g>=8?'rating-high':g>=6?'rating-mid':'rating-low') + '">' + g + '</span>' : '–';
-    const diszBadge = badge(t.disziplin);
-    const border = i > 0 ? 'border-top:1px solid var(--border);' : '';
-    const komHtml = t.kommentar ? '<div style="color:var(--muted);font-size:12px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + t.kommentar + '">' + t.kommentar + '</div>' : '';
-    const idx = sessionTricks.indexOf(t);
-    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;' + border + '">'
-      + '<div style="font-weight:700;color:var(--accent);min-width:80px;font-size:13px;">' + shortName(t.athlet) + '</div>'
-      + diszBadge
-      + '<div style="flex:1;font-size:14px;color:var(--text);">' + trickName + '</div>'
-      + '<div>' + ratingHtml + '</div>'
-      + komHtml
-      + '<button onclick="openEditModal(' + idx + ')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;cursor:pointer;color:var(--muted);font-size:13px;" title="Bearbeiten">✏️</button>'
-      + '</div>';
-  }).join('');
-}
 
 async function loadDB() {
   updateSeasonLabels();
@@ -5643,7 +5205,7 @@ const fragments = {
   coachFields: ``,
 };
 function init() { initStandortGrabs(); }
-return { fragments, init, showPage, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, renderSessionList, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, renderDBRankings, openTeamPdfReport, renderDBTable, downloadRanking, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, renderLiveSession, sessSetTrick, logAttempt, deleteLogEntry, editLogEntry, saveFsLogEdit, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar };
+return { fragments, init, showPage, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, renderDBRankings, openTeamPdfReport, renderDBTable, downloadRanking, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, renderLiveSession, sessSetTrick, logAttempt, deleteLogEntry, editLogEntry, saveFsLogEdit, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar };
 })();
 
 // ═══════════════ FREESKI-MODUL ═══════════════
@@ -5653,11 +5215,9 @@ function showPage(id, btn) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   btn.classList.add('active');
-  if (id === 'cockpit') renderCockpit();
   if (id === 'datenbank') loadDB();
   if (id === 'entwicklung') loadEntwicklung();
   if (id === 'erfassen') initSessionSetup();
-  if (id === 'erfassen') loadSessionTricks();
   if (typeof updateMobileNav === 'function') updateMobileNav(id);
 }
 
@@ -5770,36 +5330,6 @@ function trickDesc(t, prefix) {
   }
 }
 
-function renderSessionList() {
-  const filterAthlet = document.getElementById('sl-filter-athlet').value;
-  const filtered = filterAthlet ? sessionTricks.filter(t => t.athlet === filterAthlet) : sessionTricks;
-  const body = document.getElementById('session-list-body');
-  const countEl = document.getElementById('sl-count');
-  countEl.textContent = filtered.length + ' Trick' + (filtered.length !== 1 ? 's' : '');
-
-  if (filtered.length === 0) {
-    body.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Keine Tricks für diese Auswahl.</div>';
-    return;
-  }
-
-  body.innerHTML = filtered.map((t, i) => {
-    const trickName = [t.drehrichtung, t.flips && t.flips !== 'keine' ? t.flips : null, t.rotation, t.achse, t.grab, t.bringback].filter(Boolean).join(' ') || t.railart || '–';
-    const g = t.gesamt;
-    const ratingHtml = g ? '<span class="rating-pill ' + (g>=8?'rating-high':g>=6?'rating-mid':'rating-low') + '">' + g + '</span>' : '–';
-    const diszBadge = badge(t.disziplin);
-    const border = i > 0 ? 'border-top:1px solid var(--border);' : '';
-    const komHtml = t.kommentar ? '<div style="color:var(--muted);font-size:12px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + t.kommentar + '">' + t.kommentar + '</div>' : '';
-    const idx = sessionTricks.indexOf(t);
-    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;' + border + '">'
-      + '<div style="font-weight:700;color:var(--accent);min-width:80px;font-size:13px;">' + shortName(t.athlet) + '</div>'
-      + diszBadge
-      + '<div style="flex:1;font-size:14px;color:var(--text);">' + trickName + '</div>'
-      + '<div>' + ratingHtml + '</div>'
-      + komHtml
-      + '<button onclick="openEditModal(' + idx + ')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;cursor:pointer;color:var(--muted);font-size:13px;" title="Bearbeiten">✏️</button>'
-      + '</div>';
-  }).join('');
-}
 
 let _perfTypeFilter = '';
 
@@ -9462,7 +8992,7 @@ const fragments = {
         <textarea id="sbe-coach-kommentar" rows="2" placeholder="Coach-Kommentar..."></textarea></div>`,
 };
 function init() { initStandortGrabs(); }
-return { fragments, init, showPage, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, renderSessionList, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, renderDBRankings, openTeamPdfReport, renderDBTable, downloadRanking, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
+return { fragments, init, showPage, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, renderDBRankings, openTeamPdfReport, renderDBTable, downloadRanking, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
 })();
 
 // ═══════════════ SPORT BOOT ═══════════════
@@ -9471,7 +9001,7 @@ document.addEventListener('DOMContentLoaded', function bootSport(){
   for (const k of Object.keys(M)) if (typeof M[k] === 'function' && k !== 'init') window[k] = M[k];
   document.title = CFG.title;
   const h1 = document.querySelector('header h1'); if (h1) h1.textContent = CFG.title;
-  ['edit-athlet','cp-athlet','sb-athlet','ev-athlet','db-filter-athlet'].forEach(id => {
+  ['sb-athlet','ev-athlet','db-filter-athlet'].forEach(id => {
     const el = document.getElementById(id); if (el) el.insertAdjacentHTML('beforeend', CFG.athleteOptgroups);
   });
   for (const [id, html] of Object.entries(CFG.selectFill)) {
@@ -9552,58 +9082,6 @@ document.addEventListener('DOMContentLoaded', function bootSport(){
   </div>
 </div>
 
-<!-- EDIT MODAL -->
-<div id="edit-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:24px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:#06b6d4;">EDIT ENTRY</div>
-      <button onclick="closeEditModal()" style="background:none;border:none;color:#6b8299;font-size:20px;cursor:pointer;">✕</button>
-    </div>
-    <input type="hidden" id="edit-idx">
-    <input type="hidden" id="edit-id">
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Setup-Rating (1–10)</label>
-        <input type="number" id="edit-setup" min="1" max="10" oninput="updateEditGesamt()" style="border-color:#3b82f644;">
-      </div>
-      <div class="form-group">
-        <label>Ausführungs-Rating (1–10)</label>
-        <input type="number" id="edit-ausfuehrung" min="1" max="10" oninput="updateEditGesamt()" style="border-color:#3b82f644;">
-      </div>
-      <div class="form-group">
-        <label>Landungs-Rating (1–10)</label>
-        <input type="number" id="edit-landung" min="1" max="10" oninput="updateEditGesamt()" style="border-color:#3b82f644;">
-      </div>
-      <div class="form-group" style="display:flex;align-items:flex-end;">
-        <div id="edit-gesamt-preview" style="font-family:'Poppins',sans-serif;font-size:18px;color:#ffffff;padding-bottom:6px;"></div>
-      </div>
-      <div class="form-group">
-        <label>Landed?</label>
-        <select id="edit-gelandet">
-          <option value="">— select —</option>
-          <option value="Yes">✅ Yes</option>
-          <option value="No">❌ No</option>
-        </select>
-      </div>
-      <div class="form-group full">
-        <label>Comment</label>
-        <textarea id="edit-kommentar" rows="2" placeholder="Kommentar zur Ausführung..."></textarea>
-      </div>
-      <div class="form-group full">
-        <label>Trick Setup</label>
-        <input type="text" id="edit-trickaufbau" placeholder="z.B. Cab 5 → Cab 7 → Cab 9...">
-      </div>
-      <div class="form-group full">
-        <label>Video Link</label>
-        <input type="text" id="edit-videolink" placeholder="https://...">
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:20px;">
-      <button onclick="closeEditModal()" style="flex:1;padding:12px;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#6b8299;font-size:14px;cursor:pointer;">Cancel</button>
-      <button onclick="saveEditModal()" style="flex:2;padding:12px;background:#3b82f6;border:none;border-radius:8px;color:white;font-size:14px;font-weight:600;cursor:pointer;">Speichern</button>
-    </div>
-  </div>
-</div>
 
 <nav class="mobile-nav" id="mobile-nav">
   <button class="mobile-nav-btn" onclick="showPage('standort', this); updateMobileNav('standort')">
