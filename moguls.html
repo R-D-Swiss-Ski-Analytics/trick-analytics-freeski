@@ -12,7 +12,6 @@
     --border: #1a3450; --accent: #ffffff; --accent2: #39c3d4;
     --text: #e8edf2; --muted: #6b8299; --success: #2d8a4e; --danger: #e2001a;
     --warn: #f59e0b;
-    --rosso: #e2001a; --arancione: #f59e0b; --verde: #2d8a4e;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; font-size: 14px; min-height: 100vh; }
@@ -156,7 +155,20 @@
 
     <div class="card" style="margin-bottom:16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div class="card-title" style="margin:0;">Select Athletes (max. 8)</div>
+        <div class="card-title" style="margin:0;">Step 1 — Session Type</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;" id="sess-type-btns">
+        <button onclick="selectSessType(this,'50/50')" class="sess-type-btn">50/50</button>
+        <button onclick="selectSessType(this,'TTB')" class="sess-type-btn">TTB</button>
+        <button onclick="selectSessType(this,'Solo Sci')" class="sess-type-btn">Solo Sci</button>
+        <button onclick="selectSessType(this,'Jump No Grab')" class="sess-type-btn">Jump No Grab</button>
+        <button onclick="selectSessType(this,'Jump Grab')" class="sess-type-btn">Jump Grab</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="card-title" style="margin:0;">Step 2 — Select Athletes (max. 8)</div>
         <button onclick="clearSessionSelection()" style="padding:6px 14px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">Clear all</button>
       </div>
       <div id="sess-athlete-grid"></div>
@@ -180,9 +192,6 @@
         <button onclick="endSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✓ End Session</button>
       </div>
     </div>
-
-    <!-- Entry type tabs -->
-    <div id="sess-type-tabs" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;"></div>
 
     <div id="sess-athlete-cols" style="display:grid;gap:16px;margin-bottom:20px;"></div>
 
@@ -289,11 +298,11 @@ const TYPES = {
 const TYPE_NAMES = Object.keys(TYPES);
 const ALL_RATING_COLS = ['r_jump1','r_jump2','r_sci','r_ub','r_abs','r_carving','r_asse','r_air','r_grab','r_landing'];
 
-// Traffic light: stored value → label + colour (coach's Rosso / Arancione / Verde)
+// Rating levels: stored value 1–3 → label + colour (analog Freeski/Snowboard)
 const LEVELS = [
-  {val:1, label:'Rosso',     color:'#e2001a', bg:'rgba(226,0,26,0.1)'},
-  {val:2, label:'Arancione', color:'#f59e0b', bg:'rgba(245,158,11,0.1)'},
-  {val:3, label:'Verde',     color:'#2d8a4e', bg:'rgba(45,138,78,0.1)'},
+  {val:1, label:'✗ FAILED',  color:'#e2001a', bg:'rgba(226,0,26,0.1)'},
+  {val:2, label:'✓ LANDED',  color:'#2d8a4e', bg:'rgba(45,138,78,0.1)'},
+  {val:3, label:'⭐ STOMPED', color:'#39c3d4', bg:'rgba(57,195,212,0.1)'},
 ];
 const levelColor = v => (LEVELS.find(l => l.val === v) || {color:'var(--muted)'}).color;
 
@@ -335,9 +344,9 @@ function updateMobileNav(id) {
 
 // ═══════════════ SESSION STATE ═══════════════
 let sessSelectedAthletes = [];
-let sessAthleteData = {};   // name → { sel: {typ:{jump1,jump2}}, stats:{attempts,verde} }
+let sessAthleteData = {};   // name → { sel: {typ:{jump1,jump2}}, stats:{attempts,stomped} }
 let sessLog = [];
-let sessType = '50/50';
+let sessType = '';
 let sessStartTime = 0;
 let sessActiveAthlete = null;
 const sessRatings = {};     // name → { column: 1|2|3 }
@@ -360,15 +369,15 @@ function restoreSessionState() {
   if (!raw) return false;
   try {
     const state = JSON.parse(raw);
-    if (!state.athletes || !state.athletes.length) { clearSessionStorage(); return false; }
+    if (!state.athletes || !state.athletes.length || !state.type) { clearSessionStorage(); return false; }
     sessSelectedAthletes = state.athletes;
     sessLog = state.log || [];
-    sessType = state.type || '50/50';
+    sessType = state.type;
     sessStartTime = state.startTime || Date.now();
     sessActiveAthlete = state.activeAthlete || state.athletes[0];
     for (const name of sessSelectedAthletes) {
       const saved = (state.athleteState || {})[name] || {};
-      sessAthleteData[name] = { sel: saved.sel || {}, stats: saved.stats || {attempts:0, verde:0} };
+      sessAthleteData[name] = { sel: saved.sel || {}, stats: saved.stats || {attempts:0, stomped:0} };
     }
     enterLiveView();
     showToast('Session restored', 'success');
@@ -418,7 +427,7 @@ function toggleSessionAthlete(name) {
       return;
     }
     sessSelectedAthletes.push(name);
-    sessAthleteData[name] = { sel: {}, stats: {attempts:0, verde:0} };
+    sessAthleteData[name] = { sel: {}, stats: {attempts:0, stomped:0} };
     const card = document.getElementById('sess-ath-card-' + sid(name));
     if (card) card.style.borderColor = '#39c3d4';
   }
@@ -430,12 +439,19 @@ function clearSessionSelection() {
   renderAthleteGrid();
 }
 
+function selectSessType(btn, type) {
+  document.querySelectorAll('.sess-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  sessType = type;
+}
+
 function startSession() {
+  if (!sessType) { showToast('Please select a session type first', 'error'); return; }
   if (sessSelectedAthletes.length === 0) { showToast('Please select at least one athlete', 'error'); return; }
   const isResume = sessStartTime > 0 && sessLog.length > 0;
   sessSelectedAthletes.forEach(name => {
-    if (!sessAthleteData[name]) sessAthleteData[name] = { sel: {}, stats: {attempts:0, verde:0} };
-    if (!isResume) sessAthleteData[name].stats = {attempts:0, verde:0};
+    if (!sessAthleteData[name]) sessAthleteData[name] = { sel: {}, stats: {attempts:0, stomped:0} };
+    if (!isResume) sessAthleteData[name].stats = {attempts:0, stomped:0};
   });
   if (!isResume) { sessLog = []; sessStartTime = Date.now(); }
   enterLiveView();
@@ -446,7 +462,8 @@ function enterLiveView() {
   document.getElementById('sess-setup').style.display = 'none';
   document.getElementById('sess-live').style.display = 'block';
   document.getElementById('sess-live-date').textContent =
-    new Date(sessStartTime || Date.now()).toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    new Date(sessStartTime || Date.now()).toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'})
+    + (sessType ? '  ·  ' + sessType : '');
   renderLiveSession();
   renderSessionLog();
 }
@@ -454,14 +471,18 @@ function enterLiveView() {
 function addAthleteToSession() {
   document.getElementById('sess-setup').style.display = 'block';
   document.getElementById('sess-live').style.display = 'none';
+  document.querySelectorAll('.sess-type-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim() === sessType);
+  });
   renderAthleteGrid();
 }
 
 function resetSession() {
   sessSelectedAthletes = []; sessAthleteData = {}; sessLog = [];
   Object.keys(sessRatings).forEach(k => delete sessRatings[k]);
-  sessActiveAthlete = null; sessStartTime = 0;
+  sessActiveAthlete = null; sessStartTime = 0; sessType = '';
   clearSessionStorage();
+  document.querySelectorAll('.sess-type-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('sess-setup').style.display = 'block';
   document.getElementById('sess-live').style.display = 'none';
   initSessionSetup();
@@ -484,20 +505,7 @@ function endSession() {
 }
 
 // ═══════════════ LIVE SESSION ═══════════════
-function setSessType(t) {
-  if (sessType === t) return;
-  sessType = t;
-  Object.keys(sessRatings).forEach(k => delete sessRatings[k]);  // in-progress ratings belong to old type
-  renderLiveSession();
-  saveSessionState();
-}
-
 function renderLiveSession() {
-  // Type tabs
-  document.getElementById('sess-type-tabs').innerHTML = TYPE_NAMES.map(t =>
-    `<button onclick="setSessType('${t}')" class="sess-type-btn${t===sessType?' active':''}">${t}</button>`
-  ).join('');
-
   const cols = document.getElementById('sess-athlete-cols');
   if (!sessActiveAthlete && sessSelectedAthletes.length > 0) sessActiveAthlete = sessSelectedAthletes[0];
 
@@ -543,7 +551,7 @@ function renderLiveSession() {
       </div>`;
     }
 
-    // Criteria rows with Rosso / Arancione / Verde buttons
+    // Criteria rows with Failed / Landed / Stomped buttons
     const critHtml = `<div style="display:flex;flex-direction:column;gap:12px;">
       ${t.criteria.map(([col, label]) => `
         <div>
@@ -563,7 +571,7 @@ function renderLiveSession() {
     cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${s}">
       <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
         <div style="font-size:26px;font-weight:800;color:#39c3d4;">${shortName(name)}</div>
-        <div style="font-size:12px;color:var(--muted);">${d.stats.attempts} entries · <span style="color:#2d8a4e;">${d.stats.verde} all-verde</span></div>
+        <div style="font-size:12px;color:var(--muted);">${d.stats.attempts} entries · <span style="color:#39c3d4;">${d.stats.stomped} all-stomped</span></div>
       </div>
       ${jumpsHtml}
       ${critHtml}
@@ -611,7 +619,7 @@ function autoLogEntry(name) {
   const avg = vals.reduce((a,b) => a+b, 0) / vals.length;
 
   d.stats.attempts++;
-  if (vals.every(v => v === 3)) d.stats.verde++;
+  if (vals.every(v => v === 3)) d.stats.stomped++;
 
   // Flash card in the avg colour
   const col = document.getElementById('sess-col-' + sid(name));
@@ -677,7 +685,7 @@ function recalcStats(name) {
   if (!d) return;
   const entries = sessLog.filter(e => e.name === name);
   d.stats.attempts = entries.length;
-  d.stats.verde = entries.filter(e => {
+  d.stats.stomped = entries.filter(e => {
     const t = TYPES[e.typ];
     return t && t.criteria.every(([c]) => e[c] === 3);
   }).length;
@@ -889,18 +897,18 @@ function renderAnalytics() {
   const days = new Set(rows.map(r => r.datum)).size;
   let allVals = [];
   rows.forEach(r => { const t = TYPES[r.typ]; if (t) t.criteria.forEach(([c]) => { if (r[c]) allVals.push(r[c]); }); });
-  const verdePct = allVals.length ? Math.round(allVals.filter(v => v === 3).length / allVals.length * 100) : 0;
+  const stompedPct = allVals.length ? Math.round(allVals.filter(v => v === 3).length / allVals.length * 100) : 0;
 
   let html = `<div class="stats-grid">
     <div class="stat-card"><div class="stat-value">${rows.length}</div><div class="stat-label">Entries</div></div>
     <div class="stat-card"><div class="stat-value">${days}</div><div class="stat-label">Training Days</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:#2d8a4e;">${verdePct}%</div><div class="stat-label">Verde Share</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:#39c3d4;">${stompedPct}%</div><div class="stat-label">Stomped Share</div></div>
   </div>`;
 
   if (!typ) {
     // Overview per type
     html += `<div class="card"><div class="card-title">Entries per Type</div><div class="table-wrap"><table>
-      <thead><tr><th>Type</th><th>Entries</th><th>Rating Distribution (R/A/V)</th></tr></thead><tbody>
+      <thead><tr><th>Type</th><th>Entries</th><th>Rating Distribution (F/L/S)</th></tr></thead><tbody>
       ${TYPE_NAMES.map(tn => {
         const tRows = rows.filter(r => r.typ === tn);
         if (!tRows.length) return '';
@@ -914,7 +922,7 @@ function renderAnalytics() {
     const t = TYPES[typ];
     // Per criterion
     html += `<div class="card"><div class="card-title">${typ} — Criteria</div><div class="table-wrap"><table>
-      <thead><tr><th>Criterion</th><th>Ø (1–3)</th><th>Distribution (R/A/V)</th></tr></thead><tbody>
+      <thead><tr><th>Criterion</th><th>Ø (1–3)</th><th>Distribution (F/L/S)</th></tr></thead><tbody>
       ${t.criteria.map(([col, label]) => {
         const vals = rows.map(r => r[col]).filter(Boolean);
         if (!vals.length) return '';
@@ -939,7 +947,7 @@ function renderAnalytics() {
       const jumps = Object.keys(jumpStats).sort((a,b) => jumpStats[b].length - jumpStats[a].length);
       if (jumps.length) {
         html += `<div class="card"><div class="card-title">${typ} — Jumps</div><div class="table-wrap"><table>
-          <thead><tr><th>Jump</th><th>Attempts</th><th>Ø (1–3)</th><th>Distribution (R/A/V)</th></tr></thead><tbody>
+          <thead><tr><th>Jump</th><th>Attempts</th><th>Ø (1–3)</th><th>Distribution (F/L/S)</th></tr></thead><tbody>
           ${jumps.map(j => {
             const vals = jumpStats[j];
             const counts = {1:0,2:0,3:0}; vals.forEach(v => counts[Math.round(v)]++);
