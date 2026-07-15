@@ -100,6 +100,19 @@
   .dist-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--surface2); min-width: 120px; }
   .dist-bar > div { height: 100%; }
 
+  .sb-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .sb-col-header {
+    font-family: 'Poppins', sans-serif; font-size: 15px; letter-spacing: 0.5px;
+    padding: 10px 14px; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 8px;
+  }
+  .sb-col-header.mastered { background: rgba(45,138,78,0.15); color: #2d8a4e; border: 1px solid #2d8a4e; border-bottom: none; }
+  .sb-col-header.goal { background: #1a1a05; color: #f59e0b; border: 1px solid #f59e0b; border-bottom: none; }
+  .sb-col-body { border-radius: 0 0 8px 8px; min-height: 80px; border: 1px solid var(--border); background: var(--surface2); }
+  .sb-col-body.mastered { border-color: #2d8a4e; }
+  .sb-col-body.goal { border-color: #f59e0b; }
+  .sb-row { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .sb-row:last-child { border-bottom: none; }
+
   .mobile-nav { display: none; }
 
   @media (max-width: 640px) {
@@ -124,6 +137,7 @@
     }
     .mobile-nav-btn.active { color: #39c3d4; }
     .mobile-nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .sb-columns { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -132,7 +146,8 @@
 <header>
   <h1>Trick Analyses Moguls</h1>
   <nav class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('erfassen', this)">Session</button>
+    <button class="nav-tab active" onclick="showPage('standort', this)">Assessment</button>
+    <button class="nav-tab" onclick="showPage('erfassen', this)">Session</button>
     <button class="nav-tab" onclick="showPage('auswertung', this)">Development</button>
     <button class="nav-tab" onclick="showPage('datenbank', this)">Database</button>
   </nav>
@@ -143,8 +158,19 @@
   ⚠ Supabase ist noch nicht konfiguriert — Einträge werden NICHT gespeichert. URL &amp; Key in moguls.html eintragen.
 </div>
 
+<!-- ══════════════════════════════════════════ ASSESSMENT -->
+<div class="page active" id="page-standort">
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
+    <label style="font-size:16px;color:#ffffff;font-family:'Poppins',sans-serif;letter-spacing:0.5px;">ATHLETE</label>
+    <select id="st-athlet" style="max-width:220px;border:2px solid #39c3d4;border-radius:8px;" onchange="loadStandort()">
+      <option value="">— select —</option>
+    </select>
+  </div>
+  <div id="st-content"><div class="empty-state"><div class="icon">🏔</div>Select athlete</div></div>
+</div>
+
 <!-- ══════════════════════════════════════════ SESSION -->
-<div class="page active" id="page-erfassen">
+<div class="page" id="page-erfassen">
 
   <!-- ── SETUP VIEW ──────────────────────────────────── -->
   <div id="sess-setup">
@@ -345,6 +371,24 @@ function jumpOptions(listKey, selected) {
        + '<optgroup label="Grab">'    + JUMPS_GRAB.map(opt).join('')    + '</optgroup>';
 }
 
+// Sprungliste einer Athlet:in in der Live Session: nur Assessment-Jumps (Goals mit 🎯);
+// Fallback auf die volle Liste, solange kein Assessment existiert.
+function jumpOptionsFor(name, listKey, selected) {
+  const aj = (sessAthleteData[name] && sessAthleteData[name].assessJumps) || [];
+  if (!aj.length) return jumpOptions(listKey, selected);
+  const status = {};
+  aj.forEach(r => status[r.jump] = r.status);
+  if (selected && status[selected] === undefined) status[selected] = 'extra';
+  const opt = j => '<option value="' + escAttr(j) + '"' + (j === selected ? ' selected' : '') + '>' + j + (status[j] === 'goal' ? ' 🎯' : '') + '</option>';
+  const ng = JUMPS_NO_GRAB.filter(j => status[j] !== undefined);
+  const g  = JUMPS_GRAB.filter(j => status[j] !== undefined);
+  if (listKey === 'nograb') return ng.length ? ng.map(opt).join('') : jumpOptions('nograb', selected);
+  if (listKey === 'grab')   return g.length  ? g.map(opt).join('')  : jumpOptions('grab', selected);
+  if (!ng.length && !g.length) return jumpOptions('all', selected);
+  return (ng.length ? '<optgroup label="No Grab">' + ng.map(opt).join('') + '</optgroup>' : '')
+       + (g.length  ? '<optgroup label="Grab">'    + g.map(opt).join('')  + '</optgroup>' : '');
+}
+
 // ═══════════════ NAVIGATION ═══════════════
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -352,11 +396,99 @@ function showPage(id, btn) {
   document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
   if (btn && btn.classList.contains('nav-tab')) btn.classList.add('active');
   updateMobileNav(id);
+  if (id === 'standort')   loadStandort();
   if (id === 'datenbank')  loadDB();
   if (id === 'auswertung') loadAnalytics();
 }
+
+// ═══════════════ ASSESSMENT (Standortbestimmung — nur Jumps) ═══════════════
+let stRows = [];   // standort-Einträge der gewählten Athlet:in
+
+async function loadStandort() {
+  const el = document.getElementById('st-content');
+  const ath = document.getElementById('st-athlet').value;
+  if (!ath) { el.innerHTML = '<div class="empty-state"><div class="icon">🏔</div>Select athlete</div>'; return; }
+  if (!db) { el.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div>Supabase not configured.</div>'; return; }
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading…</div>';
+  const {data, error} = await db.from('standort').select('*').eq('athlet', ath).order('jump');
+  if (error) { el.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div>Error: ' + error.message + '</div>'; return; }
+  stRows = data || [];
+  renderStandort();
+}
+
+function stRowHtml(r) {
+  const grabBadge = isGrabJump(r.jump)
+    ? '<span class="badge-typ" style="font-size:9px;">Grab</span>'
+    : '<span class="badge-typ" style="font-size:9px;background:#1a3a2a;color:#34d399;">No Grab</span>';
+  const other = r.status === 'mastered' ? 'goal' : 'mastered';
+  return `<div class="sb-row">
+    <span style="flex:1;font-weight:600;">${r.jump}</span>${grabBadge}
+    <button onclick="setStandortStatus(${r.id},'${other}')" title="Move to ${other}" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 8px;font-size:11px;">${r.status === 'mastered' ? '→ 🎯' : '→ ✓'}</button>
+    <button onclick="deleteStandort(${r.id})" class="btn-del">🗑</button>
+  </div>`;
+}
+
+function renderStandort() {
+  const el = document.getElementById('st-content');
+  const mastered = stRows.filter(r => r.status === 'mastered');
+  const goals = stRows.filter(r => r.status === 'goal');
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-title">Add Jump</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="form-group" style="flex:1;min-width:160px;"><label>Jump</label>
+          <select id="st-jump">${jumpOptions('all', '')}</select></div>
+        <button onclick="addStandort('mastered')" style="padding:11px 20px;background:linear-gradient(135deg,#1a5c38,#2d8a4e);color:#fff;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✓ MASTERED</button>
+        <button onclick="addStandort('goal')" style="padding:11px 20px;background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🎯 GOAL</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;">In der Live Session zeigt das Sprung-Dropdown nur noch diese Jumps (Goals mit 🎯).</div>
+    </div>
+    <div class="sb-columns">
+      <div>
+        <div class="sb-col-header mastered">✓ Mastered <span style="margin-left:auto;font-size:12px;">${mastered.length}</span></div>
+        <div class="sb-col-body mastered">${mastered.map(stRowHtml).join('') || '<div style="padding:14px;color:var(--muted);font-size:12px;">No jumps yet.</div>'}</div>
+      </div>
+      <div>
+        <div class="sb-col-header goal">🎯 Goals <span style="margin-left:auto;font-size:12px;">${goals.length}</span></div>
+        <div class="sb-col-body goal">${goals.map(stRowHtml).join('') || '<div style="padding:14px;color:var(--muted);font-size:12px;">No goals yet.</div>'}</div>
+      </div>
+    </div>`;
+}
+
+async function addStandort(status) {
+  const ath = document.getElementById('st-athlet').value;
+  const jump = document.getElementById('st-jump').value;
+  if (!ath || !jump) { showToast('Please select a jump', 'error'); return; }
+  const existing = stRows.find(r => r.jump === jump);
+  if (existing) {
+    if (existing.status === status) { showToast(jump + ' is already listed as ' + status, 'error'); return; }
+    await setStandortStatus(existing.id, status);
+    return;
+  }
+  const {data, error} = await db.from('standort').insert({athlet: ath, jump, status, datum: today()}).select();
+  if (error) { showToast('Save error: ' + error.message, 'error'); return; }
+  stRows.push(data[0]);
+  renderStandort();
+  showToast(jump + ' → ' + (status === 'mastered' ? 'Mastered' : 'Goal'), 'success');
+}
+
+async function setStandortStatus(id, status) {
+  const {error} = await db.from('standort').update({status}).eq('id', id);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  const r = stRows.find(x => x.id === id);
+  if (r) r.status = status;
+  renderStandort();
+}
+
+async function deleteStandort(id) {
+  const {error} = await db.from('standort').delete().eq('id', id);
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+  stRows = stRows.filter(r => r.id !== id);
+  renderStandort();
+  showToast('Removed', 'success');
+}
 function updateMobileNav(id) {
-  const order = ['erfassen','auswertung','datenbank'];
+  const order = ['standort','erfassen','auswertung','datenbank'];
   document.querySelectorAll('.mobile-nav-btn').forEach((b,i) => b.classList.toggle('active', order[i] === id));
 }
 
@@ -399,6 +531,10 @@ function restoreSessionState() {
     }
     enterLiveView();
     showToast('Session restored', 'success');
+    if (db) Promise.all(sessSelectedAthletes.map(async name => {
+      const {data} = await db.from('standort').select('jump,status').eq('athlet', name);
+      if (data && sessAthleteData[name]) sessAthleteData[name].assessJumps = data;
+    })).then(() => renderLiveSession());
     return true;
   } catch(e) { clearSessionStorage(); return false; }
 }
@@ -448,6 +584,9 @@ function toggleSessionAthlete(name) {
     sessAthleteData[name] = { sel: {}, stats: {attempts:0, stomped:0} };
     const card = document.getElementById('sess-ath-card-' + sid(name));
     if (card) card.style.borderColor = '#39c3d4';
+    if (db) db.from('standort').select('jump,status').eq('athlet', name).then(({data}) => {
+      if (data && sessAthleteData[name]) sessAthleteData[name].assessJumps = data;
+    });
   }
   document.getElementById('sess-start-btn').style.display = sessSelectedAthletes.length ? 'block' : 'none';
 }
@@ -569,11 +708,11 @@ function renderLiveSession() {
       jumpsHtml += `<div style="display:grid;grid-template-columns:${t.jumps===2?'1fr 1fr':'1fr'};gap:10px;margin-bottom:20px;">
         <div class="form-group"><label>${label1}</label>
           <select onchange="setSessJump('${name}','jump1',this.value)">
-            <option value="">— select —</option>${jumpOptions(t.jumpList, sel.jump1)}
+            <option value="">— select —</option>${jumpOptionsFor(name, t.jumpList, sel.jump1)}
           </select></div>
         ${t.jumps === 2 ? `<div class="form-group"><label>Jump 2</label>
           <select onchange="setSessJump('${name}','jump2',this.value)">
-            <option value="">— select —</option>${jumpOptions(t.jumpList, sel.jump2)}
+            <option value="">— select —</option>${jumpOptionsFor(name, t.jumpList, sel.jump2)}
           </select></div>` : ''}
       </div>`;
     }
@@ -1188,7 +1327,7 @@ document.addEventListener('DOMContentLoaded', function() {
     return `<optgroup label="${sq.label}">${athletes.map(a => `<option>${a.name}</option>`).join('')}</optgroup>`;
   }).join('');
   const typOpts = TYPE_NAMES.map(t => `<option>${t}</option>`).join('');
-  ['db-athlet','an-athlet'].forEach(id => document.getElementById(id).insertAdjacentHTML('beforeend', athOpts));
+  ['db-athlet','an-athlet','st-athlet'].forEach(id => document.getElementById(id).insertAdjacentHTML('beforeend', athOpts));
   ['db-typ','an-typ'].forEach(id => document.getElementById(id).insertAdjacentHTML('beforeend', typOpts));
   initSessionSetup();
 });
@@ -1196,7 +1335,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Mobile bottom navigation -->
 <nav class="mobile-nav" id="mobile-nav">
-  <button class="mobile-nav-btn active" onclick="showPage('erfassen', this)">
+  <button class="mobile-nav-btn active" onclick="showPage('standort', this)">
+    <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+    Assessment
+  </button>
+  <button class="mobile-nav-btn" onclick="showPage('erfassen', this)">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
     Session
   </button>
