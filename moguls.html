@@ -161,8 +161,8 @@
         <button onclick="selectSessType(this,'50/50')" class="sess-type-btn">50/50</button>
         <button onclick="selectSessType(this,'TTB')" class="sess-type-btn">TTB</button>
         <button onclick="selectSessType(this,'Solo Sci')" class="sess-type-btn">Solo Sci</button>
-        <button onclick="selectSessType(this,'Jump No Grab')" class="sess-type-btn">Jump No Grab</button>
-        <button onclick="selectSessType(this,'Jump Grab')" class="sess-type-btn">Jump Grab</button>
+        <button onclick="selectSessType(this,'Water Jump')" class="sess-type-btn">Water Jump</button>
+        <button onclick="selectSessType(this,'Jump on Snow')" class="sess-type-btn">Jump on Snow</button>
       </div>
     </div>
 
@@ -286,17 +286,34 @@ const SQUADS = [
 const JUMPS_NO_GRAB = ['Strait','360','bt','Ft','bL','bp','L','360op','7op','bf','10op','bdf','14op','btf'];
 const JUMPS_GRAB    = ['360g','bg','Lg','7og','10og','14og'];
 
-// Entry types: which jump selects they need + which criteria get the traffic-light rating.
+// Entry types: which jump selects they need + which criteria get rated.
 // criteria: [column, label, abbreviation]
+const NOGRAB_CRITERIA = [['r_asse','Asse','Asse'],['r_air','Air','Air'],['r_landing','Atterraggio','Land']];
+const GRAB_CRITERIA   = [['r_asse','Asse','Asse'],['r_grab','Grab','Grab'],['r_landing','Atterraggio','Land']];
 const TYPES = {
-  '50/50':        { jumps:2, jumpList:'all',    criteria:[['r_jump1','Jump 1','J1'],['r_jump2','Jump 2','J2'],['r_sci','Sci','Sci']] },
-  'TTB':          { jumps:2, jumpList:'all',    criteria:[['r_jump1','Jump 1','J1'],['r_jump2','Jump 2','J2'],['r_sci','Sci','Sci']] },
-  'Solo Sci':     { jumps:0, jumpList:null,     criteria:[['r_ub','Upper Body','UB'],['r_abs','Absorption','ABS'],['r_carving','Carving','Carv']] },
-  'Jump No Grab': { jumps:1, jumpList:'nograb', criteria:[['r_asse','Asse','Asse'],['r_air','Air','Air'],['r_landing','Atterraggio','Land']] },
-  'Jump Grab':    { jumps:1, jumpList:'grab',   criteria:[['r_asse','Asse','Asse'],['r_grab','Grab','Grab'],['r_landing','Atterraggio','Land']] },
+  '50/50':        { jumps:2, jumpList:'all', criteria:[['r_jump1','Jump 1','J1'],['r_jump2','Jump 2','J2'],['r_sci','Sci','Sci']] },
+  'TTB':          { jumps:2, jumpList:'all', criteria:[['r_jump1','Jump 1','J1'],['r_jump2','Jump 2','J2'],['r_sci','Sci','Sci']] },
+  'Solo Sci':     { jumps:0, jumpList:null,  criteria:[['r_ub','Upper Body','UB'],['r_abs','Absorption','ABS'],['r_carving','Carving','Carv']] },
+  // Sprung-Sessions: Umgebung als Typ; Grab/No-Grab ergibt sich aus dem gewählten Sprung
+  'Water Jump':   { jumps:1, jumpList:'all', jumpSession:true },
+  'Jump on Snow': { jumps:1, jumpList:'all', jumpSession:true },
+  // Legacy-Typen der ersten App-Version — nur noch für die Anzeige alter Einträge, nicht wählbar
+  'Jump No Grab': { jumps:1, jumpList:'nograb', criteria:NOGRAB_CRITERIA, legacy:true },
+  'Jump Grab':    { jumps:1, jumpList:'grab',   criteria:GRAB_CRITERIA,   legacy:true },
 };
-const TYPE_NAMES = Object.keys(TYPES);
+const TYPE_NAMES = Object.keys(TYPES).filter(t => !TYPES[t].legacy);
 const ALL_RATING_COLS = ['r_jump1','r_jump2','r_sci','r_ub','r_abs','r_carving','r_asse','r_air','r_grab','r_landing'];
+
+function isGrabJump(j) { return JUMPS_GRAB.includes(j); }
+// Criteria of a SAVED entry (for jump sessions derived from which columns are set / which jump)
+function critsFor(e) {
+  const t = TYPES[e.typ];
+  if (!t) return null;
+  if (!t.jumpSession) return t.criteria;
+  if (e.r_grab != null) return GRAB_CRITERIA;
+  if (e.r_air != null) return NOGRAB_CRITERIA;
+  return isGrabJump(e.jump1) ? GRAB_CRITERIA : NOGRAB_CRITERIA;
+}
 
 // Rating levels: stored value 1–3 → label + colour (analog Freeski/Snowboard)
 const LEVELS = [
@@ -505,6 +522,14 @@ function endSession() {
 }
 
 // ═══════════════ LIVE SESSION ═══════════════
+// Criteria currently shown for an athlete (jump sessions: depends on selected jump)
+function liveCriteria(name) {
+  const t = TYPES[sessType];
+  if (!t.jumpSession) return t.criteria;
+  const sel = (sessAthleteData[name] && sessAthleteData[name].sel[sessType]) || {};
+  return isGrabJump(sel.jump1) ? GRAB_CRITERIA : NOGRAB_CRITERIA;
+}
+
 function renderLiveSession() {
   const cols = document.getElementById('sess-athlete-cols');
   if (!sessActiveAthlete && sessSelectedAthletes.length > 0) sessActiveAthlete = sessSelectedAthletes[0];
@@ -552,8 +577,9 @@ function renderLiveSession() {
     }
 
     // Criteria rows with Failed / Landed / Stomped buttons
+    const crits = liveCriteria(name);
     const critHtml = `<div style="display:flex;flex-direction:column;gap:12px;">
-      ${t.criteria.map(([col, label]) => `
+      ${crits.map(([col, label]) => `
         <div>
           <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">${label}</div>
           <div class="crit-row">
@@ -589,7 +615,14 @@ function selectSessAthlete(name) {
 }
 
 function setSessJump(name, slot, jump) {
-  sessAthleteData[name].sel[sessType][slot] = jump;
+  const t = TYPES[sessType];
+  const sel = sessAthleteData[name].sel[sessType];
+  const modeBefore = t.jumpSession ? isGrabJump(sel.jump1) : null;
+  sel[slot] = jump;
+  if (t.jumpSession && isGrabJump(sel.jump1) !== modeBefore) {
+    sessRatings[name] = {};   // Kriterien wechseln (Air ↔ Grab) → angefangene Bewertung verwerfen
+    renderLiveSession();
+  }
   saveSessionState();
 }
 
@@ -603,8 +636,7 @@ function setSessRating(name, col, val) {
     b.style.opacity = active ? '1' : '0.55';
     b.style.borderWidth = active ? '3px' : '2px';
   });
-  const t = TYPES[sessType];
-  if (t.criteria.every(([c]) => sessRatings[name][c])) autoLogEntry(name);
+  if (liveCriteria(name).every(([c]) => sessRatings[name][c])) autoLogEntry(name);
 }
 
 function autoLogEntry(name) {
@@ -614,8 +646,9 @@ function autoLogEntry(name) {
   if (t.jumps >= 1 && !sel.jump1) { showToast('Please select ' + (t.jumps===2?'Jump 1':'a jump'), 'error'); return; }
   if (t.jumps === 2 && !sel.jump2) { showToast('Please select Jump 2', 'error'); return; }
 
+  const crits = liveCriteria(name);
   const r = sessRatings[name];
-  const vals = t.criteria.map(([c]) => r[c]);
+  const vals = crits.map(([c]) => r[c]);
   const avg = vals.reduce((a,b) => a+b, 0) / vals.length;
 
   d.stats.attempts++;
@@ -635,7 +668,7 @@ function autoLogEntry(name) {
   const row = { athlet: name, datum: today(), typ: sessType,
     jump1: t.jumps >= 1 ? sel.jump1 : null, jump2: t.jumps === 2 ? sel.jump2 : null,
     kommentar: comment || null };
-  t.criteria.forEach(([c]) => row[c] = r[c]);
+  crits.forEach(([c]) => row[c] = r[c]);
 
   const logEntry = { ...row, name, avg,
     time: new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit'}) };
@@ -654,9 +687,9 @@ function autoLogEntry(name) {
 }
 
 function ratingDots(e) {
-  const t = TYPES[e.typ];
-  if (!t) return '';
-  return t.criteria.map(([col, label, abbr]) =>
+  const crits = critsFor(e);
+  if (!crits) return '';
+  return crits.map(([col, label, abbr]) =>
     e[col] ? `<span title="${label}" style="color:${levelColor(e[col])};font-weight:700;font-size:11px;margin-right:6px;">●&hairsp;${abbr}</span>` : ''
   ).join('');
 }
@@ -686,8 +719,8 @@ function recalcStats(name) {
   const entries = sessLog.filter(e => e.name === name);
   d.stats.attempts = entries.length;
   d.stats.stomped = entries.filter(e => {
-    const t = TYPES[e.typ];
-    return t && t.criteria.every(([c]) => e[c] === 3);
+    const crits = critsFor(e);
+    return crits && crits.every(([c]) => e[c] === 3);
   }).length;
 }
 
@@ -713,21 +746,24 @@ function editLogEntry(idx) {
 let editCtx = null;   // { entry, meta:{source, idx} }
 
 function openEdit(entry, meta) {
-  editCtx = { entry: {...entry}, meta };
   const t = TYPES[entry.typ];
   if (!t) { showToast('Unknown type: ' + entry.typ, 'error'); return; }
+  const crits = critsFor(entry);
+  editCtx = { entry: {...entry}, meta, crits };
+  // Sprung-Sessions: Sprungliste passend zum Modus des Eintrags (Grab vs. No Grab)
+  const jumpList = t.jumpSession ? (crits === GRAB_CRITERIA ? 'grab' : 'nograb') : t.jumpList;
 
   let jumpsHtml = '';
   if (t.jumps >= 1) {
     jumpsHtml = `<div style="display:grid;grid-template-columns:${t.jumps===2?'1fr 1fr':'1fr'};gap:10px;margin-bottom:14px;">
       <div class="form-group"><label>${t.jumps===2?'Jump 1':'Jump'}</label>
-        <select id="ed-jump1"><option value="">— select —</option>${jumpOptions(t.jumpList, entry.jump1)}</select></div>
+        <select id="ed-jump1"><option value="">— select —</option>${jumpOptions(jumpList, entry.jump1)}</select></div>
       ${t.jumps===2 ? `<div class="form-group"><label>Jump 2</label>
-        <select id="ed-jump2"><option value="">— select —</option>${jumpOptions(t.jumpList, entry.jump2)}</select></div>` : ''}
+        <select id="ed-jump2"><option value="">— select —</option>${jumpOptions(jumpList, entry.jump2)}</select></div>` : ''}
     </div>`;
   }
 
-  const critHtml = t.criteria.map(([col, label]) => `
+  const critHtml = crits.map(([col, label]) => `
     <div style="margin-bottom:10px;">
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">${label}</div>
       <div class="crit-row" id="ed-crit-${col}">
@@ -772,10 +808,11 @@ async function saveEdit() {
   if (!editCtx) return;
   const e = editCtx.entry;
   const t = TYPES[e.typ];
+  const crits = editCtx.crits;
   const upd = { datum: document.getElementById('ed-datum').value || e.datum, kommentar: (document.getElementById('ed-kommentar').value || '').trim() || null };
   if (t.jumps >= 1) upd.jump1 = document.getElementById('ed-jump1').value || null;
   if (t.jumps === 2) upd.jump2 = document.getElementById('ed-jump2').value || null;
-  t.criteria.forEach(([c]) => upd[c] = e[c] || null);
+  crits.forEach(([c]) => upd[c] = e[c] || null);
   if (t.jumps >= 1 && !upd.jump1) { showToast('Please select a jump', 'error'); return; }
 
   if (e.id && db) {
@@ -786,7 +823,7 @@ async function saveEdit() {
   const meta = editCtx.meta || {};
   if (meta.source === 'log' && sessLog[meta.idx]) {
     Object.assign(sessLog[meta.idx], upd);
-    const vals = t.criteria.map(([c]) => upd[c]).filter(Boolean);
+    const vals = crits.map(([c]) => upd[c]).filter(Boolean);
     if (vals.length) sessLog[meta.idx].avg = vals.reduce((a,b)=>a+b,0)/vals.length;
     recalcStats(sessLog[meta.idx].name);
     renderSessionLog(); renderLiveSession(); saveSessionState();
@@ -896,7 +933,7 @@ function renderAnalytics() {
 
   const days = new Set(rows.map(r => r.datum)).size;
   let allVals = [];
-  rows.forEach(r => { const t = TYPES[r.typ]; if (t) t.criteria.forEach(([c]) => { if (r[c]) allVals.push(r[c]); }); });
+  rows.forEach(r => { const crits = critsFor(r); if (crits) crits.forEach(([c]) => { if (r[c]) allVals.push(r[c]); }); });
   const stompedPct = allVals.length ? Math.round(allVals.filter(v => v === 3).length / allVals.length * 100) : 0;
 
   let html = `<div class="stats-grid">
@@ -909,21 +946,24 @@ function renderAnalytics() {
     // Overview per type
     html += `<div class="card"><div class="card-title">Entries per Type</div><div class="table-wrap"><table>
       <thead><tr><th>Type</th><th>Entries</th><th>Rating Distribution (F/L/S)</th></tr></thead><tbody>
-      ${TYPE_NAMES.map(tn => {
+      ${Object.keys(TYPES).map(tn => {
         const tRows = rows.filter(r => r.typ === tn);
         if (!tRows.length) return '';
         const counts = {1:0,2:0,3:0};
-        tRows.forEach(r => TYPES[tn].criteria.forEach(([c]) => { if (r[c]) counts[r[c]]++; }));
+        tRows.forEach(r => (critsFor(r) || []).forEach(([c]) => { if (r[c]) counts[r[c]]++; }));
         return `<tr><td><span class="badge-typ">${tn}</span></td><td>${tRows.length}</td><td>${distBar(counts)}</td></tr>`;
       }).join('')}
       </tbody></table></div>
       <div style="font-size:11px;color:var(--muted);margin-top:10px;">Select a type above for the per-criterion and per-jump breakdown.</div></div>`;
   } else {
     const t = TYPES[typ];
-    // Per criterion
+    // Per criterion (jump sessions: union of no-grab + grab criteria)
+    const critList = t.jumpSession
+      ? [['r_asse','Asse'],['r_air','Air (No Grab)'],['r_grab','Grab'],['r_landing','Atterraggio']]
+      : t.criteria;
     html += `<div class="card"><div class="card-title">${typ} — Criteria</div><div class="table-wrap"><table>
       <thead><tr><th>Criterion</th><th>Ø (1–3)</th><th>Distribution (F/L/S)</th></tr></thead><tbody>
-      ${t.criteria.map(([col, label]) => {
+      ${critList.map(([col, label]) => {
         const vals = rows.map(r => r[col]).filter(Boolean);
         if (!vals.length) return '';
         const counts = {1:0,2:0,3:0}; vals.forEach(v => counts[v]++);
@@ -940,7 +980,7 @@ function renderAnalytics() {
           if (r.jump1 && r.r_jump1) (jumpStats[r.jump1] = jumpStats[r.jump1] || []).push(r.r_jump1);
           if (r.jump2 && r.r_jump2) (jumpStats[r.jump2] = jumpStats[r.jump2] || []).push(r.r_jump2);
         } else if (r.jump1) {
-          const vals = t.criteria.map(([c]) => r[c]).filter(Boolean);
+          const vals = (critsFor(r) || []).map(([c]) => r[c]).filter(Boolean);
           if (vals.length) (jumpStats[r.jump1] = jumpStats[r.jump1] || []).push(vals.reduce((a,b)=>a+b,0)/vals.length);
         }
       });
