@@ -1277,6 +1277,97 @@ async function deleteStandort(id) {
 }
 
 
+// ── Grab-Status-Matrix (Variante B): standort.grab_status = {"Safety":"mastered","Blunt":"goal"} ──
+// Solange die Spalte in Supabase fehlt, fällt die App still auf das alte Verhalten zurück.
+let _standortHasGrabStatus = true;
+
+function effGrabStatus(entry) {
+  if (entry && entry.grab_status && typeof entry.grab_status === 'object') return entry.grab_status;
+  if (entry && entry.grab && (entry.status === 'mastered' || entry.status === 'goal')) {
+    const out = {};
+    entry.grab.split(',').map(g => g.trim()).filter(Boolean).forEach(g => { out[g] = entry.status; });
+    return out;
+  }
+  return {};
+}
+
+async function fetchStandortTricks(athlet) {
+  if (_standortHasGrabStatus) {
+    const {data, error} = await db.from('standort').select('trick_label,disziplin,status,grab,grab_status')
+      .eq('athlet', athlet).or('status.eq.mastered,status.eq.goal').order('trick_label');
+    if (!error) return data || [];
+    if (/grab_status/.test(error.message || '')) _standortHasGrabStatus = false;
+    else return [];
+  }
+  const {data} = await db.from('standort').select('trick_label,disziplin,status,grab')
+    .eq('athlet', athlet).or('status.eq.mastered,status.eq.goal').order('trick_label');
+  return data || [];
+}
+
+async function updateGrabStatus(entryId, gs, localEntry) {
+  if (!_standortHasGrabStatus) {
+    showToast('grab_status-Spalte fehlt in Supabase — bitte SQL ausführen', 'error');
+    return false;
+  }
+  const payload = { grab_status: gs, grab: Object.keys(gs).join(', ') || null };
+  const {error} = await db.from('standort').update(payload).eq('id', entryId);
+  if (error) {
+    if (/grab_status/.test(error.message || '')) {
+      _standortHasGrabStatus = false;
+      showToast('grab_status-Spalte fehlt in Supabase — bitte SQL ausführen', 'error');
+    } else showToast('Error: ' + error.message, 'error');
+    return false;
+  }
+  if (localEntry) { localEntry.grab_status = gs; localEntry.grab = payload.grab; }
+  return true;
+}
+
+function styleAssessGrabBtn(btn, g, st) {
+  const base = "border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;";
+  if (st === 'mastered')  { btn.textContent = '✓ ' + g;  btn.style.cssText = base + "background:rgba(45,138,78,0.25);border:1px solid #2d8a4e;color:#4ade80;"; }
+  else if (st === 'goal') { btn.textContent = '🎯 ' + g; btn.style.cssText = base + "background:rgba(245,158,11,0.2);border:1px solid #f59e0b;color:#f59e0b;"; }
+  else                    { btn.textContent = g;         btn.style.cssText = base + "background:#112236;border:1px solid #1a3450;color:#6b8299;"; }
+}
+
+function nextGrabState(cur) {
+  return cur === undefined ? 'mastered' : cur === 'mastered' ? 'goal' : undefined;
+}
+
+function grabChipsHtml(e) {
+  if (!e || !e.id || e.disziplin === 'Rail') return '';
+  if (e.status !== 'mastered' && e.status !== 'goal') return '';
+  const gs = (e.grab_status && typeof e.grab_status === 'object') ? e.grab_status : null;
+  const chips = gs ? Object.entries(gs).map(([g, st]) => {
+    const col  = st === 'mastered' ? '#4ade80' : '#f59e0b';
+    const bg   = st === 'mastered' ? 'rgba(45,138,78,0.2)' : 'rgba(245,158,11,0.15)';
+    const icon = st === 'mastered' ? '✓' : '🎯';
+    return `<span onclick="event.stopPropagation();cycleGrabStatus(${e.id},'${g.replace(/'/g,"\\'")}')" title="Click: Mastered → Goal → remove" style="cursor:pointer;font-size:10px;padding:2px 8px;border-radius:10px;background:${bg};border:1px solid ${col};color:${col};white-space:nowrap;">${icon} ${g}</span>`;
+  }).join('') : '';
+  return `<span style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;align-items:center;">${chips}
+    <span onclick="event.stopPropagation();addGrabToEntry(${e.id})" title="Add grab" style="cursor:pointer;font-size:10px;padding:2px 8px;border-radius:10px;background:var(--surface2);border:1px dashed var(--border);color:var(--muted);white-space:nowrap;">+ Grab</span></span>`;
+}
+
+function showGrabPickModal(grabs, existing, cb) {
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  m.innerHTML = `<div style="background:#0d1f33;border:1px solid var(--border);border-radius:14px;padding:20px;max-width:540px;width:100%;max-height:80vh;overflow-y:auto;">
+    <div style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">Add grab</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Added as 🎯 Goal — click the chip afterwards to change its status.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;" id="gpick-wrap"></div>
+    <div style="text-align:right;margin-top:14px;"><button id="gpick-cancel" style="padding:7px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Cancel</button></div>
+  </div>`;
+  const wrap = m.querySelector('#gpick-wrap');
+  grabs.filter(g => !existing.includes(g)).forEach(g => {
+    const b = document.createElement('button'); b.type = 'button';
+    styleAssessGrabBtn(b, g, undefined);
+    b.onclick = () => { m.remove(); cb(g); };
+    wrap.appendChild(b);
+  });
+  m.querySelector('#gpick-cancel').onclick = () => m.remove();
+  m.addEventListener('click', ev => { if (ev.target === m) m.remove(); });
+  document.body.appendChild(m);
+}
+
 const SESS_ALL_ATHLETES = CFG.athletes;
 
 const SESS_SQUADS = CFG.squads;
@@ -1930,6 +2021,7 @@ function toggleDisziplin(prefix) {
     if (divider) divider.textContent = v || 'Jump / Halfpipe';
     const dirSel = document.getElementById('sb-drehrichtung');
     if (dirSel) dirSel.innerHTML = v === 'Halfpipe' ? SB_DIR_HP : SB_DIR_NORMAL;
+    initStandortGrabs();
   }
   const isJump = v === 'Jump' || v === 'Halfpipe' || v === 'Landing Bag';
   document.querySelectorAll('.kicker-field-' + prefix).forEach(el => el.classList.toggle('hidden', !isJump));
@@ -2325,8 +2417,15 @@ function openTeamPdfReport() {
 
     const mastered = assData.filter(t=>t.athlet===athlet&&t.status==='mastered');
     const goals    = assData.filter(t=>t.athlet===athlet&&t.status==='goal');
-    const mastRows = mastered.map(e=>`<tr><td>${normSbTrick(e.trick_label||'—')}</td><td>${e.disziplin||'—'}</td><td style="color:#2d8a4e;font-weight:600">Mastered</td></tr>`).join('');
-    const goalRows = goals.map(e=>`<tr><td>${normSbTrick(e.trick_label||'—')}</td><td>${e.disziplin||'—'}</td><td style="color:#f59e0b;font-weight:600">Goal</td></tr>`).join('');
+    const grabRowsFor = st => assData
+      .filter(t => t.athlet===athlet && t.grab_status && typeof t.grab_status==='object')
+      .map(e => Object.entries(e.grab_status)
+        .filter(([,s2]) => s2===st)
+        .map(([g]) => `<tr><td>${normSbTrick(e.trick_label||'—')} — ${g}</td><td>${e.disziplin||'—'}</td><td style="color:${st==='mastered'?'#2d8a4e':'#f59e0b'};font-weight:600">${st==='mastered'?'Mastered':'Goal'}</td></tr>`)
+        .join(''))
+      .join('');
+    const mastRows = mastered.map(e=>`<tr><td>${normSbTrick(e.trick_label||'—')}</td><td>${e.disziplin||'—'}</td><td style="color:#2d8a4e;font-weight:600">Mastered</td></tr>`).join('') + grabRowsFor('mastered');
+    const goalRows = goals.map(e=>`<tr><td>${normSbTrick(e.trick_label||'—')}</td><td>${e.disziplin||'—'}</td><td style="color:#f59e0b;font-weight:600">Goal</td></tr>`).join('') + grabRowsFor('goal');
 
     return `<div class="ath-block">
       <div class="ath-name">${athlet}</div>
@@ -2418,9 +2517,7 @@ async function restoreSessionState() {
     showToast('Session restored', 'success');
     // Load tricks from DB in background, then re-render dropdown
     Promise.all(sessSelectedAthletes.map(async name => {
-      const {data} = await db.from('standort').select('trick_label,disziplin,status')
-        .eq('athlet', name).or('status.eq.mastered,status.eq.goal').order('trick_label');
-      if (data) sessAthleteData[name].tricks = data;
+      sessAthleteData[name].tricks = await fetchStandortTricks(name);
     })).then(() => renderLiveSession());
     return true;
   } catch(e) { clearSessionStorage(); return false; }
@@ -2444,9 +2541,7 @@ async function toggleSessionAthlete(name) {
     sessAthleteData[name] = { tricks: [], currentTrick: '', stats: {attempts:0,landed:0,perfect:0} };
     const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
     if (card) card.style.borderColor = '#39c3d4';
-    const {data, error} = await db.from('standort').select('trick_label,disziplin,status')
-      .eq('athlet', name).or('status.eq.mastered,status.eq.goal').order('trick_label');
-    if (!error) sessAthleteData[name].tricks = data || [];
+    sessAthleteData[name].tricks = await fetchStandortTricks(name);
   }
   // Show/hide start button directly — no trick pre-selection step
   const startBtn = document.getElementById('sess-start-btn');
@@ -2508,6 +2603,16 @@ function parseGrabsFromLabel(label) {
 
 const doubleGrabFirst = {};
 
+function sessGrabsForTrick(name, trickLabel) {
+  // Prefer the entry's grab-status matrix; fall back to grabs parsed from the label (legacy)
+  const gsKeys = new Set();
+  (((sessAthleteData[name] || {}).tricks) || []).forEach(t => {
+    if (t.trick_label === trickLabel) Object.keys(effGrabStatus(t)).forEach(g => gsKeys.add(g));
+  });
+  if (gsKeys.size) return [...gsKeys].sort();
+  return parseGrabsFromLabel(trickLabel);
+}
+
 function showGrabPicker(name, trickLabel, status, btn) {
   const safeId = name.replace(/\s/g,'_');
   document.querySelectorAll('.grab-picker-' + safeId).forEach(el => el.remove());
@@ -2518,7 +2623,7 @@ function showGrabPicker(name, trickLabel, status, btn) {
   const alreadySelected = (sessActiveTricks[name] || [])
     .filter(t => t.startsWith(base + ' — ')).map(t => t.slice(base.length + 3));
 
-  const grabs = parseGrabsFromLabel(trickLabel);
+  const grabs = sessGrabsForTrick(name, trickLabel);
   const pickerId = 'gp-' + safeId;
   const picker = document.createElement('div');
   picker.className = 'grab-picker-' + safeId;
@@ -2554,7 +2659,7 @@ function toggleDoubleGrab(name, trickLabel, pickerId) {
   const grabsDiv = document.getElementById('dg-grabs-' + safeId);
   delete doubleGrabFirst[name];
   hint.style.display = isDouble ? 'block' : 'none';
-  const grabs = parseGrabsFromLabel(trickLabel);
+  const grabs = sessGrabsForTrick(name, trickLabel);
   if (isDouble) {
     grabsDiv.querySelectorAll('button').forEach((btn, i) => {
       const g = grabs[i];
@@ -3529,6 +3634,7 @@ function renderStandort() {
           ${e.datum ? `<span style="font-size:10px;color:var(--muted);">📅 ${e.datum}</span>` : ''}
           ${e.notiz ? `<span style="font-size:10px;color:var(--muted);">${e.notiz}</span>` : ''}
         </span>
+        ${grabChipsHtml(e)}
       </span>
       <button style="background:none;border:1px solid #1a3450;border-radius:5px;color:#6b8299;cursor:pointer;padding:2px 7px;font-size:11px;margin-right:2px;" onclick="openSbEdit(${e.id})" title="Edit">✏️</button>
       <button class="btn-del" onclick="deleteSbEntry(${e.id})" title="Remove">✕</button>
@@ -3595,6 +3701,25 @@ function renderStandort() {
   }
 }
 
+async function cycleGrabStatus(entryId, grab) {
+  const e = sbData.find(x => x.id === entryId);
+  if (!e) return;
+  const gs = {...effGrabStatus(e)};
+  const next = nextGrabState(gs[grab]);
+  if (next) gs[grab] = next; else delete gs[grab];
+  if (await updateGrabStatus(entryId, gs, e)) renderStandort();
+}
+
+async function addGrabToEntry(entryId) {
+  const e = sbData.find(x => x.id === entryId);
+  if (!e) return;
+  const gs = {...effGrabStatus(e)};
+  showGrabPickModal(assessGrabList(e.disziplin), Object.keys(gs), async g => {
+    gs[g] = 'goal';
+    if (await updateGrabStatus(entryId, gs, e)) renderStandort();
+  });
+}
+
 async function sbSave(status) {
   const fields = readFields('sb');
   if (!fields.disziplin) { showToast('Please select a discipline', 'error'); return; }
@@ -3604,19 +3729,27 @@ async function sbSave(status) {
 
   const notiz = val('sb-notiz');
 
-  const { data, error } = await db.from('standort').insert({
+  const row = {
     athlet: sbAthlet,
     datum: document.getElementById('sb-datum').value || new Date().toISOString().split('T')[0],
     disziplin: fields.disziplin,
     trick_label: trickLabel,
     // Store all individual fields too for reference
     drehrichtung: fields.drehrichtung, flips: fields.flips, achse: fields.achse,
-    rotation: fields.rotation, absprung: fields.absprung, grab: fields.grab,
+    rotation: fields.rotation, absprung: fields.absprung,
+    grab: Object.keys(sbAssessGrabMatrix).join(', ') || fields.grab,
     bringback: fields.bringback, railart: fields.railart, slideform: fields.slideform,
     slidevar: fields.slidevar, inspin: fields.inspin, swap: fields.swap, outspin: fields.outspin,
     notiz,
     status,
-  }).select();
+  };
+  if (_standortHasGrabStatus && Object.keys(sbAssessGrabMatrix).length) row.grab_status = {...sbAssessGrabMatrix};
+  let { data, error } = await db.from('standort').insert(row).select();
+  if (error && /grab_status/.test(error.message||'')) {
+    _standortHasGrabStatus = false;
+    delete row.grab_status;
+    ({ data, error } = await db.from('standort').insert(row).select());
+  }
 
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
 
@@ -3626,6 +3759,7 @@ async function sbSave(status) {
   ['sb-disziplin','sb-drehrichtung','sb-flips','sb-achse','sb-rotation','sb-absprung',
    'sb-grab','sb-bringback','sb-style','sb-railart','sb-slideform','sb-slidevar','sb-inspin','sb-swap','sb-outspin','sb-notiz',
   ].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  initStandortGrabs();
   toggleDisziplin('sb');
 
   sbData = [data[0], ...sbData];
@@ -3633,9 +3767,7 @@ async function sbSave(status) {
   toggleSbForm();
 
   if (sessSelectedAthletes.includes(sbAthlet) && sessAthleteData[sbAthlet]) {
-    const {data:tricks} = await db.from('standort').select('trick_label,disziplin,status')
-      .eq('athlet', sbAthlet).or('status.eq.mastered,status.eq.goal').order('trick_label');
-    if (tricks) sessAthleteData[sbAthlet].tricks = tricks;
+    sessAthleteData[sbAthlet].tricks = await fetchStandortTricks(sbAthlet);
     saveSessionState();
   }
 }
@@ -4945,16 +5077,23 @@ async function realityCheck() {
   const mastered = dbAllStandort.filter(t => t.status === 'mastered' && t.athlet);
   const flagged = [];
 
+  // Entries with a grab-status matrix are handled grab-by-grab below
+  const hasMatrix = s => s.grab_status && typeof s.grab_status === 'object' && Object.keys(s.grab_status).length;
+  const legacyGrabsOf = s => s.grab ? s.grab.split(',').map(x=>x.trim()).filter(Boolean) : [];
+
   mastered.forEach(s => {
     const dir = s.drehrichtung?.trim();
     const rot = s.rotation ? String(s.rotation).match(/\d+/)?.[0] : null;
     if (!dir || !rot) return;
+    if (hasMatrix(s)) return;
+    const legacyGrabs = legacyGrabsOf(s);
 
     const sessions = dbAllTricks.filter(t =>
       t.athlet === s.athlet &&
       t.datum >= seasonFrom &&
       t.trickaufbau &&
-      t.trickaufbau.includes(rot)
+      t.trickaufbau.includes(rot) &&
+      (!legacyGrabs.length || legacyGrabs.some(g => t.trickaufbau.includes(' — ' + g)))
     );
 
     if (!sessions.length) {
@@ -4976,8 +5115,11 @@ async function realityCheck() {
   dbAllStandort.filter(t => t.status === 'goal' && t.athlet).forEach(s => {
     const rot = s.rotation ? String(s.rotation).match(/\d+/)?.[0] : null;
     if (!s.drehrichtung?.trim() || !rot) return;
+    if (hasMatrix(s)) return;
+    const legacyGrabs = legacyGrabsOf(s);
     const sessions = dbAllTricks.filter(t =>
-      t.athlet === s.athlet && t.datum >= seasonFrom && t.trickaufbau && t.trickaufbau.includes(rot));
+      t.athlet === s.athlet && t.datum >= seasonFrom && t.trickaufbau && t.trickaufbau.includes(rot) &&
+      (!legacyGrabs.length || legacyGrabs.some(g => t.trickaufbau.includes(' — ' + g))));
     if (!sessions.length) return;
     const quals = sessions.map(t => extractQuality(t)).filter(v => v !== null);
     if (!quals.length) return;
@@ -4985,6 +5127,27 @@ async function realityCheck() {
     if (avgQ >= 70) {
       flagged.push({ ...s, action: 'upgrade', reason: `Avg quality ${avgQ}% (≥70%) → Mastered`, avgQ, sessions: sessions.length });
     }
+  });
+
+  // Grab-level suggestions from grab-status matrices (per trick+grab)
+  dbAllStandort.filter(t => t.athlet && hasMatrix(t)).forEach(s => {
+    const rot = s.rotation ? String(s.rotation).match(/\d+/)?.[0] : null;
+    if (!rot) return;
+    Object.entries(s.grab_status).forEach(([g, st]) => {
+      if (st !== 'mastered' && st !== 'goal') return;
+      const sessions = dbAllTricks.filter(t =>
+        t.athlet === s.athlet && t.datum >= seasonFrom && t.trickaufbau &&
+        t.trickaufbau.includes(rot) && t.trickaufbau.includes(' — ' + g));
+      if (!sessions.length) {
+        if (st === 'mastered') flagged.push({ ...s, grabName: g, action: 'downgrade-grab', reason: `${g}: not attempted this season`, avgQ: null, sessions: 0 });
+        return;
+      }
+      const quals = sessions.map(t => extractQuality(t)).filter(v => v !== null);
+      if (!quals.length) return;
+      const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
+      if (st === 'mastered' && avgQ < 70)  flagged.push({ ...s, grabName: g, action: 'downgrade-grab', reason: `${g}: avg quality ${avgQ}% (<70%)`, avgQ, sessions: sessions.length });
+      if (st === 'goal' && avgQ >= 70)     flagged.push({ ...s, grabName: g, action: 'upgrade-grab', reason: `${g}: avg quality ${avgQ}% (≥70%) → Mastered`, avgQ, sessions: sessions.length });
+    });
   });
 
   if (!flagged.length) {
@@ -5000,10 +5163,13 @@ async function realityCheck() {
   const athletes = Object.keys(byAthlet).sort();
 
   function rcTrickDesc(f) {
-    if (f.trick_label) return f.trick_label;
-    const parts = [f.drehrichtung, f.flips, f.rotation ? f.rotation+'°' : null, f.achse, f.grab].filter(Boolean);
-    return parts.join(' ') || '—';
+    const label = f.trick_label
+      ? f.trick_label
+      : ([f.drehrichtung, f.flips, f.rotation ? f.rotation+'°' : null, f.achse, f.grab].filter(Boolean).join(' ') || '—');
+    return f.grabName ? label + ' — ' + f.grabName : label;
   }
+
+  window._rcFlagged = flagged;
 
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
@@ -5034,13 +5200,13 @@ async function realityCheck() {
                   <div style="font-size:12px;color:var(--text);font-weight:500;">${rcTrickDesc(f)}</div>
                   ${f.disziplin?`<div style="font-size:10px;color:var(--muted);margin-top:1px;">${f.disziplin}</div>`:''}
                 </div>
-                <span style="font-size:11px;color:${f.action==='upgrade'?'#2d8a4e':'#f59e0b'};white-space:nowrap;font-weight:600;">${f.action==='upgrade'?'↑':'↓'} ${f.reason}</span>
+                <span style="font-size:11px;color:${f.action.startsWith('upgrade')?'#2d8a4e':'#f59e0b'};white-space:nowrap;font-weight:600;">${f.action.startsWith('upgrade')?'↑':'↓'} ${f.reason}</span>
               </div>`).join('')}
           </div>`).join('')}
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:14px;">
         <button onclick="this.closest('[style*=inset]').remove()" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Cancel</button>
-        <button onclick="applyRealityCheckSelected(${JSON.stringify(flagged)},this)" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply selected</button>
+        <button onclick="applyRealityCheckSelected(window._rcFlagged,this)" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply selected</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -5050,16 +5216,28 @@ async function applyRealityCheckSelected(flagged, btn) {
   const checked = [...document.querySelectorAll('.rc-chk:checked')].map(c => c.dataset.athlet);
   if (!checked.length) { showToast('No athletes selected', 'error'); return; }
   const sel = flagged.filter(f => checked.includes(f.athlet));
-  const downIds = sel.filter(f => f.action !== 'upgrade').map(f => f.id);
+  const downIds = sel.filter(f => f.action === 'downgrade').map(f => f.id);
   const upIds   = sel.filter(f => f.action === 'upgrade').map(f => f.id);
-  if (!downIds.length && !upIds.length) { showToast('No entries to update', 'error'); return; }
+  const grabSel = sel.filter(f => f.action === 'downgrade-grab' || f.action === 'upgrade-grab');
+  if (!downIds.length && !upIds.length && !grabSel.length) { showToast('No entries to update', 'error'); return; }
   btn.textContent = 'Applying…'; btn.disabled = true;
   let error = null;
   if (downIds.length) ({ error } = await db.from('standort').update({status:'goal'}).in('id', downIds));
   if (!error && upIds.length) ({ error } = await db.from('standort').update({status:'mastered'}).in('id', upIds));
+  if (!error && grabSel.length) {
+    const byId = {};
+    grabSel.forEach(f => {
+      if (!byId[f.id]) byId[f.id] = {...((dbAllStandort.find(e => e.id === f.id) || {}).grab_status || {})};
+      byId[f.id][f.grabName] = f.action === 'upgrade-grab' ? 'mastered' : 'goal';
+    });
+    for (const [id, gs] of Object.entries(byId)) {
+      ({ error } = await db.from('standort').update({grab_status: gs}).eq('id', id));
+      if (error) break;
+    }
+  }
   if (error) { showToast('Error: '+error.message, 'error'); btn.textContent='Apply selected'; btn.disabled=false; return; }
   btn.closest('[style*=inset]').remove();
-  showToast(`✅ ${downIds.length} → Goal · ${upIds.length} → Mastered (${checked.length} athlete${checked.length!==1?'s':''})`, 'success');
+  showToast(`✅ ${downIds.length} → Goal · ${upIds.length} → Mastered · ${grabSel.length} grab update${grabSel.length!==1?'s':''} (${checked.length} athlete${checked.length!==1?'s':''})`, 'success');
   loadDB();
 }
 
@@ -5099,34 +5277,34 @@ function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
   });
 }
 
+const SB_HP_GRABS = ['Bloody Dracula', 'Canadian Bacon', 'Chicken Salad', 'Cookie Monster', 'Crail', 'Crooked Cop', 'Cross Rocket', 'Double Tail', 'Dracula Method', 'Freshfish', 'Frontside', 'Japan', 'Lien', 'Melon', 'Method', 'Nose', 'Nuclear', 'Nuclear Method', 'Reach Around', 'Roast Beef', 'Rocket Air', 'Sad Air', 'Seat Belt', 'Slob', 'Spaghetti', 'Stalefish', 'Stelmasky', 'Stink Bug', 'Suitcase', 'Swiss Cheese', 'Tai Pan', 'Tail', 'Tuck Knee', 'Weddle (Mute)'];
+const SB_JUMP_GRABS = ['Canadian Bacon', 'Chicken Salad', 'Crail', 'Double Japan', 'Double Nose', 'Double Tail', 'Indy', 'Japan', 'Melon', 'Method', 'Nose', 'Roast Beef', 'Rocket Air', 'Seat Belt', 'Stalefish', 'Tai Pan', 'Tail', 'Tuck Knee', 'Weddle (Mute)'];
+
+function assessGrabList(disziplin) {
+  return disziplin === 'Halfpipe' ? SB_HP_GRABS : SB_JUMP_GRABS;
+}
+
+let sbAssessGrabMatrix = {};
+
 function initStandortGrabs() {
-          (function(){
-            const SB_HP_GRABS = ['Bloody Dracula', 'Canadian Bacon', 'Chicken Salad', 'Cookie Monster', 'Crail', 'Crooked Cop', 'Cross Rocket', 'Double Tail', 'Dracula Method', 'Freshfish', 'Frontside', 'Japan', 'Lien', 'Melon', 'Method', 'Nose', 'Nuclear', 'Nuclear Method', 'Reach Around', 'Roast Beef', 'Rocket Air', 'Sad Air', 'Seat Belt', 'Slob', 'Spaghetti', 'Stalefish', 'Stelmasky', 'Stink Bug', 'Suitcase', 'Swiss Cheese', 'Tai Pan', 'Tail', 'Tuck Knee', 'Weddle (Mute)'];
-            const SB_JUMP_GRABS = ['Canadian Bacon', 'Chicken Salad', 'Crail', 'Double Japan', 'Double Nose', 'Double Tail', 'Indy', 'Japan', 'Melon', 'Method', 'Nose', 'Roast Beef', 'Rocket Air', 'Seat Belt', 'Stalefish', 'Tai Pan', 'Tail', 'Tuck Knee', 'Weddle (Mute)'];
-            function renderSbGrabs() {
-              const disc = document.getElementById('sb-disziplin')?.value || '';
-              const grabs = disc === 'Halfpipe' ? SB_HP_GRABS : SB_JUMP_GRABS;
-              const wrap=document.getElementById("sb-grab-wrap");
-              const hid=document.getElementById("sb-grab");
-              Array.from(wrap.querySelectorAll('button')).forEach(b=>b.remove());
-              hid.value = '';
-              const sel=new Set();
-              grabs.forEach(g=>{
-                const btn=document.createElement("button");
-                btn.type="button";btn.textContent=g;btn.dataset.grab=g;
-                btn.style.cssText="background:#112236;border:1px solid #1a3450;border-radius:20px;color:#6b8299;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;";
-                btn.onclick=()=>{
-                  if(sel.has(g)){sel.delete(g);btn.style.background="#112236";btn.style.borderColor="#1a3450";btn.style.color="#6b8299";}
-                  else{sel.add(g);btn.style.background="#1e3a5f";btn.style.borderColor="#3b82f6";btn.style.color="#60a5fa";}
-                  hid.value=[...sel].join(", ");
-                };
-                wrap.appendChild(btn);
-              });
-            }
-            const wrap=document.getElementById("sb-grab-wrap");
-            const hid=document.getElementById("sb-grab");
-            renderSbGrabs();
-          })();
+  const wrap = document.getElementById('sb-grab-wrap');
+  const hid  = document.getElementById('sb-grab');
+  if (!wrap || !hid) return;
+  const grabs = assessGrabList(document.getElementById('sb-disziplin')?.value || '');
+  Array.from(wrap.querySelectorAll('button')).forEach(b => b.remove());
+  hid.value = '';
+  sbAssessGrabMatrix = {};
+  grabs.forEach(g => {
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.dataset.grab = g;
+    styleAssessGrabBtn(btn, g, undefined);
+    btn.onclick = () => {
+      const next = nextGrabState(sbAssessGrabMatrix[g]);
+      if (next) sbAssessGrabMatrix[g] = next; else delete sbAssessGrabMatrix[g];
+      styleAssessGrabBtn(btn, g, next);
+    };
+    wrap.appendChild(btn);
+  });
 }
 
 const fragments = {
@@ -5157,7 +5335,7 @@ const fragments = {
     <div style="font-size:12px;color:var(--muted);">Compare assessment with actual session data</div>
     <button onclick="realityCheck()" style="padding:8px 16px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
   </div>`,
-  grabBlock: `        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(multiple possible)</span></label>
+  grabBlock: `        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(1× click = ✓ Mastered · 2× = 🎯 Goal · 3× = off)</span></label>
           <div id="sb-grab-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;">
             <input type="hidden" id="sb-grab" value="">
           </div>
@@ -5165,7 +5343,7 @@ const fragments = {
   coachFields: ``,
 };
 function init() { initStandortGrabs(); }
-return { fragments, init, showPage, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, renderLiveSession, sessSetTrick, logAttempt, deleteLogEntry, editLogEntry, saveFsLogEdit, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar };
+return { fragments, init, showPage, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, renderLiveSession, sessSetTrick, logAttempt, deleteLogEntry, editLogEntry, saveFsLogEdit, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, cycleGrabStatus, addGrabToEntry, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar };
 })();
 
 // ═══════════════ FREESKI-MODUL ═══════════════
@@ -5508,17 +5686,24 @@ async function realityCheck() {
   const mastered = dbAllStandort.filter(t => t.status === 'mastered' && t.athlet);
   const flagged = [];
 
+  // Entries with a grab-status matrix are handled grab-by-grab below
+  const hasMatrix = s => s.grab_status && typeof s.grab_status === 'object' && Object.keys(s.grab_status).length;
+  const legacyGrabsOf = s => s.grab ? s.grab.split(',').map(x=>x.trim()).filter(Boolean) : [];
+
   mastered.forEach(s => {
     // Find session entries for this athlete with this direction+rotation in the past season
     const dir = s.drehrichtung?.trim();
     const rot = s.rotation ? String(s.rotation).match(/\d+/)?.[0] : null;
     if (!dir || !rot) return;
+    if (hasMatrix(s)) return;
+    const legacyGrabs = legacyGrabsOf(s);
 
     const sessions = dbAllTricks.filter(t =>
       t.athlet === s.athlet &&
       t.datum >= seasonFrom &&
       t.trickaufbau &&
-      t.trickaufbau.includes(rot)
+      t.trickaufbau.includes(rot) &&
+      (!legacyGrabs.length || legacyGrabs.some(g => t.trickaufbau.includes(' — ' + g)))
     );
 
     if (!sessions.length) {
@@ -5541,8 +5726,11 @@ async function realityCheck() {
   dbAllStandort.filter(t => t.status === 'goal' && t.athlet).forEach(s => {
     const rot = s.rotation ? String(s.rotation).match(/\d+/)?.[0] : null;
     if (!s.drehrichtung?.trim() || !rot) return;
+    if (hasMatrix(s)) return;
+    const legacyGrabs = legacyGrabsOf(s);
     const sessions = dbAllTricks.filter(t =>
-      t.athlet === s.athlet && t.datum >= seasonFrom && t.trickaufbau && t.trickaufbau.includes(rot));
+      t.athlet === s.athlet && t.datum >= seasonFrom && t.trickaufbau && t.trickaufbau.includes(rot) &&
+      (!legacyGrabs.length || legacyGrabs.some(g => t.trickaufbau.includes(' — ' + g))));
     if (!sessions.length) return;
     const quals = sessions.map(t => extractQuality(t.kommentar)).filter(v => v !== null);
     if (!quals.length) return;
@@ -5550,6 +5738,27 @@ async function realityCheck() {
     if (avgQ >= 70) {
       flagged.push({ ...s, action: 'upgrade', reason: `Avg quality ${avgQ}% (≥70%) → Mastered`, avgQ, sessions: sessions.length });
     }
+  });
+
+  // Grab-level suggestions from grab-status matrices (per trick+grab)
+  dbAllStandort.filter(t => t.athlet && hasMatrix(t)).forEach(s => {
+    const rot = s.rotation ? String(s.rotation).match(/\d+/)?.[0] : null;
+    if (!rot) return;
+    Object.entries(s.grab_status).forEach(([g, st]) => {
+      if (st !== 'mastered' && st !== 'goal') return;
+      const sessions = dbAllTricks.filter(t =>
+        t.athlet === s.athlet && t.datum >= seasonFrom && t.trickaufbau &&
+        t.trickaufbau.includes(rot) && t.trickaufbau.includes(' — ' + g));
+      if (!sessions.length) {
+        if (st === 'mastered') flagged.push({ ...s, grabName: g, action: 'downgrade-grab', reason: `${g}: not attempted this season`, avgQ: null, sessions: 0 });
+        return;
+      }
+      const quals = sessions.map(t => extractQuality(t.kommentar)).filter(v => v !== null);
+      if (!quals.length) return;
+      const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
+      if (st === 'mastered' && avgQ < 70)  flagged.push({ ...s, grabName: g, action: 'downgrade-grab', reason: `${g}: avg quality ${avgQ}% (<70%)`, avgQ, sessions: sessions.length });
+      if (st === 'goal' && avgQ >= 70)     flagged.push({ ...s, grabName: g, action: 'upgrade-grab', reason: `${g}: avg quality ${avgQ}% (≥70%) → Mastered`, avgQ, sessions: sessions.length });
+    });
   });
 
   if (!flagged.length) {
@@ -5567,10 +5776,13 @@ async function realityCheck() {
 
   // Helper: build full trick description from standort fields
   function rcTrickDesc(f) {
-    if (f.trick_label) return f.trick_label;
-    const parts = [f.drehrichtung, f.flips, f.rotation ? f.rotation+'°' : null, f.achse, f.grab].filter(Boolean);
-    return parts.join(' ') || '—';
+    const label = f.trick_label
+      ? f.trick_label
+      : ([f.drehrichtung, f.flips, f.rotation ? f.rotation+'°' : null, f.achse, f.grab].filter(Boolean).join(' ') || '—');
+    return f.grabName ? label + ' — ' + f.grabName : label;
   }
+
+  window._rcFlagged = flagged;
 
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
@@ -5606,14 +5818,14 @@ async function realityCheck() {
                   <div style="font-size:12px;color:var(--text);font-weight:500;">${rcTrickDesc(f)}</div>
                   ${f.disziplin?`<div style="font-size:10px;color:var(--muted);margin-top:1px;">${f.disziplin}</div>`:''}
                 </div>
-                <span style="font-size:11px;color:${f.action==='upgrade'?'#2d8a4e':'#f59e0b'};white-space:nowrap;font-weight:600;">${f.action==='upgrade'?'↑':'↓'} ${f.reason}</span>
+                <span style="font-size:11px;color:${f.action.startsWith('upgrade')?'#2d8a4e':'#f59e0b'};white-space:nowrap;font-weight:600;">${f.action.startsWith('upgrade')?'↑':'↓'} ${f.reason}</span>
               </div>`).join('')}
           </div>`).join('')}
       </div>
       <!-- Footer -->
       <div style="display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:14px;">
         <button onclick="this.closest('[style*=inset]').remove()" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Cancel</button>
-        <button onclick="applyRealityCheckSelected(${JSON.stringify(flagged)},this)" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply selected</button>
+        <button onclick="applyRealityCheckSelected(window._rcFlagged,this)" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply selected</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -5624,16 +5836,28 @@ async function applyRealityCheckSelected(flagged, btn) {
   const checked = [...document.querySelectorAll('.rc-chk:checked')].map(c => c.dataset.athlet);
   if (!checked.length) { showToast('No athletes selected', 'error'); return; }
   const sel = flagged.filter(f => checked.includes(f.athlet));
-  const downIds = sel.filter(f => f.action !== 'upgrade').map(f => f.id);
+  const downIds = sel.filter(f => f.action === 'downgrade').map(f => f.id);
   const upIds   = sel.filter(f => f.action === 'upgrade').map(f => f.id);
-  if (!downIds.length && !upIds.length) { showToast('No entries to update', 'error'); return; }
+  const grabSel = sel.filter(f => f.action === 'downgrade-grab' || f.action === 'upgrade-grab');
+  if (!downIds.length && !upIds.length && !grabSel.length) { showToast('No entries to update', 'error'); return; }
   btn.textContent = 'Applying…'; btn.disabled = true;
   let error = null;
   if (downIds.length) ({ error } = await db.from('standort').update({status:'goal'}).in('id', downIds));
   if (!error && upIds.length) ({ error } = await db.from('standort').update({status:'mastered'}).in('id', upIds));
+  if (!error && grabSel.length) {
+    const byId = {};
+    grabSel.forEach(f => {
+      if (!byId[f.id]) byId[f.id] = {...((dbAllStandort.find(e => e.id === f.id) || {}).grab_status || {})};
+      byId[f.id][f.grabName] = f.action === 'upgrade-grab' ? 'mastered' : 'goal';
+    });
+    for (const [id, gs] of Object.entries(byId)) {
+      ({ error } = await db.from('standort').update({grab_status: gs}).eq('id', id));
+      if (error) break;
+    }
+  }
   if (error) { showToast('Error: '+error.message, 'error'); btn.textContent='Apply selected'; btn.disabled=false; return; }
   btn.closest('[style*=inset]').remove();
-  showToast(`✅ ${downIds.length} → Goal · ${upIds.length} → Mastered (${checked.length} athlete${checked.length!==1?'s':''})`, 'success');
+  showToast(`✅ ${downIds.length} → Goal · ${upIds.length} → Mastered · ${grabSel.length} grab update${grabSel.length!==1?'s':''} (${checked.length} athlete${checked.length!==1?'s':''})`, 'success');
   loadDB();
 }
 
@@ -6020,8 +6244,15 @@ function openTeamPdfReport() {
     // ── Assessment data ──
     const mastered = assData.filter(t=>t.athlet===athlet&&t.status==='mastered');
     const goals    = assData.filter(t=>t.athlet===athlet&&t.status==='goal');
-    const mastRows = mastered.map(e=>`<tr><td>${e.trick_label||'—'}</td><td>${e.disziplin||'—'}</td><td style="color:#2d8a4e;font-weight:600">Mastered</td></tr>`).join('');
-    const goalRows = goals.map(e=>`<tr><td>${e.trick_label||'—'}</td><td>${e.disziplin||'—'}</td><td style="color:#f59e0b;font-weight:600">Goal</td></tr>`).join('');
+    const grabRowsFor = st => assData
+      .filter(t => t.athlet===athlet && t.grab_status && typeof t.grab_status==='object')
+      .map(e => Object.entries(e.grab_status)
+        .filter(([,s2]) => s2===st)
+        .map(([g]) => `<tr><td>${e.trick_label||'—'} — ${g}</td><td>${e.disziplin||'—'}</td><td style="color:${st==='mastered'?'#2d8a4e':'#f59e0b'};font-weight:600">${st==='mastered'?'Mastered':'Goal'}</td></tr>`)
+        .join(''))
+      .join('');
+    const mastRows = mastered.map(e=>`<tr><td>${e.trick_label||'—'}</td><td>${e.disziplin||'—'}</td><td style="color:#2d8a4e;font-weight:600">Mastered</td></tr>`).join('') + grabRowsFor('mastered');
+    const goalRows = goals.map(e=>`<tr><td>${e.trick_label||'—'}</td><td>${e.disziplin||'—'}</td><td style="color:#f59e0b;font-weight:600">Goal</td></tr>`).join('') + grabRowsFor('goal');
 
     return `<div class="ath-block">
       <div class="ath-name">${athlet}</div>
@@ -6110,9 +6341,7 @@ async function restoreSessionState() {
     renderSessionLog();
     showToast('Session restored', 'success');
     Promise.all(sessSelectedAthletes.map(async name => {
-      const {data} = await db.from('standort').select('trick_label,disziplin,status,grab')
-        .eq('athlet', name).or('status.eq.mastered,status.eq.goal').order('trick_label');
-      if (data) sessAthleteData[name].tricks = data;
+      sessAthleteData[name].tricks = await fetchStandortTricks(name);
     })).then(() => renderLiveSession());
     return true;
   } catch(e) { clearSessionStorage(); return false; }
@@ -6135,9 +6364,7 @@ async function toggleSessionAthlete(name) {
     sessAthleteData[name] = { tricks: [], currentTrick: '', currentGrab: '', stats: {attempts:0,landed:0,perfect:0} };
     const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
     if (card) card.style.borderColor = '#39c3d4';
-    const {data, error} = await db.from('standort').select('trick_label,disziplin,status,grab')
-      .eq('athlet', name).or('status.eq.mastered,status.eq.goal').order('trick_label');
-    if (!error) sessAthleteData[name].tricks = data || [];
+    sessAthleteData[name].tricks = await fetchStandortTricks(name);
   }
   const startBtn = document.getElementById('sess-start-btn');
   if (startBtn) startBtn.style.display = sessSelectedAthletes.length ? 'block' : 'none';
@@ -6236,11 +6463,13 @@ function renderLiveSession() {
         if (!d.currentTrick) return '';
         const baseTrick = d.currentTrick;
         const matchingEntries = (d.tricks||[]).filter(t => baseLabel((t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim()) === baseTrick);
-        const grabSet = new Set();
+        const grabStat = {};
         matchingEntries.forEach(t => {
-          (t.grab||'').split(',').map(g=>g.trim()).filter(Boolean).forEach(g => grabSet.add(g));
+          Object.entries(effGrabStatus(t)).forEach(([g, st]) => {
+            if (grabStat[g] !== 'mastered') grabStat[g] = st;
+          });
         });
-        const grabs = [...grabSet].sort();
+        const grabs = Object.keys(grabStat).sort();
         if (!grabs.length) return '';
         return `<div style="margin-bottom:16px;">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Grab</div>
@@ -6250,7 +6479,7 @@ function renderLiveSession() {
             ${grabs.map(g => {
               const active = d.currentGrab === g;
               return '<button onclick="sessSelectGrab(\''+name+'\',\''+g.replace(/'/g,"\\'")+'\',this)" class="sess-grab-btn"'+
-                ' style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid '+(active?'#39c3d4':'var(--border)')+';background:'+(active?'rgba(57,195,212,0.18)':'var(--surface2)')+';color:'+(active?'#39c3d4':'var(--muted)')+';font-family:\'Poppins\',sans-serif;">'+g+'</button>';
+                ' style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid '+(active?'#39c3d4':'var(--border)')+';background:'+(active?'rgba(57,195,212,0.18)':'var(--surface2)')+';color:'+(active?'#39c3d4':'var(--muted)')+';font-family:\'Poppins\',sans-serif;">'+g+(grabStat[g]==='goal'?' 🎯':'')+'</button>';
             }).join('')}
           </div>
         </div>`;
@@ -7184,6 +7413,7 @@ function renderStandort() {
           ${e.coach_kommentar ? `<div style="font-size:10px;color:#f59e0b;margin-top:3px;">🎓 ${e.coach_rating ? e.coach_rating+'/10 · ' : ''}${e.coach_kommentar}</div>` : ''}
           ${e.coach_video ? `<div style="font-size:10px;"><a href="${e.coach_video}" target="_blank" style="color:#f59e0b;">▶ Video</a></div>` : ''}
         </span>
+        ${grabChipsHtml(e)}
       </span>
       <button style="background:none;border:1px solid #1a3450;border-radius:5px;color:#6b8299;cursor:pointer;padding:2px 7px;font-size:11px;margin-right:2px;" onclick="openSbEdit(${e.id})" title="Edit">✏️</button>
       <button class="btn-del" onclick="deleteSbEntry(${e.id})" title="Remove">✕</button>
@@ -7251,6 +7481,25 @@ function renderStandort() {
   }
 }
 
+async function cycleGrabStatus(entryId, grab) {
+  const e = sbData.find(x => x.id === entryId);
+  if (!e) return;
+  const gs = {...effGrabStatus(e)};
+  const next = nextGrabState(gs[grab]);
+  if (next) gs[grab] = next; else delete gs[grab];
+  if (await updateGrabStatus(entryId, gs, e)) renderStandort();
+}
+
+async function addGrabToEntry(entryId) {
+  const e = sbData.find(x => x.id === entryId);
+  if (!e) return;
+  const gs = {...effGrabStatus(e)};
+  showGrabPickModal(assessGrabList(e.disziplin), Object.keys(gs), async g => {
+    gs[g] = 'goal';
+    if (await updateGrabStatus(entryId, gs, e)) renderStandort();
+  });
+}
+
 async function sbSave(status) {
   const fields = readFields('sb');
   if (!fields.disziplin) { showToast('Please select a discipline', 'error'); return; }
@@ -7260,19 +7509,27 @@ async function sbSave(status) {
 
   const notiz = val('sb-notiz');
 
-  const { data, error } = await db.from('standort').insert({
+  const row = {
     athlet: sbAthlet,
     datum: document.getElementById('sb-datum').value || new Date().toISOString().split('T')[0],
     disziplin: fields.disziplin,
     trick_label: trickLabel,
     // Store all individual fields too for reference
     drehrichtung: fields.drehrichtung, flips: fields.flips, achse: fields.achse,
-    rotation: fields.rotation, absprung: fields.absprung, grab: fields.grab,
+    rotation: fields.rotation, absprung: fields.absprung,
+    grab: Object.keys(sbAssessGrabMatrix).join(', ') || fields.grab,
     bringback: fields.bringback, railart: fields.railart, slideform: fields.slideform,
     slidevar: fields.slidevar, inspin: fields.inspin, swap: fields.swap, outspin: fields.outspin,
     notiz,
     status,
-  }).select();
+  };
+  if (_standortHasGrabStatus && Object.keys(sbAssessGrabMatrix).length) row.grab_status = {...sbAssessGrabMatrix};
+  let { data, error } = await db.from('standort').insert(row).select();
+  if (error && /grab_status/.test(error.message||'')) {
+    _standortHasGrabStatus = false;
+    delete row.grab_status;
+    ({ data, error } = await db.from('standort').insert(row).select());
+  }
 
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
 
@@ -7282,6 +7539,7 @@ async function sbSave(status) {
   ['sb-disziplin','sb-drehrichtung','sb-flips','sb-achse','sb-rotation','sb-absprung',
    'sb-grab','sb-bringback','sb-style','sb-railart','sb-slideform','sb-slidevar','sb-inspin','sb-swap','sb-outspin','sb-notiz'
   ].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  initStandortGrabs();
   toggleDisziplin('sb');
 
   sbData = [data[0], ...sbData];
@@ -7289,9 +7547,7 @@ async function sbSave(status) {
   toggleSbForm();
 
   if (sessSelectedAthletes.includes(sbAthlet) && sessAthleteData[sbAthlet]) {
-    const {data:tricks} = await db.from('standort').select('trick_label,disziplin,status,grab')
-      .eq('athlet', sbAthlet).or('status.eq.mastered,status.eq.goal').order('trick_label');
-    if (tricks) sessAthleteData[sbAthlet].tricks = tricks;
+    sessAthleteData[sbAthlet].tricks = await fetchStandortTricks(sbAthlet);
     saveSessionState();
   }
 }
@@ -8675,39 +8931,54 @@ async function saveSbEdit(){
   showToast('✓ Trick updated!');closeSbEdit();loadStandort();
 }
 
+const FS_ASSESS_GRABS = ['Blunt', 'Bow and Arrow', 'Broken Arrow', 'Critical', 'Cuban', 'Double Japan', 'Esco', 'Guitar', 'High Mute', 'In and out', 'Indi-Truck', 'Inside Tail', 'Japan', 'Mute', 'Nose', 'Octo', 'Rocket', 'Safety', 'Screamin\' Seamen', 'Seatbelt', 'Seatbelt Japan', 'Stale', 'Stink Bug', 'Tail', 'Truckdriver', 'Venom'];
+
+function assessGrabList() {
+  return [...FS_ASSESS_GRABS, ...FS_ASSESS_GRABS.map(g => 'Lead ' + g)];
+}
+
+let sbAssessGrabMatrix = {};
+
+function styleFsGrabSeg(btn, label, st) {
+  btn.textContent = st === 'mastered' ? '✓ ' + label : st === 'goal' ? '🎯 ' + label : label;
+  btn.style.background = st === 'mastered' ? 'rgba(45,138,78,0.3)' : st === 'goal' ? 'rgba(245,158,11,0.25)' : '#112236';
+  btn.style.color = st === 'mastered' ? '#4ade80' : st === 'goal' ? '#f59e0b' : '#6b8299';
+}
+
 function initStandortGrabs() {
-          (function(){
-            const grabs=['Blunt', 'Bow and Arrow', 'Broken Arrow', 'Critical', 'Cuban', 'Double Japan', 'Esco', 'Guitar', 'High Mute', 'In and out', 'Indi-Truck', 'Inside Tail', 'Japan', 'Mute', 'Nose', 'Octo', 'Rocket', 'Safety', 'Screamin\' Seamen', 'Seatbelt', 'Seatbelt Japan', 'Stale', 'Stink Bug', 'Tail', 'Truckdriver', 'Venom'];
-            const wrap=document.getElementById("sb-grab-wrap");
-            const hid=document.getElementById("sb-grab");
-            const selected=new Set();
-            function updateHidden(){ hid.value=[...selected].join(", "); }
-            grabs.forEach(g=>{
-              const pair=document.createElement("div");
-              pair.style.cssText="display:inline-flex;border-radius:20px;overflow:hidden;border:1px solid #1a3450;";
-              // Normal button
-              const btn=document.createElement("button");
-              btn.type="button"; btn.textContent=g; btn.dataset.key=g;
-              btn.style.cssText="background:#112236;color:#6b8299;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;border:none;border-right:1px solid #1a3450;";
-              btn.onclick=()=>{
-                if(selected.has(g)){selected.delete(g);btn.style.background="#112236";btn.style.color="#6b8299";}
-                else{selected.add(g);btn.style.background="#1e3a5f";btn.style.color="#60a5fa";}
-                updateHidden();
-              };
-              // Lead button
-              const lBtn=document.createElement("button");
-              lBtn.type="button"; lBtn.textContent="L"; lBtn.dataset.key="Lead "+g;
-              lBtn.style.cssText="background:#112236;color:#6b8299;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;border:none;";
-              lBtn.onclick=()=>{
-                const k="Lead "+g;
-                if(selected.has(k)){selected.delete(k);lBtn.style.background="#112236";lBtn.style.color="#6b8299";}
-                else{selected.add(k);lBtn.style.background="#1a3a1a";lBtn.style.color="#7ab51d";}
-                updateHidden();
-              };
-              pair.appendChild(btn); pair.appendChild(lBtn);
-              wrap.appendChild(pair);
-            });
-          })();
+  const wrap = document.getElementById('sb-grab-wrap');
+  const hid  = document.getElementById('sb-grab');
+  if (!wrap || !hid) return;
+  Array.from(wrap.querySelectorAll('div')).forEach(d => d.remove());
+  hid.value = '';
+  sbAssessGrabMatrix = {};
+  FS_ASSESS_GRABS.forEach(g => {
+    const pair = document.createElement('div');
+    pair.style.cssText = "display:inline-flex;border-radius:20px;overflow:hidden;border:1px solid #1a3450;";
+    // Normal button
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.dataset.key = g;
+    btn.style.cssText = "padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;border:none;border-right:1px solid #1a3450;";
+    styleFsGrabSeg(btn, g, undefined);
+    btn.onclick = () => {
+      const next = nextGrabState(sbAssessGrabMatrix[g]);
+      if (next) sbAssessGrabMatrix[g] = next; else delete sbAssessGrabMatrix[g];
+      styleFsGrabSeg(btn, g, next);
+    };
+    // Lead button
+    const lBtn = document.createElement('button');
+    lBtn.type = 'button'; lBtn.dataset.key = 'Lead ' + g;
+    lBtn.style.cssText = "padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;border:none;";
+    styleFsGrabSeg(lBtn, 'L', undefined);
+    lBtn.onclick = () => {
+      const k = 'Lead ' + g;
+      const next = nextGrabState(sbAssessGrabMatrix[k]);
+      if (next) sbAssessGrabMatrix[k] = next; else delete sbAssessGrabMatrix[k];
+      styleFsGrabSeg(lBtn, 'L', next);
+    };
+    pair.appendChild(btn); pair.appendChild(lBtn);
+    wrap.appendChild(pair);
+  });
 }
 
 const fragments = {
@@ -8737,7 +9008,7 @@ const fragments = {
     <div style="font-size:12px;color:var(--muted);">Compare assessment with actual session data</div>
     <button onclick="realityCheck()" style="padding:8px 16px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
   </div>`,
-  grabBlock: `        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(click = normal · L = lead · multiple possible)</span></label>
+  grabBlock: `        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(1× click = ✓ Mastered · 2× = 🎯 Goal · 3× = off · L = Lead)</span></label>
           <div id="sb-grab-wrap" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0;">
             <input type="hidden" id="sb-grab" value="">
           </div>
@@ -8748,7 +9019,7 @@ const fragments = {
         <textarea id="sbe-coach-kommentar" rows="2" placeholder="Coach-Kommentar..."></textarea></div>`,
 };
 function init() { initStandortGrabs(); }
-return { fragments, init, showPage, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
+return { fragments, init, showPage, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, addGrabToEntry, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
 })();
 
 // ═══════════════ SPORT BOOT ═══════════════
