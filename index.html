@@ -1245,14 +1245,25 @@ function grabChipsHtml(e) {
   if (!e || !e.id || e.disziplin === 'Rail') return '';
   if (e.status !== 'mastered' && e.status !== 'goal') return '';
   const gs = (e.grab_status && typeof e.grab_status === 'object') ? e.grab_status : null;
-  const chips = gs ? Object.entries(gs).map(([g, st]) => {
+  if (!gs || !Object.keys(gs).length) return '';
+  const chips = Object.entries(gs).map(([g, st]) => {
     const col  = st === 'mastered' ? '#4ade80' : '#f59e0b';
     const bg   = st === 'mastered' ? 'rgba(45,138,78,0.2)' : 'rgba(245,158,11,0.15)';
     const icon = st === 'mastered' ? '✓' : '🎯';
-    return `<span onclick="event.stopPropagation();cycleGrabStatus(${e.id},'${g.replace(/'/g,"\\'")}')" title="Click: Mastered → Goal → remove" style="cursor:pointer;font-size:10px;padding:2px 8px;border-radius:10px;background:${bg};border:1px solid ${col};color:${col};white-space:nowrap;">${icon} ${g}</span>`;
-  }).join('') : '';
-  return `<span style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;align-items:center;">${chips}
-    <span onclick="event.stopPropagation();addGrabToEntry(${e.id})" title="Add grab" style="cursor:pointer;font-size:10px;padding:2px 8px;border-radius:10px;background:var(--surface2);border:1px dashed var(--border);color:var(--muted);white-space:nowrap;">+ Grab</span></span>`;
+    return `<span onclick="event.stopPropagation();cycleGrabStatus(${e.id},'${g.replace(/'/g,"\\'")}')" title="Antippen: ✓ Mastered → 🎯 Goal → entfernen" style="cursor:pointer;font-size:10px;padding:2px 8px;border-radius:10px;background:${bg};border:1px solid ${col};color:${col};white-space:nowrap;">${icon} ${g}</span>`;
+  }).join('');
+  return `<span style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;align-items:center;">${chips}</span>`;
+}
+
+// Was vom Label übrig bleibt, wenn man die aus Feldern ableitbaren Teile + Grabs entfernt
+// (z. B. «Frontfoot Bone», «Todeo» — Angaben ohne eigene Spalte, die nur im Label leben)
+function labelResidual(label, knownTokens) {
+  let s = ' ' + (label || '') + ' ';
+  knownTokens.filter(Boolean).forEach(t => {
+    const esc = String(t).trim().replace(/[-.*+?^${}()|[\]\\]/g, '\\$&');
+    s = s.replace(new RegExp('\\s' + esc + '(?=\\s)', 'i'), ' ');
+  });
+  return s.trim().replace(/\s{2,}/g, ' ');
 }
 
 function splitTrickGrab(label) {
@@ -1269,27 +1280,6 @@ function grabSelectHtml(id, grabs, current) {
       <option value="">— No Grab —</option>
       ${opts.map(g => `<option value="${g.replace(/"/g,'&quot;')}"${g === current ? ' selected' : ''}>${g}</option>`).join('')}
     </select></div>`;
-}
-
-function showGrabPickModal(grabs, existing, cb) {
-  const m = document.createElement('div');
-  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
-  m.innerHTML = `<div style="background:#0d1f33;border:1px solid var(--border);border-radius:14px;padding:20px;max-width:540px;width:100%;max-height:80vh;overflow-y:auto;">
-    <div style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">Add grab</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Added as 🎯 Goal — click the chip afterwards to change its status.</div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;" id="gpick-wrap"></div>
-    <div style="text-align:right;margin-top:14px;"><button id="gpick-cancel" style="padding:7px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Cancel</button></div>
-  </div>`;
-  const wrap = m.querySelector('#gpick-wrap');
-  grabs.filter(g => !existing.includes(g)).forEach(g => {
-    const b = document.createElement('button'); b.type = 'button';
-    styleAssessGrabBtn(b, g, undefined);
-    b.onclick = () => { m.remove(); cb(g); };
-    wrap.appendChild(b);
-  });
-  m.querySelector('#gpick-cancel').onclick = () => m.remove();
-  m.addEventListener('click', ev => { if (ev.target === m) m.remove(); });
-  document.body.appendChild(m);
 }
 
 const SESS_ALL_ATHLETES = CFG.athletes;
@@ -3600,6 +3590,7 @@ function renderStandort() {
   }
 
   document.getElementById('sb-columns').innerHTML = `
+    <div style="grid-column:1/-1;font-size:11px;color:var(--muted);">Grab-Chips: antippen = ✓ Mastered → 🎯 Goal → entfernt · Grabs hinzufügen über ✏️ Bearbeiten</div>
     <div>
       <div class="sb-col-header mastered">✅ MASTERED <span style="opacity:.6;font-size:13px;">(${bList.length})</span></div>
       <div class="sb-col-body mastered">${renderList(bList, 'No entries yet')}</div>
@@ -3638,16 +3629,6 @@ async function cycleGrabStatus(entryId, grab) {
   const next = nextGrabState(gs[grab]);
   if (next) gs[grab] = next; else delete gs[grab];
   if (await updateGrabStatus(entryId, gs, e)) renderStandort();
-}
-
-async function addGrabToEntry(entryId) {
-  const e = sbData.find(x => x.id === entryId);
-  if (!e) return;
-  const gs = {...effGrabStatus(e)};
-  showGrabPickModal(assessGrabList(e.disziplin), Object.keys(gs), async g => {
-    gs[g] = 'mastered';
-    if (await updateGrabStatus(entryId, gs, e)) renderStandort();
-  });
 }
 
 async function sbSave(status) {
@@ -4075,6 +4056,9 @@ async function loadEntwicklung() {
   renderRawEntries(tricks, 'all entries');
 }
 
+let sbeGrabMatrix={};
+let sbeLabelResidual='';
+
 function openSbEdit(id){
   const e=sbData.find(r=>r.id===id); if(!e)return;
   document.getElementById('sbe-id').value=id;
@@ -4088,29 +4072,26 @@ function openSbEdit(id){
   sv('sbe-slideform',e.slideform);sv('sbe-inspin',e.inspin);
   sv('sbe-outspin',e.outspin);sv('sbe-notiz',e.notiz);
   sv('sbe-status',e.status);
-  // Init sbe grab buttons
+  // Grab-Ampel wie im Erfassungs-Formular: 1×=✓ Mastered, 2×=🎯 Goal, 3×=aus
   const wrap=document.getElementById('sbe-grab-wrap');
-  const hid=document.getElementById('sbe-grab');
-  if(wrap.querySelectorAll('button').length===0){
-    ['Bloody Dracula', 'Canadian Bacon', 'Chicken Salad', 'Cookie Monster', 'Crail', 'Crooked Cop', 'Cross Rocket', 'Double Tail', 'Dracula Method', 'Freshfish', 'Frontside', 'Japan', 'Lien', 'Melon', 'Method', 'Nose', 'Nuclear', 'Nuclear Method', 'Reach Around', 'Roast Beef', 'Rocket Air', 'Sad Air', 'Seat Belt', 'Slob', 'Spaghetti', 'Stalefish', 'Stelmasky', 'Stink Bug', 'Suitcase', 'Swiss Cheese', 'Tai Pan', 'Tail', 'Tuck Knee', 'Weddle (Mute)'].forEach(g=>{
-      const btn=document.createElement('button');
-      btn.type='button';btn.textContent=g;btn.dataset.grab=g;
-      btn.style.cssText='background:#112236;border:1px solid #1a3450;border-radius:20px;color:#6b8299;padding:4px 10px;font-size:11px;cursor:pointer;margin:2px;';
-      btn.onclick=()=>{
-        const a=btn.classList.toggle('grab-active');
-        btn.style.background=a?'#1e3a5f':'#1a2235';btn.style.borderColor=a?'#3b82f6':'#1e2d45';btn.style.color=a?'#60a5fa':'#94a3b8';
-        hid.value=Array.from(wrap.querySelectorAll('.grab-active')).map(b=>b.dataset.grab).join(', ');
-      };
-      wrap.appendChild(btn);
-    });
-  }
-  const activeGrabs=(e.grab||'').split(',').map(g=>g.trim()).filter(Boolean);
-  wrap.querySelectorAll('button').forEach(btn=>{
-    const a=activeGrabs.includes(btn.dataset.grab);
-    btn.classList.toggle('grab-active',a);
-    btn.style.background=a?'#1e3a5f':'#1a2235';btn.style.borderColor=a?'#3b82f6':'#1e2d45';btn.style.color=a?'#60a5fa':'#94a3b8';
+  sbeGrabMatrix={...effGrabStatus(e)};
+  // Label-Rest merken (Angaben ohne eigene Spalte, z. B. Bones/Todeo) — wird beim Speichern wieder angehängt
+  const oldIsK=['Jump','Halfpipe','Landing Bag'].includes(e.disziplin);
+  const oldBb=e.bringback?'Bringback '+e.bringback:null;
+  const oldParts=oldIsK?[e.absprung,e.drehrichtung,e.flips&&!['keine','None','none','—'].includes(e.flips)?e.flips:null,e.rotation,e.achse,oldBb]:[e.inspin,e.slideform,e.railart,e.outspin];
+  sbeLabelResidual=labelResidual(e.trick_label,[...oldParts,...Object.keys(sbeGrabMatrix),...(e.grab||'').split(',').map(s=>s.trim())]);
+  Array.from(wrap.querySelectorAll('button')).forEach(b=>b.remove());
+  [...new Set([...assessGrabList(e.disziplin),...Object.keys(sbeGrabMatrix)])].forEach(g=>{
+    const btn=document.createElement('button');
+    btn.type='button';btn.dataset.grab=g;
+    styleAssessGrabBtn(btn,g,sbeGrabMatrix[g]);
+    btn.onclick=()=>{
+      const next=nextGrabState(sbeGrabMatrix[g]);
+      if(next)sbeGrabMatrix[g]=next;else delete sbeGrabMatrix[g];
+      styleAssessGrabBtn(btn,g,next);
+    };
+    wrap.appendChild(btn);
   });
-  hid.value=activeGrabs.join(', ');
   const ov=document.getElementById('sb-edit-overlay');
   ov.style.display='flex';
 }
@@ -4121,17 +4102,24 @@ async function saveSbEdit(){
   const updates={
     datum:gv('sbe-datum'),disziplin:gv('sbe-disziplin'),
     drehrichtung:gv('sbe-drehrichtung'),rotation:gv('sbe-rotation'),
-    flips:gv('sbe-flips'),achse:gv('sbe-achse'),grab:gv('sbe-grab'),
+    flips:gv('sbe-flips'),achse:gv('sbe-achse'),
     absprung:gv('sbe-absprung'),bringback:gv('sbe-bringback'),
     railart:gv('sbe-railart'),slideform:gv('sbe-slideform'),
     inspin:gv('sbe-inspin'),outspin:gv('sbe-outspin'),notiz:gv('sbe-notiz'),
     status:gv('sbe-status'),
+    grab:Object.keys(sbeGrabMatrix).join(', ')||null,
   };
   const isK=['Jump','Halfpipe','Landing Bag'].includes(updates.disziplin);
   const bb = updates.bringback ? 'Bringback ' + updates.bringback : null;
-  const parts=isK?[updates.absprung,updates.drehrichtung,updates.flips&&updates.flips!=='keine'?updates.flips:null,updates.rotation,updates.achse,updates.grab,bb]:[updates.inspin,updates.slideform,updates.railart,updates.outspin];
-  updates.trick_label=parts.filter(Boolean).join(' ')||'–';
-  const {error}=await db.from('standort').update(updates).eq('id',id);
+  // Label aus Feldern OHNE Grab (lebt in grab_status/Chips) + gemerktem Label-Rest
+  const parts=isK?[updates.absprung,updates.drehrichtung,updates.flips&&!['keine','None','none','—'].includes(updates.flips)?updates.flips:null,updates.rotation,updates.achse,bb]:[updates.inspin,updates.slideform,updates.railart,updates.outspin];
+  updates.trick_label=(parts.filter(Boolean).join(' ')+(sbeLabelResidual?' '+sbeLabelResidual:'')).trim()||'–';
+  if(_standortHasGrabStatus)updates.grab_status={...sbeGrabMatrix};
+  let {error}=await db.from('standort').update(updates).eq('id',id);
+  if(error&&/grab_status/.test(error.message||'')){
+    _standortHasGrabStatus=false;delete updates.grab_status;
+    ({error}=await db.from('standort').update(updates).eq('id',id));
+  }
   if(error){showToast('Error: '+error.message,'error');return;}
   showToast('✓ Trick updated!');closeSbEdit();loadStandort();
 }
@@ -5273,7 +5261,7 @@ const fragments = {
   coachFields: ``,
 };
 function init() { initStandortGrabs(); }
-return { fragments, init, showPage, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, renderLiveSession, sessSetTrick, logAttempt, deleteLogEntry, editLogEntry, saveFsLogEdit, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, cycleGrabStatus, addGrabToEntry, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar };
+return { fragments, init, showPage, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, renderLiveSession, sessSetTrick, logAttempt, deleteLogEntry, editLogEntry, saveFsLogEdit, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar };
 })();
 
 // ═══════════════ FREESKI-MODUL ═══════════════
@@ -7385,6 +7373,7 @@ function renderStandort() {
   }
 
   document.getElementById('sb-columns').innerHTML = `
+    <div style="grid-column:1/-1;font-size:11px;color:var(--muted);">Grab-Chips: antippen = ✓ Mastered → 🎯 Goal → entfernt · Grabs hinzufügen über ✏️ Bearbeiten</div>
     <div>
       <div class="sb-col-header mastered">✅ MASTERED <span style="opacity:.6;font-size:13px;">(${bList.length})</span></div>
       <div class="sb-col-body mastered">${renderList(bList, 'No entries yet')}</div>
@@ -7424,16 +7413,6 @@ async function cycleGrabStatus(entryId, grab) {
   const next = nextGrabState(gs[grab]);
   if (next) gs[grab] = next; else delete gs[grab];
   if (await updateGrabStatus(entryId, gs, e)) renderStandort();
-}
-
-async function addGrabToEntry(entryId) {
-  const e = sbData.find(x => x.id === entryId);
-  if (!e) return;
-  const gs = {...effGrabStatus(e)};
-  showGrabPickModal(assessGrabList(e.disziplin), Object.keys(gs), async g => {
-    gs[g] = 'mastered';
-    if (await updateGrabStatus(entryId, gs, e)) renderStandort();
-  });
 }
 
 async function sbSave(status) {
@@ -8806,6 +8785,9 @@ function renderTrickAnalytics() {
   }
 }
 
+let sbeGrabMatrix={};
+let sbeLabelResidual='';
+
 function openSbEdit(id){
   const e=sbData.find(r=>r.id===id); if(!e)return;
   document.getElementById('sbe-id').value=id;
@@ -8819,29 +8801,40 @@ function openSbEdit(id){
   sv('sbe-slideform',e.slideform);sv('sbe-inspin',e.inspin);
   sv('sbe-outspin',e.outspin);sv('sbe-notiz',e.notiz);
   sv('sbe-status',e.status);sv('sbe-coach-rating',e.coach_rating);sv('sbe-coach-kommentar',e.coach_kommentar);
-  // Init sbe grab buttons
+  // Grab-Ampel wie im Erfassungs-Formular: 1×=✓ Mastered, 2×=🎯 Goal, 3×=aus, L=Lead
   const wrap=document.getElementById('sbe-grab-wrap');
-  const hid=document.getElementById('sbe-grab');
-  if(wrap.querySelectorAll('button').length===0){
-    ['Blunt', 'Bow and Arrow', 'Critical', 'Cuban', 'Esco', 'In and out', 'Japan', 'Mute', 'Nose', 'Octo', 'Safety', 'Seatbelt', 'Stale', 'Tail', 'Truckdriver'].forEach(g=>{
-      const btn=document.createElement('button');
-      btn.type='button';btn.textContent=g;btn.dataset.grab=g;
-      btn.style.cssText='background:#112236;border:1px solid #1a3450;border-radius:20px;color:#6b8299;padding:4px 10px;font-size:11px;cursor:pointer;margin:2px;';
-      btn.onclick=()=>{
-        const a=btn.classList.toggle('grab-active');
-        btn.style.background=a?'#1e3a5f':'#1a2235';btn.style.borderColor=a?'#3b82f6':'#1e2d45';btn.style.color=a?'#60a5fa':'#94a3b8';
-        hid.value=Array.from(wrap.querySelectorAll('.grab-active')).map(b=>b.dataset.grab).join(', ');
-      };
-      wrap.appendChild(btn);
-    });
-  }
-  const activeGrabs=(e.grab||'').split(',').map(g=>g.trim()).filter(Boolean);
-  wrap.querySelectorAll('button').forEach(btn=>{
-    const a=activeGrabs.includes(btn.dataset.grab);
-    btn.classList.toggle('grab-active',a);
-    btn.style.background=a?'#1e3a5f':'#1a2235';btn.style.borderColor=a?'#3b82f6':'#1e2d45';btn.style.color=a?'#60a5fa':'#94a3b8';
+  sbeGrabMatrix={...effGrabStatus(e)};
+  // Label-Rest merken (Angaben ohne eigene Spalte, z. B. Bones/Todeo) — wird beim Speichern wieder angehängt
+  const oldIsK=['Jump','Halfpipe','Landing Bag'].includes(e.disziplin);
+  const oldBb=e.bringback?'Bringback '+e.bringback:null;
+  const oldParts=oldIsK?[e.absprung,e.drehrichtung,e.flips&&!['keine','None','none','—'].includes(e.flips)?e.flips:null,e.rotation,e.achse,oldBb]:[e.inspin,e.slideform,e.railart,e.outspin];
+  sbeLabelResidual=labelResidual(e.trick_label,[...oldParts,...Object.keys(sbeGrabMatrix),...(e.grab||'').split(',').map(s=>s.trim())]);
+  Array.from(wrap.querySelectorAll('button,div')).forEach(b=>b.remove());
+  FS_ASSESS_GRABS.forEach(g=>{
+    const pair=document.createElement('div');
+    pair.style.cssText="display:inline-flex;border-radius:20px;overflow:hidden;border:1px solid #1a3450;";
+    const btn=document.createElement('button');
+    btn.type='button';btn.dataset.key=g;
+    btn.style.cssText="padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;border:none;border-right:1px solid #1a3450;";
+    styleFsGrabSeg(btn,g,sbeGrabMatrix[g]);
+    btn.onclick=()=>{
+      const next=nextGrabState(sbeGrabMatrix[g]);
+      if(next)sbeGrabMatrix[g]=next;else delete sbeGrabMatrix[g];
+      styleFsGrabSeg(btn,g,next);
+    };
+    const lBtn=document.createElement('button');
+    lBtn.type='button';lBtn.dataset.key='Lead '+g;
+    lBtn.style.cssText="padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;border:none;";
+    styleFsGrabSeg(lBtn,'L',sbeGrabMatrix['Lead '+g]);
+    lBtn.onclick=()=>{
+      const k='Lead '+g;
+      const next=nextGrabState(sbeGrabMatrix[k]);
+      if(next)sbeGrabMatrix[k]=next;else delete sbeGrabMatrix[k];
+      styleFsGrabSeg(lBtn,'L',next);
+    };
+    pair.appendChild(btn);pair.appendChild(lBtn);
+    wrap.appendChild(pair);
   });
-  hid.value=activeGrabs.join(', ');
   const ov=document.getElementById('sb-edit-overlay');
   ov.style.display='flex';
 }
@@ -8852,17 +8845,24 @@ async function saveSbEdit(){
   const updates={
     datum:gv('sbe-datum'),disziplin:gv('sbe-disziplin'),
     drehrichtung:gv('sbe-drehrichtung'),rotation:gv('sbe-rotation'),
-    flips:gv('sbe-flips'),achse:gv('sbe-achse'),grab:gv('sbe-grab'),
+    flips:gv('sbe-flips'),achse:gv('sbe-achse'),
     absprung:gv('sbe-absprung'),bringback:gv('sbe-bringback'),
     railart:gv('sbe-railart'),slideform:gv('sbe-slideform'),
     inspin:gv('sbe-inspin'),outspin:gv('sbe-outspin'),notiz:gv('sbe-notiz'),
     status:gv('sbe-status'),coach_rating:gv('sbe-coach-rating')||null,coach_kommentar:gv('sbe-coach-kommentar')||null,
+    grab:Object.keys(sbeGrabMatrix).join(', ')||null,
   };
   const isK=['Jump','Halfpipe','Landing Bag'].includes(updates.disziplin);
   const bb = updates.bringback ? 'Bringback ' + updates.bringback : null;
-  const parts=isK?[updates.absprung,updates.drehrichtung,updates.flips&&updates.flips!=='keine'?updates.flips:null,updates.rotation,updates.achse,updates.grab,bb]:[updates.inspin,updates.slideform,updates.railart,updates.outspin];
-  updates.trick_label=parts.filter(Boolean).join(' ')||'–';
-  const {error}=await db.from('standort').update(updates).eq('id',id);
+  // Label aus Feldern OHNE Grab (lebt in grab_status/Chips) + gemerktem Label-Rest
+  const parts=isK?[updates.absprung,updates.drehrichtung,updates.flips&&!['keine','None','none','—'].includes(updates.flips)?updates.flips:null,updates.rotation,updates.achse,bb]:[updates.inspin,updates.slideform,updates.railart,updates.outspin];
+  updates.trick_label=(parts.filter(Boolean).join(' ')+(sbeLabelResidual?' '+sbeLabelResidual:'')).trim()||'–';
+  if(_standortHasGrabStatus)updates.grab_status={...sbeGrabMatrix};
+  let {error}=await db.from('standort').update(updates).eq('id',id);
+  if(error&&/grab_status/.test(error.message||'')){
+    _standortHasGrabStatus=false;delete updates.grab_status;
+    ({error}=await db.from('standort').update(updates).eq('id',id));
+  }
   if(error){showToast('Error: '+error.message,'error');return;}
   showToast('✓ Trick updated!');closeSbEdit();loadStandort();
 }
@@ -8955,7 +8955,7 @@ const fragments = {
         <textarea id="sbe-coach-kommentar" rows="2" placeholder="Coach-Kommentar..."></textarea></div>`,
 };
 function init() { initStandortGrabs(); }
-return { fragments, init, showPage, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, addGrabToEntry, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
+return { fragments, init, showPage, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
 })();
 
 // ═══════════════ SPORT BOOT ═══════════════
@@ -9001,7 +9001,7 @@ document.addEventListener('DOMContentLoaded', function bootSport(){
         </select></div>
       <div class="form-group sbe-kicker"><label>Axis</label>
         <select id="sbe-achse" onchange="updateFwdSwBtn('sbe')"></select></div>
-      <div class="form-group sbe-kicker" style="grid-column:1/-1;"><label>Grabs</label>
+      <div class="form-group sbe-kicker" style="grid-column:1/-1;"><label>Grabs <span style="font-size:10px;color:var(--muted);font-weight:400;">(1× tippen = ✓ Mastered · 2× = 🎯 Goal · 3× = aus)</span></label>
         <div id="sbe-grab-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;">
           <input type="hidden" id="sbe-grab" value=""></div></div>
       <div class="form-group sbe-kicker"><label>Style Element</label>
