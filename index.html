@@ -3645,7 +3645,7 @@ async function addGrabToEntry(entryId) {
   if (!e) return;
   const gs = {...effGrabStatus(e)};
   showGrabPickModal(assessGrabList(e.disziplin), Object.keys(gs), async g => {
-    gs[g] = 'goal';
+    gs[g] = 'mastered';
     if (await updateGrabStatus(entryId, gs, e)) renderStandort();
   });
 }
@@ -7431,7 +7431,7 @@ async function addGrabToEntry(entryId) {
   if (!e) return;
   const gs = {...effGrabStatus(e)};
   showGrabPickModal(assessGrabList(e.disziplin), Object.keys(gs), async g => {
-    gs[g] = 'goal';
+    gs[g] = 'mastered';
     if (await updateGrabStatus(entryId, gs, e)) renderStandort();
   });
 }
