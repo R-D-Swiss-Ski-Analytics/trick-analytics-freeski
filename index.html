@@ -2832,12 +2832,7 @@ function renderLiveSession() {
         if (grabStat[g] !== 'mastered') grabStat[g] = st;
       });
     });
-    let grabs = Object.keys(grabStat).sort();
-    if (!grabs.length) {
-      // Keine Grabs im Assessment hinterlegt → volle Liste anbieten (wie der alte Session-Picker)
-      const ti = (d.tricks||[]).find(t => sbLiveLabel(t.trick_label, t.disziplin) === d.currentTrick) || {};
-      if (ti.disziplin !== 'Rail') grabs = [...SESS_GRABS];
-    }
+    const grabs = Object.keys(grabStat).sort();
     if (grabs.length) {
       grabHtml = `<div style="margin-bottom:16px;">
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Grab</div>
