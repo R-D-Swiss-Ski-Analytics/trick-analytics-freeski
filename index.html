@@ -1347,6 +1347,22 @@ function grabChipsHtml(e) {
     <span onclick="event.stopPropagation();addGrabToEntry(${e.id})" title="Add grab" style="cursor:pointer;font-size:10px;padding:2px 8px;border-radius:10px;background:var(--surface2);border:1px dashed var(--border);color:var(--muted);white-space:nowrap;">+ Grab</span></span>`;
 }
 
+function splitTrickGrab(label) {
+  const i = (label || '').lastIndexOf(' — ');
+  if (i === -1) return { base: (label || '').trim(), grab: '' };
+  return { base: label.slice(0, i).trim(), grab: label.slice(i + 3).trim() };
+}
+
+function grabSelectHtml(id, grabs, current) {
+  const opts = [...grabs];
+  if (current && !opts.includes(current)) opts.unshift(current);
+  return `<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>
+    <select id="${id}" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+      <option value="">— No Grab —</option>
+      ${opts.map(g => `<option value="${g.replace(/"/g,'&quot;')}"${g === current ? ' selected' : ''}>${g}</option>`).join('')}
+    </select></div>`;
+}
+
 function showGrabPickModal(grabs, existing, cb) {
   const m = document.createElement('div');
   m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
@@ -2991,7 +3007,11 @@ async function saveFsLogEdit(idx, newResult) {
   if (!e) return;
   const trickEl  = document.getElementById('sess-edit-trick');
   const commentEl = document.getElementById('sess-edit-comment');
-  const newTrick  = trickEl ? trickEl.value.trim() || e.trick : e.trick;
+  const grabEl   = document.getElementById('sess-edit-grab');
+  const oldTg    = splitTrickGrab(e.trick||'');
+  const newBase  = trickEl ? (trickEl.value.trim() || oldTg.base) : oldTg.base;
+  const newGrab  = grabEl ? grabEl.value : oldTg.grab;
+  const newTrick = (newBase + (newGrab ? ' — ' + newGrab : '')) || e.trick;
   const newComment = commentEl ? commentEl.value.trim() : (e.comment||'');
   const oldResult = e.result;
   const trickChanged   = newTrick !== e.trick;
@@ -3037,9 +3057,11 @@ function renderSessionLog() {
     let editRow = '';
     if (isEditing) {
       const btnStyle = (val,col,bg) => `padding:8px 14px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ${col};background:${e.result===val?col:'transparent'};color:${e.result===val?'#060f1a':col};`;
+      const tg = splitTrickGrab(e.trick||'');
       editRow = `<div style="padding:8px 12px 4px 38px;">
-        <div style="margin-bottom:8px;">
-          <input type="text" id="sess-edit-trick" value="${(e.trick||'').replace(/"/g,'&quot;')}" placeholder="Trick name" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;">
+          <input type="text" id="sess-edit-trick" value="${tg.base.replace(/"/g,'&quot;')}" placeholder="Trick name" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+          ${grabSelectHtml('sess-edit-grab', [...new Set([...SB_HP_GRABS, ...SB_JUMP_GRABS])].sort(), tg.grab)}
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
           <button onclick="saveFsLogEdit(${i},'miss')" style="${btnStyle('miss','#e2001a','rgba(226,0,26,0.15)')}">✗ Failed</button>
@@ -6661,8 +6683,10 @@ function renderSessionLog() {
         const active = r[cat]===val;
         return `<button onclick="setEditRating('${cat}','${val}')" style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:2px solid ${c};background:${active?c:'transparent'};color:${active?'#060f1a':c};font-family:'Poppins',sans-serif;">${lbl}</button>`;
       };
+      const tg = splitTrickGrab(e.trick||'');
       editRow = `<div style="padding:8px 12px 8px 38px;display:flex;flex-direction:column;gap:6px;">
-        <input type="text" id="sess-edit-trick" value="${(e.trick||'').replace(/"/g,'&quot;')}" placeholder="Trick name" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+        <input type="text" id="sess-edit-trick" value="${tg.base.replace(/"/g,'&quot;')}" placeholder="Trick name" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+        ${grabSelectHtml('sess-edit-grab', assessGrabList(), tg.grab)}
         <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>${catBtn('grab','miss','Miss','#e2001a')}${catBtn('grab','okay','Okay','#2d8a4e')}${catBtn('grab','perfect','Perfect','#39c3d4')}</div>
         <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Trick</span>${catBtn('trick','miss','Miss','#e2001a')}${catBtn('trick','okay','Okay','#2d8a4e')}${catBtn('trick','perfect','Perfect','#39c3d4')}</div>
         <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Land</span>${catBtn('land','miss','Miss','#e2001a')}${catBtn('land','okay','Okay','#2d8a4e')}${catBtn('land','perfect','Perfect','#39c3d4')}</div>
@@ -6735,12 +6759,16 @@ async function saveFsLogEdit(idx) {
   }
   const trickEl = document.getElementById('sess-edit-trick');
   const commentEl = document.getElementById('sess-edit-comment');
-  const newTrick = trickEl ? trickEl.value.trim() || e.trick : e.trick;
+  const grabEl = document.getElementById('sess-edit-grab');
+  const oldTg = splitTrickGrab(e.trick||'');
+  const newBase = trickEl ? (trickEl.value.trim() || oldTg.base) : oldTg.base;
+  const newGrab = grabEl ? grabEl.value : oldTg.grab;
+  const newTrick = (newBase + (newGrab ? ' — ' + newGrab : '')) || e.trick;
   const trickChanged = newTrick !== e.trick;
   const newComment = commentEl ? commentEl.value.trim() : (e.comment||'');
   e.result = newResult;
   e.grab = r.grab; e.trick_r = r.trick; e.land = r.land;
-  if (trickChanged) e.trick = newTrick;
+  if (trickChanged) { e.trick = newTrick; e.selectedGrab = newGrab; }
   e.comment = newComment;
   if (e.dbId) {
     const gesamt = r.land==='miss'?3:avg>=2.7?10:7;
@@ -6751,7 +6779,7 @@ async function saveFsLogEdit(idx) {
       gelandet:r.land!=='miss'?'Yes':'No',
       kommentar: kommentarParts.join(' | ')
     };
-    if (trickChanged) upd.trickaufbau = newTrick;
+    if (trickChanged) { upd.trickaufbau = newTrick; upd.grab = newGrab || null; }
     await db.from('tricks').update(upd).eq('id', e.dbId);
     if (trickChanged) syncTrickNameLocally(e.dbId, newTrick);
   }
