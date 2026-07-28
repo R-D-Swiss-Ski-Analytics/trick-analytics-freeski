@@ -2395,7 +2395,7 @@ function saveSessionState() {
   };
   sessSelectedAthletes.forEach(name => {
     const d = sessAthleteData[name];
-    if (d) state.athleteState[name] = { currentTrick: d.currentTrick, stats: {...d.stats} };
+    if (d) state.athleteState[name] = { currentTrick: d.currentTrick, currentGrab: d.currentGrab||'', stats: {...d.stats} };
   });
   localStorage.setItem('sb_session', JSON.stringify(state));
 }
@@ -2418,7 +2418,7 @@ async function restoreSessionState() {
     sessActiveSbAthlete = state.activeAthlete || state.athletes[0];
     for (const name of sessSelectedAthletes) {
       const saved = (state.athleteState || {})[name] || {};
-      sessAthleteData[name] = { tricks: [], currentTrick: saved.currentTrick || '', stats: saved.stats || {attempts:0,landed:0,perfect:0} };
+      sessAthleteData[name] = { tricks: [], currentTrick: saved.currentTrick || '', currentGrab: saved.currentGrab || '', stats: saved.stats || {attempts:0,landed:0,perfect:0} };
     }
     document.getElementById('sess-setup').style.display = 'none';
     document.getElementById('sess-live').style.display = 'block';
@@ -2452,7 +2452,7 @@ async function toggleSessionAthlete(name) {
       return;
     }
     sessSelectedAthletes.push(name);
-    sessAthleteData[name] = { tricks: [], currentTrick: '', stats: {attempts:0,landed:0,perfect:0} };
+    sessAthleteData[name] = { tricks: [], currentTrick: '', currentGrab: '', stats: {attempts:0,landed:0,perfect:0} };
     const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
     if (card) card.style.borderColor = '#39c3d4';
     sessAthleteData[name].tricks = await fetchStandortTricks(name);
@@ -2505,6 +2505,11 @@ function baseLabel(label) {
     result = result.replace(new RegExp('[, ]+' + esc + '(?=[, ]|$)', 'gi'), '');
   });
   return result.trim().replace(/\s{2,}/g,' ').replace(/[,\s]+$/, '');
+}
+
+// Anzeige-Label in der Live-Session: ohne Grabs (leben in grab_status), Direction vorne
+function sbLiveLabel(label) {
+  return normSbTrick(baseLabel((label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim()));
 }
 
 function parseGrabsFromLabel(label) {
@@ -2744,6 +2749,13 @@ function selectSessAthlete(name) {
 
 function sbSetTrick(name, val) {
   sessAthleteData[name].currentTrick = val;
+  sessAthleteData[name].currentGrab = '';
+  renderLiveSession();
+}
+
+function sbSelectGrab(name, grab) {
+  sessAthleteData[name].currentGrab = grab;
+  renderLiveSession();
 }
 
 function renderLiveSession() {
@@ -2780,9 +2792,11 @@ function renderLiveSession() {
     }
     return 4;
   };
+  const seenLbl = new Set();
   const sortedTricks = [...(d.tricks||[])].map(t => ({
-    ...t, _lbl: normSbTrick((t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim())
-  })).sort((a,b) => {
+    ...t, _lbl: sbLiveLabel(t.trick_label)
+  })).filter(t => { if (seenLbl.has(t._lbl)) return false; seenLbl.add(t._lbl); return true; })
+  .sort((a,b) => {
     const da = getDirKey(a._lbl), db = getDirKey(b._lbl);
     if (da !== db) return da - db;
     return extractRotFromLabel(a._lbl) - extractRotFromLabel(b._lbl);
@@ -2801,6 +2815,33 @@ function renderLiveSession() {
   });
   if (lastDir >= 0) trickOptions += '</optgroup>';
 
+  // Grab-Auswahl: Grabs aus dem Assessment (grab_status) des gewählten Tricks
+  let grabHtml = '';
+  if (d.currentTrick) {
+    const grabStat = {};
+    (d.tricks||[]).forEach(t => {
+      if (sbLiveLabel(t.trick_label) !== d.currentTrick) return;
+      Object.entries(effGrabStatus(t)).forEach(([g, st]) => {
+        if (grabStat[g] !== 'mastered') grabStat[g] = st;
+      });
+    });
+    const grabs = Object.keys(grabStat).sort();
+    if (grabs.length) {
+      grabHtml = `<div style="margin-bottom:16px;">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Grab</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;" id="sess-grabs-${sid}">
+          <button onclick="sbSelectGrab('${name}','')"
+            style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${!d.currentGrab?'#39c3d4':'var(--border)'};background:${!d.currentGrab?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${!d.currentGrab?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">No Grab</button>
+          ${grabs.map(g => {
+            const active = d.currentGrab === g;
+            return `<button onclick="sbSelectGrab('${name}','${g.replace(/'/g,"\\'")}')"
+              style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${active?'#39c3d4':'var(--border)'};background:${active?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${active?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">${g}${grabStat[g]==='goal'?' 🎯':''}</button>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }
+  }
+
   const cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${sid}">
     <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:16px;text-align:center;">${shortName(name)}</div>
     <div style="margin-bottom:20px;">
@@ -2811,6 +2852,7 @@ function renderLiveSession() {
         ${trickOptions}
       </select>
     </div>
+    ${grabHtml}
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;text-align:center;">
       <div style="background:var(--surface2);border-radius:8px;padding:12px 4px;">
         <div style="font-size:28px;font-weight:800;color:var(--text);">${s.attempts}</div>
@@ -2857,7 +2899,9 @@ async function logAttempt(name, result) {
   const comment = commentEl ? commentEl.value.trim() : '';
   if (commentEl) commentEl.value = '';
 
-  const logEntry = {name, trick:d.currentTrick, result, comment,
+  const selectedGrab = d.currentGrab || '';
+  const trickWithGrab = selectedGrab ? d.currentTrick + ' — ' + selectedGrab : d.currentTrick;
+  const logEntry = {name, trick:trickWithGrab, result, comment, selectedGrab,
     time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})};
   sessLog.unshift(logEntry);
   renderLiveSession();
@@ -2866,11 +2910,12 @@ async function logAttempt(name, result) {
 
   // Save to DB (non-blocking)
   const gesamt = result==='miss'?3:result==='landed'?7:10;
-  const trickInfo = sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
+  const trickInfo = sessAthleteData[name].tricks.find(t=>sbLiveLabel(t.trick_label)===d.currentTrick)||{};
   db.from('tricks').insert({
     athlet:name, datum:sessCurrentDate(),
     typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
-    trickaufbau:d.currentTrick, gelandet:result==='miss'?'No':'Yes',
+    trickaufbau:trickWithGrab, gelandet:result==='miss'?'No':'Yes',
+    grab: selectedGrab || null,
     gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
     kommentar: comment || null,
   }).select().then(({data,error})=>{
@@ -5261,7 +5306,7 @@ const fragments = {
   coachFields: ``,
 };
 function init() { initStandortGrabs(); }
-return { fragments, init, showPage, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, renderLiveSession, sessSetTrick, logAttempt, deleteLogEntry, editLogEntry, saveFsLogEdit, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar };
+return { fragments, init, showPage, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, sbSelectGrab, renderLiveSession, sessSetTrick, logAttempt, deleteLogEntry, editLogEntry, saveFsLogEdit, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar };
 })();
 
 // ═══════════════ FREESKI-MODUL ═══════════════
