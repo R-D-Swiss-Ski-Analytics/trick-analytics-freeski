@@ -2507,9 +2507,16 @@ function baseLabel(label) {
   return result.trim().replace(/\s{2,}/g,' ').replace(/[,\s]+$/, '');
 }
 
-// Anzeige-Label in der Live-Session: ohne Grabs (leben in grab_status), Direction vorne
-function sbLiveLabel(label) {
-  return normSbTrick(baseLabel((label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim()));
+// Anzeige-Label in der Live-Session: ohne Grabs (leben in grab_status), Direction vorne.
+// Die führende Direction wird vor dem Grab-Strippen abgetrennt, weil «Frontside»
+// zugleich Grab-Name ist; Rail-Labels bleiben unangetastet (keine Grabs, Wort-Kollisionen).
+function sbLiveLabel(label, disziplin) {
+  const norm = normSbTrick((label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim());
+  if (disziplin === 'Rail') return norm;
+  for (const d of ['Switch Backside','Frontside','Backside','Cab']) {
+    if (norm.startsWith(d + ' ')) return d + ' ' + baseLabel(norm.slice(d.length + 1));
+  }
+  return baseLabel(norm);
 }
 
 function parseGrabsFromLabel(label) {
@@ -2794,7 +2801,7 @@ function renderLiveSession() {
   };
   const seenLbl = new Set();
   const sortedTricks = [...(d.tricks||[])].map(t => ({
-    ...t, _lbl: sbLiveLabel(t.trick_label)
+    ...t, _lbl: sbLiveLabel(t.trick_label, t.disziplin)
   })).filter(t => { if (seenLbl.has(t._lbl)) return false; seenLbl.add(t._lbl); return true; })
   .sort((a,b) => {
     const da = getDirKey(a._lbl), db = getDirKey(b._lbl);
@@ -2820,12 +2827,17 @@ function renderLiveSession() {
   if (d.currentTrick) {
     const grabStat = {};
     (d.tricks||[]).forEach(t => {
-      if (sbLiveLabel(t.trick_label) !== d.currentTrick) return;
+      if (sbLiveLabel(t.trick_label, t.disziplin) !== d.currentTrick) return;
       Object.entries(effGrabStatus(t)).forEach(([g, st]) => {
         if (grabStat[g] !== 'mastered') grabStat[g] = st;
       });
     });
-    const grabs = Object.keys(grabStat).sort();
+    let grabs = Object.keys(grabStat).sort();
+    if (!grabs.length) {
+      // Keine Grabs im Assessment hinterlegt → volle Liste anbieten (wie der alte Session-Picker)
+      const ti = (d.tricks||[]).find(t => sbLiveLabel(t.trick_label, t.disziplin) === d.currentTrick) || {};
+      if (ti.disziplin !== 'Rail') grabs = [...SESS_GRABS];
+    }
     if (grabs.length) {
       grabHtml = `<div style="margin-bottom:16px;">
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Grab</div>
@@ -2910,7 +2922,7 @@ async function logAttempt(name, result) {
 
   // Save to DB (non-blocking)
   const gesamt = result==='miss'?3:result==='landed'?7:10;
-  const trickInfo = sessAthleteData[name].tricks.find(t=>sbLiveLabel(t.trick_label)===d.currentTrick)||{};
+  const trickInfo = sessAthleteData[name].tricks.find(t=>sbLiveLabel(t.trick_label, t.disziplin)===d.currentTrick)||{};
   db.from('tricks').insert({
     athlet:name, datum:sessCurrentDate(),
     typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
