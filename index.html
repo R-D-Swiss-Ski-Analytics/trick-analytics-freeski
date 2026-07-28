@@ -482,6 +482,11 @@
         <button onclick="selectSessType(this,'Jump On-Snow')"     class="sess-type-btn">Jump On-Snow</button>
         <button onclick="selectSessType(this,'Big Air Competition')" class="sess-type-btn">Big Air Competition</button>
       </div>
+      <div style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <label for="sess-datum" style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Session Date</label>
+        <input type="date" id="sess-datum" onchange="onSessDateChange()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 12px;font-family:'Poppins',sans-serif;font-size:13px;outline:none;">
+        <span id="sess-datum-hint" style="display:none;color:#f59e0b;font-size:12px;font-weight:600;">⚠ Backdated — all entries will be saved for this date</span>
+      </div>
     </div>
 
     <div class="card" style="margin-bottom:16px;">
@@ -1284,7 +1289,33 @@ let sessLog = [];
 
 let sessType = '';
 
+let sessDate = '';
+
 let sessStartTime = 0;
+
+function sessTodayStr() { return new Date().toISOString().split('T')[0]; }
+
+function sessCurrentDate() { return sessDate || sessTodayStr(); }
+
+function sessDisplayDate() {
+  const d = sessDate ? new Date(sessDate + 'T12:00:00') : new Date();
+  return d.toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+function onSessDateChange() {
+  const inp = document.getElementById('sess-datum');
+  if (!inp) return;
+  const today = sessTodayStr();
+  if (inp.value && inp.value > today) {
+    inp.value = today;
+    showToast('Session date cannot be in the future', 'error');
+  }
+  sessDate = (inp.value && inp.value !== today) ? inp.value : '';
+  const hint = document.getElementById('sess-datum-hint');
+  if (hint) hint.style.display = sessDate ? 'inline' : 'none';
+  const label = document.getElementById('sess-date-label');
+  if (label) label.textContent = sessDisplayDate();
+}
 
 
 
@@ -1297,8 +1328,12 @@ function selectSessType(btn, type) {
 
 async function initSessionSetup() {
   if (await restoreSessionState()) return;
-  document.getElementById('sess-date-label').textContent =
-    new Date().toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  sessDate = '';
+  const dInp = document.getElementById('sess-datum');
+  if (dInp) { dInp.value = sessTodayStr(); dInp.max = sessTodayStr(); }
+  const dHint = document.getElementById('sess-datum-hint');
+  if (dHint) dHint.style.display = 'none';
+  document.getElementById('sess-date-label').textContent = sessDisplayDate();
   const grid = document.getElementById('sess-athlete-grid');
   grid.innerHTML = SESS_SQUADS.map(sq => {
     const athletes = SESS_ALL_ATHLETES.filter(a => a.squad === sq.key);
@@ -1331,8 +1366,9 @@ function startSession() {
   document.getElementById('sess-setup').style.display = 'none';
   document.getElementById('sess-live').style.display = 'block';
   document.getElementById('sess-live-date').textContent =
-    new Date().toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'})
-    + (sessType ? '  ·  ' + sessType : '');
+    sessDisplayDate()
+    + (sessType ? '  ·  ' + sessType : '')
+    + (sessDate ? '  ·  ⚠ BACKDATED' : '');
   renderLiveSession();
   saveSessionState();
 }
@@ -2318,6 +2354,7 @@ function saveSessionState() {
     athletes: sessSelectedAthletes,
     log: sessLog,
     type: sessType,
+    date: sessDate,
     startTime: sessStartTime,
     activeAthlete: sessActiveSbAthlete || '',
     athleteState: {}
@@ -2342,6 +2379,7 @@ async function restoreSessionState() {
     sessSelectedAthletes = state.athletes;
     sessLog = state.log || [];
     sessType = state.type || '';
+    sessDate = state.date || '';
     sessStartTime = state.startTime || Date.now();
     sessActiveSbAthlete = state.activeAthlete || state.athletes[0];
     for (const name of sessSelectedAthletes) {
@@ -2351,8 +2389,9 @@ async function restoreSessionState() {
     document.getElementById('sess-setup').style.display = 'none';
     document.getElementById('sess-live').style.display = 'block';
     document.getElementById('sess-live-date').textContent =
-      new Date(sessStartTime).toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'})
-      + (sessType ? '  ·  ' + sessType : '');
+      (sessDate ? sessDisplayDate() : new Date(sessStartTime).toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'}))
+      + (sessType ? '  ·  ' + sessType : '')
+      + (sessDate ? '  ·  ⚠ BACKDATED' : '');
     renderLiveSession();
     renderSessionLog();
     showToast('Session restored', 'success');
@@ -2788,7 +2827,7 @@ async function logAttempt(name, result) {
   const gesamt = result==='miss'?3:result==='landed'?7:10;
   const trickInfo = sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
   db.from('tricks').insert({
-    athlet:name, datum:new Date().toISOString().split('T')[0],
+    athlet:name, datum:sessCurrentDate(),
     typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
     trickaufbau:d.currentTrick, gelandet:result==='miss'?'No':'Yes',
     gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
@@ -3046,7 +3085,7 @@ async function saveSessionReport(duration, location, conditions, comments, athle
   });
 
   const row = {
-    datum: new Date().toISOString().split('T')[0],
+    datum: sessCurrentDate(),
     session_type: sessType,
     app: 'snowboard',
     athletes: sessSelectedAthletes,
@@ -6007,6 +6046,7 @@ function saveSessionState() {
     athletes: sessSelectedAthletes,
     log: sessLog,
     type: sessType,
+    date: sessDate,
     startTime: sessStartTime,
     activeAthlete: sessActiveAthlete || '',
     athleteState: {}
@@ -6031,6 +6071,7 @@ async function restoreSessionState() {
     sessSelectedAthletes = state.athletes;
     sessLog = state.log || [];
     sessType = state.type || '';
+    sessDate = state.date || '';
     sessStartTime = state.startTime || Date.now();
     sessActiveAthlete = state.activeAthlete || state.athletes[0];
     for (const name of sessSelectedAthletes) {
@@ -6040,8 +6081,9 @@ async function restoreSessionState() {
     document.getElementById('sess-setup').style.display = 'none';
     document.getElementById('sess-live').style.display = 'block';
     document.getElementById('sess-live-date').textContent =
-      new Date(sessStartTime).toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'})
-      + (sessType ? '  ·  ' + sessType : '');
+      (sessDate ? sessDisplayDate() : new Date(sessStartTime).toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'}))
+      + (sessType ? '  ·  ' + sessType : '')
+      + (sessDate ? '  ·  ⚠ BACKDATED' : '');
     renderLiveSession();
     renderSessionLog();
     showToast('Session restored', 'success');
@@ -6281,7 +6323,7 @@ async function autoLogAttempt(name) {
   if (comment) kommentarParts.push(comment);
   const trickInfo=sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
   db.from('tricks').insert({
-    athlet:name, datum:new Date().toISOString().split('T')[0],
+    athlet:name, datum:sessCurrentDate(),
     typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
     trickaufbau:trickWithGrab, gelandet:r.land!=='miss'?'Yes':'No',
     grab: selectedGrab || null,
@@ -6335,7 +6377,7 @@ async function logAttempt(name, result) {
   const gesamt = result==='miss'?3:result==='landed'?7:10;
   const trickInfo = sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
   db.from('tricks').insert({
-    athlet:name, datum:new Date().toISOString().split('T')[0],
+    athlet:name, datum:sessCurrentDate(),
     typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
     trickaufbau:d.currentTrick, gelandet:result==='miss'?'No':'Yes',
     gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
@@ -6624,7 +6666,7 @@ async function saveSessionReport(duration, location, conditions, comments, athle
   });
 
   const row = {
-    datum: new Date().toISOString().split('T')[0],
+    datum: sessCurrentDate(),
     session_type: sessType,
     app: 'freeski',
     athletes: sessSelectedAthletes,
