@@ -1250,7 +1250,7 @@ function grabChipsHtml(e) {
     const col  = st === 'mastered' ? '#4ade80' : '#f59e0b';
     const bg   = st === 'mastered' ? 'rgba(45,138,78,0.2)' : 'rgba(245,158,11,0.15)';
     const icon = st === 'mastered' ? '✓' : '🎯';
-    return `<span onclick="event.stopPropagation();cycleGrabStatus(${e.id},'${g.replace(/'/g,"\\'")}')" title="Antippen: ✓ Mastered → 🎯 Goal → entfernen" style="cursor:pointer;font-size:10px;padding:2px 8px;border-radius:10px;background:${bg};border:1px solid ${col};color:${col};white-space:nowrap;">${icon} ${g}</span>`;
+    return `<span onclick="event.stopPropagation();cycleGrabStatus(${e.id},'${g.replace(/'/g,"\\'")}')" title="Tap: ✓ Mastered → 🎯 Goal → remove" style="cursor:pointer;font-size:10px;padding:2px 8px;border-radius:10px;background:${bg};border:1px solid ${col};color:${col};white-space:nowrap;">${icon} ${g}</span>`;
   }).join('');
   return `<span style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;align-items:center;">${chips}</span>`;
 }
@@ -3642,7 +3642,7 @@ function renderStandort() {
   }
 
   document.getElementById('sb-columns').innerHTML = `
-    <div style="grid-column:1/-1;font-size:11px;color:var(--muted);">Grab-Chips: antippen = ✓ Mastered → 🎯 Goal → entfernt · Grabs hinzufügen über ✏️ Bearbeiten</div>
+    <div style="grid-column:1/-1;font-size:11px;color:var(--muted);">Grab chips: tap = ✓ Mastered → 🎯 Goal → removed · Add grabs via ✏️ Edit</div>
     <div>
       <div class="sb-col-header mastered">✅ MASTERED <span style="opacity:.6;font-size:13px;">(${bList.length})</span></div>
       <div class="sb-col-body mastered">${renderList(bList, 'No entries yet')}</div>
@@ -7425,7 +7425,7 @@ function renderStandort() {
   }
 
   document.getElementById('sb-columns').innerHTML = `
-    <div style="grid-column:1/-1;font-size:11px;color:var(--muted);">Grab-Chips: antippen = ✓ Mastered → 🎯 Goal → entfernt · Grabs hinzufügen über ✏️ Bearbeiten</div>
+    <div style="grid-column:1/-1;font-size:11px;color:var(--muted);">Grab chips: tap = ✓ Mastered → 🎯 Goal → removed · Add grabs via ✏️ Edit</div>
     <div>
       <div class="sb-col-header mastered">✅ MASTERED <span style="opacity:.6;font-size:13px;">(${bList.length})</span></div>
       <div class="sb-col-body mastered">${renderList(bList, 'No entries yet')}</div>
@@ -9053,7 +9053,7 @@ document.addEventListener('DOMContentLoaded', function bootSport(){
         </select></div>
       <div class="form-group sbe-kicker"><label>Axis</label>
         <select id="sbe-achse" onchange="updateFwdSwBtn('sbe')"></select></div>
-      <div class="form-group sbe-kicker" style="grid-column:1/-1;"><label>Grabs <span style="font-size:10px;color:var(--muted);font-weight:400;">(1× tippen = ✓ Mastered · 2× = 🎯 Goal · 3× = aus)</span></label>
+      <div class="form-group sbe-kicker" style="grid-column:1/-1;"><label>Grabs <span style="font-size:10px;color:var(--muted);font-weight:400;">(1× tap = ✓ Mastered · 2× = 🎯 Goal · 3× = off)</span></label>
         <div id="sbe-grab-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;">
           <input type="hidden" id="sbe-grab" value=""></div></div>
       <div class="form-group sbe-kicker"><label>Style Element</label>
