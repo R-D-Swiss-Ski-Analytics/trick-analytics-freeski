@@ -6290,7 +6290,7 @@ async function toggleSessionAthlete(name) {
   if (trickSel) trickSel.style.display = 'none';
 }
 
-const SESS_GRABS = ['Blunt', 'Bow and Arrow', 'Broken Arrow', 'Critical', 'Cuban', 'Double Japan', 'Esco', 'Guitar', 'High Mute', 'In and out', 'Indi-Truck', 'Inside Tail', 'Japan', 'Mute', 'Nose', 'Octo', 'Rocket', 'Safety', 'Screamin\' Seamen', 'Seatbelt', 'Seatbelt Japan', 'Stale', 'Stink Bug', 'Tail', 'Truckdriver', 'Venom'];
+const SESS_GRABS = ['Blunt', 'Bow and Arrow', 'Broken Arrow', 'Critical', 'Cuban', 'Double Japan', 'Double Tail', 'Esco', 'Guitar', 'High Mute', 'In and out', 'Indi-Truck', 'Inside Tail', 'Japan', 'Mute', 'Nose', 'Octo', 'Rocket', 'Safety', 'Screamin\' Seamen', 'Seatbelt', 'Seatbelt Japan', 'Stale', 'Stink Bug', 'Tail', 'Truckdriver', 'Venom'];
 
 function baseLabel(label) {
   let result = ' ' + label + ' ';
@@ -8867,7 +8867,7 @@ async function saveSbEdit(){
   showToast('✓ Trick updated!');closeSbEdit();loadStandort();
 }
 
-const FS_ASSESS_GRABS = ['Blunt', 'Bow and Arrow', 'Broken Arrow', 'Critical', 'Cuban', 'Double Japan', 'Esco', 'Guitar', 'High Mute', 'In and out', 'Indi-Truck', 'Inside Tail', 'Japan', 'Mute', 'Nose', 'Octo', 'Rocket', 'Safety', 'Screamin\' Seamen', 'Seatbelt', 'Seatbelt Japan', 'Stale', 'Stink Bug', 'Tail', 'Truckdriver', 'Venom'];
+const FS_ASSESS_GRABS = ['Blunt', 'Bow and Arrow', 'Broken Arrow', 'Critical', 'Cuban', 'Double Japan', 'Double Tail', 'Esco', 'Guitar', 'High Mute', 'In and out', 'Indi-Truck', 'Inside Tail', 'Japan', 'Mute', 'Nose', 'Octo', 'Rocket', 'Safety', 'Screamin\' Seamen', 'Seatbelt', 'Seatbelt Japan', 'Stale', 'Stink Bug', 'Tail', 'Truckdriver', 'Venom'];
 
 function assessGrabList() {
   return [...FS_ASSESS_GRABS, ...FS_ASSESS_GRABS.map(g => 'Lead ' + g)];
