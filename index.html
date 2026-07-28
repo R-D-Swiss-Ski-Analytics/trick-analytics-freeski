@@ -1171,17 +1171,17 @@ function shortName(full) {
 
 
 async function deleteTrick(id) {
-  if (!confirm('Trick löschen?')) return;
+  if (!confirm('Delete trick?')) return;
   const { error } = await db.from('tricks').delete().eq('id', id);
-  if (error) { showToast('Fehler beim Löschen', 'error'); return; }
-  showToast('Trick gelöscht', 'success'); loadDB();
+  if (error) { showToast('Error deleting', 'error'); return; }
+  showToast('Trick deleted', 'success'); loadDB();
 }
 
 async function deleteStandort(id) {
   if (!confirm('Delete assessment entry?')) return;
   const { error } = await db.from('standort').delete().eq('id', id);
-  if (error) { showToast('Fehler beim Löschen', 'error'); return; }
-  showToast('Eintrag gelöscht', 'success'); loadDB();
+  if (error) { showToast('Error deleting', 'error'); return; }
+  showToast('Entry deleted', 'success'); loadDB();
 }
 
 
@@ -3716,7 +3716,7 @@ async function sbSave(status) {
 
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
 
-  showToast(status === 'mastered' ? '✓ Als mastered gespeichert!' : '🎯 Saved as goal!', 'success');
+  showToast(status === 'mastered' ? '✓ Saved as mastered!' : '🎯 Saved as goal!', 'success');
 
   // Reset sb form fields
   ['sb-disziplin','sb-drehrichtung','sb-flips','sb-achse','sb-rotation','sb-absprung',
@@ -7500,7 +7500,7 @@ async function sbSave(status) {
 
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
 
-  showToast(status === 'mastered' ? '✓ Als mastered gespeichert!' : '🎯 Saved as goal!', 'success');
+  showToast(status === 'mastered' ? '✓ Saved as mastered!' : '🎯 Saved as goal!', 'success');
 
   // Reset sb form fields
   ['sb-disziplin','sb-drehrichtung','sb-flips','sb-achse','sb-rotation','sb-absprung',
@@ -9034,7 +9034,7 @@ document.addEventListener('DOMContentLoaded', function bootSport(){
 
 <div id="sb-edit-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:20px;">
   <div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:14px;padding:24px;width:100%;max-width:500px;max-height:88vh;overflow-y:auto;">
-    <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:#ffffff;margin-bottom:16px;">✏️ TRICK BEARBEITEN</div>
+    <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:#ffffff;margin-bottom:16px;">✏️ EDIT TRICK</div>
     <input type="hidden" id="sbe-id">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
       <div class="form-group"><label>Date</label><input type="date" id="sbe-datum"></div>
@@ -9083,15 +9083,15 @@ document.addEventListener('DOMContentLoaded', function bootSport(){
       <div class="form-group" style="grid-column:1/-1;"><label>Status</label>
         <select id="sbe-status"><option value="">— select —</option>
           <option value="mastered">Mastered</option>
-          <option value="goal">Ziel / In Arbeit</option>
-          <option value="erreicht">Erreicht</option>
+          <option value="goal">Goal / In progress</option>
+          <option value="erreicht">Achieved</option>
         </select></div>
       <div id="sbe-coach-fields-placeholder"></div>
       <div class="form-group" style="grid-column:1/-1;"><label>Note</label>
         <textarea id="sbe-notiz" rows="2" placeholder="Optional..."></textarea></div>
     </div>
     <div style="display:flex;gap:10px;">
-      <button onclick="closeSbEdit()" style="flex:1;background:#112236;border:1px solid #1a3450;color:#6b8299;border-radius:8px;padding:12px;font-family:'Poppins',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer;">ABBRECHEN</button>
+      <button onclick="closeSbEdit()" style="flex:1;background:#112236;border:1px solid #1a3450;color:#6b8299;border-radius:8px;padding:12px;font-family:'Poppins',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer;">CANCEL</button>
       <button onclick="saveSbEdit()" style="flex:1;background:linear-gradient(135deg,#3b82f6,#6366f1);border:none;color:#fff;border-radius:8px;padding:12px;font-family:'Poppins',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer;">SAVE</button>
     </div>
   </div>
