@@ -1319,9 +1319,7 @@ function sessPlayLogSound(result) {
       o.connect(g); g.connect(sessAudioCtx.destination);
       o.start(t + start); o.stop(t + start + dur + 0.05);
     };
-    if (result === 'miss')         { beep(180, 0, 0.18, 'square', 0.06); }
-    else if (result === 'perfect') { beep(660, 0, 0.10, 'sine', 0.15); beep(990, 0.09, 0.16, 'sine', 0.15); }
-    else                           { beep(520, 0, 0.12, 'sine', 0.12); }
+    beep(520, 0, 0.12, 'sine', 0.12);
   } catch(e) {}
 }
 
