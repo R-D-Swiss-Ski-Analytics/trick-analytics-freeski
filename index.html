@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#001a2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Trick Analyses</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -253,6 +257,40 @@
   .tu-avg-chip{background:#112236;border:1px solid #f59e0b33;border-radius:20px;padding:4px 12px;font-size:12px;color:#6b8299;}
   .tu-avg-chip span{color:#f59e0b;font-weight:700;margin-left:4px;}
 
+  /* ── PWA INSTALL BANNER ─────────────────────────────────────────── */
+  .pwa-banner {
+    display: none; position: fixed; bottom: 16px; left: 50%;
+    transform: translateX(-50%); width: calc(100% - 32px); max-width: 440px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px; z-index: 400;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5);
+    align-items: center; gap: 12px;
+  }
+  .pwa-banner.show { display: flex; }
+  .pwa-banner img { width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0; }
+  .pwa-banner-text { flex: 1; min-width: 0; }
+  .pwa-banner-text b { display: block; font-size: 13px; color: var(--text); }
+  .pwa-banner-text span { font-size: 12px; color: var(--muted); }
+  button.pwa-install {
+    background: var(--accent2); color: #04222a; border: none; border-radius: 8px;
+    padding: 8px 14px; font-family: 'Poppins', sans-serif; font-weight: 600;
+    font-size: 13px; cursor: pointer; flex-shrink: 0;
+  }
+  .pwa-banner button.pwa-close {
+    background: none; border: none; color: var(--muted); font-size: 16px;
+    cursor: pointer; padding: 4px; flex-shrink: 0; line-height: 1;
+  }
+  .pwa-ios-help {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65);
+    z-index: 500; align-items: center; justify-content: center; padding: 24px;
+  }
+  .pwa-ios-help.show { display: flex; }
+  .pwa-ios-help .card { max-width: 360px; width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .pwa-ios-help ol { margin: 12px 0 16px 18px; font-size: 13px; line-height: 2; color: var(--text); }
+  @media (max-width: 768px) {
+    .pwa-banner { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+  }
+
   /* ── MOBILE RESPONSIVE ──────────────────────────────────────────── */
   /* Hide mobile nav on desktop */
   .mobile-nav { display: none; }
@@ -399,6 +437,28 @@
 </header>
 
 <div class="toast" id="toast"></div>
+
+<!-- ── PWA INSTALL BANNER ── -->
+<div class="pwa-banner" id="pwa-banner">
+  <img id="pwa-banner-icon" alt="" src="">
+  <div class="pwa-banner-text">
+    <b>Als App installieren</b>
+    <span>Direkt vom Homescreen starten</span>
+  </div>
+  <button class="pwa-install" id="pwa-install-btn">Installieren</button>
+  <button class="pwa-close" id="pwa-close-btn" title="Ausblenden">✕</button>
+</div>
+<div class="pwa-ios-help" id="pwa-ios-help">
+  <div class="card">
+    <div class="card-title" style="margin-bottom:4px;">Auf dem Homescreen installieren</div>
+    <ol>
+      <li>Unten das <b>Teilen-Symbol</b> antippen (Quadrat mit Pfeil)</li>
+      <li><b>«Zum Home-Bildschirm»</b> wählen</li>
+      <li>Oben rechts <b>«Hinzufügen»</b> antippen</li>
+    </ol>
+    <button class="pwa-install" style="width:100%;" onclick="document.getElementById('pwa-ios-help').classList.remove('show')">Verstanden</button>
+  </div>
+</div>
 
 
 <!-- ══════════════════════════════════════════ ERFASSEN -->
@@ -731,6 +791,59 @@
 const SPORT = new URLSearchParams(location.search).get('sport') === 'snowboard' ? 'snowboard'
   : new URLSearchParams(location.search).get('sport') === 'freeski' ? 'freeski'
   : location.hostname.includes('snowboard') ? 'snowboard' : 'freeski';
+
+// ═══════════════ PWA (Manifest, Icons, Install-Banner) ═══════════════
+(function initPWA(){
+  // Manifest & Icons je Sport in den <head> injizieren
+  const manifest = document.createElement('link');
+  manifest.rel = 'manifest';
+  manifest.href = `manifest-${SPORT}.webmanifest`;
+  document.head.appendChild(manifest);
+  const touchIcon = document.createElement('link');
+  touchIcon.rel = 'apple-touch-icon';
+  touchIcon.href = `icons/apple-touch-icon-${SPORT}.png`;
+  document.head.appendChild(touchIcon);
+  const appTitle = document.createElement('meta');
+  appTitle.name = 'apple-mobile-web-app-title';
+  appTitle.content = SPORT === 'snowboard' ? 'Snowboard' : 'Freeski';
+  document.head.appendChild(appTitle);
+
+  // Bereits installiert (Standalone) oder dauerhaft ausgeblendet → kein Banner
+  const isStandalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const DISMISS_KEY = 'pwa_install_dismissed';
+  if (isStandalone || localStorage.getItem(DISMISS_KEY)) return;
+
+  const banner = document.getElementById('pwa-banner');
+  const installBtn = document.getElementById('pwa-install-btn');
+  const closeBtn = document.getElementById('pwa-close-btn');
+  document.getElementById('pwa-banner-icon').src = `icons/icon-${SPORT}-192.png`;
+
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    banner.classList.add('show');
+  });
+  if (isIOS) banner.classList.add('show');
+
+  installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      if (outcome === 'accepted') banner.classList.remove('show');
+    } else if (isIOS) {
+      document.getElementById('pwa-ios-help').classList.add('show');
+    }
+  });
+  closeBtn.addEventListener('click', () => {
+    localStorage.setItem(DISMISS_KEY, '1');
+    banner.classList.remove('show');
+  });
+})();
 const SPORT_CONFIGS = {
   snowboard: {
     title: 'Trick Analyses Snowboard',
@@ -753,12 +866,19 @@ const SPORT_CONFIGS = {
   {name:'Jonas Hasler',squad:'PE'},
   {name:'Nicolas Schütz',squad:'PE'},
   {name:'Reef Hasler',squad:'PE'},
-  {name:'Robin Zürcher',squad:'PE'},
   {name:'Yuna Scheidegger',squad:'PE'},
+  {name:'Emil Hoppe',squad:'DVLP'},
+  {name:'Finn Ledergerber',squad:'DVLP'},
+  {name:'Gian Casparis',squad:'DVLP'},
+  {name:'Lina Kälin',squad:'DVLP'},
+  {name:'Lou Limacher',squad:'DVLP'},
+  {name:'Norin Keller',squad:'DVLP'},
+  {name:'Robin Zürcher',squad:'DVLP'},
 ],
     squads: [
   {key:'M',  label:'TG HP Matty',         color:'#39c3d4'},
   {key:'PE', label:'TG SS&BA Pascal & Emil', color:'#f59e0b'},
+  {key:'DVLP', label:'DVLP Team Wendelin', color:'#34d399'},
 ],
     athleteOptgroups: `<optgroup label="TG HP Matty">
                           <option>Berenice Wicki</option>
@@ -778,8 +898,16 @@ const SPORT_CONFIGS = {
             <option>Jonas Hasler</option>
             <option>Nicolas Schütz</option>
             <option>Reef Hasler</option>
-            <option>Robin Zürcher</option>
             <option>Yuna Scheidegger</option>
+          </optgroup>
+          <optgroup label="DVLP Team Wendelin">
+                          <option>Emil Hoppe</option>
+            <option>Finn Ledergerber</option>
+            <option>Gian Casparis</option>
+            <option>Lina Kälin</option>
+            <option>Lou Limacher</option>
+            <option>Norin Keller</option>
+            <option>Robin Zürcher</option>
           </optgroup>
           `,
     selectFill: {
@@ -874,11 +1002,18 @@ const SPORT_CONFIGS = {
   {name:'Maxence Petzoldt',squad:'X'},
   {name:'Tim Egger',squad:'X'},
   {name:'Alan Bornet',squad:'HP'},
+  {name:'Carmen Savioz',squad:'DVLP'},
+  {name:'Elia Grauwiler',squad:'DVLP'},
+  {name:'Enak Picot',squad:'DVLP'},
+  {name:'Jakub Sklenar',squad:'DVLP'},
+  {name:'Nando Demke',squad:'DVLP'},
+  {name:'Neo Zingg',squad:'DVLP'},
 ],
     squads: [
   {key:'GK', label:'TG SS&BA Greg & Kai', color:'#39c3d4'},
   {key:'X',  label:'TG SS&BA Xeno',       color:'#f59e0b'},
   {key:'HP', label:'TG Halfpipe',   color:'#a78bfa'},
+  {key:'DVLP', label:'DVLP Team Dominic', color:'#34d399'},
 ],
     athleteOptgroups: `<optgroup label="TG SS&BA Greg & Kai">
             <option>Adrien Vaudaux</option>
@@ -903,6 +1038,14 @@ const SPORT_CONFIGS = {
           </optgroup>
           <optgroup label="TG Halfpipe">
                           <option>Alan Bornet</option>
+          </optgroup>
+          <optgroup label="DVLP Team Dominic">
+                          <option>Carmen Savioz</option>
+            <option>Elia Grauwiler</option>
+            <option>Enak Picot</option>
+            <option>Jakub Sklenar</option>
+            <option>Nando Demke</option>
+            <option>Neo Zingg</option>
           </optgroup>
           `,
     selectFill: {
