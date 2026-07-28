@@ -1214,7 +1214,7 @@ async function fetchStandortTricks(athlet) {
 
 async function updateGrabStatus(entryId, gs, localEntry) {
   if (!_standortHasGrabStatus) {
-    showToast('grab_status-Spalte fehlt in Supabase — bitte SQL ausführen', 'error');
+    showToast('grab_status column missing in Supabase — please run the SQL', 'error');
     return false;
   }
   const payload = { grab_status: gs, grab: Object.keys(gs).join(', ') || null };
@@ -1222,7 +1222,7 @@ async function updateGrabStatus(entryId, gs, localEntry) {
   if (error) {
     if (/grab_status/.test(error.message || '')) {
       _standortHasGrabStatus = false;
-      showToast('grab_status-Spalte fehlt in Supabase — bitte SQL ausführen', 'error');
+      showToast('grab_status column missing in Supabase — please run the SQL', 'error');
     } else showToast('Error: ' + error.message, 'error');
     return false;
   }
@@ -1530,7 +1530,7 @@ function renderAthleteDirBalance(wrap, dirs, colors, dirOf) {
 async function deleteSbEntry(id) {
   if (!confirm('Remove entry?')) return;
   const { error } = await db.from('standort').delete().eq('id', id);
-  if (error) { showToast('Fehler', 'error'); return; }
+  if (error) { showToast('Error', 'error'); return; }
   sbData = sbData.filter(e => e.id !== id);
   renderStandort();
   showToast('Removed', 'success');
@@ -3663,10 +3663,10 @@ function renderStandort() {
         <div class="timeline-dot dot-erreicht"></div>
         <div class="timeline-body">
           <div class="timeline-title">${badge(e.disziplin)} ${e.trick_label}
-            <span class="sb-status-erreicht" style="margin-left:6px;">✓ Erreicht</span>
+            <span class="sb-status-erreicht" style="margin-left:6px;">✓ Achieved</span>
           </div>
           ${e.notiz ? `<div class="timeline-meta">${e.notiz}</div>` : ''}
-          <div class="timeline-meta">Eingetragen: ${fmtDate(e.created_at)}</div>
+          <div class="timeline-meta">Logged: ${fmtDate(e.created_at)}</div>
         </div>
       </div>`).join('');
   } else {
@@ -3753,7 +3753,7 @@ async function loadEntwicklung() {
   const standort = standortRes.data || [];
 
   if (!tricks.length && !standort.length) {
-    main.innerHTML = '<div class="empty-state">No entries yet für diese Athlete</div>';
+    main.innerHTML = '<div class="empty-state">No entries yet for this athlete</div>';
     return;
   }
 
@@ -7446,11 +7446,11 @@ function renderStandort() {
         <div class="timeline-dot dot-erreicht"></div>
         <div class="timeline-body">
           <div class="timeline-title">${badge(e.disziplin)} ${e.trick_label}
-            <span class="sb-status-erreicht" style="margin-left:6px;">✓ Erreicht</span>
+            <span class="sb-status-erreicht" style="margin-left:6px;">✓ Achieved</span>
           </div>
           ${e.notiz ? `<div class="timeline-meta">${e.notiz}</div>` : ''}
           ${e.coach_kommentar ? `<div class="timeline-meta" style="color:#f59e0b;">🎓 ${e.coach_rating ? e.coach_rating+'/10 · ' : ''}${e.coach_kommentar}</div>` : ''}
-          <div class="timeline-meta">Eingetragen: ${fmtDate(e.created_at)}</div>
+          <div class="timeline-meta">Logged: ${fmtDate(e.created_at)}</div>
         </div>
       </div>`).join('');
   } else {
@@ -7537,7 +7537,7 @@ async function loadEntwicklung() {
   const standort = standortRes.data || [];
 
   if (!tricks.length && !standort.length) {
-    main.innerHTML = '<div class="empty-state">No entries yet für diese Athlete</div>';
+    main.innerHTML = '<div class="empty-state">No entries yet for this athlete</div>';
     return;
   }
 
@@ -7557,10 +7557,10 @@ async function loadEntwicklung() {
             <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
           </div>
           <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
-            <option value="">— Trick auswählen —</option>
+            <option value="">— select trick —</option>
           </select>
           <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
-            <option value="">— Session auswählen —</option>
+            <option value="">— select session —</option>
           </select>
         </div>
         <div id="ev-trick-analytics"></div>
@@ -8979,10 +8979,10 @@ const fragments = {
             <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
           </div>
           <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
-            <option value="">— Trick auswählen —</option>
+            <option value="">— select trick —</option>
           </select>
           <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
-            <option value="">— Session auswählen —</option>
+            <option value="">— select session —</option>
           </select>
         </div>
         <div id="ev-trick-analytics"></div>
