@@ -1302,6 +1302,29 @@ function sessDisplayDate() {
   return d.toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
 }
 
+let sessAudioCtx = null;
+
+function sessPlayLogSound(result) {
+  try {
+    if (!sessAudioCtx) sessAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (sessAudioCtx.state === 'suspended') sessAudioCtx.resume();
+    const t = sessAudioCtx.currentTime;
+    const beep = (freq, start, dur, type, gain) => {
+      const o = sessAudioCtx.createOscillator();
+      const g = sessAudioCtx.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t + start);
+      g.gain.exponentialRampToValueAtTime(gain, t + start + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + start + dur);
+      o.connect(g); g.connect(sessAudioCtx.destination);
+      o.start(t + start); o.stop(t + start + dur + 0.05);
+    };
+    if (result === 'miss')         { beep(180, 0, 0.18, 'square', 0.06); }
+    else if (result === 'perfect') { beep(660, 0, 0.10, 'sine', 0.15); beep(990, 0.09, 0.16, 'sine', 0.15); }
+    else                           { beep(520, 0, 0.12, 'sine', 0.12); }
+  } catch(e) {}
+}
+
 function onSessDateChange() {
   const inp = document.getElementById('sess-datum');
   if (!inp) return;
@@ -2810,6 +2833,7 @@ async function logAttempt(name, result) {
   const flashColor = result==='miss'?'rgba(226,0,26,0.2)':result==='landed'?'rgba(45,138,78,0.2)':'rgba(57,195,212,0.2)';
   col.style.background = flashColor;
   setTimeout(()=>{ col.style.background=''; }, 250);
+  sessPlayLogSound(result);
 
   const sid = name.replace(/\s/g,'_');
   const commentEl = document.getElementById('sess-comment-'+sid);
@@ -6303,6 +6327,7 @@ async function autoLogAttempt(name) {
   const sid = name.replace(/\s/g,'_');
   const col = document.getElementById('sess-col-'+sid);
   if (col) { col.style.background=result==='miss'?'rgba(226,0,26,0.2)':result==='perfect'?'rgba(57,195,212,0.2)':'rgba(45,138,78,0.2)'; setTimeout(()=>{col.style.background='';},300); }
+  sessPlayLogSound(result);
 
   const commentEl = document.getElementById('sess-comment-'+sid);
   const comment = commentEl ? commentEl.value.trim() : '';
@@ -6365,6 +6390,7 @@ async function logAttempt(name, result) {
   const flashColor = result==='miss'?'rgba(226,0,26,0.2)':result==='landed'?'rgba(45,138,78,0.2)':'rgba(57,195,212,0.2)';
   col.style.background = flashColor;
   setTimeout(()=>{ col.style.background=''; }, 250);
+  sessPlayLogSound(result);
 
   const logEntry = {name, trick:d.currentTrick, result,
     time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})};
