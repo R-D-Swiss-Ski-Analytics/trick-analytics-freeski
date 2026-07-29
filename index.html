@@ -5508,11 +5508,10 @@ function extractRotation(name) {
 }
 
 function extractQuality(kommentar) {
-  // Quality = Grab + Trick only (execution in the air)
-  // Landing is captured separately as landing rate
+  // Quality of Execution: Schnitt der bewerteten Kategorien (Take-off/Grab/Trick/Landing)
   if (!kommentar) return null;
   const score = {perfect:100, okay:50, miss:0};
-  const vals = ['Grab','Trick'].map(k => {
+  const vals = ['Takeoff','Grab','Trick','Landing'].map(k => {
     const m = kommentar.match(new RegExp(k+':(\\w+)'));
     return (m && score[m[1]] !== undefined) ? score[m[1]] : null;
   }).filter(v => v !== null);
@@ -5526,10 +5525,10 @@ function renderSessionPerformance() {
   const DIRS = ['Left','Right','Switch Left','Switch Right'];
   const DIR_COL = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
 
-  // Status based on Landing%, Grab% and Trick% independently
-  function status(landPct, avgGrab, avgTrick) {
-    if (landPct >= 70 && avgGrab >= 70 && avgTrick >= 70) return {icon:'🟢', label:'Ready', color:'#2d8a4e'};
-    if (landPct >= 50 || avgGrab >= 50 || avgTrick >= 50) return {icon:'🟡', label:'Developing', color:'#f59e0b'};
+  // Status basiert auf der Quality of Execution (Schnitt der bewerteten Kategorien)
+  function status(qoe) {
+    if (qoe >= 70) return {icon:'🟢', label:'Ready', color:'#2d8a4e'};
+    if (qoe >= 50) return {icon:'🟡', label:'Developing', color:'#f59e0b'};
     return {icon:'🔴', label:'Not ready', color:'#e2001a'};
   }
 
@@ -5566,14 +5565,11 @@ function renderSessionPerformance() {
     const a = t.athlet;
     const trick = t.trickaufbau;
     if (!athTricks[a]) athTricks[a] = {};
-    if (!athTricks[a][trick]) athTricks[a][trick] = {att:0, land:0, grabVals:[], trickVals:[], rot:extractRotation(trick), dir:trickDir(trick)};
+    if (!athTricks[a][trick]) athTricks[a][trick] = {att:0, qoeVals:[], rot:extractRotation(trick), dir:trickDir(trick)};
     const s = athTricks[a][trick];
     s.att++;
-    if (t.gelandet==='Yes') s.land++;
-    const g = extractSubQuality(t.kommentar,'Grab');
-    if (g !== null) s.grabVals.push(g);
-    const tr = extractSubQuality(t.kommentar,'Trick');
-    if (tr !== null) s.trickVals.push(tr);
+    const q = qoeOf(t);
+    if (q !== null) s.qoeVals.push(q);
   });
 
   // Sort athletes alphabetically (no ranking)
@@ -5603,10 +5599,8 @@ function renderSessionPerformance() {
         const avgOf = arr => arr.length ? Math.round(arr.reduce((x,y)=>x+y,0)/arr.length) : 0;
         DIRS.forEach(d => {
           byDir[d].sort(([,a],[,b]) => {
-            const lA = a.att?Math.round(a.land/a.att*100):0, gA = avgOf(a.grabVals), tA = avgOf(a.trickVals);
-            const lB = b.att?Math.round(b.land/b.att*100):0, gB = avgOf(b.grabVals), tB = avgOf(b.trickVals);
             const rank = {'🟢':0,'🟡':1,'🔴':2};
-            return (rank[status(lA,gA,tA).icon]||0)-(rank[status(lB,gB,tB).icon]||0) || b.rot-a.rot;
+            return (rank[status(avgOf(a.qoeVals)).icon]||0)-(rank[status(avgOf(b.qoeVals)).icon]||0) || b.rot-a.rot;
           });
         });
 
@@ -5615,19 +5609,15 @@ function renderSessionPerformance() {
           return `<div style="flex:1;min-width:200px;">
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${DIR_COL[d]};margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid ${DIR_COL[d]}33;">${d}</div>
             ${entries.length ? entries.map(([trick, s]) => {
-              const landPct  = s.att ? Math.round(s.land/s.att*100) : 0;
-              const avgGrab  = avgOf(s.grabVals);
-              const avgTrick = avgOf(s.trickVals);
-              const st       = status(landPct, avgGrab, avgTrick);
+              const qoe      = avgOf(s.qoeVals);
+              const st       = status(qoe);
               const colFor   = v => v>=70?'#2d8a4e':v>=50?'#f59e0b':'#e2001a';
               return `<div style="background:${bkg[st.icon]};border:1px solid ${brd[st.icon]};border-radius:8px;padding:6px 10px;margin-bottom:5px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
                   <span style="font-size:12px;color:var(--text);flex:1;">${trick}</span>
                 </div>
                 <div style="display:flex;gap:10px;margin-top:4px;font-size:11px;font-weight:700;flex-wrap:wrap;">
-                  <span style="color:${colFor(landPct)};">${landPct}% landed</span>
-                  <span style="color:${colFor(avgGrab)};">${avgGrab}% grab</span>
-                  <span style="color:${colFor(avgTrick)};">${avgTrick}% trick</span>
+                  <span style="color:${colFor(qoe)};">${qoe}% QoE</span>
                   <span style="color:var(--muted);font-weight:400;">${s.att} att.</span>
                 </div>
               </div>`;
@@ -5686,8 +5676,7 @@ async function realityCheck() {
     const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
 
     if (avgQ < 70) {
-      const landRate = Math.round(sessions.filter(t=>t.gelandet==='Yes').length/sessions.length*100);
-      flagged.push({ ...s, action: 'downgrade', reason: `Avg quality ${avgQ}% (<70%)`, avgQ, sessions: sessions.length, landRate });
+      flagged.push({ ...s, action: 'downgrade', reason: `QoE ${avgQ}% (<70%)`, avgQ, sessions: sessions.length });
     }
   });
 
@@ -5705,7 +5694,7 @@ async function realityCheck() {
     if (!quals.length) return;
     const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
     if (avgQ >= 70) {
-      flagged.push({ ...s, action: 'upgrade', reason: `Avg quality ${avgQ}% (≥70%) → Mastered`, avgQ, sessions: sessions.length });
+      flagged.push({ ...s, action: 'upgrade', reason: `QoE ${avgQ}% (≥70%) → Mastered`, avgQ, sessions: sessions.length });
     }
   });
 
@@ -5725,8 +5714,8 @@ async function realityCheck() {
       const quals = sessions.map(t => extractQuality(t.kommentar)).filter(v => v !== null);
       if (!quals.length) return;
       const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
-      if (st === 'mastered' && avgQ < 70)  flagged.push({ ...s, grabName: g, action: 'downgrade-grab', reason: `${g}: avg quality ${avgQ}% (<70%)`, avgQ, sessions: sessions.length });
-      if (st === 'goal' && avgQ >= 70)     flagged.push({ ...s, grabName: g, action: 'upgrade-grab', reason: `${g}: avg quality ${avgQ}% (≥70%) → Mastered`, avgQ, sessions: sessions.length });
+      if (st === 'mastered' && avgQ < 70)  flagged.push({ ...s, grabName: g, action: 'downgrade-grab', reason: `${g}: QoE ${avgQ}% (<70%)`, avgQ, sessions: sessions.length });
+      if (st === 'goal' && avgQ >= 70)     flagged.push({ ...s, grabName: g, action: 'upgrade-grab', reason: `${g}: QoE ${avgQ}% (≥70%) → Mastered`, avgQ, sessions: sessions.length });
     });
   });
 
@@ -5935,9 +5924,10 @@ async function rebuildReportFromTimestamps(id, silent=false) {
     const trickList = buildFsTrickBlocks(ents);
     const totalAtt = trickList.reduce((a,t)=>a+t.att,0);
     const totalLand = trickList.reduce((a,t)=>a+t.land,0);
+    const qualityPct = ents.length ? Math.round(ents.reduce((a,e)=>a+qoeOfLogEntry(e),0)/ents.length) : null;
     const note = existingNotes[shortName(name)] || '';
     const trickIds = ents.map(e=>e.dbId).filter(Boolean);
-    return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList, note, trickIds};
+    return {athlet: shortName(name), totalAtt, totalLand, qualityPct, tricks: trickList, note, trickIds};
   });
 
   const {error: updErr} = await db.from('session_reports').update({trick_data: trickData}).eq('id', id);
@@ -6033,21 +6023,20 @@ function generateAthleteReport() {
   const sessMap = {};
   data.forEach(e => {
     const key = e.datum+'|'+(e.typ||'');
-    if (!sessMap[key]) sessMap[key] = {datum:e.datum, typ:e.typ||'', att:0, land:0};
+    if (!sessMap[key]) sessMap[key] = {datum:e.datum, typ:e.typ||'', att:0, qoeVals:[]};
     sessMap[key].att++;
-    if (e.gelandet==='Yes') sessMap[key].land++;
+    const q = qoeOf(e); if (q!==null) sessMap[key].qoeVals.push(q);
   });
   const sessRows = Object.values(sessMap)
     .sort((a,b) => a.datum.localeCompare(b.datum))
     .map(s => {
       const p=s.datum.split('-'); const d=p[2]+'.'+p[1]+'.'+p[0].slice(2);
-      const lp = s.att ? Math.round(s.land/s.att*100) : 0;
-      return [d, s.typ||'—', s.att, s.land, lp+'%'];
+      const q = qoeAvg(s.qoeVals);
+      return [d, s.typ||'—', s.att, q!==null ? q+'%' : '—'];
     });
 
   const totalAtt  = data.length;
-  const totalLand = data.filter(e=>e.gelandet==='Yes').length;
-  const totalPct  = totalAtt ? Math.round(totalLand/totalAtt*100) : 0;
+  const totalQoe  = qoeAvg(data.map(qoeOf));
   const filename = 'Athlete_Report_'+athName.replace(/\s/g,'_')+'_'+(new Date().toISOString().split('T')[0].replace(/-/g,''))+'.pdf';
 
   function generate() {
@@ -6071,7 +6060,7 @@ function generateAthleteReport() {
 
     // Meta
     const meta = [['Athlete', athName], ['Period', seasonLabel], ['Sessions', sessRows.length+''],
-                  ['Total Attempts', totalAtt+''], ['Landed', totalLand+''], ['Landing Rate', totalPct+'%']];
+                  ['Total Attempts', totalAtt+''], ['Quality of Execution', totalQoe!==null?totalQoe+'%':'—'], ['', '']];
     const col = cw/3;
     doc.setFontSize(7.5);
     meta.forEach(([label, val], i) => {
@@ -6118,14 +6107,14 @@ function generateAthleteReport() {
     doc.text('SESSION BREAKDOWN', margin, y); y += 4;
     doc.autoTable({
       startY: y, margin:{left:margin,right:margin},
-      head:[['Date','Type','Attempts','Landed','Rate']],
+      head:[['Date','Type','Attempts','QoE']],
       body: sessRows,
       theme:'grid',
       styles:{fontSize:8.5,cellPadding:2.5,textColor:[34,34,34],lineColor:[230,230,230]},
       headStyles:{fillColor:[240,240,240],textColor:[100,100,100],fontStyle:'bold',fontSize:7.5},
-      columnStyles:{0:{cellWidth:cw*0.2},1:{cellWidth:cw*0.3},2:{cellWidth:cw*0.17,halign:'center'},3:{cellWidth:cw*0.17,halign:'center'},4:{cellWidth:cw*0.16,halign:'center'}},
+      columnStyles:{0:{cellWidth:cw*0.22},1:{cellWidth:cw*0.34},2:{cellWidth:cw*0.22,halign:'center'},3:{cellWidth:cw*0.22,halign:'center'}},
       didParseCell(data) {
-        if (data.column.index===4 && data.section==='body') {
+        if (data.column.index===3 && data.section==='body') {
           const v=parseInt(data.cell.raw);
           data.cell.styles.textColor=v>=70?[45,138,78]:v>=50?[180,100,0]:[200,30,30];
           data.cell.styles.fontStyle='bold';
@@ -6193,22 +6182,21 @@ function openTeamPdfReport() {
     // ── Session data ──
     const tricks = sessData.filter(t=>t.athlet===athlet);
     const totalAtt  = tricks.length;
-    const totalLand = tricks.filter(t=>t.gelandet==='Yes').length;
-    const landPct   = totalAtt ? Math.round(totalLand/totalAtt*100) : 0;
+    const totalQoe  = qoeAvg(tricks.map(qoeOf));
 
     const byTrick = {};
     tricks.forEach(t => {
       const key = t.trickaufbau||'—';
-      if (!byTrick[key]) byTrick[key] = {att:0,land:0,dates:new Set(),type:new Set()};
+      if (!byTrick[key]) byTrick[key] = {att:0,qoeVals:[],dates:new Set(),type:new Set()};
       byTrick[key].att++;
-      if(t.gelandet==='Yes') byTrick[key].land++;
+      const q=qoeOf(t); if(q!==null) byTrick[key].qoeVals.push(q);
       if(t.datum) byTrick[key].dates.add(fmtDate(t.datum));
       if(t.typ) byTrick[key].type.add(t.typ);
     });
     const sessRows = Object.entries(byTrick).sort((a,b)=>b[1].att-a[1].att).map(([trick,s]) => {
-      const lp = s.att ? Math.round(s.land/s.att*100) : 0;
+      const lp = qoeAvg(s.qoeVals) ?? 0;
       const typeStr = [...s.type].map(t=>({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[t]||t)).join(', ');
-      return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center">${s.land}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#2d8a4e':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:11px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
+      return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#2d8a4e':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:11px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
     }).join('');
 
     // ── Assessment data ──
@@ -6228,8 +6216,8 @@ function openTeamPdfReport() {
       <div class="ath-name">${athlet}</div>
       ${totalAtt>0?`
       <div class="section-title">Session Performance</div>
-      <div class="ath-sum">${totalAtt} attempts &nbsp;·&nbsp; ${totalLand} landed &nbsp;·&nbsp; ${landPct}%</div>
-      <table><thead><tr><th>Trick</th><th>Type</th><th>Att.</th><th>Landed</th><th>Rate</th><th>Sessions</th></tr></thead><tbody>${sessRows||'<tr><td colspan="6" style="color:#aaa">No session data</td></tr>'}</tbody></table>` : ''}
+      <div class="ath-sum">${totalAtt} attempts &nbsp;·&nbsp; Quality of Execution ${totalQoe!==null?totalQoe+'%':'—'}</div>
+      <table><thead><tr><th>Trick</th><th>Type</th><th>Att.</th><th>QoE</th><th>Sessions</th></tr></thead><tbody>${sessRows||'<tr><td colspan="5" style="color:#aaa">No session data</td></tr>'}</tbody></table>` : ''}
       ${(mastRows||goalRows)?`
       <div class="section-title">Assessment</div>
       <table><thead><tr><th>Trick</th><th>Discipline</th><th>Status</th></tr></thead><tbody>${mastRows}${goalRows}</tbody></table>` : ''}
@@ -6867,6 +6855,30 @@ function parseSubRating(kommentar, key) {
   return m ? m[1] : null;
 }
 
+// ── Quality of Execution (QoE): Schnitt der bewerteten Kategorien (miss=0/okay=50/perfect=100).
+// Leitmetrik statt Landing-Quote — nutzt die Daten, die vorhanden sind (Teilbewertungen).
+const QOE_SCORE = {miss:0, okay:50, perfect:100};
+
+// QoE einer tricks-DB-Zeile; Fallback für Einträge ohne Teilbewertungen: gesamt (10→100, 7→50, sonst 0)
+function qoeOf(t) {
+  const vals = ['Takeoff','Grab','Trick','Landing']
+    .map(k => QOE_SCORE[parseSubRating(t.kommentar, k)])
+    .filter(v => v !== undefined);
+  if (vals.length) return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+  const g = t.gesamt;
+  if (g === undefined || g === null) return null;
+  return g >= 10 ? 100 : g >= 7 ? 50 : 0;
+}
+
+// QoE eines Session-Log-Eintrags (live oder aus Report rekonstruiert)
+function qoeOfLogEntry(e) {
+  const vals = [e.takeoff, e.grab, e.trick_r, e.land].map(v => QOE_SCORE[v]).filter(v => v !== undefined);
+  if (vals.length) return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+  return e.result === 'perfect' ? 100 : e.result === 'miss' ? 0 : 50;
+}
+
+const qoeAvg = arr => { const v = arr.filter(x=>x!==null&&x!==undefined); return v.length ? Math.round(v.reduce((a,b)=>a+b,0)/v.length) : null; };
+
 function buildFsTrickBlocks(entries) {
   // entries = [{trick, result, grab, trick_r, land}] in chronological order
   // A new block starts whenever the trick changes and then comes back.
@@ -6882,6 +6894,7 @@ function buildFsTrickBlocks(entries) {
     }
     target.att++;
     if (e.result !== 'miss') target.land++;
+    target.qoeSum = (target.qoeSum||0) + qoeOfLogEntry(e); target.qoeN = (target.qoeN||0) + 1;
     if (e.takeoff in score) { target.takeoffSum += score[e.takeoff]; target.takeoffN++; }
     if (e.grab in score)    { target.grabSum  += score[e.grab];    target.grabN++; }
     if (e.trick_r in score) { target.trickSum += score[e.trick_r]; target.trickN++; }
@@ -6889,6 +6902,7 @@ function buildFsTrickBlocks(entries) {
   });
   return blocks.map(b => ({
     trick: b.trick, att: b.att, land: b.land,
+    qualityPct: b.qoeN ? Math.round(b.qoeSum/b.qoeN) : null,
     takeoffPct: b.takeoffN ? Math.round(b.takeoffSum/b.takeoffN) : null,
     grabPct:  b.grabN  ? Math.round(b.grabSum/b.grabN)   : null,
     trickPct: b.trickN ? Math.round(b.trickSum/b.trickN) : null,
@@ -6908,9 +6922,10 @@ async function saveSessionReport(duration, location, conditions, comments, athle
     const trickList = buildFsTrickBlocks(ents);
     const totalAtt = trickList.reduce((a,t)=>a+t.att,0);
     const totalLand = trickList.reduce((a,t)=>a+t.land,0);
+    const qualityPct = ents.length ? Math.round(ents.reduce((a,e)=>a+qoeOfLogEntry(e),0)/ents.length) : null;
     const note = (athleteNotes||{})[shortName(name)] || '';
     const trickIds = ents.map(e=>e.dbId).filter(Boolean);
-    return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList, note, trickIds};
+    return {athlet: shortName(name), totalAtt, totalLand, qualityPct, tricks: trickList, note, trickIds};
   });
 
   const row = {
@@ -7047,7 +7062,7 @@ function openReportPrint(report) {
       doc.setFont('helvetica','normal');
       doc.setFontSize(8);
       doc.setTextColor(180,180,180);
-      doc.text(`${a.totalAtt} att.  |  ${a.totalLand} landed  |  ${pct}%`, W-margin-3, y+5.5, {align:'right'});
+      doc.text(a.qualityPct!=null ? `${a.totalAtt} att.  |  Quality of Execution ${a.qualityPct}%` : `${a.totalAtt} att.  |  ${a.totalLand} landed  |  ${pct}%`, W-margin-3, y+5.5, {align:'right'});
       y += 9;
 
       // Trick table — chronological blocks, Grab/Trick/Landing quality columns
@@ -7647,7 +7662,7 @@ async function loadEntwicklung() {
     return res;
   }
 
-  // ── 1. RADAR: Directions — session landing rate (blue) + assessment volume (amber)
+  // ── 1. RADAR: Directions — session QoE (blue) + assessment volume (amber)
   const directions = ['Right','Switch Right','Switch Left','Left'];
 
   // Parse direction from trickaufbau (new session format: "Left Double 1080 Cork — Japan")
@@ -7659,7 +7674,7 @@ async function loadEntwicklung() {
     return null;
   }
 
-  // Calculate landing rate per direction from session data
+  // Quality of Execution pro Direction aus Session-Daten
   const dirStats = {};
   tTagged.forEach(t => {
     // New session entries (trickaufbau with " — ")
@@ -7667,13 +7682,13 @@ async function loadEntwicklung() {
       ? dirFromTrickaufbau(t.trickaufbau)
       : t.drehrichtung;
     if (!dir) return;
-    if (!dirStats[dir]) dirStats[dir] = { total: 0, landed: 0 };
+    if (!dirStats[dir]) dirStats[dir] = { total: 0, qoeVals: [] };
     dirStats[dir].total++;
-    if (t.gelandet === 'Yes') dirStats[dir].landed++;
+    const q = qoeOf(t); if (q !== null) dirStats[dir].qoeVals.push(q);
   });
 
-  const dirRates    = directions.map(d => dirStats[d]?.total ? dirStats[d].landed / dirStats[d].total : 0);
-  const dirRatePct  = directions.map(d => dirStats[d]?.total ? Math.round(dirStats[d].landed / dirStats[d].total * 100) : null);
+  const dirRatePct  = directions.map(d => dirStats[d]?.total ? (qoeAvg(dirStats[d].qoeVals) ?? 0) : null);
+  const dirRates    = dirRatePct.map(p => p !== null ? p/100 : 0);
 
   // Assessment volume for amber polygon
   const { stand: dirS } = countBySplit('drehrichtung');
@@ -7857,29 +7872,25 @@ async function loadEntwicklung() {
       const byTrick = {};
       sessionTricks.forEach(t => {
         const key = t.trickaufbau;
-        if (!byTrick[key]) byTrick[key] = { total: 0, landed: 0, perfect: 0, dates: new Set() };
+        if (!byTrick[key]) byTrick[key] = { total: 0, perfect: 0, qoeVals: [], dates: new Set() };
         byTrick[key].total++;
-        if (t.gelandet === 'Yes') byTrick[key].landed++;
         if (t.gesamt >= 10) byTrick[key].perfect++;
+        const q = qoeOf(t); if (q !== null) byTrick[key].qoeVals.push(q);
         if (t.datum) byTrick[key].dates.add(t.datum);
       });
 
-      const rows = Object.entries(byTrick).sort((a,b) => {
-        const pctA = a[1].total ? a[1].landed / a[1].total : 0;
-        const pctB = b[1].total ? b[1].landed / b[1].total : 0;
-        return pctB - pctA;
-      });
+      const rows = Object.entries(byTrick).sort((a,b) => (qoeAvg(b[1].qoeVals)||0) - (qoeAvg(a[1].qoeVals)||0));
 
       statsEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead><tr>
           <th style="text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Trick — Grab</th>
           <th style="text-align:center;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Date(s)</th>
-          <th style="text-align:center;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Landed / Total</th>
-          <th style="text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Rate</th>
+          <th style="text-align:center;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Attempts</th>
+          <th style="text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">QoE</th>
         </tr></thead>
         <tbody>
           ${rows.map(([trick, s]) => {
-            const pct = s.total ? Math.round(s.landed / s.total * 100) : 0;
+            const pct = qoeAvg(s.qoeVals) ?? 0;
             const barColor = pct >= 70 ? '#2d8a4e' : pct >= 40 ? '#f59e0b' : '#e2001a';
             const dates = [...s.dates].sort().map(d => new Date(d).toLocaleDateString('de-CH', {day:'2-digit',month:'2-digit'})).join(', ');
             const parts = trick.split(' — ');
@@ -7890,7 +7901,7 @@ async function loadEntwicklung() {
               </td>
               <td style="padding:10px 12px;text-align:center;color:var(--muted);font-size:12px;">${dates}</td>
               <td style="padding:10px 12px;text-align:center;">
-                <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:15px;color:var(--text);">${s.landed}/${s.total}</div>
+                <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:15px;color:var(--text);">${s.total}</div>
                 ${s.perfect > 0 ? `<div style="font-size:10px;color:#39c3d4;margin-top:2px;">⭐ ${s.perfect}× perfect</div>` : ''}
               </td>
               <td style="padding:10px 12px;min-width:120px;">
@@ -8007,10 +8018,11 @@ function appendTrendChart(allData, highlightDate) {
   const byDate = {};
   allData.forEach(t => {
     if (!t.datum) return;
-    if (!byDate[t.datum]) byDate[t.datum] = {att:0,land:0,stomped:0,takeoff:[],grab:[],trick:[],land_r:[]};
+    if (!byDate[t.datum]) byDate[t.datum] = {att:0,land:0,stomped:0,qoeVals:[],takeoff:[],grab:[],trick:[],land_r:[]};
     byDate[t.datum].att++;
     if (t.gelandet==='Yes') byDate[t.datum].land++;
     if ((t.gesamt||0)>=10) byDate[t.datum].stomped++;
+    const q=qoeOf(t); if(q!==null) byDate[t.datum].qoeVals.push(q);
     const to=pr('Takeoff',t), g=pr('Grab',t), tr=pr('Trick',t), la=pr('Landing',t);
     if(to!==null) byDate[t.datum].takeoff.push(to);
     if(g!==null) byDate[t.datum].grab.push(g);
@@ -8022,6 +8034,7 @@ function appendTrendChart(allData, highlightDate) {
   const pts = dates.map(d => ({
     d, att:byDate[d].att,
     landPct: Math.round(byDate[d].land/byDate[d].att*100),
+    qoe: qoeAvg(byDate[d].qoeVals),
     land: byDate[d].land, stomped: byDate[d].stomped,
     takeoff: avg(byDate[d].takeoff), grab: avg(byDate[d].grab), trick: avg(byDate[d].trick), landing: avg(byDate[d].land_r),
     isHighlight: d === highlightDate
@@ -8087,8 +8100,8 @@ function appendTrendChart(allData, highlightDate) {
           ctx.fillStyle = col; ctx.font = (isHi?'bold ':'')+'9px Poppins,sans-serif'; ctx.textAlign='center';
           ctx.fillText(val+'%', bx+bw/2, by-3);
         });
-      } else if(!_hc && pt.landPct!==null) {
-        const val = pt.landPct;
+      } else if(!_hc && pt.qoe!==null) {
+        const val = pt.qoe;
         const bx = x - barW/2;
         const by = toY(val);
         const bh = H-pad.b - by;
@@ -8107,7 +8120,7 @@ function appendTrendChart(allData, highlightDate) {
       drawConnectLine(pts.map(p=>p.trick), '#39c3d4');
       drawConnectLine(pts.map(p=>p.landing), '#2d8a4e');
     } else {
-      drawConnectLine(pts.map(p=>p.landPct), '#39c3d4');
+      drawConnectLine(pts.map(p=>p.qoe), '#39c3d4');
     }
 
     // Draw bars for each date
@@ -8145,7 +8158,7 @@ function appendTrendChart(allData, highlightDate) {
         +`<div style="color:#39c3d4;">⭐ Stomped: <b>${p.stomped}×</b></div>`
         +`<div style="color:#2d8a4e;">✓ Landed&nbsp;: <b>${lo}×</b></div>`
         +`<div style="color:#e2001a;">✗ Missed&nbsp;: <b>${ms}×</b></div>`
-        +`<div style="color:#6b8299;margin-top:4px;">Success: <b style="color:#39c3d4;">${p.landPct}%</b></div>`;
+        +`<div style="color:#6b8299;margin-top:4px;">QoE: <b style="color:#39c3d4;">${p.qoe!==null?p.qoe+'%':'—'}</b></div>`;
       tt.style.display='block';
       const tx = e.clientX+14, ty = e.clientY-10;
       tt.style.left=(tx+tt.offsetWidth>window.innerWidth-10?e.clientX-tt.offsetWidth-14:tx)+'px';
@@ -8167,10 +8180,11 @@ function renderSessionSummary(data, sessionLabel) {
   const tmap = {};
   data.forEach(t => {
     const key = t.trickaufbau || '—';
-    if (!tmap[key]) tmap[key] = {att:0, land:0, perf:0, takeoff:[], grab:[], trick:[], land_r:[]};
+    if (!tmap[key]) tmap[key] = {att:0, land:0, perf:0, qoeVals:[], takeoff:[], grab:[], trick:[], land_r:[]};
     tmap[key].att++;
     if (t.gelandet==='Yes') tmap[key].land++;
     if (t.gesamt>=10) tmap[key].perf++;
+    const q=qoeOf(t); if(q!==null) tmap[key].qoeVals.push(q);
     const to=pr('Takeoff',t), g=pr('Grab',t), tr=pr('Trick',t), la=pr('Landing',t);
     if(to!==null) tmap[key].takeoff.push(to);
     if(g!==null) tmap[key].grab.push(g);
@@ -8179,7 +8193,7 @@ function renderSessionSummary(data, sessionLabel) {
   });
   const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
   const total = data.length;
-  const totalLand = data.filter(t=>t.gelandet==='Yes').length;
+  const totalQoe = qoeAvg(data.map(qoeOf));
 
   // Session header
   const headerHtml = `<div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;">
@@ -8188,12 +8202,8 @@ function renderSessionSummary(data, sessionLabel) {
       <div style="font-size:11px;color:var(--muted);">Attempts</div>
     </div>
     <div style="background:var(--surface2);border-radius:10px;padding:12px 18px;text-align:center;flex:1;min-width:80px;">
-      <div style="font-size:22px;font-weight:800;color:#2d8a4e;">${totalLand}</div>
-      <div style="font-size:11px;color:var(--muted);">Landed</div>
-    </div>
-    <div style="background:var(--surface2);border-radius:10px;padding:12px 18px;text-align:center;flex:1;min-width:80px;">
-      <div style="font-size:22px;font-weight:800;color:#39c3d4;">${total?Math.round(totalLand/total*100)+'%':'—'}</div>
-      <div style="font-size:11px;color:var(--muted);">Success</div>
+      <div style="font-size:22px;font-weight:800;color:${totalQoe!==null?colQ(totalQoe):'var(--muted)'};">${totalQoe!==null?totalQoe+'%':'—'}</div>
+      <div style="font-size:11px;color:var(--muted);">Quality of Execution</div>
     </div>
     <div style="background:var(--surface2);border-radius:10px;padding:12px 18px;text-align:center;flex:1;min-width:80px;">
       <div style="font-size:22px;font-weight:800;color:#f59e0b;">${Object.keys(tmap).length}</div>
@@ -8205,10 +8215,7 @@ function renderSessionSummary(data, sessionLabel) {
   const cardsHtml = Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
     const hasComp = s.grab.length > 0;
     const toAvg=avg(s.takeoff), gAvg=avg(s.grab), tAvg=avg(s.trick), lAvg=avg(s.land_r);
-    const landPct = s.att ? Math.round(s.land/s.att*100) : 0;
-    // Execution quality = Grab + Trick only (Landing captured separately as landing rate)
-    const qualVals = [gAvg, tAvg].filter(v => v !== null); // Grab+Trick only
-    const qualAvg = qualVals.length ? Math.round(qualVals.reduce((a,b)=>a+b,0)/qualVals.length) : null;
+    const trickQoe = qoeAvg(s.qoeVals);
 
     const compBars = hasComp ? `
       <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
@@ -8226,9 +8233,8 @@ function renderSessionSummary(data, sessionLabel) {
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}${s.perf>0?` <span style="font-size:11px;color:#39c3d4;font-weight:400;">⭐ ${s.perf}×</span>`:''}</div>
         <div style="text-align:right;flex-shrink:0;">
-          <div style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${s.land} / ${s.att}</div>
-          <div style="font-size:10px;color:var(--muted);">landed</div>
-          ${qualAvg!==null?`<div style="font-size:11px;font-weight:700;color:#39c3d4;margin-top:4px;">${qualAvg}% exec. quality</div>`:''}
+          <div style="font-size:18px;font-weight:800;color:${trickQoe!==null?colQ(trickQoe):'var(--muted)'};">${trickQoe!==null?trickQoe+'%':'—'}</div>
+          <div style="font-size:10px;color:var(--muted);">QoE · ${s.att} att.</div>
         </div>
       </div>
       ${compBars}
@@ -8444,6 +8450,7 @@ function renderTrickAnalytics() {
     if(el) el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;">No session data yet.</div>';
     return;
   }
+  const colQ = v=>v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
   const sel = document.getElementById('ev-trick-sel');
   const dateSel = document.getElementById('ev-date-sel');
   const chosen = sel ? sel.value : '';
@@ -8498,16 +8505,16 @@ function renderTrickAnalytics() {
       }
       const td = baseData.filter(t=>t.trickaufbau===tObj.name);
       const byDate = {};
-      td.forEach(t => { if(!t.datum) return; if(!byDate[t.datum]) byDate[t.datum]={att:0,land:0}; byDate[t.datum].att++; if(t.gelandet==='Yes') byDate[t.datum].land++; });
+      td.forEach(t => { if(!t.datum) return; if(!byDate[t.datum]) byDate[t.datum]={att:0,qoeVals:[]}; byDate[t.datum].att++; const q=qoeOf(t); if(q!==null) byDate[t.datum].qoeVals.push(q); });
       const dates = Object.keys(byDate).sort();
-      const totAtt = td.length, totLand = td.filter(t=>t.gelandet==='Yes').length;
-      const landRate = totAtt ? Math.round(totLand/totAtt*100) : 0;
+      const totAtt = td.length;
+      const trickQoe = qoeAvg(td.map(qoeOf)) ?? 0;
       const cid = 'ta-all-'+ti+'-'+Date.now();
       chartIds.push({cid, dates, byDate});
       html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
           <span style="font-size:13px;font-weight:600;color:var(--text);">${tObj.name}</span>
-          <span style="font-size:16px;font-weight:800;color:${colQ(landRate)};">${totLand}/${totAtt} <span style="font-size:11px;font-weight:400;">(${landRate}%)</span></span>
+          <span style="font-size:16px;font-weight:800;color:${colQ(trickQoe)};">${trickQoe}% <span style="font-size:11px;font-weight:400;">QoE · ${totAtt} att.</span></span>
         </div>
         <canvas id="${cid}" style="width:100%;height:100px;"></canvas>
       </div>`;
@@ -8524,7 +8531,7 @@ function renderTrickAnalytics() {
         const pad = {l:32,r:8,t:8,b:22};
         const n = dates.length;
         if (!n) return;
-        const pts = dates.map(d=>({d,pct:Math.round(byDate[d].land/byDate[d].att*100),att:byDate[d].att}));
+        const pts = dates.map(d=>({d,pct:qoeAvg(byDate[d].qoeVals)??0,att:byDate[d].att}));
         const xs = pts.map((_,i) => pad.l+(n===1?(W-pad.l-pad.r)/2:i/(n-1)*(W-pad.l-pad.r)));
         const toY = v => pad.t+(1-v/100)*(H-pad.t-pad.b);
         [0,50,100].forEach(pct => {
@@ -8565,17 +8572,17 @@ function renderTrickAnalytics() {
     const tmap = {};
     sd.forEach(t => {
       const key = t.trickaufbau||'—';
-      if (!tmap[key]) tmap[key]={att:0,land:0,perf:0,takeoff:[],grab:[],trick:[],land_r:[]};
+      if (!tmap[key]) tmap[key]={att:0,land:0,perf:0,qoeVals:[],takeoff:[],grab:[],trick:[],land_r:[]};
       tmap[key].att++;
       if(t.gelandet==='Yes') tmap[key].land++;
       if(t.gesamt>=10) tmap[key].perf++;
+      const q=qoeOf(t); if(q!==null) tmap[key].qoeVals.push(q);
       const to=pr('Takeoff',t),g=pr('Grab',t),tr=pr('Trick',t),la=pr('Landing',t);
       if(to!==null)tmap[key].takeoff.push(to);
       if(g!==null)tmap[key].grab.push(g);
       if(tr!==null)tmap[key].trick.push(tr);
       if(la!==null)tmap[key].land_r.push(la);
     });
-    const colQ = v=>v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
 
     // Direction distribution for radar
     const SESS_DIRS = ['Left','Right','Switch Left','Switch Right'];
@@ -8594,9 +8601,7 @@ function renderTrickAnalytics() {
     const cardsHtml = Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
         const hasComp = s.grab.length>0;
         const toA=avg(s.takeoff),gA=avg(s.grab),tA=avg(s.trick),lA=avg(s.land_r);
-        const landPct=s.att?Math.round(s.land/s.att*100):0;
-        const qualVals=[gA,tA].filter(v=>v!==null); // Grab+Trick only
-        const qualAvg=qualVals.length?Math.round(qualVals.reduce((a,b)=>a+b,0)/qualVals.length):null;
+        const trickQoe=qoeAvg(s.qoeVals);
         const bars = hasComp ? [['Take-off',toA,'#a78bfa'],['Grab',gA,'#f59e0b'],['Trick',tA,'#39c3d4'],['Landing',lA,'#2d8a4e']].map(([lbl,val,col])=>
           val!==null?`<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
             <span style="font-size:10px;color:var(--muted);min-width:48px;">${lbl}</span>
@@ -8610,9 +8615,8 @@ function renderTrickAnalytics() {
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
             <span style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}${s.perf>0?` <span style="font-size:11px;color:#39c3d4;font-weight:400;">⭐ ${s.perf}×</span>`:''}</span>
             <div style="text-align:right;flex-shrink:0;">
-              <span style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${s.land} / ${s.att}</span>
-              <span style="font-size:10px;color:var(--muted);display:block;">landed</span>
-              ${qualAvg!==null?`<span style="font-size:11px;font-weight:700;color:#39c3d4;display:block;margin-top:2px;">${qualAvg}% exec. quality</span>`:''}
+              <span style="font-size:18px;font-weight:800;color:${trickQoe!==null?colQ(trickQoe):'var(--muted)'};">${trickQoe!==null?trickQoe+'%':'—'}</span>
+              <span style="font-size:10px;color:var(--muted);display:block;">QoE · ${s.att} att.</span>
             </div>
           </div>
           ${bars}
@@ -8670,10 +8674,11 @@ function renderTrickAnalytics() {
   const byDate={};
   chartData.forEach(t=>{
     if(!t.datum)return;
-    if(!byDate[t.datum])byDate[t.datum]={att:0,land:0,stomped:0,takeoff:[],grab:[],trick:[],land_r:[]};
+    if(!byDate[t.datum])byDate[t.datum]={att:0,land:0,stomped:0,qoeVals:[],takeoff:[],grab:[],trick:[],land_r:[]};
     byDate[t.datum].att++;
     if(t.gelandet==='Yes')byDate[t.datum].land++;
     if((t.gesamt||0)>=10)byDate[t.datum].stomped++;
+    const q=qoeOf(t); if(q!==null)byDate[t.datum].qoeVals.push(q);
     const to=pr('Takeoff',t),g=pr('Grab',t),tr=pr('Trick',t),la=pr('Landing',t);
     if(to!==null)byDate[t.datum].takeoff.push(to);
     if(g!==null)byDate[t.datum].grab.push(g);
@@ -8683,18 +8688,19 @@ function renderTrickAnalytics() {
   const dates=Object.keys(byDate).sort();
   const pts=dates.map(d=>({d,att:byDate[d].att,
     landPct:Math.round(byDate[d].land/byDate[d].att*100),
+    qoe:qoeAvg(byDate[d].qoeVals),
     land:byDate[d].land,stomped:byDate[d].stomped,
     takeoff:avg(byDate[d].takeoff),grab:avg(byDate[d].grab),trick:avg(byDate[d].trick),landing:avg(byDate[d].land_r)}));
   const hasComp=pts.some(p=>p.grab!==null);
 
   // Overall stats
   const totAtt=chartData.length, totLand=chartData.filter(t=>t.gelandet==='Yes').length;
+  const overallQoe=qoeAvg(chartData.map(qoeOf));
   const allTakeoff=chartData.map(t=>pr('Takeoff',t)).filter(v=>v!==null);
   const allGrab=chartData.map(t=>pr('Grab',t)).filter(v=>v!==null);
   const allTrick=chartData.map(t=>pr('Trick',t)).filter(v=>v!==null);
   const allLand=chartData.map(t=>pr('Landing',t)).filter(v=>v!==null);
   const toAvg=avg(allTakeoff),gAvg=avg(allGrab),tAvg=avg(allTrick),lAvg=avg(allLand);
-  const colQ=v=>v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
 
   const statsHtml = hasComp
     ? `<div style="display:grid;grid-template-columns:repeat(${toAvg!==null?5:4},1fr);gap:10px;margin-bottom:16px;text-align:center;">
@@ -8704,10 +8710,9 @@ function renderTrickAnalytics() {
         <div><div style="font-size:26px;font-weight:800;color:${colQ(tAvg||0)};">${tAvg!==null?tAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Trick</div></div>
         <div><div style="font-size:26px;font-weight:800;color:${colQ(lAvg||0)};">${lAvg!==null?lAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Landing</div></div>
       </div>`
-    : `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;text-align:center;">
+    : `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;text-align:center;">
         <div><div style="font-size:26px;font-weight:800;color:var(--text);">${totAtt}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
-        <div><div style="font-size:26px;font-weight:800;color:#2d8a4e;">${totLand}</div><div style="font-size:11px;color:var(--muted);">Landed</div></div>
-        <div><div style="font-size:26px;font-weight:800;color:${colQ(totAtt?Math.round(totLand/totAtt*100):0)};">${totAtt?Math.round(totLand/totAtt*100)+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Success</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:${overallQoe!==null?colQ(overallQoe):'var(--muted)'};">${overallQoe!==null?overallQoe+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Quality of Execution</div></div>
       </div>`;
 
   const legend = hasComp ? `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;font-size:11px;">
@@ -8784,8 +8789,8 @@ function renderTrickAnalytics() {
           ctx.fillStyle=col;ctx.font='9px Poppins,sans-serif';ctx.textAlign='center';
           ctx.fillText(val+'%',bx+bw/2,by-3);
         });
-      } else if(!hasComp&&pt.landPct!==null){
-        const val=pt.landPct, bx=x-barW/2, by=toY(val), bh=H-pad.b-by;
+      } else if(!hasComp&&pt.qoe!==null){
+        const val=pt.qoe, bx=x-barW/2, by=toY(val), bh=H-pad.b-by;
         ctx.fillStyle='#39c3d4cc';ctx.fillRect(bx,by,barW,bh);
         ctx.fillStyle='#39c3d4';ctx.font='9px Poppins,sans-serif';ctx.textAlign='center';
         ctx.fillText(val+'%',bx+barW/2,by-3);
@@ -8793,7 +8798,7 @@ function renderTrickAnalytics() {
     }
 
     if(hasComp){drawConn(pts.map(p=>p.takeoff),'#a78bfa');drawConn(pts.map(p=>p.grab),'#f59e0b');drawConn(pts.map(p=>p.trick),'#39c3d4');drawConn(pts.map(p=>p.landing),'#2d8a4e');}
-    else drawConn(pts.map(p=>p.landPct),'#39c3d4');
+    else drawConn(pts.map(p=>p.qoe),'#39c3d4');
     pts.forEach((p,i)=>drawBars(p,xs[i]));
 
     ctx.textAlign='center';
@@ -8840,7 +8845,7 @@ function renderTrickAnalytics() {
         html+=`<div style="color:#39c3d4;">Trick &nbsp;: <b>${p.trick??'—'}%</b>${isFirst?'':dSign(p.trick,pv?.trick)}</div>`;
         html+=`<div style="color:#2d8a4e;">Landing: <b>${p.landing??'—'}%</b>${isFirst?'':dSign(p.landing,pv?.landing)}</div>`;
       } else {
-        html+=`<div style="color:#39c3d4;">Landing: <b>${p.landPct}%</b>${isFirst?'':dSign(p.landPct,pv?.landPct)}</div>`;
+        html+=`<div style="color:#39c3d4;">QoE: <b>${p.qoe!==null?p.qoe+'%':'—'}</b>${isFirst?'':dSign(p.qoe,pv?.qoe)}</div>`;
       }
       if(isFirst) html+=`<div style="font-size:10px;color:#6b8299;margin-top:4px;">First session</div>`;
       tt.innerHTML=html;
