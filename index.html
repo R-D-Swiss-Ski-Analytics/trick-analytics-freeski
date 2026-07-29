@@ -6457,7 +6457,7 @@ function renderLiveSession() {
 
       <!-- Rating rows -->
       <div style="display:flex;flex-direction:column;gap:12px;">
-        ${[['takeoff','Take-off'],['grab','Grab'],['trick','Trick'],['land','Landing']].map(([cat,label]) => `
+        ${[['takeoff','Take-off'],['trick','Trick'],['grab','Grab'],['land','Landing']].map(([cat,label]) => `
           <div>
             <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">${label}</div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
@@ -6622,7 +6622,7 @@ function renderSessionLog() {
   el.innerHTML = filtered.slice(0,30).map(e=>{ const i=e._i;
     const icon = e.result==='miss'?'✗':e.result==='perfect'?'⭐':'✓';
     const col = e.result==='miss'?'#e2001a':e.result==='perfect'?'#39c3d4':'#2d8a4e';
-    const ratings = e.grab ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">[${e.takeoff?`TO:${e.takeoff} `:''}G:${e.grab} T:${e.trick_r} L:${e.land}]</span>` : '';
+    const ratings = e.grab ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">[${e.takeoff?`TO:${e.takeoff} `:''}T:${e.trick_r} G:${e.grab} L:${e.land}]</span>` : '';
     const isEditing = sessEditIdx === i;
     let editRow = '';
     if (isEditing) {
@@ -6636,8 +6636,8 @@ function renderSessionLog() {
         <input type="text" id="sess-edit-trick" value="${tg.base.replace(/"/g,'&quot;')}" placeholder="Trick name" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
         ${grabSelectHtml('sess-edit-grab', assessGrabList(), tg.grab)}
         <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">T-off</span>${catBtn('takeoff','miss','Miss','#e2001a')}${catBtn('takeoff','okay','Okay','#2d8a4e')}${catBtn('takeoff','perfect','Perfect','#39c3d4')}</div>
-        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>${catBtn('grab','miss','Miss','#e2001a')}${catBtn('grab','okay','Okay','#2d8a4e')}${catBtn('grab','perfect','Perfect','#39c3d4')}</div>
         <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Trick</span>${catBtn('trick','miss','Miss','#e2001a')}${catBtn('trick','okay','Okay','#2d8a4e')}${catBtn('trick','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>${catBtn('grab','miss','Miss','#e2001a')}${catBtn('grab','okay','Okay','#2d8a4e')}${catBtn('grab','perfect','Perfect','#39c3d4')}</div>
         <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Land</span>${catBtn('land','miss','Miss','#e2001a')}${catBtn('land','okay','Okay','#2d8a4e')}${catBtn('land','perfect','Perfect','#39c3d4')}</div>
         <input type="text" id="sess-edit-comment" value="${(e.comment||'').replace(/"/g,'&quot;')}" placeholder="Comment (optional)" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
         <div style="display:flex;gap:8px;margin-top:2px;"><button onclick="saveFsLogEdit(${i})" style="padding:6px 16px;border-radius:8px;background:#39c3d4;border:none;color:#060f1a;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;">Save</button><button onclick="cancelFsEdit()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button></div>
