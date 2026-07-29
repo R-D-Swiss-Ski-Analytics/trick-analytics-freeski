@@ -5581,6 +5581,7 @@ function renderSessionPerformance() {
   el.innerHTML = `
     <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
       <span>All recorded tricks per athlete, grouped by direction</span>
+      <div style="margin-top:4px;font-size:10px;">QoE (Quality of Execution) = average of the rated categories Take-off · Trick · Grab · Landing — Miss 0% · Okay 50% · Perfect 100% · 🟢 ≥70% Ready · 🟡 ≥50% Developing</div>
     </div>
     <div>
       ${athList.map((athlet, i) => {
@@ -7597,6 +7598,7 @@ async function loadEntwicklung() {
           </select>
         </div>
         <div id="ev-trick-analytics"></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5;">QoE (Quality of Execution) = average of the rated categories Take-off · Trick · Grab · Landing — ✗ Miss 0% · ✓ Okay 50% · ⭐ Perfect 100%. Unrated categories are simply left out.</div>
       </div>
     </div>
     <div id="ev-raw-wrap" style="margin-top:16px;"></div>`;
@@ -9019,6 +9021,7 @@ const fragments = {
           </select>
         </div>
         <div id="ev-trick-analytics"></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5;">QoE (Quality of Execution) = average of the rated categories Take-off · Trick · Grab · Landing — ✗ Miss 0% · ✓ Okay 50% · ⭐ Perfect 100%. Unrated categories are simply left out.</div>
       </div>
     </div>`,
   dirRadar: `      <div class="card" style="padding:16px;">
