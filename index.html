@@ -5926,7 +5926,7 @@ async function rebuildReportFromTimestamps(id, silent=false) {
     const result = (e.gesamt||0) >= 10 ? 'perfect' : e.gelandet==='Yes' ? 'landed' : 'miss';
     athleteEntries[name].push({
       trick: e.trickaufbau || '—', result,
-      grab: parseSubRating(e.kommentar,'Grab'), trick_r: parseSubRating(e.kommentar,'Trick'), land: parseSubRating(e.kommentar,'Landing'),
+      takeoff: parseSubRating(e.kommentar,'Takeoff'), grab: parseSubRating(e.kommentar,'Grab'), trick_r: parseSubRating(e.kommentar,'Trick'), land: parseSubRating(e.kommentar,'Landing'),
       dbId: e.id
     });
   });
@@ -6009,9 +6009,10 @@ function generateAthleteReport() {
   const trickMap = {};
   data.forEach(e => {
     const trick = e.trickaufbau;
-    if (!trickMap[trick]) trickMap[trick] = {att:0, grabVals:[], trickVals:[], landVals:[]};
+    if (!trickMap[trick]) trickMap[trick] = {att:0, takeoffVals:[], grabVals:[], trickVals:[], landVals:[]};
     const s = trickMap[trick];
     s.att++;
+    const to = parseSubRating(e.kommentar,'Takeoff'); if (to!==null) s.takeoffVals.push(to);
     const g = parseSubRating(e.kommentar,'Grab');   if (g!==null) s.grabVals.push(g);
     const t = parseSubRating(e.kommentar,'Trick');  if (t!==null) s.trickVals.push(t);
     const l = parseSubRating(e.kommentar,'Landing'); if (l!==null) s.landVals.push(l);
@@ -6025,7 +6026,7 @@ function generateAthleteReport() {
     .sort((a,b) => b[1].att - a[1].att)
     .map(([trick,s]) => {
       const pctStr = v => v===null ? '—' : v+'%';
-      return [trick, s.att, pctStr(avgOfRatings(s.grabVals)), pctStr(avgOfRatings(s.trickVals)), pctStr(avgOfRatings(s.landVals))];
+      return [trick, s.att, pctStr(avgOfRatings(s.takeoffVals)), pctStr(avgOfRatings(s.grabVals)), pctStr(avgOfRatings(s.trickVals)), pctStr(avgOfRatings(s.landVals))];
     });
 
   // Build per-session breakdown
@@ -6092,14 +6093,14 @@ function generateAthleteReport() {
     doc.text('TRICK SUMMARY', margin, y); y += 4;
     doc.autoTable({
       startY: y, margin:{left:margin,right:margin},
-      head:[['Trick','Att.','Grab','Trick','Landing']],
+      head:[['Trick','Att.','Take-off','Grab','Trick','Landing']],
       body: trickRows,
       theme:'grid',
       styles:{fontSize:8.5,cellPadding:2.5,textColor:[34,34,34],lineColor:[230,230,230]},
       headStyles:{fillColor:[240,240,240],textColor:[100,100,100],fontStyle:'bold',fontSize:7.5},
-      columnStyles:{0:{cellWidth:cw*0.44},1:{cellWidth:cw*0.13,halign:'center'},2:{cellWidth:cw*0.15,halign:'center'},3:{cellWidth:cw*0.13,halign:'center'},4:{cellWidth:cw*0.15,halign:'center'}},
+      columnStyles:{0:{cellWidth:cw*0.34},1:{cellWidth:cw*0.10,halign:'center'},2:{cellWidth:cw*0.14,halign:'center'},3:{cellWidth:cw*0.14,halign:'center'},4:{cellWidth:cw*0.14,halign:'center'},5:{cellWidth:cw*0.14,halign:'center'}},
       didParseCell(data) {
-        if ([2,3,4].includes(data.column.index) && data.section==='body') {
+        if ([2,3,4,5].includes(data.column.index) && data.section==='body') {
           const v=parseInt(data.cell.raw);
           if (!isNaN(v)) {
             data.cell.styles.textColor=v>=70?[45,138,78]:v>=50?[180,100,0]:[200,30,30];
@@ -6382,7 +6383,7 @@ function renderLiveSession() {
   const name = sessActiveAthlete;
   let cardHtml = '';
   if (name && sessAthleteData[name]) {
-    if (!sessRatings[name]) sessRatings[name] = {grab:null,trick:null,land:null};
+    if (!sessRatings[name]) sessRatings[name] = {takeoff:null,grab:null,trick:null,land:null};
     const d = sessAthleteData[name];
     const sid = name.replace(/\s/g,'_');
     cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${sid}">
@@ -6456,7 +6457,7 @@ function renderLiveSession() {
 
       <!-- Rating rows -->
       <div style="display:flex;flex-direction:column;gap:12px;">
-        ${[['grab','Grab'],['trick','Trick'],['land','Landing']].map(([cat,label]) => `
+        ${[['takeoff','Take-off'],['grab','Grab'],['trick','Trick'],['land','Landing']].map(([cat,label]) => `
           <div>
             <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">${label}</div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
@@ -6488,7 +6489,7 @@ function selectSessAthlete(name) {
 }
 
 function setSessRating(name, cat, val, btn) {
-  if (!sessRatings[name]) sessRatings[name] = {grab:null,trick:null,land:null};
+  if (!sessRatings[name]) sessRatings[name] = {takeoff:null,grab:null,trick:null,land:null};
   sessRatings[name][cat] = val;
   // Update button styles inline
   const sid = name.replace(/\s/g,'_');
@@ -6503,7 +6504,7 @@ function setSessRating(name, cat, val, btn) {
     b.style.borderWidth = active ? '3px' : '2px';
   });
   const r = sessRatings[name];
-  if (r.grab && r.trick && r.land) autoLogAttempt(name);
+  if (r.takeoff && r.grab && r.trick && r.land) autoLogAttempt(name);
 }
 
 function highlightRatingBtn(name, cat, val) {}
@@ -6512,7 +6513,7 @@ async function autoLogAttempt(name) {
   const r = sessRatings[name];
   const d = sessAthleteData[name];
   const score = {miss:1,okay:2,perfect:3};
-  const avg = (score[r.grab]+score[r.trick]+score[r.land])/3;
+  const avg = (score[r.takeoff]+score[r.grab]+score[r.trick]+score[r.land])/4;
   const result = avg>=2.7?'perfect':avg>=1.7?'landed':'miss';
   const gesamt = r.land==='miss'?3:avg>=2.7?10:7;
 
@@ -6531,16 +6532,16 @@ async function autoLogAttempt(name) {
 
   const selectedGrab = d.currentGrab || '';
   const trickWithGrab = selectedGrab ? d.currentTrick + ' — ' + selectedGrab : d.currentTrick;
-  const logEntry = {name, trick:trickWithGrab, result, grab:r.grab, trick_r:r.trick, land:r.land, comment, selectedGrab,
+  const logEntry = {name, trick:trickWithGrab, result, takeoff:r.takeoff, grab:r.grab, trick_r:r.trick, land:r.land, comment, selectedGrab,
     time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})};
   sessLog.unshift(logEntry);
 
-  sessRatings[name]={grab:null,trick:null,land:null};
+  sessRatings[name]={takeoff:null,grab:null,trick:null,land:null};
   renderLiveSession();
   renderSessionLog();
   saveSessionState();
 
-  const kommentarParts = [`Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`];
+  const kommentarParts = [`Takeoff:${r.takeoff} Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`];
   if (comment) kommentarParts.push(comment);
   const trickInfo=sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
   db.from('tricks').insert({
@@ -6621,7 +6622,7 @@ function renderSessionLog() {
   el.innerHTML = filtered.slice(0,30).map(e=>{ const i=e._i;
     const icon = e.result==='miss'?'✗':e.result==='perfect'?'⭐':'✓';
     const col = e.result==='miss'?'#e2001a':e.result==='perfect'?'#39c3d4':'#2d8a4e';
-    const ratings = e.grab ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">[G:${e.grab} T:${e.trick_r} L:${e.land}]</span>` : '';
+    const ratings = e.grab ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">[${e.takeoff?`TO:${e.takeoff} `:''}G:${e.grab} T:${e.trick_r} L:${e.land}]</span>` : '';
     const isEditing = sessEditIdx === i;
     let editRow = '';
     if (isEditing) {
@@ -6634,6 +6635,7 @@ function renderSessionLog() {
       editRow = `<div style="padding:8px 12px 8px 38px;display:flex;flex-direction:column;gap:6px;">
         <input type="text" id="sess-edit-trick" value="${tg.base.replace(/"/g,'&quot;')}" placeholder="Trick name" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
         ${grabSelectHtml('sess-edit-grab', assessGrabList(), tg.grab)}
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">T-off</span>${catBtn('takeoff','miss','Miss','#e2001a')}${catBtn('takeoff','okay','Okay','#2d8a4e')}${catBtn('takeoff','perfect','Perfect','#39c3d4')}</div>
         <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>${catBtn('grab','miss','Miss','#e2001a')}${catBtn('grab','okay','Okay','#2d8a4e')}${catBtn('grab','perfect','Perfect','#39c3d4')}</div>
         <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Trick</span>${catBtn('trick','miss','Miss','#e2001a')}${catBtn('trick','okay','Okay','#2d8a4e')}${catBtn('trick','perfect','Perfect','#39c3d4')}</div>
         <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Land</span>${catBtn('land','miss','Miss','#e2001a')}${catBtn('land','okay','Okay','#2d8a4e')}${catBtn('land','perfect','Perfect','#39c3d4')}</div>
@@ -6672,14 +6674,14 @@ async function deleteLogEntry(idx) {
   saveSessionState();
 }
 
-let sessEditRatings = {grab:null,trick:null,land:null};
+let sessEditRatings = {takeoff:null,grab:null,trick:null,land:null};
 
 function editLogEntry(idx) {
   if (sessEditIdx === idx) { sessEditIdx = -1; renderSessionLog(); return; }
   const e = sessLog[idx];
   if (!e) return;
   sessEditIdx = idx;
-  sessEditRatings = {grab: e.grab||null, trick: e.trick_r||null, land: e.land||null};
+  sessEditRatings = {takeoff: e.takeoff||null, grab: e.grab||null, trick: e.trick_r||null, land: e.land||null};
   renderSessionLog();
 }
 
@@ -6692,10 +6694,12 @@ async function saveFsLogEdit(idx) {
   const e = sessLog[idx];
   if (!e) return;
   const r = sessEditRatings;
-  if (!r.grab || !r.trick || !r.land) { showToast('Please rate all 3 categories', 'error'); return; }
+  if (!r.grab || !r.trick || !r.land) { showToast('Please rate Grab, Trick and Landing', 'error'); return; }
   const oldResult = e.result;
   const score = {miss:1,okay:2,perfect:3};
-  const avg = (score[r.grab]+score[r.trick]+score[r.land])/3;
+  // Take-off zählt mit, wenn bewertet — alte Einträge ohne Take-off bleiben editierbar
+  const ratedCats = [r.takeoff, r.grab, r.trick, r.land].filter(Boolean);
+  const avg = ratedCats.reduce((a,v)=>a+score[v],0)/ratedCats.length;
   const newResult = avg>=2.7?'perfect':avg>=1.7?'landed':'miss';
   const d = sessAthleteData[e.name];
   if (d) {
@@ -6714,12 +6718,12 @@ async function saveFsLogEdit(idx) {
   const trickChanged = newTrick !== e.trick;
   const newComment = commentEl ? commentEl.value.trim() : (e.comment||'');
   e.result = newResult;
-  e.grab = r.grab; e.trick_r = r.trick; e.land = r.land;
+  e.takeoff = r.takeoff||null; e.grab = r.grab; e.trick_r = r.trick; e.land = r.land;
   if (trickChanged) { e.trick = newTrick; e.selectedGrab = newGrab; }
   e.comment = newComment;
   if (e.dbId) {
     const gesamt = r.land==='miss'?3:avg>=2.7?10:7;
-    const kommentarParts = [`Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`];
+    const kommentarParts = [(r.takeoff?`Takeoff:${r.takeoff} `:'')+`Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`];
     if (newComment) kommentarParts.push(newComment);
     const upd = {
       gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
@@ -6859,17 +6863,19 @@ function buildFsTrickBlocks(entries) {
     const trick = e.trick || '—';
     let target = blocks[blocks.length - 1];
     if (!target || target.trick !== trick) {
-      target = {trick, att:0, land:0, grabSum:0, grabN:0, trickSum:0, trickN:0, landSum:0, landN:0};
+      target = {trick, att:0, land:0, takeoffSum:0, takeoffN:0, grabSum:0, grabN:0, trickSum:0, trickN:0, landSum:0, landN:0};
       blocks.push(target);
     }
     target.att++;
     if (e.result !== 'miss') target.land++;
+    if (e.takeoff in score) { target.takeoffSum += score[e.takeoff]; target.takeoffN++; }
     if (e.grab in score)    { target.grabSum  += score[e.grab];    target.grabN++; }
     if (e.trick_r in score) { target.trickSum += score[e.trick_r]; target.trickN++; }
     if (e.land in score)    { target.landSum  += score[e.land];    target.landN++; }
   });
   return blocks.map(b => ({
     trick: b.trick, att: b.att, land: b.land,
+    takeoffPct: b.takeoffN ? Math.round(b.takeoffSum/b.takeoffN) : null,
     grabPct:  b.grabN  ? Math.round(b.grabSum/b.grabN)   : null,
     trickPct: b.trickN ? Math.round(b.trickSum/b.trickN) : null,
     landPct:  b.landN  ? Math.round(b.landSum/b.landN)   : null
@@ -7032,19 +7038,19 @@ function openReportPrint(report) {
 
       // Trick table — chronological blocks, Grab/Trick/Landing quality columns
       const pctStr = v => v===null||v===undefined ? '—' : v+'%';
-      const rows = (a.tricks||[]).map(t => [t.trick, t.att, pctStr(t.grabPct), pctStr(t.trickPct), pctStr(t.landPct)]);
+      const rows = (a.tricks||[]).map(t => [t.trick, t.att, pctStr(t.takeoffPct), pctStr(t.grabPct), pctStr(t.trickPct), pctStr(t.landPct)]);
 
       doc.autoTable({
         startY: y,
         margin: {left:margin, right:margin},
-        head: [['Trick','Att.','Grab','Trick','Landing']],
+        head: [['Trick','Att.','Take-off','Grab','Trick','Landing']],
         body: rows,
         theme: 'grid',
         styles: {fontSize:8.5, cellPadding:2.5, textColor:[34,34,34], lineColor:[230,230,230]},
         headStyles: {fillColor:[240,240,240], textColor:[100,100,100], fontStyle:'bold', fontSize:7.5},
-        columnStyles: {0:{cellWidth:cw*0.4}, 1:{cellWidth:cw*0.12,halign:'center'}, 2:{cellWidth:cw*0.16,halign:'center'}, 3:{cellWidth:cw*0.16,halign:'center'}, 4:{cellWidth:cw*0.16,halign:'center'}},
+        columnStyles: {0:{cellWidth:cw*0.34}, 1:{cellWidth:cw*0.10,halign:'center'}, 2:{cellWidth:cw*0.14,halign:'center'}, 3:{cellWidth:cw*0.14,halign:'center'}, 4:{cellWidth:cw*0.14,halign:'center'}, 5:{cellWidth:cw*0.14,halign:'center'}},
         didParseCell(data) {
-          if ([2,3,4].includes(data.column.index) && data.section==='body') {
+          if ([2,3,4,5].includes(data.column.index) && data.section==='body') {
             const v = parseInt(data.cell.raw);
             if (!isNaN(v)) {
               data.cell.styles.textColor = v>=70?[45,138,78]:v>=50?[180,100,0]:[200,30,30];
@@ -7987,11 +7993,12 @@ function appendTrendChart(allData, highlightDate) {
   const byDate = {};
   allData.forEach(t => {
     if (!t.datum) return;
-    if (!byDate[t.datum]) byDate[t.datum] = {att:0,land:0,stomped:0,grab:[],trick:[],land_r:[]};
+    if (!byDate[t.datum]) byDate[t.datum] = {att:0,land:0,stomped:0,takeoff:[],grab:[],trick:[],land_r:[]};
     byDate[t.datum].att++;
     if (t.gelandet==='Yes') byDate[t.datum].land++;
     if ((t.gesamt||0)>=10) byDate[t.datum].stomped++;
-    const g=pr('Grab',t), tr=pr('Trick',t), la=pr('Landing',t);
+    const to=pr('Takeoff',t), g=pr('Grab',t), tr=pr('Trick',t), la=pr('Landing',t);
+    if(to!==null) byDate[t.datum].takeoff.push(to);
     if(g!==null) byDate[t.datum].grab.push(g);
     if(tr!==null) byDate[t.datum].trick.push(tr);
     if(la!==null) byDate[t.datum].land_r.push(la);
@@ -8002,12 +8009,12 @@ function appendTrendChart(allData, highlightDate) {
     d, att:byDate[d].att,
     landPct: Math.round(byDate[d].land/byDate[d].att*100),
     land: byDate[d].land, stomped: byDate[d].stomped,
-    grab: avg(byDate[d].grab), trick: avg(byDate[d].trick), landing: avg(byDate[d].land_r),
+    takeoff: avg(byDate[d].takeoff), grab: avg(byDate[d].grab), trick: avg(byDate[d].trick), landing: avg(byDate[d].land_r),
     isHighlight: d === highlightDate
   }));
   const hasComp = pts.some(p=>p.grab!==null);
   const legend = hasComp ? `<div style="display:flex;gap:16px;font-size:11px;margin-bottom:6px;">
-    <span style="color:#2d8a4e;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span>
+    <span style="color:#2d8a4e;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span><span style="color:#a78bfa;">● Take-off</span>
   </div>` : '';
   const cid = 'trend-chart-'+Date.now();
   const div = document.createElement('div');
@@ -8024,8 +8031,8 @@ function appendTrendChart(allData, highlightDate) {
     const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
     const pad={l:42,r:16,t:14,b:48};
     const n=pts.length;
-    const barW=Math.max(6,Math.min(14,(W-pad.l-pad.r)/(n*5)));
-    const totalBarW=3*(barW+2)-2;
+    const barW=Math.max(5,Math.min(14,(W-pad.l-pad.r)/(n*6)));
+    const totalBarW=4*(barW+2)-2;
     const margin=totalBarW/2+4;
     const xs=pts.map((_,i)=>pad.l+margin+(n===1?(W-pad.l-pad.r-margin*2)/2:i/(n-1)*(W-pad.l-pad.r-margin*2)));
     const toY=v=>pad.t+(1-v/100)*(H-pad.t-pad.b);
@@ -8050,8 +8057,8 @@ function appendTrendChart(allData, highlightDate) {
 
     function drawBars(pt, x, isHi) {
       if(_hc && pt.grab!==null) {
-        // 3 mini bars: grab, trick, landing
-        const comps = [['grab','#f59e0b'],['trick','#39c3d4'],['landing','#2d8a4e']];
+        // Mini-Balken pro Kategorie: Take-off, Grab, Trick, Landing
+        const comps = [['takeoff','#a78bfa'],['grab','#f59e0b'],['trick','#39c3d4'],['landing','#2d8a4e']];
         const bw = barW; const gap = 2;
         const totalW = comps.length*(bw+gap)-gap;
         comps.forEach(([key,col],ci) => {
@@ -8081,6 +8088,7 @@ function appendTrendChart(allData, highlightDate) {
     const _hc = typeof hasComp !== 'undefined' ? hasComp : pts.some(p=>p.grab!==null);
     // Draw connecting lines first (behind bars)
     if(_hc) {
+      drawConnectLine(pts.map(p=>p.takeoff), '#a78bfa');
       drawConnectLine(pts.map(p=>p.grab), '#f59e0b');
       drawConnectLine(pts.map(p=>p.trick), '#39c3d4');
       drawConnectLine(pts.map(p=>p.landing), '#2d8a4e');
@@ -8145,11 +8153,12 @@ function renderSessionSummary(data, sessionLabel) {
   const tmap = {};
   data.forEach(t => {
     const key = t.trickaufbau || '—';
-    if (!tmap[key]) tmap[key] = {att:0, land:0, perf:0, grab:[], trick:[], land_r:[]};
+    if (!tmap[key]) tmap[key] = {att:0, land:0, perf:0, takeoff:[], grab:[], trick:[], land_r:[]};
     tmap[key].att++;
     if (t.gelandet==='Yes') tmap[key].land++;
     if (t.gesamt>=10) tmap[key].perf++;
-    const g=pr('Grab',t), tr=pr('Trick',t), la=pr('Landing',t);
+    const to=pr('Takeoff',t), g=pr('Grab',t), tr=pr('Trick',t), la=pr('Landing',t);
+    if(to!==null) tmap[key].takeoff.push(to);
     if(g!==null) tmap[key].grab.push(g);
     if(tr!==null) tmap[key].trick.push(tr);
     if(la!==null) tmap[key].land_r.push(la);
@@ -8181,7 +8190,7 @@ function renderSessionSummary(data, sessionLabel) {
   // Per-trick cards
   const cardsHtml = Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
     const hasComp = s.grab.length > 0;
-    const gAvg=avg(s.grab), tAvg=avg(s.trick), lAvg=avg(s.land_r);
+    const toAvg=avg(s.takeoff), gAvg=avg(s.grab), tAvg=avg(s.trick), lAvg=avg(s.land_r);
     const landPct = s.att ? Math.round(s.land/s.att*100) : 0;
     // Execution quality = Grab + Trick only (Landing captured separately as landing rate)
     const qualVals = [gAvg, tAvg].filter(v => v !== null); // Grab+Trick only
@@ -8189,7 +8198,7 @@ function renderSessionSummary(data, sessionLabel) {
 
     const compBars = hasComp ? `
       <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
-        ${[['Grab',gAvg,'#f59e0b'],['Trick',tAvg,'#39c3d4'],['Landing',lAvg,'#2d8a4e']].map(([lbl,val,col])=>
+        ${[['Take-off',toAvg,'#a78bfa'],['Grab',gAvg,'#f59e0b'],['Trick',tAvg,'#39c3d4'],['Landing',lAvg,'#2d8a4e']].map(([lbl,val,col])=>
           val!==null?`<div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:11px;color:var(--muted);min-width:52px;">${lbl}</span>
             <div style="flex:1;background:var(--border);border-radius:3px;height:8px;">
@@ -8222,7 +8231,7 @@ function renderRawEntries(entries, subtitle) {
   const sorted = [...entries].sort((a,b)=>(b.datum||'').localeCompare(a.datum||'') || (b.id||0)-(a.id||0));
 
   const fmtDate = d => { if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
-  const fmtKom  = k => { if(!k) return ''; return k.replace(/Grab:/,'G:').replace(/Trick:/,' T:').replace(/Landing:/,' L:'); };
+  const fmtKom  = k => { if(!k) return ''; return k.replace(/Takeoff:/,'TO:').replace(/Grab:/,' G:').replace(/Trick:/,' T:').replace(/Landing:/,' L:'); };
   const typShort = t => t==='Landing Bag'?'Bag':t==='Jump On-Snow'?'On-Snow':t==='Big Air Competition'?'Comp':t||'—';
   const open = wasOpen;
 
@@ -8542,11 +8551,12 @@ function renderTrickAnalytics() {
     const tmap = {};
     sd.forEach(t => {
       const key = t.trickaufbau||'—';
-      if (!tmap[key]) tmap[key]={att:0,land:0,perf:0,grab:[],trick:[],land_r:[]};
+      if (!tmap[key]) tmap[key]={att:0,land:0,perf:0,takeoff:[],grab:[],trick:[],land_r:[]};
       tmap[key].att++;
       if(t.gelandet==='Yes') tmap[key].land++;
       if(t.gesamt>=10) tmap[key].perf++;
-      const g=pr('Grab',t),tr=pr('Trick',t),la=pr('Landing',t);
+      const to=pr('Takeoff',t),g=pr('Grab',t),tr=pr('Trick',t),la=pr('Landing',t);
+      if(to!==null)tmap[key].takeoff.push(to);
       if(g!==null)tmap[key].grab.push(g);
       if(tr!==null)tmap[key].trick.push(tr);
       if(la!==null)tmap[key].land_r.push(la);
@@ -8569,11 +8579,11 @@ function renderTrickAnalytics() {
 
     const cardsHtml = Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
         const hasComp = s.grab.length>0;
-        const gA=avg(s.grab),tA=avg(s.trick),lA=avg(s.land_r);
+        const toA=avg(s.takeoff),gA=avg(s.grab),tA=avg(s.trick),lA=avg(s.land_r);
         const landPct=s.att?Math.round(s.land/s.att*100):0;
         const qualVals=[gA,tA].filter(v=>v!==null); // Grab+Trick only
         const qualAvg=qualVals.length?Math.round(qualVals.reduce((a,b)=>a+b,0)/qualVals.length):null;
-        const bars = hasComp ? [['Grab',gA,'#f59e0b'],['Trick',tA,'#39c3d4'],['Landing',lA,'#2d8a4e']].map(([lbl,val,col])=>
+        const bars = hasComp ? [['Take-off',toA,'#a78bfa'],['Grab',gA,'#f59e0b'],['Trick',tA,'#39c3d4'],['Landing',lA,'#2d8a4e']].map(([lbl,val,col])=>
           val!==null?`<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
             <span style="font-size:10px;color:var(--muted);min-width:48px;">${lbl}</span>
             <div style="flex:1;background:var(--border);border-radius:3px;height:7px;">
@@ -8646,11 +8656,12 @@ function renderTrickAnalytics() {
   const byDate={};
   chartData.forEach(t=>{
     if(!t.datum)return;
-    if(!byDate[t.datum])byDate[t.datum]={att:0,land:0,stomped:0,grab:[],trick:[],land_r:[]};
+    if(!byDate[t.datum])byDate[t.datum]={att:0,land:0,stomped:0,takeoff:[],grab:[],trick:[],land_r:[]};
     byDate[t.datum].att++;
     if(t.gelandet==='Yes')byDate[t.datum].land++;
     if((t.gesamt||0)>=10)byDate[t.datum].stomped++;
-    const g=pr('Grab',t),tr=pr('Trick',t),la=pr('Landing',t);
+    const to=pr('Takeoff',t),g=pr('Grab',t),tr=pr('Trick',t),la=pr('Landing',t);
+    if(to!==null)byDate[t.datum].takeoff.push(to);
     if(g!==null)byDate[t.datum].grab.push(g);
     if(tr!==null)byDate[t.datum].trick.push(tr);
     if(la!==null)byDate[t.datum].land_r.push(la);
@@ -8659,20 +8670,22 @@ function renderTrickAnalytics() {
   const pts=dates.map(d=>({d,att:byDate[d].att,
     landPct:Math.round(byDate[d].land/byDate[d].att*100),
     land:byDate[d].land,stomped:byDate[d].stomped,
-    grab:avg(byDate[d].grab),trick:avg(byDate[d].trick),landing:avg(byDate[d].land_r)}));
+    takeoff:avg(byDate[d].takeoff),grab:avg(byDate[d].grab),trick:avg(byDate[d].trick),landing:avg(byDate[d].land_r)}));
   const hasComp=pts.some(p=>p.grab!==null);
 
   // Overall stats
   const totAtt=chartData.length, totLand=chartData.filter(t=>t.gelandet==='Yes').length;
+  const allTakeoff=chartData.map(t=>pr('Takeoff',t)).filter(v=>v!==null);
   const allGrab=chartData.map(t=>pr('Grab',t)).filter(v=>v!==null);
   const allTrick=chartData.map(t=>pr('Trick',t)).filter(v=>v!==null);
   const allLand=chartData.map(t=>pr('Landing',t)).filter(v=>v!==null);
-  const gAvg=avg(allGrab),tAvg=avg(allTrick),lAvg=avg(allLand);
+  const toAvg=avg(allTakeoff),gAvg=avg(allGrab),tAvg=avg(allTrick),lAvg=avg(allLand);
   const colQ=v=>v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
 
   const statsHtml = hasComp
-    ? `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;text-align:center;">
+    ? `<div style="display:grid;grid-template-columns:repeat(${toAvg!==null?5:4},1fr);gap:10px;margin-bottom:16px;text-align:center;">
         <div><div style="font-size:26px;font-weight:800;color:var(--text);">${totAtt}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
+        ${toAvg!==null?`<div><div style="font-size:26px;font-weight:800;color:${colQ(toAvg)};">${toAvg}%</div><div style="font-size:11px;color:var(--muted);">Take-off</div></div>`:''}
         <div><div style="font-size:26px;font-weight:800;color:${colQ(gAvg||0)};">${gAvg!==null?gAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Grab</div></div>
         <div><div style="font-size:26px;font-weight:800;color:${colQ(tAvg||0)};">${tAvg!==null?tAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Trick</div></div>
         <div><div style="font-size:26px;font-weight:800;color:${colQ(lAvg||0)};">${lAvg!==null?lAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Landing</div></div>
@@ -8684,7 +8697,7 @@ function renderTrickAnalytics() {
       </div>`;
 
   const legend = hasComp ? `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;font-size:11px;">
-    <span style="color:#2d8a4e;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span>
+    <span style="color:#2d8a4e;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span><span style="color:#a78bfa;">● Take-off</span>
   </div>` : '';
 
   // Direction distribution for overall/trick view
@@ -8726,8 +8739,8 @@ function renderTrickAnalytics() {
     const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
     const pad={l:42,r:16,t:14,b:52};
     const n=pts.length;
-    const barW=Math.max(6,Math.min(16,(W-pad.l-pad.r)/(n*5)));
-    const totalBarW=3*(barW+2)-2;
+    const barW=Math.max(5,Math.min(16,(W-pad.l-pad.r)/(n*6)));
+    const totalBarW=4*(barW+2)-2;
     const margin=totalBarW/2+6;
     const xs=pts.map((_,i)=>pad.l+margin+(n===1?(W-pad.l-pad.r-margin*2)/2:i/(n-1)*(W-pad.l-pad.r-margin*2)));
     const toY=v=>pad.t+(1-v/100)*(H-pad.t-pad.b);
@@ -8748,7 +8761,7 @@ function renderTrickAnalytics() {
     }
     function drawBars(pt,x){
       if(hasComp&&pt.grab!==null){
-        const comps=[['grab','#f59e0b'],['trick','#39c3d4'],['landing','#2d8a4e']];
+        const comps=[['takeoff','#a78bfa'],['grab','#f59e0b'],['trick','#39c3d4'],['landing','#2d8a4e']];
         const bw=barW,gap=2,totalW=comps.length*(bw+gap)-gap;
         comps.forEach(([key,col],ci)=>{
           const val=pt[key]; if(val===null)return;
@@ -8765,7 +8778,7 @@ function renderTrickAnalytics() {
       }
     }
 
-    if(hasComp){drawConn(pts.map(p=>p.grab),'#f59e0b');drawConn(pts.map(p=>p.trick),'#39c3d4');drawConn(pts.map(p=>p.landing),'#2d8a4e');}
+    if(hasComp){drawConn(pts.map(p=>p.takeoff),'#a78bfa');drawConn(pts.map(p=>p.grab),'#f59e0b');drawConn(pts.map(p=>p.trick),'#39c3d4');drawConn(pts.map(p=>p.landing),'#2d8a4e');}
     else drawConn(pts.map(p=>p.landPct),'#39c3d4');
     pts.forEach((p,i)=>drawBars(p,xs[i]));
 
@@ -8808,6 +8821,7 @@ function renderTrickAnalytics() {
           +`<div style="color:#e2001a;">✗ Missed&nbsp;: <b>${_ms}×</b></div>`
           +`<div style="border-bottom:1px solid rgba(255,255,255,0.1);margin:5px 0;"></div>`;
       if(hasComp){
+        if(p.takeoff!==null) html+=`<div style="color:#a78bfa;">Take-off: <b>${p.takeoff}%</b>${isFirst?'':dSign(p.takeoff,pv?.takeoff)}</div>`;
         html+=`<div style="color:#f59e0b;">Grab &nbsp;&nbsp;: <b>${p.grab??'—'}%</b>${isFirst?'':dSign(p.grab,pv?.grab)}</div>`;
         html+=`<div style="color:#39c3d4;">Trick &nbsp;: <b>${p.trick??'—'}%</b>${isFirst?'':dSign(p.trick,pv?.trick)}</div>`;
         html+=`<div style="color:#2d8a4e;">Landing: <b>${p.landing??'—'}%</b>${isFirst?'':dSign(p.landing,pv?.landing)}</div>`;
