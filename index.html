@@ -6476,6 +6476,7 @@ function renderLiveSession() {
           </div>`).join('')}
       </div>
       <input type="text" id="sess-comment-${sid}" placeholder="Comment before rating (optional)" style="width:100%;margin-top:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+      <button onclick="logRatedAttempt('${name}')" style="width:100%;margin-top:10px;padding:14px 8px;border-radius:12px;background:rgba(57,195,212,0.12);border:2px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;cursor:pointer;-webkit-tap-highlight-color:transparent;">＋ LOG ATTEMPT</button>
     </div>`;
   }
 
@@ -6509,11 +6510,23 @@ function setSessRating(name, cat, val, btn) {
 
 function highlightRatingBtn(name, cat, val) {}
 
+// Manueller Log-Button: loggt mit den bisher gesetzten Bewertungen (auch unvollständig,
+// z. B. nur Take-off, wenn die Landung vom Absprung aus nicht sichtbar ist)
+function logRatedAttempt(name) {
+  const d = sessAthleteData[name];
+  if (!d || !d.currentTrick) { showToast('Please select a trick first', 'error'); return; }
+  const r = sessRatings[name] || {};
+  if (!r.takeoff && !r.grab && !r.trick && !r.land) { showToast('Rate at least one category', 'error'); return; }
+  autoLogAttempt(name);
+}
+
 async function autoLogAttempt(name) {
   const r = sessRatings[name];
   const d = sessAthleteData[name];
   const score = {miss:1,okay:2,perfect:3};
-  const avg = (score[r.takeoff]+score[r.grab]+score[r.trick]+score[r.land])/4;
+  const rated = ['takeoff','grab','trick','land'].filter(c => r[c]);
+  if (!rated.length) return;
+  const avg = rated.reduce((a,c)=>a+score[r[c]],0)/rated.length;
   const result = avg>=2.7?'perfect':avg>=1.7?'landed':'miss';
   const gesamt = r.land==='miss'?3:avg>=2.7?10:7;
 
@@ -6532,7 +6545,7 @@ async function autoLogAttempt(name) {
 
   const selectedGrab = d.currentGrab || '';
   const trickWithGrab = selectedGrab ? d.currentTrick + ' — ' + selectedGrab : d.currentTrick;
-  const logEntry = {name, trick:trickWithGrab, result, takeoff:r.takeoff, grab:r.grab, trick_r:r.trick, land:r.land, comment, selectedGrab,
+  const logEntry = {name, trick:trickWithGrab, result, takeoff:r.takeoff||null, grab:r.grab||null, trick_r:r.trick||null, land:r.land||null, comment, selectedGrab,
     time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})};
   sessLog.unshift(logEntry);
 
@@ -6541,13 +6554,13 @@ async function autoLogAttempt(name) {
   renderSessionLog();
   saveSessionState();
 
-  const kommentarParts = [`Takeoff:${r.takeoff} Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`];
+  const kommentarParts = [[r.takeoff&&`Takeoff:${r.takeoff}`, r.grab&&`Grab:${r.grab}`, r.trick&&`Trick:${r.trick}`, r.land&&`Landing:${r.land}`].filter(Boolean).join(' ')];
   if (comment) kommentarParts.push(comment);
   const trickInfo=sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
   db.from('tricks').insert({
     athlet:name, datum:sessCurrentDate(),
     typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
-    trickaufbau:trickWithGrab, gelandet:r.land!=='miss'?'Yes':'No',
+    trickaufbau:trickWithGrab, gelandet:(r.land ? r.land!=='miss' : result!=='miss')?'Yes':'No',
     grab: selectedGrab || null,
     gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
     kommentar: kommentarParts.join(' | ')
@@ -6622,7 +6635,8 @@ function renderSessionLog() {
   el.innerHTML = filtered.slice(0,30).map(e=>{ const i=e._i;
     const icon = e.result==='miss'?'✗':e.result==='perfect'?'⭐':'✓';
     const col = e.result==='miss'?'#e2001a':e.result==='perfect'?'#39c3d4':'#2d8a4e';
-    const ratings = e.grab ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">[${e.takeoff?`TO:${e.takeoff} `:''}T:${e.trick_r} G:${e.grab} L:${e.land}]</span>` : '';
+    const ratingStr = [e.takeoff&&`TO:${e.takeoff}`, e.trick_r&&`T:${e.trick_r}`, e.grab&&`G:${e.grab}`, e.land&&`L:${e.land}`].filter(Boolean).join(' ');
+    const ratings = ratingStr ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">[${ratingStr}]</span>` : '';
     const isEditing = sessEditIdx === i;
     let editRow = '';
     if (isEditing) {
@@ -6694,10 +6708,10 @@ async function saveFsLogEdit(idx) {
   const e = sessLog[idx];
   if (!e) return;
   const r = sessEditRatings;
-  if (!r.grab || !r.trick || !r.land) { showToast('Please rate Grab, Trick and Landing', 'error'); return; }
+  if (!r.takeoff && !r.grab && !r.trick && !r.land) { showToast('Rate at least one category', 'error'); return; }
   const oldResult = e.result;
   const score = {miss:1,okay:2,perfect:3};
-  // Take-off zählt mit, wenn bewertet — alte Einträge ohne Take-off bleiben editierbar
+  // Schnitt über die bewerteten Kategorien — Teilbewertungen sind erlaubt
   const ratedCats = [r.takeoff, r.grab, r.trick, r.land].filter(Boolean);
   const avg = ratedCats.reduce((a,v)=>a+score[v],0)/ratedCats.length;
   const newResult = avg>=2.7?'perfect':avg>=1.7?'landed':'miss';
@@ -6718,16 +6732,16 @@ async function saveFsLogEdit(idx) {
   const trickChanged = newTrick !== e.trick;
   const newComment = commentEl ? commentEl.value.trim() : (e.comment||'');
   e.result = newResult;
-  e.takeoff = r.takeoff||null; e.grab = r.grab; e.trick_r = r.trick; e.land = r.land;
+  e.takeoff = r.takeoff||null; e.grab = r.grab||null; e.trick_r = r.trick||null; e.land = r.land||null;
   if (trickChanged) { e.trick = newTrick; e.selectedGrab = newGrab; }
   e.comment = newComment;
   if (e.dbId) {
     const gesamt = r.land==='miss'?3:avg>=2.7?10:7;
-    const kommentarParts = [(r.takeoff?`Takeoff:${r.takeoff} `:'')+`Grab:${r.grab} Trick:${r.trick} Landing:${r.land}`];
+    const kommentarParts = [[r.takeoff&&`Takeoff:${r.takeoff}`, r.grab&&`Grab:${r.grab}`, r.trick&&`Trick:${r.trick}`, r.land&&`Landing:${r.land}`].filter(Boolean).join(' ')];
     if (newComment) kommentarParts.push(newComment);
     const upd = {
       gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
-      gelandet:r.land!=='miss'?'Yes':'No',
+      gelandet:(r.land ? r.land!=='miss' : newResult!=='miss')?'Yes':'No',
       kommentar: kommentarParts.join(' | ')
     };
     if (trickChanged) { upd.trickaufbau = newTrick; upd.grab = newGrab || null; }
@@ -9019,7 +9033,7 @@ const fragments = {
         <textarea id="sbe-coach-kommentar" rows="2" placeholder="Coach-Kommentar..."></textarea></div>`,
 };
 function init() { initStandortGrabs(); }
-return { fragments, init, showPage, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
+return { fragments, init, showPage, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, logRatedAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
 })();
 
 // ═══════════════ SPORT BOOT ═══════════════
