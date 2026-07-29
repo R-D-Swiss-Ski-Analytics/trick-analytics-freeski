@@ -8287,7 +8287,9 @@ function renderRawEntries(entries, subtitle) {
             <span style="color:var(--muted);font-size:10px;">${ts}</span>
             <span style="color:var(--muted);font-size:10px;">${typShort(e.typ)}</span>
             <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${e.trickaufbau||''}">${e.trickaufbau||'—'}</span>
-            <span style="color:${e.gelandet==='Yes'?'#2d8a4e':'#e2001a'};font-weight:700;">${e.gelandet==='Yes'?'✓ Yes':'✗ No'}</span>
+            ${(() => { const q = qoeOf(e); return q!==null
+              ? `<span style="color:${q>=70?'#2d8a4e':q>=40?'#f59e0b':'#e2001a'};font-weight:700;">${q}%</span>`
+              : `<span style="color:var(--muted);">—</span>`; })()}
             <span style="color:var(--muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${fmtKom(e.kommentar)}</span>
             <button onclick="editRawEntry(${e.id})" title="Edit entry"
               style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;font-size:11px;padding:2px 5px;line-height:1;">✏</button>
