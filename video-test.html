@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Video-Qualitätstest — Trick Analyses</title>
+<style>
+  :root {
+    --bg:#060f1a; --surface:#0b1826; --surface2:#122438; --border:#1a3450;
+    --text:#e8f1f8; --muted:#6b8299; --accent:#39c3d4; --warn:#f59e0b; --err:#e2001a; --ok:#2d8a4e;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Poppins',-apple-system,sans-serif; font-size:14px; padding:16px; max-width:720px; margin:0 auto; }
+  h1 { font-size:18px; margin-bottom:4px; }
+  .sub { color:var(--muted); font-size:12px; margin-bottom:16px; line-height:1.5; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; }
+  .card h2 { font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--accent); margin-bottom:10px; }
+  .pick-btn { display:block; width:100%; text-align:center; padding:14px; border-radius:10px; border:2px solid var(--accent); background:rgba(57,195,212,0.12); color:var(--accent); font-weight:700; font-size:15px; cursor:pointer; margin-bottom:8px; }
+  .pick-btn.secondary { border-color:var(--border); background:var(--surface2); color:var(--muted); font-weight:500; font-size:13px; }
+  .pick-btn input { display:none; }
+  .hint { font-size:11px; color:var(--muted); line-height:1.5; margin-top:6px; }
+  button.action { width:100%; padding:13px; border-radius:10px; border:none; background:var(--accent); color:#060f1a; font-weight:700; font-size:15px; cursor:pointer; font-family:inherit; }
+  button.action:disabled { opacity:.4; cursor:default; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--border); vertical-align:top; word-break:break-word; }
+  th { color:var(--muted); font-weight:500; white-space:nowrap; }
+  td.diff { color:var(--warn); font-weight:700; }
+  td.same { color:var(--ok); }
+  .progress-wrap { background:var(--surface2); border-radius:8px; height:22px; overflow:hidden; margin:8px 0; display:none; position:relative; }
+  .progress-bar { background:var(--accent); height:100%; width:0%; transition:width .2s; }
+  .progress-label { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text); }
+  .status { font-size:12px; margin-top:8px; line-height:1.5; }
+  .status.err { color:var(--err); }
+  .status.ok { color:var(--ok); }
+  video { width:100%; border-radius:8px; margin-top:10px; background:#000; }
+  .verdict { padding:10px; border-radius:8px; font-size:13px; font-weight:700; margin-top:10px; text-align:center; }
+  .verdict.ok { background:rgba(45,138,78,.15); color:var(--ok); border:1px solid var(--ok); }
+  .verdict.warn { background:rgba(245,158,11,.15); color:var(--warn); border:1px solid var(--warn); }
+  code { background:var(--surface2); padding:1px 5px; border-radius:4px; font-size:11px; }
+</style>
+</head>
+<body>
+<h1>🎥 Video-Qualitätstest</h1>
+<div class="sub">
+  Prüft, ob und wie iOS Videos beim Übergeben an den Browser verändert (Codec, Auflösung, Framerate),
+  und ob Upload → Download verlustfrei ist.<br>
+  <b>Wichtig:</b> Was hier als «Original» angezeigt wird, ist bereits das, was iOS dem Browser übergibt —
+  eine eventuelle Umwandlung (z.&nbsp;B. HEVC → H.264) ist dann schon passiert. Zum echten Vergleich die Angaben
+  in der Fotos-App (aufwischen → Info) neben die Werte hier halten.
+</div>
+
+<div class="card">
+  <h2>1 · Video wählen</h2>
+  <label class="pick-btn">🎥 Mit Kamera filmen
+    <input type="file" accept="video/*" capture="environment" onchange="onFilePicked(this)">
+  </label>
+  <label class="pick-btn secondary">📁 Video aus Mediathek wählen (nur für diesen Test)
+    <input type="file" accept="video/*" onchange="onFilePicked(this)">
+  </label>
+  <div class="hint">Die Mediathek-Option gibt es nur hier: So kannst du ein Video mit bekannten Eigenschaften
+  (z.&nbsp;B. ein Slowmo, dessen Daten du in der Fotos-App siehst) durch die Pipeline schicken.
+  In der App selbst wird nur direkt gefilmt.</div>
+</div>
+
+<div class="card" id="card-original" style="display:none;">
+  <h2>2 · Original (wie vom Browser empfangen)</h2>
+  <div id="meta-original">Analysiere…</div>
+  <video id="vid-original" controls playsinline preload="metadata" style="display:none;"></video>
+</div>
+
+<div class="card" id="card-upload" style="display:none;">
+  <h2>3 · Upload → Download</h2>
+  <button class="action" id="btn-upload" onclick="startRoundtrip()">⬆️ Hochladen &amp; wieder herunterladen</button>
+  <div class="progress-wrap" id="up-progress-wrap">
+    <div class="progress-bar" id="up-progress"></div>
+    <div class="progress-label" id="up-progress-label"></div>
+  </div>
+  <div class="progress-wrap" id="down-progress-wrap">
+    <div class="progress-bar" id="down-progress"></div>
+    <div class="progress-label" id="down-progress-label"></div>
+  </div>
+  <div class="status" id="roundtrip-status"></div>
+</div>
+
+<div class="card" id="card-compare" style="display:none;">
+  <h2>4 · Vergleich Original ↔ Heruntergeladen</h2>
+  <div id="compare-table"></div>
+  <div id="verdict"></div>
+  <video id="vid-download" controls playsinline preload="metadata" style="display:none;"></video>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// Testseite nutzt das Freeski-Projekt; die iOS-Qualitätsfrage ist projektunabhängig.
+const SUPABASE_URL = 'https://nvibrxtqknkmsiccauzs.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_8RRRG5c_PhJ8Cc1rC03zJw_1W5UYkS7';
+const BUCKET = 'video-test';
+
+let originalFile = null;
+let originalMeta = null;
+let downloadMeta = null;
+let uploadedPath = null;
+
+// ───────────── ISO-BMFF-Parser (MP4/MOV) — liest Codec, FPS, Frames aus dem Container ─────────────
+// Liest nur die Box-Header per Blob.slice, damit auch grosse Dateien nicht komplett in den Speicher müssen.
+async function readBytes(blob, offset, length) {
+  const buf = await blob.slice(offset, offset + length).arrayBuffer();
+  return new DataView(buf);
+}
+function fourcc(dv, off) {
+  return String.fromCharCode(dv.getUint8(off), dv.getUint8(off+1), dv.getUint8(off+2), dv.getUint8(off+3));
+}
+async function findTopLevelBox(blob, wanted) {
+  let offset = 0;
+  while (offset + 8 <= blob.size) {
+    const head = await readBytes(blob, offset, 16);
+    let size = head.getUint32(0);
+    const type = fourcc(head, 4);
+    let headerLen = 8;
+    if (size === 1) { // 64-bit largesize (grosse mdat)
+      size = Number(head.getBigUint64(8));
+      headerLen = 16;
+    } else if (size === 0) {
+      size = blob.size - offset; // Box reicht bis Dateiende
+    }
+    if (type === wanted) return { offset: offset + headerLen, size: size - headerLen };
+    offset += size;
+  }
+  return null;
+}
+// Rekursiver Walk innerhalb eines bereits geladenen Buffers (moov ist klein)
+function* walkBoxes(dv, start, end) {
+  let off = start;
+  while (off + 8 <= end) {
+    let size = dv.getUint32(off);
+    const type = fourcc(dv, off + 4);
+    let headerLen = 8;
+    if (size === 1) { size = Number(dv.getBigUint64(off + 8)); headerLen = 16; }
+    else if (size === 0) { size = end - off; }
+    yield { type, start: off + headerLen, end: off + size };
+    off += size;
+  }
+}
+function findBox(dv, start, end, path) {
+  let ranges = [{ start, end }];
+  for (const wanted of path) {
+    const next = [];
+    for (const r of ranges) {
+      for (const box of walkBoxes(dv, r.start, r.end)) {
+        if (box.type === wanted) next.push(box);
+      }
+    }
+    if (!next.length) return null;
+    ranges = next;
+  }
+  return ranges;
+}
+const CODEC_NAMES = {
+  avc1:'H.264 / AVC', avc3:'H.264 / AVC', hvc1:'H.265 / HEVC', hev1:'H.265 / HEVC',
+  av01:'AV1', vp09:'VP9', mp4v:'MPEG-4 Visual', apch:'ProRes 422 HQ', apcn:'ProRes 422',
+};
+async function parseContainer(blob) {
+  const out = { container:null, codec:null, codecName:null, fps:null, nominalFps:null, frames:null, duration:null };
+  try {
+    // ftyp → Container-Typ
+    const ftyp = await findTopLevelBox(blob, 'ftyp');
+    if (ftyp) {
+      const dv = await readBytes(blob, ftyp.offset, Math.min(ftyp.size, 4));
+      const brand = fourcc(dv, 0);
+      out.container = brand === 'qt  ' ? 'QuickTime (.mov)' : `MP4 (${brand.trim()})`;
+    }
+    // moov komplett laden (typisch < 1 MB)
+    const moov = await findTopLevelBox(blob, 'moov');
+    if (!moov) return out;
+    const dv = await readBytes(blob, moov.offset, moov.size);
+    // Video-Track finden: trak, dessen hdlr == 'vide'
+    for (const trak of walkBoxes(dv, 0, moov.size)) {
+      if (trak.type !== 'trak') continue;
+      const hdlr = findBox(dv, trak.start, trak.end, ['mdia','hdlr']);
+      if (!hdlr || fourcc(dv, hdlr[0].start + 8) !== 'vide') continue;
+      // mdhd → timescale + duration
+      const mdhd = findBox(dv, trak.start, trak.end, ['mdia','mdhd']);
+      let timescale = null, duration = null;
+      if (mdhd) {
+        const s = mdhd[0].start;
+        const version = dv.getUint8(s);
+        if (version === 1) { timescale = dv.getUint32(s + 20); duration = Number(dv.getBigUint64(s + 24)); }
+        else { timescale = dv.getUint32(s + 12); duration = dv.getUint32(s + 16); }
+        if (timescale) out.duration = duration / timescale;
+      }
+      // stsd → Codec-FourCC
+      const stsd = findBox(dv, trak.start, trak.end, ['mdia','minf','stbl','stsd']);
+      if (stsd) {
+        out.codec = fourcc(dv, stsd[0].start + 8 + 4); // version/flags+count, dann size+format
+        out.codecName = CODEC_NAMES[out.codec] || out.codec;
+      }
+      // stsz → Frame-Anzahl
+      const stsz = findBox(dv, trak.start, trak.end, ['mdia','minf','stbl','stsz']);
+      if (stsz) out.frames = dv.getUint32(stsz[0].start + 8);
+      // stts → nominale FPS (bei konstanter Framerate)
+      const stts = findBox(dv, trak.start, trak.end, ['mdia','minf','stbl','stts']);
+      if (stts && timescale) {
+        const entryCount = dv.getUint32(stts[0].start + 4);
+        if (entryCount >= 1) {
+          const delta = dv.getUint32(stts[0].start + 8 + 4);
+          if (delta > 0) out.nominalFps = timescale / delta;
+        }
+        if (entryCount > 1) out.nominalFps = null; // variable Framerate → nur Ø-FPS aussagekräftig
+      }
+      if (out.frames && out.duration) out.fps = out.frames / out.duration;
+      break;
+    }
+  } catch (e) { console.warn('Container-Parse fehlgeschlagen:', e); }
+  return out;
+}
+
+// ───────────── Metadaten sammeln ─────────────
+function loadVideoDims(blob) {
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(blob);
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.onloadedmetadata = () => {
+      resolve({ width:v.videoWidth, height:v.videoHeight, duration:v.duration });
+      URL.revokeObjectURL(url);
+    };
+    v.onerror = () => { resolve({ width:null, height:null, duration:null }); URL.revokeObjectURL(url); };
+    v.src = url;
+  });
+}
+async function sha256(blob) {
+  if (blob.size > 1024 * 1024 * 1024) return '— (Datei > 1 GB, übersprungen)';
+  try {
+    const buf = await blob.arrayBuffer();
+    const hash = await crypto.subtle.digest('SHA-256', buf);
+    return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2,'0')).join('').slice(0, 16) + '…';
+  } catch (e) { return '— (nicht berechenbar: ' + e.message + ')'; }
+}
+async function analyzeFile(blob, name) {
+  const [dims, container] = await Promise.all([loadVideoDims(blob), parseContainer(blob)]);
+  const hash = await sha256(blob);
+  return {
+    name: name || blob.name || '—',
+    size: blob.size,
+    mime: blob.type || '—',
+    container: container.container || '—',
+    codec: container.codecName ? `${container.codecName} (${container.codec})` : '—',
+    width: dims.width, height: dims.height,
+    duration: dims.duration || container.duration,
+    frames: container.frames,
+    fps: container.fps,
+    nominalFps: container.nominalFps,
+    hash,
+  };
+}
+
+// ───────────── Anzeige ─────────────
+const fmtSize = b => b == null ? '—' : b >= 1048576 ? (b/1048576).toFixed(1)+' MB' : (b/1024).toFixed(0)+' KB';
+const fmtFps = f => f == null ? '—' : (Math.round(f*100)/100) + ' fps';
+const fmtDur = d => d == null ? '—' : d.toFixed(2)+' s';
+const fmtRes = m => (m.width && m.height) ? m.width+' × '+m.height : '—';
+
+function metaRows(m) {
+  return [
+    ['Dateiname', m.name], ['Grösse', fmtSize(m.size)], ['MIME-Typ', m.mime],
+    ['Container', m.container], ['Video-Codec', m.codec], ['Auflösung', fmtRes(m)],
+    ['Dauer', fmtDur(m.duration)], ['Frames', m.frames ?? '—'],
+    ['Ø Framerate', fmtFps(m.fps)], ['Nominale Framerate', fmtFps(m.nominalFps)],
+    ['SHA-256 (gekürzt)', m.hash],
+  ];
+}
+function renderMetaTable(el, m) {
+  document.getElementById(el).innerHTML = '<table>' +
+    metaRows(m).map(([k,v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('') + '</table>';
+}
+function renderCompare(a, b) {
+  const rowsA = metaRows(a), rowsB = metaRows(b);
+  document.getElementById('compare-table').innerHTML =
+    '<table><tr><th></th><th>Original</th><th>Download</th></tr>' +
+    rowsA.map(([k, va], i) => {
+      const vb = rowsB[i][1];
+      const same = String(va) === String(vb);
+      return `<tr><th>${k}</th><td>${va}</td><td class="${same?'same':'diff'}">${vb}</td></tr>`;
+    }).join('') + '</table>';
+  const identical = a.hash === b.hash && !a.hash.startsWith('—');
+  const v = document.getElementById('verdict');
+  if (identical) {
+    v.className = 'verdict ok';
+    v.textContent = '✓ Byte-identisch — Upload und Download verändern die Datei nicht.';
+  } else if (a.size === b.size) {
+    v.className = 'verdict warn';
+    v.textContent = 'Gleiche Grösse, aber Hash-Vergleich nicht eindeutig — Details oben prüfen.';
+  } else {
+    v.className = 'verdict warn';
+    v.textContent = '⚠️ Dateien unterscheiden sich — Upload-Pipeline verändert die Datei!';
+  }
+}
+
+// ───────────── Ablauf ─────────────
+async function onFilePicked(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  input.value = '';
+  originalFile = file;
+  downloadMeta = null;
+  document.getElementById('card-original').style.display = 'block';
+  document.getElementById('card-upload').style.display = 'block';
+  document.getElementById('card-compare').style.display = 'none';
+  document.getElementById('roundtrip-status').textContent = '';
+  document.getElementById('meta-original').textContent = 'Analysiere…';
+  const vid = document.getElementById('vid-original');
+  vid.style.display = 'block';
+  vid.src = URL.createObjectURL(file);
+
+  originalMeta = await analyzeFile(file, file.name);
+  renderMetaTable('meta-original', originalMeta);
+}
+
+function setProgress(idPrefix, done, total, label) {
+  const wrap = document.getElementById(idPrefix + '-progress-wrap');
+  wrap.style.display = 'block';
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById(idPrefix + '-progress').style.width = pct + '%';
+  document.getElementById(idPrefix + '-progress-label').textContent = `${label} ${pct}% (${fmtSize(done)} / ${fmtSize(total)})`;
+}
+
+function uploadWithProgress(file, path) {
+  // XHR statt supabase-js, damit wir einen Upload-Fortschritt haben
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${encodeURIComponent(path)}`);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY);
+    xhr.setRequestHeader('apikey', SUPABASE_KEY);
+    xhr.setRequestHeader('x-upsert', 'true');
+    xhr.setRequestHeader('Content-Type', file.type || 'video/quicktime');
+    xhr.upload.onprogress = e => { if (e.lengthComputable) setProgress('up', e.loaded, e.total, '⬆️'); };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload fehlgeschlagen (HTTP ${xhr.status}): ${xhr.responseText}`));
+    };
+    xhr.onerror = () => reject(new Error('Upload fehlgeschlagen: Netzwerkfehler'));
+    xhr.send(file);
+  });
+}
+
+async function downloadWithProgress(path) {
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${encodeURIComponent(path)}`);
+  if (!res.ok) throw new Error(`Download fehlgeschlagen (HTTP ${res.status})`);
+  const total = Number(res.headers.get('content-length')) || 0;
+  const reader = res.body.getReader();
+  const chunks = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    received += value.length;
+    setProgress('down', received, total || received, '⬇️');
+  }
+  return new Blob(chunks, { type: res.headers.get('content-type') || 'video/quicktime' });
+}
+
+async function startRoundtrip() {
+  if (!originalFile) return;
+  const btn = document.getElementById('btn-upload');
+  const status = document.getElementById('roundtrip-status');
+  btn.disabled = true;
+  status.className = 'status';
+  try {
+    const safeName = (originalFile.name || 'video.mov').replace(/[^a-zA-Z0-9._-]/g, '_');
+    uploadedPath = `test/${Date.now()}_${safeName}`;
+    status.textContent = 'Lade hoch…';
+    await uploadWithProgress(originalFile, uploadedPath);
+    status.textContent = 'Upload OK. Lade wieder herunter…';
+    const blob = await downloadWithProgress(uploadedPath);
+    status.className = 'status ok';
+    status.textContent = `✓ Fertig. Gespeichert als ${BUCKET}/${uploadedPath}`;
+    document.getElementById('card-compare').style.display = 'block';
+    document.getElementById('compare-table').textContent = 'Analysiere heruntergeladene Datei…';
+    const vid = document.getElementById('vid-download');
+    vid.style.display = 'block';
+    vid.src = URL.createObjectURL(blob);
+    downloadMeta = await analyzeFile(blob, uploadedPath.split('/').pop());
+    renderCompare(originalMeta, downloadMeta);
+  } catch (e) {
+    status.className = 'status err';
+    status.textContent = '✗ ' + e.message +
+      (String(e.message).includes('Bucket not found') || String(e.message).includes('404')
+        ? ` — existiert der Bucket «${BUCKET}» im Freeski-Supabase-Projekt und ist er public mit Insert-Policy für anon?` : '');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// Für automatisierte Tests von aussen erreichbar
+window.analyzeFile = analyzeFile;
+</script>
+</body>
+</html>
