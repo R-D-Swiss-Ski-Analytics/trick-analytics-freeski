@@ -331,7 +331,7 @@ function uploadWithProgress(file, path) {
     xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${encodeURIComponent(path)}`);
     xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY);
     xhr.setRequestHeader('apikey', SUPABASE_KEY);
-    xhr.setRequestHeader('x-upsert', 'true');
+    // kein x-upsert: Upsert bräuchte zusätzlich eine Update-Policy; Pfade sind eh eindeutig (Timestamp)
     xhr.setRequestHeader('Content-Type', file.type || 'video/quicktime');
     xhr.upload.onprogress = e => { if (e.lengthComputable) setProgress('up', e.loaded, e.total, '⬆️'); };
     xhr.onload = () => {
