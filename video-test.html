@@ -458,13 +458,25 @@ async function openRecorder(profile) {
       });
     }
     const track = recStream.getVideoTracks()[0];
-    const s = track.getSettings();
+    let s = track.getSettings();
+    // Liefert der Stream weniger fps als gewünscht: nachträglich am laufenden Track hochsetzen
+    // (applyConstraints schaltet auf iOS manchmal frei, was getUserMedia beim Start klemmt)
+    if (s.frameRate && s.frameRate < p.fps) {
+      try {
+        await track.applyConstraints({ frameRate: p.fps });
+        const s2 = track.getSettings();
+        if (s2.frameRate > s.frameRate) fpsNote += `; per applyConstraints auf ${Math.round(s2.frameRate)} erhöht`;
+        else fpsNote += `; applyConstraints(${p.fps}) ohne Wirkung`;
+        s = s2;
+      } catch (e) { fpsNote += `; applyConstraints abgelehnt (${e.name})`; }
+    }
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
     lastStreamInfo = `${s.width} × ${s.height} @ ${s.frameRate ? Math.round(s.frameRate) : '?'} fps (${profile}, ${fpsNote})`;
     st.className = 'status';
-    st.textContent = `Angefordert: ${profile} (${fpsNote}) — Kamera liefert laut Browser: ${s.width} × ${s.height} @ ${s.frameRate ? Math.round(s.frameRate) : '?'} fps`;
+    st.textContent = `Angefordert: ${profile} (${fpsNote}) — Kamera liefert laut Browser: ${s.width} × ${s.height} @ ${s.frameRate ? Math.round(s.frameRate) : '?'} fps`
+      + (caps.frameRate || caps.width ? ` · Kamera-Maximum laut Browser: ${caps.width?.max ?? '?'} × ${caps.height?.max ?? '?'} @ ${caps.frameRate?.max ?? '?'} fps` : '');
     document.getElementById('rec-preview').srcObject = recStream;
     // Zoom-Fähigkeiten prüfen (iOS 17+ bietet die echte Kamera-Zoom-Steuerung an)
-    const caps = track.getCapabilities ? track.getCapabilities() : {};
     const zw = document.getElementById('rec-zoom-wrap');
     if (caps.zoom && caps.zoom.max > caps.zoom.min) {
       zw.style.display = 'block';
