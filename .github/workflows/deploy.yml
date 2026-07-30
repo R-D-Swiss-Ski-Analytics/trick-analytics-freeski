@@ -37,7 +37,7 @@ jobs:
             console.log('Sanity-Check Moguls OK');
           "
       - name: Stage unified app
-        run: mkdir -p stage && cp index.html manifest-*.webmanifest stage/ && cp -R icons stage/
+        run: mkdir -p stage && cp index.html video-test.html manifest-*.webmanifest stage/ && cp -R icons stage/
       - name: Stage moguls app
         run: mkdir -p stage-moguls && cp moguls.html stage-moguls/index.html
       - name: Deploy Freeski
