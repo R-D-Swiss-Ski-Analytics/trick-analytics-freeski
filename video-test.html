@@ -71,7 +71,13 @@
 <div class="card" id="card-recorder" style="display:none;">
   <h2>1b · Browser-Aufnahme</h2>
   <div class="status" id="rec-settings"></div>
+  <div class="status" id="rec-caps"></div>
+  <div class="status" id="rec-cams"></div>
   <video id="rec-preview" autoplay muted playsinline></video>
+  <div id="rec-zoom-wrap" style="display:none;margin-top:8px;">
+    <span style="font-size:11px;color:var(--muted);">Zoom: <span id="rec-zoom-val"></span>×</span>
+    <input type="range" id="rec-zoom" style="width:100%;" oninput="applyZoom(this.value)">
+  </div>
   <button class="action" id="btn-rec" onclick="toggleRecording()" style="margin-top:10px;">🔴 Aufnahme starten</button>
   <div class="status" id="rec-status"></div>
 </div>
@@ -379,14 +385,38 @@ async function openRecorder(profile) {
       audio: false,
       video: { facingMode: 'environment', ...(REC_PROFILES[profile] || REC_PROFILES['4k60']) }
     });
-    const s = recStream.getVideoTracks()[0].getSettings();
+    const track = recStream.getVideoTracks()[0];
+    const s = track.getSettings();
     st.className = 'status';
     st.textContent = `Angefordert: ${profile} — Kamera liefert laut Browser: ${s.width} × ${s.height} @ ${s.frameRate ? Math.round(s.frameRate) : '?'} fps`;
     document.getElementById('rec-preview').srcObject = recStream;
+    // Zoom-Fähigkeiten prüfen (iOS 17+ bietet die echte Kamera-Zoom-Steuerung an)
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    const zw = document.getElementById('rec-zoom-wrap');
+    if (caps.zoom && caps.zoom.max > caps.zoom.min) {
+      zw.style.display = 'block';
+      const z = document.getElementById('rec-zoom');
+      z.min = caps.zoom.min; z.max = caps.zoom.max; z.step = caps.zoom.step || 0.1;
+      z.value = s.zoom || caps.zoom.min;
+      document.getElementById('rec-zoom-val').textContent = z.value;
+      document.getElementById('rec-caps').textContent = `✓ Zoom via Browser steuerbar: ${caps.zoom.min}× – ${caps.zoom.max}×`;
+    } else {
+      zw.style.display = 'none';
+      document.getElementById('rec-caps').textContent = '✗ Zoom-Steuerung wird vom Browser nicht angeboten';
+    }
+    navigator.mediaDevices.enumerateDevices().then(ds => {
+      const cams = ds.filter(d => d.kind === 'videoinput').map(d => d.label).filter(Boolean).join(' · ');
+      document.getElementById('rec-cams').textContent = cams ? 'Kameras: ' + cams : '';
+    });
   } catch (e) {
     st.className = 'status err';
     st.textContent = '✗ Kamera nicht verfügbar: ' + e.message;
   }
+}
+function applyZoom(v) {
+  document.getElementById('rec-zoom-val').textContent = v;
+  if (!recStream) return;
+  recStream.getVideoTracks()[0].applyConstraints({ advanced: [{ zoom: Number(v) }] }).catch(() => {});
 }
 function pickMimeType() {
   const candidates = [
