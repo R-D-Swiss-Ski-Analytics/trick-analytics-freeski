@@ -57,7 +57,11 @@
   <label class="pick-btn secondary">📁 Video aus Mediathek wählen (nur für diesen Test)
     <input type="file" accept="video/*" onchange="onFilePicked(this)">
   </label>
-  <div class="pick-btn secondary" style="border-color:var(--warn);color:var(--warn);" onclick="openRecorder()">🔴 Variante B: Im Browser aufnehmen (getUserMedia)</div>
+  <div class="pick-btn secondary" style="border-color:var(--warn);color:var(--warn);margin-bottom:4px;" onclick="openRecorder('4k60')">🔴 Variante B: Browser-Aufnahme — 4K@60 anfordern</div>
+  <div style="display:flex;gap:8px;margin-bottom:8px;">
+    <div class="pick-btn secondary" style="flex:1;border-color:var(--warn);color:var(--warn);margin:0;" onclick="openRecorder('1080p60')">🔴 1080p@60</div>
+    <div class="pick-btn secondary" style="flex:1;border-color:var(--warn);color:var(--warn);margin:0;" onclick="openRecorder('720p120')">🔴 720p@120</div>
+  </div>
   <div class="hint">Die Mediathek-Option gibt es nur hier: So kannst du ein Video mit bekannten Eigenschaften
   (z.&nbsp;B. eines, dessen Daten du in der Fotos-App siehst) durch die Pipeline schicken.
   Variante B testet den dritten Weg: Die Seite steuert die Kamera selbst und fordert 4K/60fps an —
@@ -361,17 +365,23 @@ async function setOriginal(file) {
 
 // ───────────── Variante B: Aufnahme in der Seite (getUserMedia + MediaRecorder) ─────────────
 let recStream = null, recorder = null, recChunks = [];
-async function openRecorder() {
+const REC_PROFILES = {
+  '4k60':    { width: {ideal: 3840}, height: {ideal: 2160}, frameRate: {ideal: 60} },
+  '1080p60': { width: {ideal: 1920}, height: {ideal: 1080}, frameRate: {ideal: 60} },
+  '720p120': { width: {ideal: 1280}, height: {ideal: 720},  frameRate: {ideal: 120} },
+};
+async function openRecorder(profile) {
   document.getElementById('card-recorder').style.display = 'block';
   const st = document.getElementById('rec-settings');
+  if (recStream) { recStream.getTracks().forEach(t => t.stop()); recStream = null; } // Profilwechsel
   try {
     recStream = await navigator.mediaDevices.getUserMedia({
       audio: false,
-      video: { facingMode: 'environment', width: {ideal: 3840}, height: {ideal: 2160}, frameRate: {ideal: 60} }
+      video: { facingMode: 'environment', ...(REC_PROFILES[profile] || REC_PROFILES['4k60']) }
     });
     const s = recStream.getVideoTracks()[0].getSettings();
     st.className = 'status';
-    st.textContent = `Kamera liefert laut Browser: ${s.width} × ${s.height} @ ${s.frameRate ? Math.round(s.frameRate) : '?'} fps`;
+    st.textContent = `Angefordert: ${profile} — Kamera liefert laut Browser: ${s.width} × ${s.height} @ ${s.frameRate ? Math.round(s.frameRate) : '?'} fps`;
     document.getElementById('rec-preview').srcObject = recStream;
   } catch (e) {
     st.className = 'status err';
