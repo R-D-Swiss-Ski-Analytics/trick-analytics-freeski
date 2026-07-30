@@ -57,9 +57,19 @@
   <label class="pick-btn secondary">📁 Video aus Mediathek wählen (nur für diesen Test)
     <input type="file" accept="video/*" onchange="onFilePicked(this)">
   </label>
+  <div class="pick-btn secondary" style="border-color:var(--warn);color:var(--warn);" onclick="openRecorder()">🔴 Variante B: Im Browser aufnehmen (getUserMedia)</div>
   <div class="hint">Die Mediathek-Option gibt es nur hier: So kannst du ein Video mit bekannten Eigenschaften
-  (z.&nbsp;B. ein Slowmo, dessen Daten du in der Fotos-App siehst) durch die Pipeline schicken.
-  In der App selbst wird nur direkt gefilmt.</div>
+  (z.&nbsp;B. eines, dessen Daten du in der Fotos-App siehst) durch die Pipeline schicken.
+  Variante B testet den dritten Weg: Die Seite steuert die Kamera selbst und fordert 4K/60fps an —
+  was tatsächlich geliefert wird, zeigt der Test.</div>
+</div>
+
+<div class="card" id="card-recorder" style="display:none;">
+  <h2>1b · Browser-Aufnahme</h2>
+  <div class="status" id="rec-settings"></div>
+  <video id="rec-preview" autoplay muted playsinline></video>
+  <button class="action" id="btn-rec" onclick="toggleRecording()" style="margin-top:10px;">🔴 Aufnahme starten</button>
+  <div class="status" id="rec-status"></div>
 </div>
 
 <div class="card" id="card-original" style="display:none;">
@@ -221,7 +231,8 @@ function loadVideoDims(blob) {
     const v = document.createElement('video');
     v.preload = 'metadata';
     v.onloadedmetadata = () => {
-      resolve({ width:v.videoWidth, height:v.videoHeight, duration:v.duration });
+      // MediaRecorder-Blobs melden teils duration=Infinity
+      resolve({ width:v.videoWidth, height:v.videoHeight, duration:isFinite(v.duration) ? v.duration : null });
       URL.revokeObjectURL(url);
     };
     v.onerror = () => { resolve({ width:null, height:null, duration:null }); URL.revokeObjectURL(url); };
@@ -236,10 +247,37 @@ async function sha256(blob) {
     return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2,'0')).join('').slice(0, 16) + '…';
   } catch (e) { return '— (nicht berechenbar: ' + e.message + ')'; }
 }
+// Fallback für fragmentierte Aufnahmen (MediaRecorder): FPS durch Abspielen messen
+function estimateFpsByPlayback(blob) {
+  return new Promise(resolve => {
+    if (!('requestVideoFrameCallback' in HTMLVideoElement.prototype)) return resolve(null);
+    const v = document.createElement('video');
+    v.muted = true; v.playsInline = true;
+    v.src = URL.createObjectURL(blob);
+    let settled = false, first = null, count = 0;
+    const done = fps => { if (settled) return; settled = true; v.pause(); URL.revokeObjectURL(v.src); resolve(fps); };
+    const cb = (now, meta) => {
+      if (settled) return;
+      if (first === null) first = meta.mediaTime;
+      else if (meta.mediaTime - first >= 1.5 || count > 400) return done(Math.round(count / (meta.mediaTime - first)));
+      count++;
+      v.requestVideoFrameCallback(cb);
+    };
+    v.requestVideoFrameCallback(cb);
+    v.play().catch(() => done(null));
+    setTimeout(() => done(null), 6000);
+  });
+}
 async function analyzeFile(blob, name) {
   const [dims, container] = await Promise.all([loadVideoDims(blob), parseContainer(blob)]);
   const hash = await sha256(blob);
+  let fpsEstimated = false;
+  if (container.fps == null) {
+    const est = await estimateFpsByPlayback(blob);
+    if (est) { container.fps = est; fpsEstimated = true; }
+  }
   return {
+    fpsEstimated,
     name: name || blob.name || '—',
     size: blob.size,
     mime: blob.type || '—',
@@ -265,7 +303,9 @@ function metaRows(m) {
     ['Dateiname', m.name], ['Grösse', fmtSize(m.size)], ['MIME-Typ', m.mime],
     ['Container', m.container], ['Video-Codec', m.codec], ['Auflösung', fmtRes(m)],
     ['Dauer', fmtDur(m.duration)], ['Frames', m.frames ?? '—'],
-    ['Ø Framerate', fmtFps(m.fps)], ['Nominale Framerate', fmtFps(m.nominalFps)],
+    ['Ø Framerate', fmtFps(m.fps) + (m.fpsEstimated ? ' (per Abspielen gemessen)' : '')],
+    ['Nominale Framerate', fmtFps(m.nominalFps)],
+    ['Datenrate', (m.size && m.duration) ? fmtSize(m.size / m.duration) + '/s' : '—'],
     ['SHA-256 (gekürzt)', m.hash],
   ];
 }
@@ -301,6 +341,9 @@ async function onFilePicked(input) {
   const file = input.files && input.files[0];
   if (!file) return;
   input.value = '';
+  await setOriginal(file);
+}
+async function setOriginal(file) {
   originalFile = file;
   downloadMeta = null;
   document.getElementById('card-original').style.display = 'block';
@@ -314,6 +357,65 @@ async function onFilePicked(input) {
 
   originalMeta = await analyzeFile(file, file.name);
   renderMetaTable('meta-original', originalMeta);
+}
+
+// ───────────── Variante B: Aufnahme in der Seite (getUserMedia + MediaRecorder) ─────────────
+let recStream = null, recorder = null, recChunks = [];
+async function openRecorder() {
+  document.getElementById('card-recorder').style.display = 'block';
+  const st = document.getElementById('rec-settings');
+  try {
+    recStream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: 'environment', width: {ideal: 3840}, height: {ideal: 2160}, frameRate: {ideal: 60} }
+    });
+    const s = recStream.getVideoTracks()[0].getSettings();
+    st.className = 'status';
+    st.textContent = `Kamera liefert laut Browser: ${s.width} × ${s.height} @ ${s.frameRate ? Math.round(s.frameRate) : '?'} fps`;
+    document.getElementById('rec-preview').srcObject = recStream;
+  } catch (e) {
+    st.className = 'status err';
+    st.textContent = '✗ Kamera nicht verfügbar: ' + e.message;
+  }
+}
+function pickMimeType() {
+  const candidates = [
+    'video/mp4;codecs=hvc1.1.6.L153.b0',
+    'video/mp4;codecs=avc1.640033',
+    'video/mp4',
+    'video/webm;codecs=vp9',
+    'video/webm',
+  ];
+  return (window.MediaRecorder && candidates.find(t => MediaRecorder.isTypeSupported(t))) || '';
+}
+function toggleRecording() {
+  const btn = document.getElementById('btn-rec');
+  const st = document.getElementById('rec-status');
+  if (recorder && recorder.state === 'recording') { recorder.stop(); return; }
+  if (!recStream) { st.className = 'status err'; st.textContent = '✗ Keine Kamera aktiv'; return; }
+  recChunks = [];
+  const mimeType = pickMimeType();
+  try {
+    recorder = new MediaRecorder(recStream, { mimeType: mimeType || undefined, videoBitsPerSecond: 60_000_000 });
+  } catch (e) {
+    st.className = 'status err'; st.textContent = '✗ MediaRecorder: ' + e.message; return;
+  }
+  recorder.ondataavailable = e => { if (e.data && e.data.size) recChunks.push(e.data); };
+  recorder.onstop = async () => {
+    btn.textContent = '🔴 Aufnahme starten';
+    const type = recorder.mimeType || mimeType || 'video/mp4';
+    const ext = type.includes('mp4') ? 'mp4' : 'webm';
+    const blob = new Blob(recChunks, { type });
+    if (recStream) { recStream.getTracks().forEach(t => t.stop()); recStream = null; }
+    document.getElementById('rec-preview').srcObject = null;
+    document.getElementById('card-recorder').style.display = 'none';
+    st.textContent = '';
+    await setOriginal(new File([blob], `inpage_${Date.now()}.${ext}`, { type }));
+  };
+  recorder.start();
+  st.className = 'status';
+  st.textContent = `Aufnahme läuft… (Format: ${mimeType || 'Browser-Standard'})`;
+  btn.textContent = '⏹ Aufnahme beenden';
 }
 
 function setProgress(idPrefix, done, total, label) {
