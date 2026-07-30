@@ -179,6 +179,47 @@ const CODEC_NAMES = {
   avc1:'H.264 / AVC', avc3:'H.264 / AVC', hvc1:'H.265 / HEVC', hev1:'H.265 / HEVC',
   av01:'AV1', vp09:'VP9', mp4v:'MPEG-4 Visual', apch:'ProRes 422 HQ', apcn:'ProRes 422',
 };
+// Fragmentierte MP4s (MediaRecorder): Frames & Dauer exakt aus moof/trun-Boxen zählen
+async function countFragments(blob, trexDur) {
+  let frames = 0, durUnits = 0, offset = 0;
+  while (offset + 8 <= blob.size) {
+    const head = await readBytes(blob, offset, 16);
+    let size = head.getUint32(0);
+    const type = fourcc(head, 4);
+    let headerLen = 8;
+    if (size === 1) { size = Number(head.getBigUint64(8)); headerLen = 16; }
+    else if (size === 0) size = blob.size - offset;
+    if (type === 'moof') {
+      const dv = await readBytes(blob, offset + headerLen, size - headerLen);
+      for (const traf of walkBoxes(dv, 0, size - headerLen)) {
+        if (traf.type !== 'traf') continue;
+        let defDur = trexDur;
+        for (const box of walkBoxes(dv, traf.start, traf.end)) {
+          if (box.type === 'tfhd') {
+            const flags = dv.getUint32(box.start) & 0xffffff;
+            let o = box.start + 8; // version/flags + track_ID
+            if (flags & 0x1) o += 8; // base-data-offset
+            if (flags & 0x2) o += 4; // sample-description-index
+            if (flags & 0x8) defDur = dv.getUint32(o);
+          } else if (box.type === 'trun') {
+            const flags = dv.getUint32(box.start) & 0xffffff;
+            const n = dv.getUint32(box.start + 4);
+            frames += n;
+            let o = box.start + 8;
+            if (flags & 0x1) o += 4; // data-offset
+            if (flags & 0x4) o += 4; // first-sample-flags
+            const perDur = !!(flags & 0x100);
+            const step = (perDur?4:0) + ((flags&0x200)?4:0) + ((flags&0x400)?4:0) + ((flags&0x800)?4:0);
+            if (perDur) { for (let i = 0; i < n; i++) durUnits += dv.getUint32(o + i*step); }
+            else durUnits += n * (defDur || 0);
+          }
+        }
+      }
+    }
+    offset += size;
+  }
+  return { frames, durUnits };
+}
 async function parseContainer(blob) {
   const out = { container:null, codec:null, codecName:null, fps:null, nominalFps:null, frames:null, duration:null };
   try {
@@ -193,6 +234,7 @@ async function parseContainer(blob) {
     const moov = await findTopLevelBox(blob, 'moov');
     if (!moov) return out;
     const dv = await readBytes(blob, moov.offset, moov.size);
+    let videoTimescale = null;
     // Video-Track finden: trak, dessen hdlr == 'vide'
     for (const trak of walkBoxes(dv, 0, moov.size)) {
       if (trak.type !== 'trak') continue;
@@ -206,7 +248,7 @@ async function parseContainer(blob) {
         const version = dv.getUint8(s);
         if (version === 1) { timescale = dv.getUint32(s + 20); duration = Number(dv.getBigUint64(s + 24)); }
         else { timescale = dv.getUint32(s + 12); duration = dv.getUint32(s + 16); }
-        if (timescale) out.duration = duration / timescale;
+        if (timescale) { out.duration = duration / timescale; videoTimescale = timescale; }
       }
       // stsd → Codec-FourCC
       const stsd = findBox(dv, trak.start, trak.end, ['mdia','minf','stbl','stsd']);
@@ -229,6 +271,17 @@ async function parseContainer(blob) {
       }
       if (out.frames && out.duration) out.fps = out.frames / out.duration;
       break;
+    }
+    // Fragmentiertes MP4 (stsz leer): Frames/Dauer aus den Fragmenten zählen.
+    // Annahme: nur ein Track (unsere Aufnahmen sind ohne Audio) — sonst würden Audio-Samples mitgezählt.
+    if (!out.frames && videoTimescale) {
+      const trex = findBox(dv, 0, moov.size, ['mvex','trex']);
+      const trexDur = trex ? dv.getUint32(trex[0].start + 12) : 0;
+      const { frames, durUnits } = await countFragments(blob, trexDur);
+      if (frames) {
+        out.frames = frames;
+        if (durUnits) { out.duration = durUnits / videoTimescale; out.fps = frames / out.duration; }
+      }
     }
   } catch (e) { console.warn('Container-Parse fehlgeschlagen:', e); }
   return out;
@@ -257,7 +310,7 @@ async function sha256(blob) {
     return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2,'0')).join('').slice(0, 16) + '…';
   } catch (e) { return '— (nicht berechenbar: ' + e.message + ')'; }
 }
-// Fallback für fragmentierte Aufnahmen (MediaRecorder): FPS durch Abspielen messen
+// Letzte Rückfallebene (z. B. WebM): FPS durch Abspielen messen — Näherung
 function estimateFpsByPlayback(blob) {
   return new Promise(resolve => {
     if (!('requestVideoFrameCallback' in HTMLVideoElement.prototype)) return resolve(null);
@@ -310,6 +363,7 @@ const fmtRes = m => (m.width && m.height) ? m.width+' × '+m.height : '—';
 
 function metaRows(m) {
   return [
+    ...(m.streamInfo ? [['Stream (getUserMedia)', m.streamInfo]] : []),
     ['Dateiname', m.name], ['Grösse', fmtSize(m.size)], ['MIME-Typ', m.mime],
     ['Container', m.container], ['Video-Codec', m.codec], ['Auflösung', fmtRes(m)],
     ['Dauer', fmtDur(m.duration)], ['Frames', m.frames ?? '—'],
@@ -329,7 +383,12 @@ function renderCompare(a, b) {
     '<table><tr><th></th><th>Original</th><th>Download</th></tr>' +
     rowsA.map(([k, va], i) => {
       const vb = rowsB[i][1];
-      const same = String(va) === String(vb);
+      let same = String(va) === String(vb);
+      // Gemessene FPS byte-identischer Dateien schwanken leicht — Toleranz statt Fehlalarm
+      if (!same && k === 'Ø Framerate' && String(va).includes('gemessen') && String(vb).includes('gemessen')) {
+        const na = parseFloat(va), nb = parseFloat(vb);
+        if (isFinite(na) && isFinite(nb) && Math.abs(na - nb) <= 3) same = true;
+      }
       return `<tr><th>${k}</th><td>${va}</td><td class="${same?'same':'diff'}">${vb}</td></tr>`;
     }).join('') + '</table>';
   const identical = a.hash === b.hash && !a.hash.startsWith('—');
@@ -372,23 +431,37 @@ async function setOriginal(file) {
 // ───────────── Variante B: Aufnahme in der Seite (getUserMedia + MediaRecorder) ─────────────
 let recStream = null, recorder = null, recChunks = [];
 const REC_PROFILES = {
-  '4k60':    { width: {ideal: 3840}, height: {ideal: 2160}, frameRate: {ideal: 60} },
-  '1080p60': { width: {ideal: 1920}, height: {ideal: 1080}, frameRate: {ideal: 60} },
-  '720p120': { width: {ideal: 1280}, height: {ideal: 720},  frameRate: {ideal: 120} },
+  '4k60':    { width: {ideal: 3840}, height: {ideal: 2160}, fps: 60 },
+  '1080p60': { width: {ideal: 1920}, height: {ideal: 1080}, fps: 60 },
+  '720p120': { width: {ideal: 1280}, height: {ideal: 720},  fps: 120 },
 };
+let lastStreamInfo = null; // wandert als Zeile in die Metadaten-Tabelle
 async function openRecorder(profile) {
   document.getElementById('card-recorder').style.display = 'block';
   const st = document.getElementById('rec-settings');
   if (recStream) { recStream.getTracks().forEach(t => t.stop()); recStream = null; } // Profilwechsel
+  const p = REC_PROFILES[profile] || REC_PROFILES['4k60'];
+  let fpsNote = `${p.fps} fps verbindlich`;
   try {
-    recStream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: { facingMode: 'environment', ...(REC_PROFILES[profile] || REC_PROFILES['4k60']) }
-    });
+    // Framerate zuerst verbindlich anfordern — lehnt iOS ab, wissen wir sicher, dass sie nicht geht
+    try {
+      recStream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: 'environment', width: p.width, height: p.height, frameRate: { exact: p.fps } }
+      });
+    } catch (e) {
+      if (e.name !== 'OverconstrainedError' && e.name !== 'NotSupportedError') throw e;
+      fpsNote = `${p.fps} fps exakt NICHT möglich — Fallback auf Wunsch-Modus`;
+      recStream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: 'environment', width: p.width, height: p.height, frameRate: { ideal: p.fps } }
+      });
+    }
     const track = recStream.getVideoTracks()[0];
     const s = track.getSettings();
+    lastStreamInfo = `${s.width} × ${s.height} @ ${s.frameRate ? Math.round(s.frameRate) : '?'} fps (${profile}, ${fpsNote})`;
     st.className = 'status';
-    st.textContent = `Angefordert: ${profile} — Kamera liefert laut Browser: ${s.width} × ${s.height} @ ${s.frameRate ? Math.round(s.frameRate) : '?'} fps`;
+    st.textContent = `Angefordert: ${profile} (${fpsNote}) — Kamera liefert laut Browser: ${s.width} × ${s.height} @ ${s.frameRate ? Math.round(s.frameRate) : '?'} fps`;
     document.getElementById('rec-preview').srcObject = recStream;
     // Zoom-Fähigkeiten prüfen (iOS 17+ bietet die echte Kamera-Zoom-Steuerung an)
     const caps = track.getCapabilities ? track.getCapabilities() : {};
@@ -451,6 +524,10 @@ function toggleRecording() {
     document.getElementById('card-recorder').style.display = 'none';
     st.textContent = '';
     await setOriginal(new File([blob], `inpage_${Date.now()}.${ext}`, { type }));
+    if (originalMeta && lastStreamInfo) {
+      originalMeta.streamInfo = lastStreamInfo;
+      renderMetaTable('meta-original', originalMeta);
+    }
   };
   recorder.start();
   st.className = 'status';
@@ -523,6 +600,7 @@ async function startRoundtrip() {
     vid.style.display = 'block';
     vid.src = URL.createObjectURL(blob);
     downloadMeta = await analyzeFile(blob, uploadedPath.split('/').pop());
+    downloadMeta.streamInfo = originalMeta.streamInfo; // gleiche Bytes, gleiche Herkunft
     renderCompare(originalMeta, downloadMeta);
   } catch (e) {
     status.className = 'status err';
