@@ -184,9 +184,7 @@
         <div class="card-title" style="margin:0;">Step 1 — Session Type</div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;" id="sess-type-btns">
-        <button onclick="selectSessType(this,'50/50')" class="sess-type-btn">50/50</button>
-        <button onclick="selectSessType(this,'TTB')" class="sess-type-btn">TTB</button>
-        <button onclick="selectSessType(this,'Solo Sci')" class="sess-type-btn">Solo Sci</button>
+        <button onclick="selectSessType(this,'Run')" class="sess-type-btn">Run</button>
         <button onclick="selectSessType(this,'Water Jump')" class="sess-type-btn">Water Jump</button>
         <button onclick="selectSessType(this,'Jump on Snow')" class="sess-type-btn">Jump on Snow</button>
       </div>
@@ -330,7 +328,8 @@ const SQUADS = [
 ];
 
 const JUMPS_NO_GRAB = ['Strait','360','bt','Ft','bL','bp','L','360op','7op','bf','10op','bdf','14op','btf'];
-const JUMPS_GRAB    = ['360g','bg','Lg','7og','10og','14og'];
+// Jeder Grab-Trick als Paar: kleines g direkt gefolgt vom grossen G
+const JUMPS_GRAB    = ['360g','360G','bg','bG','fg','fG','Lg','LG','7og','7oG','10og','10oG','14og','14oG'];
 
 // Entry types: which jump selects they need + which criteria get rated.
 // criteria: [column, label, abbreviation]
@@ -348,6 +347,8 @@ const TYPES = {
   'Jump Grab':    { jumps:1, jumpList:'grab',   criteria:GRAB_CRITERIA,   legacy:true },
 };
 const TYPE_NAMES = Object.keys(TYPES).filter(t => !TYPES[t].legacy);
+// "Run"-Session: Sammel-Typ im Setup; der konkrete Typ wird pro Athlet:in im Run-Dropdown gewählt
+const RUN_TYPES = ['TTB', '50/50', 'Solo Sci'];
 const ALL_RATING_COLS = ['r_jump1','r_jump2','r_sci','r_ub','r_abs','r_carving','r_asse','r_air','r_grab','r_landing'];
 
 function isGrabJump(j) { return JUMPS_GRAB.includes(j); }
@@ -390,20 +391,36 @@ function jumpOptions(listKey, selected) {
        + '<optgroup label="Grab">'    + JUMPS_GRAB.map(opt).join('')    + '</optgroup>';
 }
 
+// Häufigkeit der Jumps in bisherigen Einträgen einer Athlet:in → Sortierung der Session-Dropdowns
+function countJumps(rows) {
+  const c = {};
+  rows.forEach(r => {
+    if (r.jump1) c[r.jump1] = (c[r.jump1] || 0) + 1;
+    if (r.jump2) c[r.jump2] = (c[r.jump2] || 0) + 1;
+  });
+  return c;
+}
+
 // Sprungliste einer Athlet:in in der Live Session: nur Assessment-Jumps (Goals mit 🎯);
 // Fallback auf die volle Liste, solange kein Assessment existiert.
+// Innerhalb der Gruppen nach Häufigkeit sortiert (meistgenutzte zuoberst, Rest in Grundreihenfolge).
 function jumpOptionsFor(name, listKey, selected) {
-  const aj = (sessAthleteData[name] && sessAthleteData[name].assessJumps) || [];
-  if (!aj.length) return jumpOptions(listKey, selected);
+  const d = sessAthleteData[name] || {};
+  const counts = d.jumpCounts || {};
+  const byFreq = list => [...list].sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
+  const NG = byFreq(JUMPS_NO_GRAB), G = byFreq(JUMPS_GRAB);
+  const aj = d.assessJumps || [];
   const status = {};
   aj.forEach(r => status[r.jump] = r.status);
   if (selected && status[selected] === undefined) status[selected] = 'extra';
   const opt = j => '<option value="' + escAttr(j) + '"' + (j === selected ? ' selected' : '') + '>' + j + (status[j] === 'goal' ? ' 🎯' : '') + '</option>';
-  const ng = JUMPS_NO_GRAB.filter(j => status[j] !== undefined);
-  const g  = JUMPS_GRAB.filter(j => status[j] !== undefined);
-  if (listKey === 'nograb') return ng.length ? ng.map(opt).join('') : jumpOptions('nograb', selected);
-  if (listKey === 'grab')   return g.length  ? g.map(opt).join('')  : jumpOptions('grab', selected);
-  if (!ng.length && !g.length) return jumpOptions('all', selected);
+  const ng = aj.length ? NG.filter(j => status[j] !== undefined) : [];
+  const g  = aj.length ? G.filter(j => status[j] !== undefined) : [];
+  if (listKey === 'nograb') return (ng.length ? ng : NG).map(opt).join('');
+  if (listKey === 'grab')   return (g.length ? g : G).map(opt).join('');
+  if (!ng.length && !g.length)
+    return '<optgroup label="No Grab">' + NG.map(opt).join('') + '</optgroup>'
+         + '<optgroup label="Grab">'    + G.map(opt).join('')  + '</optgroup>';
   return (ng.length ? '<optgroup label="No Grab">' + ng.map(opt).join('') + '</optgroup>' : '')
        + (g.length  ? '<optgroup label="Grab">'    + g.map(opt).join('')  + '</optgroup>' : '');
 }
@@ -553,6 +570,8 @@ function restoreSessionState() {
     if (db) Promise.all(sessSelectedAthletes.map(async name => {
       const {data} = await db.from('standort').select('jump,status').eq('athlet', name);
       if (data && sessAthleteData[name]) sessAthleteData[name].assessJumps = data;
+      const {data: ent} = await db.from('entries').select('jump1,jump2').eq('athlet', name);
+      if (ent && sessAthleteData[name]) sessAthleteData[name].jumpCounts = countJumps(ent);
     })).then(() => renderLiveSession());
     return true;
   } catch(e) { clearSessionStorage(); return false; }
@@ -605,6 +624,9 @@ function toggleSessionAthlete(name) {
     if (card) card.style.borderColor = '#39c3d4';
     if (db) db.from('standort').select('jump,status').eq('athlet', name).then(({data}) => {
       if (data && sessAthleteData[name]) sessAthleteData[name].assessJumps = data;
+    });
+    if (db) db.from('entries').select('jump1,jump2').eq('athlet', name).then(({data}) => {
+      if (data && sessAthleteData[name]) sessAthleteData[name].jumpCounts = countJumps(data);
     });
   }
   document.getElementById('sess-start-btn').style.display = sessSelectedAthletes.length ? 'block' : 'none';
@@ -760,9 +782,17 @@ async function submitSessionReport(duration) {
 }
 
 // ═══════════════ LIVE SESSION ═══════════════
+// Effective entry type: for "Run" sessions chosen per athlete via the Run dropdown ('' = not yet chosen)
+function effType(name) {
+  if (sessType !== 'Run') return sessType;
+  const sel = (sessAthleteData[name] && sessAthleteData[name].sel['Run']) || {};
+  return sel.runType || '';
+}
+
 // Criteria currently shown for an athlete (jump sessions: depends on selected jump)
 function liveCriteria(name) {
-  const t = TYPES[sessType];
+  const t = TYPES[effType(name)];
+  if (!t) return [];
   if (!t.jumpSession) return t.criteria;
   const sel = (sessAthleteData[name] && sessAthleteData[name].sel[sessType]) || {};
   return isGrabJump(sel.jump1) ? GRAB_CRITERIA : NOGRAB_CRITERIA;
@@ -793,30 +823,39 @@ function renderLiveSession() {
   if (name && sessAthleteData[name]) {
     if (!sessRatings[name]) sessRatings[name] = {};
     const d = sessAthleteData[name];
-    if (!d.sel[sessType]) d.sel[sessType] = {jump1:'', jump2:''};
-    const t = TYPES[sessType];
+    if (!d.sel[sessType]) d.sel[sessType] = sessType === 'Run' ? {runType:'', jump1:'', jump2:''} : {jump1:'', jump2:''};
     const sel = d.sel[sessType];
+    const t = TYPES[effType(name)];
     const s = sid(name);
 
-    // Jump selects
-    let jumpsHtml = '';
-    if (t.jumps >= 1) {
-      const label1 = t.jumps === 2 ? 'Jump 1' : 'Jump';
-      jumpsHtml += `<div style="display:grid;grid-template-columns:${t.jumps===2?'1fr 1fr':'1fr'};gap:10px;margin-bottom:20px;">
-        <div class="form-group"><label>${label1}</label>
-          <select onchange="setSessJump('${name}','jump1',this.value)">
-            <option value="">— select —</option>${jumpOptionsFor(name, t.jumpList, sel.jump1)}
-          </select></div>
-        ${t.jumps === 2 ? `<div class="form-group"><label>Jump 2</label>
-          <select onchange="setSessJump('${name}','jump2',this.value)">
-            <option value="">— select —</option>${jumpOptionsFor(name, t.jumpList, sel.jump2)}
-          </select></div>` : ''}
-      </div>`;
+    // Run + jump selects
+    const selects = [];
+    if (sessType === 'Run') {
+      selects.push(`<div class="form-group"><label>Run</label>
+        <select onchange="setSessRunType('${name}',this.value)">
+          <option value="">— select —</option>${RUN_TYPES.map(rt => `<option value="${rt}" ${sel.runType===rt?'selected':''}>${rt}</option>`).join('')}
+        </select></div>`);
     }
+    if (t && t.jumps >= 1) {
+      const label1 = t.jumps === 2 ? 'Jump 1' : 'Jump';
+      selects.push(`<div class="form-group"><label>${label1}</label>
+        <select onchange="setSessJump('${name}','jump1',this.value)">
+          <option value="">— select —</option>${jumpOptionsFor(name, t.jumpList, sel.jump1)}
+        </select></div>`);
+      if (t.jumps === 2) selects.push(`<div class="form-group"><label>Jump 2</label>
+        <select onchange="setSessJump('${name}','jump2',this.value)">
+          <option value="">— select —</option>${jumpOptionsFor(name, t.jumpList, sel.jump2)}
+        </select></div>`);
+    }
+    const jumpsHtml = selects.length
+      ? `<div style="display:grid;grid-template-columns:repeat(${selects.length},1fr);gap:10px;margin-bottom:20px;">${selects.join('')}</div>`
+      : '';
 
     // Criteria rows with Miss / Okay / Perfect buttons
     const crits = liveCriteria(name);
-    const critHtml = `<div style="display:flex;flex-direction:column;gap:12px;">
+    const critHtml = !crits.length
+      ? `<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px;border:1px dashed var(--border);border-radius:10px;">Select a run first</div>`
+      : `<div style="display:flex;flex-direction:column;gap:12px;">
       ${crits.map(([col, label]) => `
         <div>
           <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">${label}</div>
@@ -852,8 +891,16 @@ function selectSessAthlete(name) {
   saveSessionState();
 }
 
+function setSessRunType(name, typ) {
+  const sel = sessAthleteData[name].sel['Run'];
+  sel.runType = typ;
+  sessRatings[name] = {};   // Kriterien können wechseln (Jumps/Sci ↔ Solo Sci) → angefangene Bewertung verwerfen
+  renderLiveSession();
+  saveSessionState();
+}
+
 function setSessJump(name, slot, jump) {
-  const t = TYPES[sessType];
+  const t = TYPES[effType(name)] || {};
   const sel = sessAthleteData[name].sel[sessType];
   const modeBefore = t.jumpSession ? isGrabJump(sel.jump1) : null;
   sel[slot] = jump;
@@ -878,7 +925,9 @@ function setSessRating(name, col, val) {
 }
 
 function autoLogEntry(name) {
-  const t = TYPES[sessType];
+  const typ = effType(name);
+  const t = TYPES[typ];
+  if (!t) { showToast('Please select a run first', 'error'); return; }
   const d = sessAthleteData[name];
   const sel = d.sel[sessType] || {};
   if (t.jumps >= 1 && !sel.jump1) { showToast('Please select ' + (t.jumps===2?'Jump 1':'a jump'), 'error'); return; }
@@ -903,7 +952,7 @@ function autoLogEntry(name) {
   const comment = commentEl ? commentEl.value.trim() : '';
   if (commentEl) commentEl.value = '';
 
-  const row = { athlet: name, datum: today(), typ: sessType,
+  const row = { athlet: name, datum: today(), typ: typ,
     jump1: t.jumps >= 1 ? sel.jump1 : null, jump2: t.jumps === 2 ? sel.jump2 : null,
     kommentar: comment || null };
   crits.forEach(([c]) => row[c] = r[c]);
@@ -911,6 +960,10 @@ function autoLogEntry(name) {
   const logEntry = { ...row, name, avg,
     time: new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit'}) };
   sessLog.unshift(logEntry);
+
+  d.jumpCounts = d.jumpCounts || {};
+  if (row.jump1) d.jumpCounts[row.jump1] = (d.jumpCounts[row.jump1] || 0) + 1;
+  if (row.jump2) d.jumpCounts[row.jump2] = (d.jumpCounts[row.jump2] || 0) + 1;
 
   sessRatings[name] = {};
   renderLiveSession();
