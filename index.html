@@ -2762,7 +2762,14 @@ function sbSetTrick(name, val) {
 }
 
 function sbSelectGrab(name, grab) {
-  sessAthleteData[name].currentGrab = grab;
+  // Double Grab: zweiter Tap auf einen anderen Grab kombiniert zu «A + B»,
+  // Tap auf einen gewählten Grab entfernt ihn wieder.
+  const d = sessAthleteData[name];
+  const parts = (d.currentGrab || '').split(' + ').filter(Boolean);
+  if (!grab) d.currentGrab = '';
+  else if (parts.includes(grab)) d.currentGrab = parts.filter(g => g !== grab).join(' + ');
+  else if (parts.length === 1) d.currentGrab = parts[0] + ' + ' + grab;
+  else d.currentGrab = grab;
   renderLiveSession();
 }
 
@@ -2835,13 +2842,14 @@ function renderLiveSession() {
     });
     const grabs = Object.keys(grabStat).sort();
     if (grabs.length) {
+      const selParts = (d.currentGrab || '').split(' + ').filter(Boolean);
       grabHtml = `<div style="margin-bottom:16px;">
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Grab</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Grab <span style="text-transform:none;letter-spacing:0;">(tap a 2nd grab for a double grab)</span></div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;" id="sess-grabs-${sid}">
           <button onclick="sbSelectGrab('${name}','')"
             style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${!d.currentGrab?'#39c3d4':'var(--border)'};background:${!d.currentGrab?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${!d.currentGrab?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">No Grab</button>
           ${grabs.map(g => {
-            const active = d.currentGrab === g;
+            const active = selParts.includes(g);
             return `<button onclick="sbSelectGrab('${name}','${g.replace(/'/g,"\\'")}')"
               style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${active?'#39c3d4':'var(--border)'};background:${active?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${active?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">${g}${grabStat[g]==='goal'?' 🎯':''}</button>`;
           }).join('')}
@@ -6432,14 +6440,15 @@ function renderLiveSession() {
         });
         const grabs = Object.keys(grabStat).sort();
         if (!grabs.length) return '';
+        const selParts = (d.currentGrab || '').split(' + ').filter(Boolean);
         return `<div style="margin-bottom:16px;">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Grab</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Grab <span style="text-transform:none;letter-spacing:0;">(tap a 2nd grab for a double grab)</span></div>
           <div style="display:flex;flex-wrap:wrap;gap:5px;" id="sess-grabs-${sid}">
-            <button onclick="sessSelectGrab('${name}','',this)" class="sess-grab-btn${!d.currentGrab?' active':''}"
+            <button onclick="sessSelectGrab('${name}','',this)" data-grab="" class="sess-grab-btn${!d.currentGrab?' active':''}"
               style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${!d.currentGrab?'#39c3d4':'var(--border)'};background:${!d.currentGrab?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${!d.currentGrab?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">No Grab</button>
             ${grabs.map(g => {
-              const active = d.currentGrab === g;
-              return '<button onclick="sessSelectGrab(\''+name+'\',\''+g.replace(/'/g,"\\'")+'\',this)" class="sess-grab-btn"'+
+              const active = selParts.includes(g);
+              return '<button onclick="sessSelectGrab(\''+name+'\',\''+g.replace(/'/g,"\\'")+'\',this)" data-grab="'+g.replace(/"/g,'&quot;')+'" class="sess-grab-btn"'+
                 ' style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid '+(active?'#39c3d4':'var(--border)')+';background:'+(active?'rgba(57,195,212,0.18)':'var(--surface2)')+';color:'+(active?'#39c3d4':'var(--muted)')+';font-family:\'Poppins\',sans-serif;">'+g+(grabStat[g]==='goal'?' 🎯':'')+'</button>';
             }).join('')}
           </div>
@@ -6568,11 +6577,22 @@ function sessSetTrick(name, trick) {
 }
 
 function sessSelectGrab(name, grab, btn) {
-  sessAthleteData[name].currentGrab = grab;
+  // Double Grab: zweiter Tap auf einen anderen Grab kombiniert zu «A + B»,
+  // Tap auf einen gewählten Grab entfernt ihn wieder.
+  const d = sessAthleteData[name];
+  const parts = (d.currentGrab || '').split(' + ').filter(Boolean);
+  let next;
+  if (!grab) next = '';
+  else if (parts.includes(grab)) next = parts.filter(g => g !== grab).join(' + ');
+  else if (parts.length === 1) next = parts[0] + ' + ' + grab;
+  else next = grab;
+  d.currentGrab = next;
+  const nextParts = next ? next.split(' + ') : [];
   const sid = name.replace(/\s/g,'_');
   const wrap = document.getElementById('sess-grabs-'+sid);
   if (wrap) wrap.querySelectorAll('.sess-grab-btn').forEach(b => {
-    const isActive = b === btn;
+    const g = b.dataset.grab || '';
+    const isActive = g ? nextParts.includes(g) : !next;
     b.style.borderColor = isActive ? '#39c3d4' : 'var(--border)';
     b.style.background = isActive ? 'rgba(57,195,212,0.18)' : 'var(--surface2)';
     b.style.color = isActive ? '#39c3d4' : 'var(--muted)';
