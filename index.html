@@ -424,7 +424,6 @@
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;" id="sess-type-btns">
         <button onclick="selectSessType(this,'Landing Bag')"       class="sess-type-btn">Landing Bag</button>
-        <button onclick="selectSessType(this,'Landing Bag Side Hit')" class="sess-type-btn">Landing Bag Side Hit</button>
         <button onclick="selectSessType(this,'Jump On-Snow')"     class="sess-type-btn">Jump On-Snow</button>
         <button onclick="selectSessType(this,'Big Air Competition')" class="sess-type-btn">Big Air Competition</button>
       </div>
@@ -646,7 +645,6 @@
         <div style="display:flex;gap:4px;">
           <button id="pf-all"  onclick="setPerfFilter('')"                    style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
           <button id="pf-bag"  onclick="setPerfFilter('Landing Bag')"         style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
-          <button id="pf-bagside" onclick="setPerfFilter('Landing Bag Side Hit')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag Side</button>
           <button id="pf-jump" onclick="setPerfFilter('Jump On-Snow')"        style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
           <button id="pf-comp" onclick="setPerfFilter('Big Air Competition')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
         </div>
@@ -700,7 +698,6 @@
       <select id="ar-typ-sel" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
         <option value="">All session types</option>
         <option value="Landing Bag">Landing Bag</option>
-        <option value="Landing Bag Side Hit">Landing Bag Side Hit</option>
         <option value="Jump On-Snow">Jump On-Snow</option>
         <option value="Big Air Competition">Big Air Competition</option>
       </select>
@@ -727,7 +724,6 @@
       <select id="tr-typ-sel" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
         <option value="">All session types</option>
         <option value="Landing Bag">Landing Bag</option>
-        <option value="Landing Bag Side Hit">Landing Bag Side Hit</option>
         <option value="Jump On-Snow">Jump On-Snow</option>
         <option value="Big Air Competition">Big Air Competition</option>
       </select>
@@ -1153,7 +1149,7 @@ function trSeasonChange() {
   if (dr) dr.style.display = v === 'custom' ? 'flex' : 'none';
 }
 
-const SESS_TYPE_SHORT = {'Landing Bag':'Bag','Landing Bag Side Hit':'Bag Side','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'};
+const SESS_TYPE_SHORT = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'};
 
 function populateAthleteReportDropdown() {
   const sel = document.getElementById('ar-athlete-sel');
@@ -2188,7 +2184,7 @@ function renderSessionReports() {
     const condStars = r.conditions ? '★'.repeat(r.conditions)+'☆'.repeat(5-r.conditions) : '';
     const athStr = Array.isArray(r.athletes) ? r.athletes.map(a=>shortName(a)).join(', ') : '';
     const durStr = r.duration_min ? (r.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
-    const typeShort = {'Landing Bag':'Bag','Landing Bag Side Hit':'Bag Side','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[r.session_type]||r.session_type||'—';
+    const typeShort = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[r.session_type]||r.session_type||'—';
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:600;color:var(--text);">${dateStr} &nbsp;<span style="color:var(--muted);font-weight:400;font-size:12px;">${typeShort} · ${durStr}</span></div>
@@ -2329,7 +2325,7 @@ function openTeamPdfReport() {
     });
     const sessRows = Object.entries(byTrick).sort((a,b)=>b[1].att-a[1].att).map(([trick,s]) => {
       const lp = s.att ? Math.round(s.land/s.att*100) : 0;
-      const typeStr = [...s.type].map(t=>({'Landing Bag':'Bag','Landing Bag Side Hit':'Bag Side','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[t]||t)).join(', ');
+      const typeStr = [...s.type].map(t=>({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[t]||t)).join(', ');
       return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center">${s.land-s.stomped}</td><td style="text-align:center">${s.stomped}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#2d8a4e':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:11px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
     }).join('');
 
@@ -3408,7 +3404,7 @@ async function viewSessionReportByDate(date) {
   modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:24px;max-width:400px;width:100%;">
     <div style="font-size:16px;font-weight:700;color:#39c3d4;margin-bottom:16px;">Multiple reports for ${date}</div>
     ${data.map((r,i)=>`<button onclick="document.getElementById('sr-pick-modal').remove();openReportPrint(window._srPickData[${i}])" style="display:block;width:100%;text-align:left;padding:10px 14px;margin-bottom:8px;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;">
-      ${({'Landing Bag':'Bag','Landing Bag Side Hit':'Bag Side','Jump On-Snow':'On-Snow','Big Air Competition':'Competition'}[r.session_type]||r.session_type||'—')} · ${(r.athletes||[]).map(a=>a.split(' ')[0]).join(', ')} · ${r.duration_min}min
+      ${({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Competition'}[r.session_type]||r.session_type||'—')} · ${(r.athletes||[]).map(a=>a.split(' ')[0]).join(', ')} · ${r.duration_min}min
     </button>`).join('')}
     <button onclick="document.getElementById('sr-pick-modal').remove()" style="padding:8px 16px;background:none;border:1px solid #1a3450;border-radius:8px;color:#6b8299;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;margin-top:4px;">Cancel</button>
   </div>`;
@@ -4037,7 +4033,6 @@ async function loadEntwicklung() {
           <span style="font-size:11px;color:var(--muted);">Filter:</span>
           <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
           <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
-          <button id="ev-tf-bagside" onclick="setTypeFilter('Landing Bag Side Hit')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag Side</button>
           <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
           <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
         </div>
@@ -4275,7 +4270,7 @@ function buildSessionList(data) {
   function swissDate(d) { const [y,m,day] = d.split('-'); return `${day}.${m}.${y.slice(2)}`; }
   function sessType(dayData) {
     const types = [...new Set(dayData.map(t=>t.typ||'Training'))];
-    const short = {'Landing Bag':'Bag','Landing Bag Side Hit':'Bag Side','Jump On-Snow':'On-Snow','Big Air Competition':'Competition','Training':'Training'};
+    const short = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Competition','Training':'Training'};
     return types.map(t=>short[t]||t).join(', ');
   }
   Object.keys(byDate).sort().forEach(date => {
@@ -4318,7 +4313,7 @@ function setStatsMode(mode) {
 
 function setTypeFilter(typ) {
   _sbTaTypeFilter = typ;
-  const map = {'':'ev-tf-all','Landing Bag':'ev-tf-bag','Landing Bag Side Hit':'ev-tf-bagside','Jump On-Snow':'ev-tf-jump','Big Air Competition':'ev-tf-comp'};
+  const map = {'':'ev-tf-all','Landing Bag':'ev-tf-bag','Jump On-Snow':'ev-tf-jump','Big Air Competition':'ev-tf-comp'};
   Object.values(map).forEach(id=>{
     const b=document.getElementById(id); if(!b) return;
     b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
@@ -4731,7 +4726,7 @@ function renderRawEntries(entries, subtitle) {
   const sorted = [...entries].sort((a,b)=>(b.datum||'').localeCompare(a.datum||'') || (b.id||0)-(a.id||0));
 
   const fmtDate = d => { if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
-  const typShort = t => t==='Landing Bag'?'Bag':t==='Landing Bag Side Hit'?'Bag Side':t==='Jump On-Snow'?'On-Snow':t==='Big Air Competition'?'Comp':t||'—';
+  const typShort = t => t==='Landing Bag'?'Bag':t==='Jump On-Snow'?'On-Snow':t==='Big Air Competition'?'Comp':t||'—';
   const resultBadge = t => {
     const g = t.gesamt;
     if (g >= 10) return '<span style="color:#39c3d4;font-weight:700;">⭐ Stomped</span>';
@@ -4872,7 +4867,7 @@ function hidePerfTip() {
 
 function setPerfFilter(typ) {
   _sbPerfTypeFilter = typ;
-  const map = {'':'pf-all','Landing Bag':'pf-bag','Landing Bag Side Hit':'pf-bagside','Jump On-Snow':'pf-jump','Big Air Competition':'pf-comp'};
+  const map = {'':'pf-all','Landing Bag':'pf-bag','Jump On-Snow':'pf-jump','Big Air Competition':'pf-comp'};
   Object.values(map).forEach(id=>{
     const b=document.getElementById(id); if(!b) return;
     b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
@@ -5457,7 +5452,7 @@ let _perfTypeFilter = '';
 
 function setPerfFilter(typ) {
   _perfTypeFilter = typ;
-  const map = {'':'pf-all','Landing Bag':'pf-bag','Landing Bag Side Hit':'pf-bagside','Jump On-Snow':'pf-jump','Big Air Competition':'pf-comp'};
+  const map = {'':'pf-all','Landing Bag':'pf-bag','Jump On-Snow':'pf-jump','Big Air Competition':'pf-comp'};
   Object.values(map).forEach(id=>{
     const b=document.getElementById(id); if(!b) return;
     b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
@@ -5963,7 +5958,7 @@ function renderSessionReports() {
     const condStars = r.conditions ? '★'.repeat(r.conditions)+'☆'.repeat(5-r.conditions) : '';
     const athStr = Array.isArray(r.athletes) ? r.athletes.map(a=>shortName(a)).join(', ') : '';
     const durStr = r.duration_min ? (r.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
-    const typeShort = {'Landing Bag':'Bag','Landing Bag Side Hit':'Bag Side','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[r.session_type]||r.session_type||'—';
+    const typeShort = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[r.session_type]||r.session_type||'—';
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:600;color:var(--text);">${dateStr} &nbsp;<span style="color:var(--muted);font-weight:400;font-size:12px;">${typeShort} · ${durStr}</span></div>
@@ -6211,7 +6206,7 @@ function openTeamPdfReport() {
     });
     const sessRows = Object.entries(byTrick).sort((a,b)=>b[1].att-a[1].att).map(([trick,s]) => {
       const lp = qoeAvg(s.qoeVals) ?? 0;
-      const typeStr = [...s.type].map(t=>({'Landing Bag':'Bag','Landing Bag Side Hit':'Bag Side','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[t]||t)).join(', ');
+      const typeStr = [...s.type].map(t=>({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[t]||t)).join(', ');
       return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#2d8a4e':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:11px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
     }).join('');
 
@@ -7178,7 +7173,7 @@ async function viewSessionReportByDate(date) {
   modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:24px;max-width:400px;width:100%;">
     <div style="font-size:16px;font-weight:700;color:#39c3d4;margin-bottom:16px;">Multiple reports for ${date}</div>
     ${data.map((r,i)=>`<button onclick="document.getElementById('sr-pick-modal').remove();openReportPrint(window._srPickData[${i}])" style="display:block;width:100%;text-align:left;padding:10px 14px;margin-bottom:8px;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;">
-      ${({'Landing Bag':'Bag','Landing Bag Side Hit':'Bag Side','Jump On-Snow':'On-Snow','Big Air Competition':'Competition'}[r.session_type]||r.session_type||'—')} · ${(r.athletes||[]).map(a=>a.split(' ')[0]).join(', ')} · ${r.duration_min}min
+      ${({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Competition'}[r.session_type]||r.session_type||'—')} · ${(r.athletes||[]).map(a=>a.split(' ')[0]).join(', ')} · ${r.duration_min}min
     </button>`).join('')}
     <button onclick="document.getElementById('sr-pick-modal').remove()" style="padding:8px 16px;background:none;border:1px solid #1a3450;border-radius:8px;color:#6b8299;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;margin-top:4px;">Cancel</button>
   </div>`;
@@ -7643,7 +7638,6 @@ async function loadEntwicklung() {
           <span style="font-size:11px;color:var(--muted);">Filter:</span>
           <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
           <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
-          <button id="ev-tf-bagside" onclick="setTypeFilter('Landing Bag Side Hit')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag Side</button>
           <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
           <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
         </div>
@@ -8016,7 +8010,7 @@ function buildSessionList(data) {
   }
   function sessType(dayData) {
     const types = [...new Set(dayData.map(t=>t.typ||'Training'))];
-    const short = {'Landing Bag':'Bag','Landing Bag Side Hit':'Bag Side','Jump On-Snow':'On-Snow','Big Air Competition':'Competition','Training':'Training'};
+    const short = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Competition','Training':'Training'};
     return types.map(t=>short[t]||t).join(', ');
   }
   Object.keys(byDate).sort().forEach(date => {
@@ -8282,7 +8276,7 @@ function renderRawEntries(entries, subtitle) {
 
   const fmtDate = d => { if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
   const fmtKom  = k => { if(!k) return ''; return k.replace(/Takeoff:/,'TO:').replace(/Grab:/,' G:').replace(/Trick:/,' T:').replace(/Landing:/,' L:'); };
-  const typShort = t => t==='Landing Bag'?'Bag':t==='Landing Bag Side Hit'?'Bag Side':t==='Jump On-Snow'?'On-Snow':t==='Big Air Competition'?'Comp':t||'—';
+  const typShort = t => t==='Landing Bag'?'Bag':t==='Jump On-Snow'?'On-Snow':t==='Big Air Competition'?'Comp':t||'—';
   const open = wasOpen;
 
   wrap.innerHTML = `
@@ -8454,7 +8448,7 @@ function clearDateRange() {
 function setTypeFilter(typ) {
   _taTypeFilter = typ;
   // Update button styles
-  const map = {'':'ev-tf-all','Landing Bag':'ev-tf-bag','Landing Bag Side Hit':'ev-tf-bagside','Jump On-Snow':'ev-tf-jump','Big Air Competition':'ev-tf-comp'};
+  const map = {'':'ev-tf-all','Landing Bag':'ev-tf-bag','Jump On-Snow':'ev-tf-jump','Big Air Competition':'ev-tf-comp'};
   Object.values(map).forEach(id=>{
     const b=document.getElementById(id); if(!b) return;
     b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
