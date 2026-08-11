@@ -2475,13 +2475,29 @@ function normSbTrick(label) {
   // das Erfassen-Formular «Trick Grab» — sonst erscheint derselbe Trick doppelt.
   label = label.replace(/\s+—\s+/g, ' ').replace(/\s{2,}/g, ' ').trim();
   const dirs = ['Switch Backside','Switch Frontside','Frontside','Backside','Cab'];
-  // Already starts with a direction? → correct
-  for (const d of dirs) if (label.startsWith(d + ' ')) return label;
-  // Direction appended at end?
-  for (const d of dirs) {
-    if (label.endsWith(' ' + d)) return d + ' ' + label.slice(0, -(d.length+1)).trim();
+  let dir = null;
+  for (const d of dirs) if (label.startsWith(d + ' ')) { dir = d; break; }
+  if (!dir) {
+    // Direction appended at end?
+    for (const d of dirs) {
+      if (label.endsWith(' ' + d)) { label = d + ' ' + label.slice(0, -(d.length+1)).trim(); dir = d; break; }
+    }
   }
-  return label;
+  if (!dir) return label;
+  // Grab-Position vereinheitlichen: das Formular schreibt den Grab vor Bringback/Style,
+  // die Live-Session ans Ende — Grabs ans Ende verschieben, sonst doppelte Tricks.
+  let rest = label.slice(dir.length + 1);
+  const grabsSorted = [...new Set([...SESS_GRABS, ...(typeof SB_HP_GRABS !== 'undefined' ? SB_HP_GRABS : []), ...(typeof SB_JUMP_GRABS !== 'undefined' ? SB_JUMP_GRABS : [])])].sort((a,b) => b.length - a.length);
+  const endsWithGrab = grabsSorted.some(g => rest === g || rest.endsWith(' ' + g));
+  if (!endsWithGrab) {
+    const found = [];
+    for (const g of grabsSorted) {
+      const re = new RegExp('(^|\\s)' + g.replace(/[-.*+?^${}()|[\]\\]/g, '\\$&') + '(?=\\s|$)');
+      if (re.test(rest)) { found.push(g); rest = rest.replace(re, ' ').replace(/\s{2,}/g, ' ').trim(); }
+    }
+    if (found.length) rest = (rest ? rest + ' ' : '') + found.join(' ');
+  }
+  return dir + ' ' + rest;
 }
 
 function tricksForDir(tricks, dir) {
