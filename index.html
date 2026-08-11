@@ -828,7 +828,7 @@ const SPORT_CONFIGS = {
           <option value="">— select —</option><option>Jump</option><option>Rail</option><option>Halfpipe</option>
         `,
       'edit-drehrichtung': `
-          <option value="">–</option><option>Frontside</option><option>Backside</option><option>Cab</option><option>Switch Backside</option>
+          <option value="">–</option><option>Frontside</option><option>Backside</option><option>Switch Frontside</option><option>Switch Backside</option><option>Cab</option>
         `,
       'edit-flips': `
           <option value="">–</option><option value="">–</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
@@ -849,7 +849,7 @@ const SPORT_CONFIGS = {
           <option value="">–</option><option>0-50</option><option>Boardslide</option><option>Lipslide</option><option>Bluntslide</option><option>Nosepress</option><option>Tailpress</option><option>Noseslide</option><option>Tailslide</option>
         `,
       'sb-drehrichtung': `<option value="">–</option>
-            <option>Frontside</option><option>Backside</option><option>Cab</option><option>Switch Backside</option>
+            <option>Frontside</option><option>Backside</option><option>Switch Frontside</option><option>Switch Backside</option>
           `,
       'sb-flips': `<option value="">–</option>
             <option value="">–</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
@@ -874,7 +874,7 @@ const SPORT_CONFIGS = {
           <option>Jump</option><option>Rail</option><option>Halfpipe</option>
         `,
       'sbe-drehrichtung': `<option value="">–</option>
-          <option>Frontside</option><option>Backside</option><option>Cab</option><option>Switch Backside</option>
+          <option>Frontside</option><option>Backside</option><option>Switch Frontside</option><option>Switch Backside</option><option>Cab</option>
         `,
       'sbe-achse': `<option value="">–</option>
           <option>Cork</option><option>Crippler</option><option>Bio/Misty</option><option>Flat</option><option>Rodeo</option>
@@ -1875,7 +1875,7 @@ function updateFwdSwBtn(prefix) {
   if (!dirSelect) return;
   if (isClassic) {
     dirSelect.style.display = 'none';
-    const dirOptions = achse === 'Underflip' ? ['Frontside','Cab'] : ['Forward','Switch'];
+    const dirOptions = achse === 'Underflip' ? ['Frontside','Switch Frontside'] : ['Forward','Switch'];
     if (btnWrap) btnWrap.remove();
     {
       const wrap = document.createElement('div');
@@ -1924,7 +1924,7 @@ function updateSbDisciplines() {
   toggleDisziplin('sb');
 }
 
-const SB_DIR_NORMAL = '<option value="">–</option><option>Frontside</option><option>Backside</option><option>Cab</option><option>Switch Backside</option>';
+const SB_DIR_NORMAL = '<option value="">–</option><option>Frontside</option><option>Backside</option><option>Switch Frontside</option><option>Switch Backside</option>';
 
 const SB_DIR_HP     = '<option value="">–</option><option>Frontside</option><option>Frontside Alley Oop</option><option>Backside</option><option>Backside Alley Oop</option><option>Cab</option><option>Cab Alley Oop</option><option>Switch Backside</option><option>Switch Backside Alley Oop</option>';
 
@@ -2465,7 +2465,7 @@ async function toggleSessionAthlete(name) {
   if (trickSel) trickSel.style.display = 'none';
 }
 
-const SESS_DIRECTIONS = ['Frontside','Backside','Cab','Switch Backside','Forward','Switch'];
+const SESS_DIRECTIONS = ['Frontside','Backside','Switch Frontside','Switch Backside','Forward','Switch'];
 
 const SESS_GRABS = ['Bloody Dracula', 'Canadian Bacon', 'Chicken Salad', 'Cookie Monster', 'Crail', 'Crooked Cop', 'Cross Rocket', 'Double Tail', 'Dracula Method', 'Drunk Driver', 'Freshfish', 'Frontside', 'Indy', 'Japan', 'Lien', 'Melon', 'Method', 'Nose', 'Nuclear', 'Nuclear Method', 'Reach Around', 'Roast Beef', 'Rocket Air', 'Rusty Trombone', 'Sad Air', 'Seat Belt', 'Slob', 'Spaghetti', 'Stalefish', 'Stelmasky', 'Stink Bug', 'Suitcase', 'Swiss Cheese', 'Tai Pan', 'Tail', 'Truck Driver', 'Tuck Knee', 'Weddle (Mute)'];
 
@@ -2474,7 +2474,7 @@ function normSbTrick(label) {
   // Grab-Separator vereinheitlichen: Live-Session schreibt «Trick — Grab»,
   // das Erfassen-Formular «Trick Grab» — sonst erscheint derselbe Trick doppelt.
   label = label.replace(/\s+—\s+/g, ' ').replace(/\s{2,}/g, ' ').trim();
-  const dirs = ['Switch Backside','Frontside','Backside','Cab'];
+  const dirs = ['Switch Backside','Switch Frontside','Frontside','Backside','Cab'];
   // Already starts with a direction? → correct
   for (const d of dirs) if (label.startsWith(d + ' ')) return label;
   // Direction appended at end?
@@ -2487,12 +2487,12 @@ function normSbTrick(label) {
 function tricksForDir(tricks, dir) {
   return tricks.filter(t => {
     const lbl = (t.trick_label||'').toLowerCase();
-    if (dir === 'Switch Backside') return lbl.startsWith('switch backside');
+    if (dir === 'Switch Backside')  return lbl.startsWith('switch backside');
+    if (dir === 'Switch Frontside') return lbl.startsWith('switch frontside') || lbl.startsWith('cab');
     if (dir === 'Frontside')       return lbl.startsWith('frontside');
     if (dir === 'Backside')        return lbl.startsWith('backside') && !lbl.startsWith('switch backside');
-    if (dir === 'Cab')             return lbl.startsWith('cab');
     if (dir === 'Forward')         return lbl.startsWith('forward');
-    if (dir === 'Switch')          return lbl.startsWith('switch ') && !lbl.startsWith('switch backside');
+    if (dir === 'Switch')          return lbl.startsWith('switch ') && !lbl.startsWith('switch backside') && !lbl.startsWith('switch frontside');
     return false;
   });
 }
@@ -2514,7 +2514,7 @@ function baseLabel(label) {
 function sbLiveLabel(label, disziplin) {
   const norm = normSbTrick((label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim());
   if (disziplin === 'Rail') return norm;
-  for (const d of ['Switch Backside','Frontside','Backside','Cab']) {
+  for (const d of ['Switch Backside','Switch Frontside','Frontside','Backside','Cab']) {
     if (norm.startsWith(d + ' ')) return d + ' ' + baseLabel(norm.slice(d.length + 1));
   }
   return baseLabel(norm);
@@ -2792,9 +2792,9 @@ function renderLiveSession() {
   const pct = s.attempts ? Math.round((s.landed+s.perfect)/s.attempts*100) : 0;
   const sid = name.replace(/\s/g,'_');
 
-  const dirOrder = {'Frontside':0,'Backside':1,'Cab':2,'Switch Backside':3};
+  const dirOrder = {'Frontside':0,'Backside':1,'Switch Frontside':2,'Switch Backside':3,'Cab':2};
   const getDirKey = lbl => {
-    for (const d of ['Switch Backside','Frontside','Backside','Cab']) {
+    for (const d of ['Switch Backside','Switch Frontside','Frontside','Backside','Cab']) {
       if (lbl.startsWith(d)) return dirOrder[d];
       if (lbl.includes(' '+d+' ') || lbl.includes(' '+d)) return dirOrder[d];
     }
@@ -2811,7 +2811,7 @@ function renderLiveSession() {
   });
   let trickOptions = '';
   let lastDir = -1;
-  const dirNames = ['Frontside','Backside','Cab','Switch Backside','Other'];
+  const dirNames = ['Frontside','Backside','Switch Frontside','Switch Backside','Other'];
   sortedTricks.forEach(t => {
     const dir = getDirKey(t._lbl);
     if (dir !== lastDir) {
@@ -3461,13 +3461,13 @@ function renderSbDirRadar() {
   if (!mastered.length && !goals.length) { wrap.style.display='none'; return; }
   wrap.style.display = 'block';
 
-  // Clockwise from top-left: Frontside(TL), Backside(TR), Cab(BR), Switch Backside(BL)
-  const DIRS = ['Backside','Cab','Switch Backside','Frontside'];
+  // Clockwise from top-left: Frontside(TL), Backside(TR), Switch Frontside(BR), Switch Backside(BL)
+  const DIRS = ['Backside','Switch Frontside','Switch Backside','Frontside'];
   const getDir = raw => {
     const s = (raw||'').trim();
     if(s==='Frontside') return 'Frontside';
     if(s==='Backside') return 'Backside';
-    if(s==='Cab') return 'Cab';
+    if(s==='Switch Frontside' || s==='Cab') return 'Switch Frontside';
     if(s==='Switch Backside') return 'Switch Backside';
     return null;
   };
@@ -3537,7 +3537,7 @@ function renderSbDirRadar() {
   }
 
   // Labels
-  const DIR_COL={'Frontside':'#39c3d4','Backside':'#3b82f6','Cab':'#a78bfa','Switch Backside':'#f59e0b'};
+  const DIR_COL={'Frontside':'#39c3d4','Backside':'#3b82f6','Switch Frontside':'#a78bfa','Switch Backside':'#f59e0b'};
   angles.forEach((a,i)=>{
     const lx=cx+Math.cos(a)*(r+62),ly=cy+Math.sin(a)*(r+62);
     const align=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center';
@@ -3550,12 +3550,13 @@ function renderSbDirRadar() {
     ctx.fillText('◎ '+goalC[DIRS[i]],lx,ly+17);
   });
 
-  renderAthleteDirBalance(wrap, ['Frontside','Backside','Cab','Switch Backside'],
-    {'Frontside':'#39c3d4','Backside':'#f59e0b','Cab':'#a78bfa','Switch Backside':'#3b82f6'},
+  renderAthleteDirBalance(wrap, ['Frontside','Backside','Switch Frontside','Switch Backside'],
+    {'Frontside':'#39c3d4','Backside':'#f59e0b','Switch Frontside':'#a78bfa','Switch Backside':'#3b82f6'},
     t => {
       const tb = t.trickaufbau || t.trick_label || '';
-      const fromTb = ['Switch Backside','Frontside','Backside','Cab'].find(d => tb.startsWith(d+' ') || tb.startsWith(d+' —')) || null;
-      return fromTb || (t.drehrichtung||'').trim() || null;
+      const fromTb = ['Switch Backside','Switch Frontside','Frontside','Backside','Cab'].find(d => tb.startsWith(d+' ') || tb.startsWith(d+' —')) || null;
+      const raw = fromTb || (t.drehrichtung||'').trim() || null;
+      return raw === 'Cab' ? 'Switch Frontside' : raw;
     });
 }
 
@@ -3586,15 +3587,15 @@ function renderStandort() {
   const bList = sbData.filter(e => e.status === 'mastered');
   const zList = sbData.filter(e => e.status === 'goal');
 
-  const DIR_ORDER = ['Frontside','Backside','Cab','Switch Backside'];
-  const DIR_COLORS = {'Frontside':'#39c3d4','Backside':'#3b82f6','Cab':'#a78bfa','Switch Backside':'#f59e0b'};
+  const DIR_ORDER = ['Frontside','Backside','Switch Frontside','Switch Backside'];
+  const DIR_COLORS = {'Frontside':'#39c3d4','Backside':'#3b82f6','Switch Frontside':'#a78bfa','Switch Backside':'#f59e0b'};
 
   function normDir4(d) {
     if (!d) return null;
     const s = d.trim();
     if (s === 'Frontside') return 'Frontside';
     if (s === 'Backside') return 'Backside';
-    if (s === 'Cab') return 'Cab';
+    if (s === 'Switch Frontside' || s === 'Cab') return 'Switch Frontside';
     if (s === 'Switch Backside') return 'Switch Backside';
     return null;
   }
@@ -3818,13 +3819,13 @@ async function loadEntwicklung() {
   }
 
   // ── 1. RADAR: Directions — session landing rate (blue) + assessment volume (amber)
-  const directions = ['Frontside','Backside','Cab','Switch Backside'];
+  const directions = ['Frontside','Backside','Switch Frontside','Switch Backside'];
 
-  // Parse direction from trickaufbau (new session format: "Left Double 1080 Cork — Japan")
+  // Parse direction from trickaufbau (session format: "Switch Frontside 900 — Indy")
   function dirFromTrickaufbau(tb) {
     if (!tb) return null;
-    for (const d of ['Switch Right','Switch Left','Right','Left']) {
-      if (tb.startsWith(d + ' ') || tb.startsWith(d + ' —')) return d;
+    for (const d of ['Switch Backside','Switch Frontside','Frontside','Backside','Cab']) {
+      if (tb.startsWith(d + ' ') || tb.startsWith(d + ' —')) return d === 'Cab' ? 'Switch Frontside' : d;
     }
     return null;
   }
@@ -3832,10 +3833,8 @@ async function loadEntwicklung() {
   // Calculate landing rate per direction from session data
   const dirStats = {};
   tTagged.forEach(t => {
-    // New session entries (trickaufbau with " — ")
-    const dir = t.trickaufbau && t.trickaufbau.includes(' — ')
-      ? dirFromTrickaufbau(t.trickaufbau)
-      : t.drehrichtung;
+    const rawDir = dirFromTrickaufbau(t.trickaufbau) || t.drehrichtung;
+    const dir = rawDir === 'Cab' ? 'Switch Frontside' : rawDir;
     if (!dir) return;
     if (!dirStats[dir]) dirStats[dir] = { total: 0, landed: 0 };
     dirStats[dir].total++;
@@ -3845,8 +3844,9 @@ async function loadEntwicklung() {
   const dirRates    = directions.map(d => dirStats[d]?.total ? dirStats[d].landed / dirStats[d].total : 0);
   const dirRatePct  = directions.map(d => dirStats[d]?.total ? Math.round(dirStats[d].landed / dirStats[d].total * 100) : null);
 
-  // Assessment volume for amber polygon
+  // Assessment volume for amber polygon (Cab = HP-Terminologie → zählt zu Switch Frontside)
   const { stand: dirS } = countBySplit('drehrichtung');
+  dirS['Switch Frontside'] = (dirS['Switch Frontside']||0) + (dirS['Cab']||0);
   const maxDirS = Math.max(...directions.map(d => dirS[d]||0), 1);
 
   drawRadarSplit('cv-radar', directions,
@@ -4187,9 +4187,10 @@ function extractQuality(t) {
 function trickDir(name) {
   if (!name) return null;
   if (name.includes('Switch Backside')) return 'Switch Backside';
+  if (name.includes('Switch Frontside')) return 'Switch Frontside';
   if (name.includes('Backside'))  return 'Backside';
   if (name.includes('Frontside')) return 'Frontside';
-  if (name.includes('Cab'))       return 'Cab';
+  if (name.includes('Cab'))       return 'Switch Frontside';
   return null;
 }
 
@@ -4202,11 +4203,11 @@ let _sbTaDateFrom = '';
 let _sbTaDateTo = '';
 
 function sortFsTricksByDir(tricks) {
-  const dirOrder = {'Frontside':0,'Backside':1,'Cab':2,'Switch Backside':3};
+  const dirOrder = {'Frontside':0,'Backside':1,'Switch Frontside':2,'Switch Backside':3};
   const getDir = lbl => {
-    for (const d of ['Switch Backside','Frontside','Backside','Cab']) {
-      if (lbl.startsWith(d)) return d;
-      if (lbl.includes(' '+d+' ') || lbl.includes(' '+d)) return d;
+    for (const d of ['Switch Backside','Switch Frontside','Frontside','Backside','Cab']) {
+      if (lbl.startsWith(d)) return d === 'Cab' ? 'Switch Frontside' : d;
+      if (lbl.includes(' '+d+' ') || lbl.includes(' '+d)) return d === 'Cab' ? 'Switch Frontside' : d;
     }
     return 'Other';
   };
@@ -4390,8 +4391,8 @@ function renderTrickAnalytics() {
   const colQ = v => v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
 
   // SB directions and colors
-  const SB_DIRS = ['Frontside','Backside','Cab','Switch Backside'];
-  const SB_DIR_COL = {'Frontside':'#39c3d4','Backside':'#f59e0b','Cab':'#a78bfa','Switch Backside':'#3b82f6'};
+  const SB_DIRS = ['Frontside','Backside','Switch Frontside','Switch Backside'];
+  const SB_DIR_COL = {'Frontside':'#39c3d4','Backside':'#f59e0b','Switch Frontside':'#a78bfa','Switch Backside':'#3b82f6'};
 
   // ── SESSION VIEW ─────────────────────────────────────────────────
   if (dateKey) {
@@ -4499,8 +4500,8 @@ function renderTrickAnalytics() {
 
   // ── ALL TRICKS — one chart per trick, scrollable ──────────────────
   if (chosen === '__ALL__') {
-    const dirOrder = {'Frontside':0,'Backside':1,'Cab':2,'Switch Backside':3};
-    const getDirAll = lbl => { for (const d of ['Switch Backside','Frontside','Backside','Cab']) { if (lbl.startsWith(d) || lbl.includes(' '+d+' ') || lbl.includes(' '+d)) return d; } return 'Other'; };
+    const dirOrder = {'Frontside':0,'Backside':1,'Switch Frontside':2,'Switch Backside':3};
+    const getDirAll = lbl => { for (const d of ['Switch Backside','Switch Frontside','Frontside','Backside','Cab']) { if (lbl.startsWith(d) || lbl.includes(' '+d+' ') || lbl.includes(' '+d)) return d === 'Cab' ? 'Switch Frontside' : d; } return 'Other'; };
     const allTricks = [...new Set(baseData.map(t=>t.trickaufbau))]
       .map(t => ({name:t, dir:getDirAll(t), rot:extractRotFromLabel(t)}))
       .sort((a,b) => { const da=dirOrder[a.dir]??4, db=dirOrder[b.dir]??4; return da!==db ? da-db : a.rot-b.rot; });
@@ -4928,8 +4929,8 @@ function renderSessionPerformance() {
   const el = document.getElementById('perf-table');
   if (!el || !dbAllTricks) return;
 
-  const DIRS = ['Frontside','Backside','Cab','Switch Backside'];
-  const DIR_COL = {'Frontside':'#39c3d4','Backside':'#f59e0b','Cab':'#a78bfa','Switch Backside':'#3b82f6'};
+  const DIRS = ['Frontside','Backside','Switch Frontside','Switch Backside'];
+  const DIR_COL = {'Frontside':'#39c3d4','Backside':'#f59e0b','Switch Frontside':'#a78bfa','Switch Backside':'#3b82f6'};
 
   function status(landPct, avgQ) {
     if (landPct >= 70 && avgQ >= 70) return {icon:'🟢', label:'Ready', color:'#2d8a4e'};
