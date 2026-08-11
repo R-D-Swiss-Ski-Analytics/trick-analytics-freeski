@@ -2471,13 +2471,14 @@ const SESS_GRABS = ['Bloody Dracula', 'Canadian Bacon', 'Chicken Salad', 'Cookie
 
 function normSbTrick(label) {
   if (!label) return label;
+  // Grab-Separator vereinheitlichen: Live-Session schreibt «Trick — Grab»,
+  // das Erfassen-Formular «Trick Grab» — sonst erscheint derselbe Trick doppelt.
+  label = label.replace(/\s+—\s+/g, ' ').replace(/\s{2,}/g, ' ').trim();
   const dirs = ['Switch Backside','Frontside','Backside','Cab'];
   // Already starts with a direction? → correct
   for (const d of dirs) if (label.startsWith(d + ' ')) return label;
-  // Direction appended at end with " — Direction"?
+  // Direction appended at end?
   for (const d of dirs) {
-    const suffix = ' — ' + d;
-    if (label.endsWith(suffix)) return d + ' ' + label.slice(0, -suffix.length).trim();
     if (label.endsWith(' ' + d)) return d + ' ' + label.slice(0, -(d.length+1)).trim();
   }
   return label;
