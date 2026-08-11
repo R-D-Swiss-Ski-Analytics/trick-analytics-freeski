@@ -2765,10 +2765,10 @@ function sbSelectGrab(name, grab) {
   // Double Grab: zweiter Tap auf einen anderen Grab kombiniert zu «A + B»,
   // Tap auf einen gewählten Grab entfernt ihn wieder.
   const d = sessAthleteData[name];
-  const parts = (d.currentGrab || '').split(' + ').filter(Boolean);
+  const parts = (d.currentGrab || '').split(' to ').filter(Boolean);
   if (!grab) d.currentGrab = '';
-  else if (parts.includes(grab)) d.currentGrab = parts.filter(g => g !== grab).join(' + ');
-  else if (parts.length === 1) d.currentGrab = parts[0] + ' + ' + grab;
+  else if (parts.includes(grab)) d.currentGrab = parts.filter(g => g !== grab).join(' to ');
+  else if (parts.length === 1) d.currentGrab = parts[0] + ' to ' + grab;
   else d.currentGrab = grab;
   renderLiveSession();
 }
@@ -2842,7 +2842,7 @@ function renderLiveSession() {
     });
     const grabs = Object.keys(grabStat).sort();
     if (grabs.length) {
-      const selParts = (d.currentGrab || '').split(' + ').filter(Boolean);
+      const selParts = (d.currentGrab || '').split(' to ').filter(Boolean);
       grabHtml = `<div style="margin-bottom:16px;">
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Grab <span style="text-transform:none;letter-spacing:0;">(tap a 2nd grab for a double grab)</span></div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;" id="sess-grabs-${sid}">
@@ -6440,7 +6440,7 @@ function renderLiveSession() {
         });
         const grabs = Object.keys(grabStat).sort();
         if (!grabs.length) return '';
-        const selParts = (d.currentGrab || '').split(' + ').filter(Boolean);
+        const selParts = (d.currentGrab || '').split(' to ').filter(Boolean);
         return `<div style="margin-bottom:16px;">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Grab <span style="text-transform:none;letter-spacing:0;">(tap a 2nd grab for a double grab)</span></div>
           <div style="display:flex;flex-wrap:wrap;gap:5px;" id="sess-grabs-${sid}">
@@ -6580,14 +6580,14 @@ function sessSelectGrab(name, grab, btn) {
   // Double Grab: zweiter Tap auf einen anderen Grab kombiniert zu «A + B»,
   // Tap auf einen gewählten Grab entfernt ihn wieder.
   const d = sessAthleteData[name];
-  const parts = (d.currentGrab || '').split(' + ').filter(Boolean);
+  const parts = (d.currentGrab || '').split(' to ').filter(Boolean);
   let next;
   if (!grab) next = '';
-  else if (parts.includes(grab)) next = parts.filter(g => g !== grab).join(' + ');
-  else if (parts.length === 1) next = parts[0] + ' + ' + grab;
+  else if (parts.includes(grab)) next = parts.filter(g => g !== grab).join(' to ');
+  else if (parts.length === 1) next = parts[0] + ' to ' + grab;
   else next = grab;
   d.currentGrab = next;
-  const nextParts = next ? next.split(' + ') : [];
+  const nextParts = next ? next.split(' to ') : [];
   const sid = name.replace(/\s/g,'_');
   const wrap = document.getElementById('sess-grabs-'+sid);
   if (wrap) wrap.querySelectorAll('.sess-grab-btn').forEach(b => {
