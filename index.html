@@ -8839,11 +8839,6 @@ function renderTrickAnalytics() {
       const p=pts[ni], pv=ni>0?pts[ni-1]:null;
       const isFirst = ni===0;
       let html=`<div style="font-weight:700;color:#e8edf2;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">${fmtD(p.d)} &nbsp;·&nbsp; ${p.att} attempts</div>`;
-      const _lo=p.land-p.stomped, _ms=p.att-p.land;
-      html+=`<div style="color:#39c3d4;">⭐ Stomped: <b>${p.stomped}×</b></div>`
-          +`<div style="color:#2d8a4e;">✓ Landed&nbsp;: <b>${_lo}×</b></div>`
-          +`<div style="color:#e2001a;">✗ Missed&nbsp;: <b>${_ms}×</b></div>`
-          +`<div style="border-bottom:1px solid rgba(255,255,255,0.1);margin:5px 0;"></div>`;
       if(hasComp){
         if(p.takeoff!==null) html+=`<div style="color:#a78bfa;">Take-off: <b>${p.takeoff}%</b>${isFirst?'':dSign(p.takeoff,pv?.takeoff)}</div>`;
         html+=`<div style="color:#f59e0b;">Grab &nbsp;&nbsp;: <b>${p.grab??'—'}%</b>${isFirst?'':dSign(p.grab,pv?.grab)}</div>`;
