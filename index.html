@@ -655,10 +655,10 @@
           <option value="custom">Custom period…</option>
         </select>
         <div id="pf-custom-range" style="display:none;align-items:center;gap:4px;">
-          <input type="text" id="pf-from" placeholder="TT.MM.JJ" oninput="setPerfDateRange()"
+          <input type="text" id="pf-from" placeholder="DD.MM.YY" oninput="setPerfDateRange()"
             style="width:82px;padding:3px 7px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;">
           <span style="font-size:11px;color:var(--muted);">→</span>
-          <input type="text" id="pf-to" placeholder="TT.MM.JJ" oninput="setPerfDateRange()"
+          <input type="text" id="pf-to" placeholder="DD.MM.YY" oninput="setPerfDateRange()"
             style="width:82px;padding:3px 7px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;">
           <button onclick="clearPerfDateRange()" style="padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
         </div>
@@ -4038,10 +4038,10 @@ async function loadEntwicklung() {
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-size:11px;color:var(--muted);white-space:nowrap;">Period:</span>
-          <input type="text" id="ev-date-from" oninput="setDateRange()" placeholder="TT.MM.JJ"
+          <input type="text" id="ev-date-from" oninput="setDateRange()" placeholder="DD.MM.YY"
             style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
           <span style="font-size:11px;color:var(--muted);">→</span>
-          <input type="text" id="ev-date-to" oninput="setDateRange()" placeholder="TT.MM.JJ"
+          <input type="text" id="ev-date-to" oninput="setDateRange()" placeholder="DD.MM.YY"
             style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
           <button onclick="clearDateRange()" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
         </div>
@@ -7643,10 +7643,10 @@ async function loadEntwicklung() {
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-size:11px;color:var(--muted);white-space:nowrap;">Period:</span>
-          <input type="text" id="ev-date-from" oninput="setDateRange()" placeholder="TT.MM.JJ"
+          <input type="text" id="ev-date-from" oninput="setDateRange()" placeholder="DD.MM.YY"
             style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
           <span style="font-size:11px;color:var(--muted);">→</span>
-          <input type="text" id="ev-date-to" oninput="setDateRange()" placeholder="TT.MM.JJ"
+          <input type="text" id="ev-date-to" oninput="setDateRange()" placeholder="DD.MM.YY"
             style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
           <button onclick="clearDateRange()" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
         </div>
@@ -9054,10 +9054,10 @@ const fragments = {
             <input type="hidden" id="sb-grab" value="">
           </div>
         </div>`,
-  coachFields: `      <div class="form-group"><label>Coach-Rating (1–10)</label>
+  coachFields: `      <div class="form-group"><label>Coach Rating (1–10)</label>
         <input type="number" id="sbe-coach-rating" min="1" max="10" placeholder="1–10"></div>
-      <div class="form-group full"><label>Coach-Kommentar</label>
-        <textarea id="sbe-coach-kommentar" rows="2" placeholder="Coach-Kommentar..."></textarea></div>`,
+      <div class="form-group full"><label>Coach Comment</label>
+        <textarea id="sbe-coach-kommentar" rows="2" placeholder="Coach comment..."></textarea></div>`,
 };
 function init() { initStandortGrabs(); }
 return { fragments, init, showPage, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, logRatedAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
