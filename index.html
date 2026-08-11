@@ -834,10 +834,10 @@ const SPORT_CONFIGS = {
           <option value="">–</option><option value="">–</option><option>Single</option><option>Double</option><option>Triple</option><option>Quad</option>
         `,
       'edit-achse': `
-          <option value="">–</option><option>Cork</option><option>McTwist</option><option>Todeo</option><option>Rodeo</option><option>Infinity Axis</option><option>Upright Spins</option><option>Backroll</option><option>Frontroll</option><option>Underflip</option><option>Wildcat</option><option>Tamedog</option>
+          <option value="">–</option><option>Cork</option><option>Crippler</option><option>McTwist</option><option>Todeo</option><option>Rodeo</option><option>Infinity Axis</option><option>Upright Spins</option><option>Backroll</option><option>Frontroll</option><option>Underflip</option><option>Wildcat</option><option>Tamedog</option>
         `,
       'edit-grab': `
-          <option value="">–</option><option>Bloody Dracula</option><option>Canadian Bacon</option><option>Chicken Salad</option><option>Cookie Monster</option><option>Crail</option><option>Crooked Cop</option><option>Cross Rocket</option><option>Double Tail</option><option>Dracula Method</option><option>Freshfish</option><option>Frontside</option><option>Japan</option><option>Lien</option><option>Melon</option><option>Method</option><option>Nose</option><option>Nuclear</option><option>Nuclear Method</option><option>Reach Around</option><option>Roast Beef</option><option>Rocket Air</option><option>Sad Air</option><option>Seat Belt</option><option>Slob</option><option>Spaghetti</option><option>Stalefish</option><option>Stelmasky</option><option>Stink Bug</option><option>Suitcase</option><option>Swiss Cheese</option><option>Tai Pan</option><option>Tail</option><option>Tuck Knee</option><option>Weddle (Mute)</option>
+          <option value="">–</option><option>Bloody Dracula</option><option>Canadian Bacon</option><option>Chicken Salad</option><option>Cookie Monster</option><option>Crail</option><option>Crooked Cop</option><option>Cross Rocket</option><option>Double Tail</option><option>Dracula Method</option><option>Drunk Driver</option><option>Freshfish</option><option>Frontside</option><option>Indy</option><option>Japan</option><option>Lien</option><option>Melon</option><option>Method</option><option>Nose</option><option>Nuclear</option><option>Nuclear Method</option><option>Reach Around</option><option>Roast Beef</option><option>Rocket Air</option><option>Rusty Trombone</option><option>Sad Air</option><option>Seat Belt</option><option>Slob</option><option>Spaghetti</option><option>Stalefish</option><option>Stelmasky</option><option>Stink Bug</option><option>Suitcase</option><option>Swiss Cheese</option><option>Tai Pan</option><option>Tail</option><option>Truck Driver</option><option>Tuck Knee</option><option>Weddle (Mute)</option>
         `,
       'edit-absprung': `
           <option value="">–</option><option>N'Ollie</option><option>Nosebutter</option><option>Noseslide</option><option>Tailbutter</option><option>Tailslide</option><option>Hardway</option>
@@ -856,7 +856,7 @@ const SPORT_CONFIGS = {
           `,
       'sb-achse': `<option value="">–</option>
             <optgroup label="Off-Axis">
-              <option>Cork</option><option>McTwist</option><option>Todeo</option><option>Rodeo</option><option>Infinity Axis</option>
+              <option>Cork</option><option>Crippler</option><option>McTwist</option><option>Todeo</option><option>Rodeo</option><option>Infinity Axis</option>
             </optgroup>
             <optgroup label="Upright Spins (Longitudinal Axis)">
               <option>Upright Spins</option>
@@ -877,7 +877,7 @@ const SPORT_CONFIGS = {
           <option>Frontside</option><option>Backside</option><option>Cab</option><option>Switch Backside</option>
         `,
       'sbe-achse': `<option value="">–</option>
-          <option>Cork</option><option>Bio/Misty</option><option>Flat</option><option>Rodeo</option>
+          <option>Cork</option><option>Crippler</option><option>Bio/Misty</option><option>Flat</option><option>Rodeo</option>
           <option>Upright Spins</option><option>Backroll</option><option>Frontroll</option><option>Underflip</option><option>Wildcat</option><option>Tamedog</option>
         `,
       'sbe-style': `<option value="">–</option>
@@ -2467,7 +2467,7 @@ async function toggleSessionAthlete(name) {
 
 const SESS_DIRECTIONS = ['Frontside','Backside','Cab','Switch Backside','Forward','Switch'];
 
-const SESS_GRABS = ['Bloody Dracula', 'Canadian Bacon', 'Chicken Salad', 'Cookie Monster', 'Crail', 'Crooked Cop', 'Cross Rocket', 'Double Tail', 'Dracula Method', 'Freshfish', 'Frontside', 'Japan', 'Lien', 'Melon', 'Method', 'Nose', 'Nuclear', 'Nuclear Method', 'Reach Around', 'Roast Beef', 'Rocket Air', 'Sad Air', 'Seat Belt', 'Slob', 'Spaghetti', 'Stalefish', 'Stelmasky', 'Stink Bug', 'Suitcase', 'Swiss Cheese', 'Tai Pan', 'Tail', 'Tuck Knee', 'Weddle (Mute)'];
+const SESS_GRABS = ['Bloody Dracula', 'Canadian Bacon', 'Chicken Salad', 'Cookie Monster', 'Crail', 'Crooked Cop', 'Cross Rocket', 'Double Tail', 'Dracula Method', 'Drunk Driver', 'Freshfish', 'Frontside', 'Indy', 'Japan', 'Lien', 'Melon', 'Method', 'Nose', 'Nuclear', 'Nuclear Method', 'Reach Around', 'Roast Beef', 'Rocket Air', 'Rusty Trombone', 'Sad Air', 'Seat Belt', 'Slob', 'Spaghetti', 'Stalefish', 'Stelmasky', 'Stink Bug', 'Suitcase', 'Swiss Cheese', 'Tai Pan', 'Tail', 'Truck Driver', 'Tuck Knee', 'Weddle (Mute)'];
 
 function normSbTrick(label) {
   if (!label) return label;
@@ -5247,8 +5247,8 @@ function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
   });
 }
 
-const SB_HP_GRABS = ['Bloody Dracula', 'Canadian Bacon', 'Chicken Salad', 'Cookie Monster', 'Crail', 'Crooked Cop', 'Cross Rocket', 'Double Tail', 'Dracula Method', 'Freshfish', 'Frontside', 'Japan', 'Lien', 'Melon', 'Method', 'Nose', 'Nuclear', 'Nuclear Method', 'Reach Around', 'Roast Beef', 'Rocket Air', 'Sad Air', 'Seat Belt', 'Slob', 'Spaghetti', 'Stalefish', 'Stelmasky', 'Stink Bug', 'Suitcase', 'Swiss Cheese', 'Tai Pan', 'Tail', 'Tuck Knee', 'Weddle (Mute)'];
-const SB_JUMP_GRABS = ['Canadian Bacon', 'Chicken Salad', 'Crail', 'Double Japan', 'Double Nose', 'Double Tail', 'Indy', 'Japan', 'Melon', 'Method', 'Nose', 'Roast Beef', 'Rocket Air', 'Seat Belt', 'Stalefish', 'Tai Pan', 'Tail', 'Tuck Knee', 'Weddle (Mute)'];
+const SB_HP_GRABS = ['Bloody Dracula', 'Canadian Bacon', 'Chicken Salad', 'Cookie Monster', 'Crail', 'Crooked Cop', 'Cross Rocket', 'Double Tail', 'Dracula Method', 'Drunk Driver', 'Freshfish', 'Frontside', 'Indy', 'Japan', 'Lien', 'Melon', 'Method', 'Nose', 'Nuclear', 'Nuclear Method', 'Reach Around', 'Roast Beef', 'Rocket Air', 'Rusty Trombone', 'Sad Air', 'Seat Belt', 'Slob', 'Spaghetti', 'Stalefish', 'Stelmasky', 'Stink Bug', 'Suitcase', 'Swiss Cheese', 'Tai Pan', 'Tail', 'Truck Driver', 'Tuck Knee', 'Weddle (Mute)'];
+const SB_JUMP_GRABS = ['Canadian Bacon', 'Chicken Salad', 'Crail', 'Double Japan', 'Double Nose', 'Double Tail', 'Drunk Driver', 'Indy', 'Japan', 'Melon', 'Method', 'Nose', 'Roast Beef', 'Rocket Air', 'Rusty Trombone', 'Seat Belt', 'Stalefish', 'Tai Pan', 'Tail', 'Truck Driver', 'Tuck Knee', 'Weddle (Mute)'];
 
 function assessGrabList(disziplin) {
   return disziplin === 'Halfpipe' ? SB_HP_GRABS : SB_JUMP_GRABS;
