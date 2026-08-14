@@ -1092,6 +1092,9 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ═══════════════ AUTH (Coach-Login) + Gruppen-Filter ═══════════════
+// Login pausiert bis die Coach-Accounts angelegt sind — dann auf true stellen
+// und danach das RLS-SQL ausführen (siehe Memory/Chat 14.8.2026).
+const AUTH_ENABLED = false;
 let AUTH_USER = null;
 let COACH_SQUAD = null;                       // squad key from the coaches table, null = unknown
 let GROUP_FILTER = 'all';
@@ -1177,6 +1180,7 @@ async function authForgotPassword() {
 }
 
 async function initAuth() {
+  if (!AUTH_ENABLED) return true;   // Login pausiert — App startet ohne Anmeldung
   let session = null;
   try { session = (await db.auth.getSession()).data.session; } catch (e) { console.error(e); }
   if (session && (AUTH_URL_TYPE === 'invite' || AUTH_URL_TYPE === 'recovery')) {
@@ -1234,6 +1238,8 @@ function renderAuthControls() {
   if (!wrap || !sel) return;
   sel.innerHTML = `<option value="all" ${GROUP_FILTER==='all'?'selected':''}>All</option>` +
     FILTER_GROUPS.map(g => `<option value="${g.value}" ${GROUP_FILTER===g.value?'selected':''}>${g.short}</option>`).join('');
+  const logoutBtn = wrap.querySelector('button');
+  if (logoutBtn) logoutBtn.style.display = AUTH_USER ? '' : 'none';
   wrap.style.display = 'flex';
 }
 
