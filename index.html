@@ -1083,6 +1083,9 @@ const SUPABASE_URL = CFG.supabaseUrl;
 
 const SUPABASE_KEY = CFG.supabaseKey;
 
+// Invite-/Recovery-Links tragen den Typ im URL-Hash — vor supabase-js einlesen
+const AUTH_URL_TYPE = (location.hash.match(/type=(\w+)/) || [])[1] || null;
+
 const { createClient } = supabase;
 
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1109,6 +1112,7 @@ function showAuthGate(msg) {
     <input type="password" id="auth-pass" autocomplete="current-password" required style="margin-bottom:6px;">
     <div id="auth-err" style="min-height:16px;font-size:11px;color:#e2001a;margin-bottom:10px;">${msg||''}</div>
     <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Sign in</button>
+    <div style="text-align:center;margin-top:12px;"><a href="#" onclick="authForgotPassword();return false;" style="font-size:11px;color:var(--muted);">Forgot password?</a></div>
   </form>`;
   document.body.appendChild(gate);
   document.getElementById('auth-form').addEventListener('submit', async e => {
@@ -1128,9 +1132,56 @@ function showAuthGate(msg) {
   });
 }
 
+function showSetPasswordGate() {
+  document.getElementById('auth-gate')?.remove();
+  const gate = document.createElement('div');
+  gate.id = 'auth-gate';
+  gate.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  gate.innerHTML = `<form id="setpw-form" style="width:100%;max-width:360px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;">
+    <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:2px;">${CFG.title}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Welcome! Choose your password.</div>
+    <label style="display:block;margin-bottom:4px;">New password</label>
+    <input type="password" id="setpw-1" autocomplete="new-password" required minlength="8" style="margin-bottom:12px;">
+    <label style="display:block;margin-bottom:4px;">Repeat password</label>
+    <input type="password" id="setpw-2" autocomplete="new-password" required minlength="8" style="margin-bottom:6px;">
+    <div id="setpw-err" style="min-height:16px;font-size:11px;color:#e2001a;margin-bottom:10px;"></div>
+    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Save password</button>
+  </form>`;
+  document.body.appendChild(gate);
+  document.getElementById('setpw-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const p1 = document.getElementById('setpw-1').value, p2 = document.getElementById('setpw-2').value;
+    const err = document.getElementById('setpw-err');
+    if (p1 !== p2) { err.textContent = 'Passwords do not match.'; return; }
+    const btn = e.target.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const {error} = await db.auth.updateUser({password: p1});
+    if (error) {
+      btn.disabled = false; btn.textContent = 'Save password';
+      err.textContent = 'Error: ' + error.message;
+    } else {
+      history.replaceState(null, '', location.pathname + location.search);
+      location.reload();
+    }
+  });
+}
+
+async function authForgotPassword() {
+  const email = (document.getElementById('auth-email')?.value || '').trim();
+  const err = document.getElementById('auth-err');
+  if (!email) { err.textContent = 'Enter your e-mail above first, then tap the link again.'; return; }
+  const {error} = await db.auth.resetPasswordForEmail(email, {redirectTo: location.origin + location.pathname});
+  err.style.color = error ? '#e2001a' : '#34d399';
+  err.textContent = error ? 'Error: ' + error.message : 'Password reset e-mail sent — check your inbox.';
+}
+
 async function initAuth() {
   let session = null;
   try { session = (await db.auth.getSession()).data.session; } catch (e) { console.error(e); }
+  if (session && (AUTH_URL_TYPE === 'invite' || AUTH_URL_TYPE === 'recovery')) {
+    showSetPasswordGate();
+    return false;
+  }
   if (!session) { showAuthGate(); return false; }
   AUTH_USER = session.user;
   try {
