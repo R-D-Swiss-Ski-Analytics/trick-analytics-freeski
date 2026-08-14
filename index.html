@@ -50,7 +50,7 @@
   .form-group { display: flex; flex-direction: column; gap: 5px; }
   .form-group.full { grid-column: 1 / -1; }
   label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
-  select, input[type="text"], input[type="number"], input[type="date"], textarea {
+  select, input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="password"], textarea {
     background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
     color: var(--text); padding: 9px 12px; font-family: 'Poppins', sans-serif;
     font-size: 14px; outline: none; transition: border-color .2s; width: 100%;
@@ -430,6 +430,10 @@ body.sport-snowboard textarea { font-family: 'Poppins', sans-serif; }
     <button class="nav-tab" id="nav-tab-monitoring" style="display:none;" onclick="showPage('monitoring', this)">Monitoring</button>
     <button class="nav-tab" id="nav-tab-sessionreport" style="display:none;" onclick="showPage('sessionreport', this)">Reports</button>
   </nav>
+  <div id="auth-controls" style="display:none;align-items:center;gap:8px;margin-left:12px;flex-shrink:0;">
+    <select id="group-filter-sel" onchange="setGroupFilter(this.value)" style="max-width:180px;padding:6px 10px;font-size:12px;"></select>
+    <button onclick="authLogout()" title="Log out" style="background:none;border:1px solid rgba(255,255,255,0.3);border-radius:8px;color:rgba(255,255,255,0.7);cursor:pointer;padding:6px 10px;font-size:12px;font-family:'Poppins',sans-serif;white-space:nowrap;">Log out</button>
+  </div>
 </header>
 
 <div class="toast" id="toast"></div>
@@ -827,9 +831,9 @@ const SPORT_CONFIGS = {
   {name:'Robin Zürcher',squad:'DVLP'},
 ],
     squads: [
-  {key:'M',  label:'TG HP Matty',         color:'#39c3d4'},
-  {key:'PE', label:'TG SS&BA Pascal & Emil', color:'#f59e0b'},
-  {key:'DVLP', label:'TG DVLP Wendelin', color:'#34d399'},
+  {key:'M',  label:'TG HP Matty',         short:'TG HP',   color:'#39c3d4'},
+  {key:'PE', label:'TG SS&BA Pascal & Emil', short:'TG 1 & 2', color:'#f59e0b'},
+  {key:'DVLP', label:'TG DVLP Wendelin', short:'TG DVLP', color:'#34d399'},
 ],
     athleteOptgroups: `<optgroup label="TG HP Matty">
                           <option>Berenice Wicki</option>
@@ -961,10 +965,10 @@ const SPORT_CONFIGS = {
   {name:'Neo Zingg',squad:'DVLP'},
 ],
     squads: [
-  {key:'GK', label:'TG SS&BA Greg & Kai', color:'#39c3d4'},
-  {key:'X',  label:'TG SS&BA Xeno',       color:'#f59e0b'},
-  {key:'HP', label:'TG Halfpipe',   color:'#a78bfa'},
-  {key:'DVLP', label:'TG DVLP Dominic', color:'#34d399'},
+  {key:'GK', label:'TG SS&BA Greg & Kai', short:'TG 1', color:'#39c3d4'},
+  {key:'X',  label:'TG SS&BA Xeno',       short:'TG 2', color:'#f59e0b'},
+  {key:'HP', label:'TG Halfpipe',   short:'TG HP',   color:'#a78bfa'},
+  {key:'DVLP', label:'TG DVLP Dominic', short:'TG DVLP', color:'#34d399'},
 ],
     athleteOptgroups: `<optgroup label="TG SS&BA Greg & Kai">
             <option>Adrien Vaudaux</option>
@@ -1082,6 +1086,99 @@ const SUPABASE_KEY = CFG.supabaseKey;
 const { createClient } = supabase;
 
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ═══════════════ AUTH (Coach-Login) + Gruppen-Filter ═══════════════
+let AUTH_USER = null;
+let COACH_SQUAD = null;                       // squad key from the coaches table, null = unknown
+let GROUP_FILTER = 'all';
+const ALL_SQUADS = CFG.squads.map(s => ({...s})); // unfiltered copy for the selector
+// Selector entries; a value can combine several squad keys (joined with '+')
+const FILTER_GROUPS = ALL_SQUADS.map(s => ({value:s.key, short:s.short || s.label}));
+
+function showAuthGate(msg) {
+  document.getElementById('auth-gate')?.remove();
+  const gate = document.createElement('div');
+  gate.id = 'auth-gate';
+  gate.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  gate.innerHTML = `<form id="auth-form" style="width:100%;max-width:360px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;">
+    <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:2px;">${CFG.title}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Coach login</div>
+    <label style="display:block;margin-bottom:4px;">E-Mail</label>
+    <input type="email" id="auth-email" autocomplete="username" required style="margin-bottom:12px;">
+    <label style="display:block;margin-bottom:4px;">Password</label>
+    <input type="password" id="auth-pass" autocomplete="current-password" required style="margin-bottom:6px;">
+    <div id="auth-err" style="min-height:16px;font-size:11px;color:#e2001a;margin-bottom:10px;">${msg||''}</div>
+    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Sign in</button>
+  </form>`;
+  document.body.appendChild(gate);
+  document.getElementById('auth-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    const {error} = await db.auth.signInWithPassword({
+      email: document.getElementById('auth-email').value.trim(),
+      password: document.getElementById('auth-pass').value,
+    });
+    if (error) {
+      btn.disabled = false; btn.textContent = 'Sign in';
+      document.getElementById('auth-err').textContent = 'Login failed: ' + error.message;
+    } else {
+      location.reload();
+    }
+  });
+}
+
+async function initAuth() {
+  let session = null;
+  try { session = (await db.auth.getSession()).data.session; } catch (e) { console.error(e); }
+  if (!session) { showAuthGate(); return false; }
+  AUTH_USER = session.user;
+  try {
+    const {data} = await db.from('coaches').select('squad').eq('email', AUTH_USER.email).maybeSingle();
+    COACH_SQUAD = data && data.squad ? data.squad : null;
+  } catch (e) { COACH_SQUAD = null; }
+  return true;
+}
+
+function authLogout() {
+  db.auth.signOut().finally(() => location.reload());
+}
+
+function applyGroupFilter() {
+  const saved = localStorage.getItem(SPORT + '_group_filter');
+  // Map the coach's squad key to the filter entry that contains it (e.g. freeski X → 'GK+X')
+  const coachDefault = COACH_SQUAD
+    ? (FILTER_GROUPS.find(g => g.value.split('+').includes(COACH_SQUAD)) || {}).value || 'all'
+    : 'all';
+  GROUP_FILTER = saved || coachDefault;
+  if (GROUP_FILTER !== 'all' && !FILTER_GROUPS.some(g => g.value === GROUP_FILTER)) GROUP_FILTER = 'all';
+  if (GROUP_FILTER !== 'all') {
+    const keys = new Set(GROUP_FILTER.split('+'));
+    // Mutate in place — modules captured these array references at parse time
+    const keepA = CFG.athletes.filter(a => keys.has(a.squad));
+    CFG.athletes.length = 0; CFG.athletes.push(...keepA);
+    const keepS = CFG.squads.filter(s => keys.has(s.key));
+    CFG.squads.length = 0; CFG.squads.push(...keepS);
+    CFG.athleteOptgroups = CFG.squads.map(sq =>
+      `<optgroup label="${sq.label}">` +
+      CFG.athletes.filter(a => a.squad === sq.key).map(a => `<option>${a.name}</option>`).join('') +
+      `</optgroup>`).join('');
+  }
+}
+
+function setGroupFilter(v) {
+  localStorage.setItem(SPORT + '_group_filter', v);
+  location.reload();
+}
+
+function renderAuthControls() {
+  const wrap = document.getElementById('auth-controls');
+  const sel = document.getElementById('group-filter-sel');
+  if (!wrap || !sel) return;
+  sel.innerHTML = `<option value="all" ${GROUP_FILTER==='all'?'selected':''}>All</option>` +
+    FILTER_GROUPS.map(g => `<option value="${g.value}" ${GROUP_FILTER===g.value?'selected':''}>${g.short}</option>`).join('');
+  wrap.style.display = 'flex';
+}
 
 
 
@@ -2051,6 +2148,12 @@ async function loadDB() {
   dbAllTricks   = (tricks   || []).map(t => ({ ...t, _quelle: 'session' }));
   dbAllStandort = (standort || []).map(t => ({ ...t, _quelle: 'standort' }));
   dbSessionReports = reports || [];
+  if (GROUP_FILTER !== 'all') {
+    const names = new Set(SESS_ALL_ATHLETES.map(a => a.name));
+    dbAllTricks = dbAllTricks.filter(t => names.has(t.athlet));
+    dbAllStandort = dbAllStandort.filter(t => names.has(t.athlet));
+    dbSessionReports = dbSessionReports.filter(r => Array.isArray(r.athletes) && r.athletes.some(n => names.has(n)));
+  }
 
   renderSessionPerformance();
   renderSessionReports();
@@ -3964,7 +4067,8 @@ function renderReportsList() {
   const filtered = _sbRepList.map((r, i) => ({r, i}))
     .filter(x => !_sbRepTyp || x.r.session_type === _sbRepTyp)
     .filter(x => !repFrom || (x.r.datum || '') >= repFrom)
-    .filter(x => !repTo || (x.r.datum || '') <= repTo);
+    .filter(x => !repTo || (x.r.datum || '') <= repTo)
+    .filter(x => GROUP_FILTER === 'all' || (Array.isArray(x.r.athletes) && x.r.athletes.some(n => SESS_ALL_ATHLETES.some(a => a.name === n))));
   const rows = filtered.map(({r, i}) => {
     const dateStr = r.datum ? (() => { const p=r.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '—';
     const typeShort = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[r.session_type]||r.session_type||'—';
@@ -7006,6 +7110,12 @@ async function loadDB() {
   dbAllTricks   = (tricks   || []).map(t => ({ ...t, _quelle: 'session' }));
   dbAllStandort = (standort || []).map(t => ({ ...t, _quelle: 'standort' }));
   dbSessionReports = reports || [];
+  if (GROUP_FILTER !== 'all') {
+    const names = new Set(SESS_ALL_ATHLETES.map(a => a.name));
+    dbAllTricks = dbAllTricks.filter(t => names.has(t.athlet));
+    dbAllStandort = dbAllStandort.filter(t => names.has(t.athlet));
+    dbSessionReports = dbSessionReports.filter(r => Array.isArray(r.athletes) && r.athletes.some(n => names.has(n)));
+  }
 
   renderSessionPerformance();
   renderSessionReports();
@@ -10208,11 +10318,14 @@ return { fragments, init, showPage, updateSbDisciplines, updateFwdSwBtn, toggleD
 })();
 
 // ═══════════════ SPORT BOOT ═══════════════
-document.addEventListener('DOMContentLoaded', function bootSport(){
-  const M = SPORT === 'snowboard' ? SnowboardModule : FreeskiModule;
-  for (const k of Object.keys(M)) if (typeof M[k] === 'function' && k !== 'init') window[k] = M[k];
+document.addEventListener('DOMContentLoaded', async function bootSport(){
   document.title = CFG.title;
   const h1 = document.querySelector('header h1'); if (h1) h1.textContent = CFG.title;
+  if (!(await initAuth())) return;   // not signed in → login gate, stop booting
+  applyGroupFilter();
+  renderAuthControls();
+  const M = SPORT === 'snowboard' ? SnowboardModule : FreeskiModule;
+  for (const k of Object.keys(M)) if (typeof M[k] === 'function' && k !== 'init') window[k] = M[k];
   ['sb-athlet','ev-athlet'].forEach(id => {
     const el = document.getElementById(id); if (el) el.insertAdjacentHTML('beforeend', CFG.athleteOptgroups);
   });
@@ -10226,6 +10339,7 @@ document.addEventListener('DOMContentLoaded', function bootSport(){
   const cf = document.getElementById('sbe-coach-fields-placeholder');
   if (cf) cf.outerHTML = M.fragments.coachFields;
   M.init();
+  if (typeof bootOpenInitialPage === 'function') bootOpenInitialPage();
 });
 </script>
 
@@ -10329,13 +10443,14 @@ function updateMobileNav(pageId) {
   const btns = document.querySelectorAll('.mobile-nav-btn');
   if (btns[idx[pageId]] !== undefined) btns[idx[pageId]].classList.add('active');
 }
-document.addEventListener('DOMContentLoaded', () => {
+// Runs at the end of bootSport (after auth) — window functions are installed by then
+function bootOpenInitialPage() {
   if(localStorage.getItem(CFG.sessionKey)){
     const sessBtn=Array.from(document.querySelectorAll('.nav-tab')).find(t=>t.textContent.trim()==='Session');
     if(sessBtn) sessBtn.click();
   }
   updateMobileNav(localStorage.getItem(CFG.sessionKey)?'erfassen':'standort');
-});
+}
 </script>
 
 </body>
