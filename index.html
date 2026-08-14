@@ -1085,6 +1085,7 @@ const SUPABASE_KEY = CFG.supabaseKey;
 
 // Invite-/Recovery-Links tragen den Typ im URL-Hash — vor supabase-js einlesen
 const AUTH_URL_TYPE = (location.hash.match(/type=(\w+)/) || [])[1] || null;
+const AUTH_URL_ERROR = decodeURIComponent(((location.hash.match(/error_description=([^&]*)/) || [])[1] || '').replace(/\+/g, ' '));
 
 const { createClient } = supabase;
 
@@ -1182,7 +1183,12 @@ async function initAuth() {
     showSetPasswordGate();
     return false;
   }
-  if (!session) { showAuthGate(); return false; }
+  if (!session) {
+    showAuthGate(AUTH_URL_ERROR
+      ? 'This link is invalid or was already used (' + AUTH_URL_ERROR + '). Ask for a new invite or use “Forgot password?”.'
+      : '');
+    return false;
+  }
   AUTH_USER = session.user;
   try {
     const {data} = await db.from('coaches').select('squad').eq('email', AUTH_USER.email).maybeSingle();
