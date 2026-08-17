@@ -3882,11 +3882,69 @@ function sbRVShowDetail(ai, ti, i) {
   el.innerHTML = txt;
 }
 
-// Inline onclick handlers run in global scope and can't see _sbRV — go through this instead
+// Inline onclick handlers run in global scope and can't see _sbRV — go through this instead.
+// The PDF reuses sbReportInnerHtml(), so print and web view render from the exact same markup.
 function sbRVPrintPdf() {
   const report = _sbRV && _sbRV.report;
   if (!report) { showToast('No report open', 'error'); return; }
-  openReportPrint(report);
+  const inner = sbReportInnerHtml(report);
+  // Legacy reports without per-attempt data have no web view — fall back to the table export
+  if (inner === null) { openReportPrint(report); return; }
+
+  const dateStr = report.datum ? (() => { const p=report.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+  const athleteStr = Array.isArray(report.athletes) ? report.athletes.map(a=>shortName(a)).join(', ') : (report.athletes||'');
+  const condLabel = report.conditions ? (report.conditions+'/5 '+(['','Poor','Below Average','Average','Good','Excellent'][report.conditions]||'')) : '—';
+  const printable = inner
+    .replace(/<div id="sbrv-det-\d+-\d+"[^>]*>Tap a bar for details<\/div>/g, '')  // interaction hint only
+    .replace(/ onclick="sbRVShowDetail\([^"]*\)"/g, '')
+    .replace(/cursor:pointer;/g, '');
+  const today = new Date().toLocaleDateString('de-CH');
+
+  const win = window.open('', '_blank');
+  if (!win) { showToast('Please allow pop-ups to export the PDF', 'error'); return; }
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Session Report ${dateStr} — Snowboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#060f1a; --surface:#0c1a2b; --surface2:#112236; --border:#1a3450;
+          --accent2:#39c3d4; --text:#e8edf2; --muted:#6b8299; --success:#34d399; --danger:#e2001a; }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{font-family:'Poppins',-apple-system,'Helvetica Neue',Arial,sans-serif;background:var(--bg);
+       color:var(--text);padding:28px 32px;max-width:820px;margin:0 auto;}
+  .print-btn{margin-bottom:20px;}
+  .print-btn button{padding:9px 22px;background:var(--accent2);color:#060f1a;border:none;border-radius:8px;
+       font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+  h1{font-size:20px;font-weight:800;margin-bottom:10px;}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 26px;border-top:1px solid var(--border);
+        border-bottom:1px solid var(--border);padding:10px 0;margin-bottom:16px;}
+  .meta div{font-size:11px;color:var(--muted);}
+  .meta b{display:block;color:var(--text);font-size:12px;font-weight:600;margin-top:2px;}
+  .comments{background:var(--surface2);border-left:3px solid var(--accent2);border-radius:8px;
+            padding:10px 12px;font-size:12px;margin-bottom:18px;}
+  /* Wide charts scroll in the web view; on paper they must scale to fit instead of being clipped */
+  svg{max-width:100%;height:auto;}
+  footer{margin-top:24px;border-top:1px solid var(--border);padding-top:10px;font-size:10px;
+         color:var(--muted);display:flex;justify-content:space-between;}
+  @media print{
+    .print-btn{display:none;}
+    body{padding:12mm;max-width:none;}
+    @page{size:A4;margin:0;}
+    /* Keep a trick card whole; matches the card divs sbReportInnerHtml() emits */
+    div[style*="border-radius:12px"]{break-inside:avoid;page-break-inside:avoid;}
+  }
+</style></head><body>
+  <div class="print-btn"><button onclick="window.print()">Print / Save as PDF</button></div>
+  <h1>Session Report · ${dateStr}</h1>
+  <div class="meta">
+    <div>ATHLETES<b>${athleteStr||'—'}</b></div>
+    <div>LOCATION<b>${(report.location||'—')}${report.jump_size ? ' · Jump '+report.jump_size : ''}</b></div>
+    <div>CONDITIONS<b>${condLabel}</b></div>
+  </div>
+  ${report.comments ? `<div class="comments"><b>Coach comments:</b> ${report.comments}</div>` : ''}
+  ${printable}
+  <footer><span>Swiss-Ski Trick Analyses — Snowboard</span><span>Generated ${today}</span></footer>
+</body></html>`);
+  win.document.close();
 }
 
 function sbRVEditStart(ai, ti, i) {
