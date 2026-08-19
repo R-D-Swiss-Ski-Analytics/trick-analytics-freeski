@@ -2181,8 +2181,8 @@ function trickDesc(t, prefix) {
       t ? t.absprung  : val(p+'absprung'),
       t ? t.drehrichtung : val(p+'drehrichtung'),
       (t ? t.flips : val(p+'flips')) && !['keine','None','none','—'].includes(t ? t.flips : val(p+'flips')) ? (t ? t.flips : val(p+'flips')) : null,
-      t ? t.rotation     : val(p+'rotation'),
       t ? t.achse : val(p+'achse'),
+      t ? t.rotation     : val(p+'rotation'),
       t ? t.grab  : val(p+'grab'),
       (t ? t.bringback : val(p+'bringback')) ? 'Bringback ' + (t ? t.bringback : val(p+'bringback')) : null,
       t ? t.style : val(p+'style'),
@@ -2712,6 +2712,9 @@ function normSbTrick(label) {
   // Grab-Separator vereinheitlichen: Live-Session schreibt «Trick — Grab»,
   // das Erfassen-Formular «Trick Grab» — sonst erscheint derselbe Trick doppelt.
   label = label.replace(/\s+—\s+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+  // Alte Label-Reihenfolge «Rotation Achse» (z. B. «1440 Cork») → «Achse Rotation»,
+  // damit bestehende Einträge gleich angezeigt und mit neuen gruppiert werden.
+  label = label.replace(/\b(180|270|360|450|540|630|720|810|900|1080|1260|1440|1620|1800|1980|2160)\s+(Infinity Axis|Upright Spins|Bio\/Misty|Backroll|Frontroll|Underflip|Crippler|McTwist|Wildcat|Tamedog|Todeo|Rodeo|Cork|Flat)\b/g, '$2 $1');
   const dirs = ['Switch Backside','Switch Frontside','Frontside','Backside','Cab'];
   let dir = null;
   for (const d of dirs) if (label.startsWith(d + ' ')) { dir = d; break; }
@@ -2770,6 +2773,17 @@ function sbLiveLabel(label, disziplin) {
   if (disziplin === 'Rail') return norm;
   for (const d of ['Switch Backside','Switch Frontside','Frontside','Backside','Cab']) {
     if (norm.startsWith(d + ' ')) return d + ' ' + baseLabel(norm.slice(d.length + 1));
+  }
+  // Direction kann auch nach dem Absprung stehen («Hardway Frontside 720») —
+  // die früheste Fundstelle schützen, sonst strippt baseLabel «Frontside» als Grab.
+  let dirIdx = -1, dirFound = null;
+  for (const d of ['Switch Backside','Switch Frontside','Frontside','Backside','Cab']) {
+    const idx = norm.indexOf(' ' + d + ' ');
+    if (idx >= 0 && (dirIdx < 0 || idx < dirIdx)) { dirIdx = idx; dirFound = d; }
+  }
+  if (dirFound) {
+    const cut = dirIdx + 1 + dirFound.length;
+    return norm.slice(0, cut) + ' ' + baseLabel(norm.slice(cut + 1));
   }
   return baseLabel(norm);
 }
@@ -4797,7 +4811,7 @@ async function loadEntwicklung() {
   // ── 5. Qualität über Zeit — nach Trick gefiltert
   // Build trick label for each session entry
   function trickLabel(t) {
-    const parts = [t.drehrichtung, t.rotation, t.achse, t.grab].filter(Boolean);
+    const parts = [t.drehrichtung, t.achse, t.rotation, t.grab].filter(Boolean);
     return parts.join(' · ');
   }
   const tricksWithRating = tTagged.filter(t => t.datum && t.gesamt != null && trickLabel(t));
@@ -4826,7 +4840,7 @@ async function loadEntwicklung() {
   // ── 7. Landing Rate per Trick
   const landMap = {};
   tTagged.forEach(t => {
-    const label = [t.drehrichtung, t.rotation, t.achse, t.grab].filter(Boolean).join(' · ');
+    const label = [t.drehrichtung, t.achse, t.rotation, t.grab].filter(Boolean).join(' · ');
     if (!label) return;
     if (!landMap[label]) landMap[label] = { ja: 0, total: 0 };
     landMap[label].total++;
@@ -4873,7 +4887,7 @@ async function loadEntwicklung() {
         if (!byDate[d]) byDate[d] = [];
         const parts = [s.drehrichtung,
           s.flips && s.flips !== 'keine' ? s.flips : null,
-          s.rotation, s.achse, s.grab].filter(Boolean);
+          s.achse, s.rotation, s.grab].filter(Boolean);
         byDate[d].push(parts.join(' ') || s.railart || '–');
       });
       const dates = Object.keys(byDate).sort();
@@ -5060,7 +5074,7 @@ async function saveSbEdit(){
   const isK=['Jump','Halfpipe','Landing Bag'].includes(updates.disziplin);
   const bb = updates.bringback ? 'Bringback ' + updates.bringback : null;
   // Label aus Feldern OHNE Grab (lebt in grab_status/Chips) + gemerktem Label-Rest
-  const parts=isK?[updates.absprung,updates.drehrichtung,updates.flips&&!['keine','None','none','—'].includes(updates.flips)?updates.flips:null,updates.rotation,updates.achse,bb]:[updates.inspin,updates.slideform,updates.railart,updates.outspin];
+  const parts=isK?[updates.absprung,updates.drehrichtung,updates.flips&&!['keine','None','none','—'].includes(updates.flips)?updates.flips:null,updates.achse,updates.rotation,bb]:[updates.inspin,updates.slideform,updates.railart,updates.outspin];
   updates.trick_label=(parts.filter(Boolean).join(' ')+(sbeLabelResidual?' '+sbeLabelResidual:'')).trim()||'–';
   if(_standortHasGrabStatus)updates.grab_status={...sbeGrabMatrix};
   let {error}=await db.from('standort').update(updates).eq('id',id);
@@ -6032,7 +6046,7 @@ async function realityCheck() {
   function rcTrickDesc(f) {
     const label = f.trick_label
       ? f.trick_label
-      : ([f.drehrichtung, f.flips, f.rotation ? f.rotation+'°' : null, f.achse, f.grab].filter(Boolean).join(' ') || '—');
+      : ([f.drehrichtung, f.flips, f.achse, f.rotation ? f.rotation+'°' : null, f.grab].filter(Boolean).join(' ') || '—');
     return f.grabName ? label + ' — ' + f.grabName : label;
   }
 
