@@ -866,8 +866,12 @@ const SPORT_CONFIGS = {
           </optgroup>
           `,
     selectFill: {
+      'sb-disziplin': `
+          <option value="">— select —</option>
+          <option>Jump</option><option>Side Hit</option><option>Rail</option><option>Halfpipe</option>
+        `,
       'edit-disziplin': `
-          <option value="">— select —</option><option>Jump</option><option>Rail</option><option>Halfpipe</option>
+          <option value="">— select —</option><option>Jump</option><option>Side Hit</option><option>Rail</option><option>Halfpipe</option>
         `,
       'edit-drehrichtung': `
           <option value="">–</option><option>Frontside</option><option>Backside</option><option>Switch Frontside</option><option>Switch Backside</option><option>Cab</option>
@@ -913,7 +917,7 @@ const SPORT_CONFIGS = {
       'sb-style': `<option value="">–</option><option>Frontfoot Bone</option><option>Backfoot Bone</option><option>Shifty</option><option>Double Shifty</option><option>Tweak</option>
           `,
       'sbe-disziplin': `<option value="">–</option>
-          <option>Jump</option><option>Rail</option><option>Halfpipe</option>
+          <option>Jump</option><option>Side Hit</option><option>Rail</option><option>Halfpipe</option>
         `,
       'sbe-drehrichtung': `<option value="">–</option>
           <option>Frontside</option><option>Backside</option><option>Switch Frontside</option><option>Switch Backside</option><option>Cab</option>
@@ -1267,7 +1271,7 @@ function readFields(prefix) {
 
 
 function badge(d) {
-  const cls = d==='Jump'||d==='Landing Bag'?'badge-kicker':d==='Rail'?'badge-rail':'badge-halfpipe';
+  const cls = d==='Jump'||d==='Side Hit'||d==='Landing Bag'?'badge-kicker':d==='Rail'?'badge-rail':'badge-halfpipe';
   return `<span class="badge ${cls}">${d||'?'}</span>`;
 }
 
@@ -2042,7 +2046,7 @@ function drawLine(canvasId, labels, values) {
 
 function sbeToggle(){
   const v=document.getElementById('sbe-disziplin').value;
-  const isK=v==='Jump'||v==='Halfpipe'||v==='Landing Bag';
+  const isK=v==='Jump'||v==='Side Hit'||v==='Halfpipe'||v==='Landing Bag';
   document.querySelectorAll('.sbe-kicker').forEach(el=>el.style.display=isK?'':'none');
   document.querySelectorAll('.sbe-rail').forEach(el=>el.style.display=v==='Rail'?'':'none');
 }
@@ -2135,7 +2139,7 @@ function updateSbDisciplines() {
     sel.value = 'Halfpipe';
     sel.style.display = 'none';
   } else {
-    sel.innerHTML = '<option value="">— select —</option><option>Jump</option><option>Rail</option>';
+    sel.innerHTML = '<option value="">— select —</option><option>Jump</option><option>Side Hit</option><option>Rail</option>';
     sel.value = '';
     sel.style.display = '';
   }
@@ -2155,7 +2159,7 @@ function toggleDisziplin(prefix) {
     if (dirSel) dirSel.innerHTML = v === 'Halfpipe' ? SB_DIR_HP : SB_DIR_NORMAL;
     initStandortGrabs();
   }
-  const isJump = v === 'Jump' || v === 'Halfpipe' || v === 'Landing Bag';
+  const isJump = v === 'Jump' || v === 'Side Hit' || v === 'Halfpipe' || v === 'Landing Bag';
   document.querySelectorAll('.kicker-field-' + prefix).forEach(el => el.classList.toggle('hidden', !isJump));
   document.querySelectorAll('.rail-field-' + prefix).forEach(el => el.classList.toggle('hidden', v !== 'Rail'));
 }
@@ -2715,6 +2719,9 @@ function normSbTrick(label) {
   // Alte Label-Reihenfolge «Rotation Achse» (z. B. «1440 Cork») → «Achse Rotation»,
   // damit bestehende Einträge gleich angezeigt und mit neuen gruppiert werden.
   label = label.replace(/\b(180|270|360|450|540|630|720|810|900|1080|1260|1440|1620|1800|1980|2160)\s+(Infinity Axis|Upright Spins|Bio\/Misty|Backroll|Frontroll|Underflip|Crippler|McTwist|Wildcat|Tamedog|Todeo|Rodeo|Cork|Flat)\b/g, '$2 $1');
+  // «SH »-Präfix (Side Hit) abtrennen und am Schluss wieder voranstellen
+  let shPre = '';
+  if (label.startsWith('SH ')) { shPre = 'SH '; label = label.slice(3); }
   const dirs = ['Switch Backside','Switch Frontside','Frontside','Backside','Cab'];
   let dir = null;
   for (const d of dirs) if (label.startsWith(d + ' ')) { dir = d; break; }
@@ -2724,7 +2731,7 @@ function normSbTrick(label) {
       if (label.endsWith(' ' + d)) { label = d + ' ' + label.slice(0, -(d.length+1)).trim(); dir = d; break; }
     }
   }
-  if (!dir) return label;
+  if (!dir) return shPre + label;
   // Grab-Position vereinheitlichen: das Formular schreibt den Grab vor Bringback/Style,
   // die Live-Session ans Ende — Grabs ans Ende verschieben, sonst doppelte Tricks.
   let rest = label.slice(dir.length + 1);
@@ -2738,7 +2745,7 @@ function normSbTrick(label) {
     }
     if (found.length) rest = (rest ? rest + ' ' : '') + found.join(' ');
   }
-  return dir + ' ' + rest;
+  return shPre + dir + ' ' + rest;
 }
 
 function tricksForDir(tricks, dir) {
@@ -2769,6 +2776,12 @@ function baseLabel(label) {
 // Die führende Direction wird vor dem Grab-Strippen abgetrennt, weil «Frontside»
 // zugleich Grab-Name ist; Rail-Labels bleiben unangetastet (keine Grabs, Wort-Kollisionen).
 function sbLiveLabel(label, disziplin) {
+  const core = sbLiveLabelCore(label, disziplin);
+  // Side-Hit-Tricks im Log/Dropdown mit «SH »-Präfix kennzeichnen
+  return disziplin === 'Side Hit' && !core.startsWith('SH ') ? 'SH ' + core : core;
+}
+
+function sbLiveLabelCore(label, disziplin) {
   const norm = normSbTrick((label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim());
   if (disziplin === 'Rail') return norm;
   for (const d of ['Switch Backside','Switch Frontside','Frontside','Backside','Cab']) {
@@ -4734,6 +4747,7 @@ async function loadEntwicklung() {
   // Parse direction from trickaufbau (session format: "Switch Frontside 900 — Indy")
   function dirFromTrickaufbau(tb) {
     if (!tb) return null;
+    if (tb.startsWith('SH ')) tb = tb.slice(3);
     for (const d of ['Switch Backside','Switch Frontside','Frontside','Backside','Cab']) {
       if (tb.startsWith(d + ' ') || tb.startsWith(d + ' —')) return d === 'Cab' ? 'Switch Frontside' : d;
     }
@@ -5038,7 +5052,7 @@ function openSbEdit(id){
   const wrap=document.getElementById('sbe-grab-wrap');
   sbeGrabMatrix={...effGrabStatus(e)};
   // Label-Rest merken (Angaben ohne eigene Spalte, z. B. Bones/Todeo) — wird beim Speichern wieder angehängt
-  const oldIsK=['Jump','Halfpipe','Landing Bag'].includes(e.disziplin);
+  const oldIsK=['Jump','Side Hit','Halfpipe','Landing Bag'].includes(e.disziplin);
   const oldBb=e.bringback?'Bringback '+e.bringback:null;
   const oldParts=oldIsK?[e.absprung,e.drehrichtung,e.flips&&!['keine','None','none','—'].includes(e.flips)?e.flips:null,e.rotation,e.achse,oldBb]:[e.inspin,e.slideform,e.railart,e.outspin];
   sbeLabelResidual=labelResidual(e.trick_label,[...oldParts,...Object.keys(sbeGrabMatrix),...(e.grab||'').split(',').map(s=>s.trim())]);
@@ -5071,7 +5085,7 @@ async function saveSbEdit(){
     status:gv('sbe-status'),
     grab:Object.keys(sbeGrabMatrix).join(', ')||null,
   };
-  const isK=['Jump','Halfpipe','Landing Bag'].includes(updates.disziplin);
+  const isK=['Jump','Side Hit','Halfpipe','Landing Bag'].includes(updates.disziplin);
   const bb = updates.bringback ? 'Bringback ' + updates.bringback : null;
   // Label aus Feldern OHNE Grab (lebt in grab_status/Chips) + gemerktem Label-Rest
   const parts=isK?[updates.absprung,updates.drehrichtung,updates.flips&&!['keine','None','none','—'].includes(updates.flips)?updates.flips:null,updates.achse,updates.rotation,bb]:[updates.inspin,updates.slideform,updates.railart,updates.outspin];
@@ -6214,9 +6228,12 @@ function sbMonOutcome(t) {
 
 function sbMonKey(label) {
   const n = normSbTrick(label || '—');
+  // «SH »-Präfix (Side Hit) schützen, sonst strippt baseLabel die Direction als Grab
+  const shPre = n.startsWith('SH ') ? 'SH ' : '';
+  const m = shPre ? n.slice(3) : n;
   const dirs = ['Switch Backside','Switch Frontside','Frontside','Backside','Cab'];
-  for (const d of dirs) if (n.startsWith(d + ' ')) return (d + ' ' + baseLabel(n.slice(d.length + 1))).trim();
-  return baseLabel(n) || n;
+  for (const d of dirs) if (m.startsWith(d + ' ')) return (shPre + d + ' ' + baseLabel(m.slice(d.length + 1))).trim();
+  return (shPre + (baseLabel(m) || m)).trim() || n;
 }
 
 async function sbMonFetchAll() {
