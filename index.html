@@ -1100,9 +1100,7 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ═══════════════ AUTH (Coach-Login) + Gruppen-Filter ═══════════════
-// Login pausiert bis die Coach-Accounts angelegt sind — dann auf true stellen
-// und danach das RLS-SQL ausführen (siehe Memory/Chat 14.8.2026).
-const AUTH_ENABLED = false;
+const AUTH_ENABLED = true;
 let AUTH_USER = null;
 let COACH_SQUAD = null;                       // squad key from the coaches table, null = unknown
 let GROUP_FILTER = 'all';
