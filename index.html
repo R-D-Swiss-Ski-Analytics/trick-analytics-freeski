@@ -3655,6 +3655,8 @@ function buildFsTrickBlocks(entries) {
 }
 
 async function saveSessionReport(duration, location, conditions, comments, athleteNotes, jumpSize) {
+  // Geister-Reports verhindern: ohne einen einzigen geloggten Versuch gibt es nichts zu rapportieren
+  if (!sessLog.length) { showToast('No attempts logged — session ended without saving a report', 'error'); resetSession(); return; }
   const athleteEntries = {};
   // sessLog is newest-first (unshift), reverse to get chronological order
   sessLog.slice().reverse().forEach(e => {
@@ -8715,6 +8717,8 @@ function buildFsTrickBlocks(entries) {
 }
 
 async function saveSessionReport(duration, location, conditions, comments, athleteNotes, jumpSize) {
+  // Geister-Reports verhindern: ohne einen einzigen geloggten Versuch gibt es nichts zu rapportieren
+  if (!sessLog.length) { showToast('No attempts logged — session ended without saving a report', 'error'); resetSession(); return; }
   // Build trick_data from sessLog as chronological trick blocks (sessLog is newest-first, reverse for order)
   const chronological = sessLog.slice().reverse();
   const athleteEntries = {};
