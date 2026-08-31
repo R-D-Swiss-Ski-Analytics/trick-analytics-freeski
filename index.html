@@ -7989,28 +7989,15 @@ function logRatedAttempt(name) {
   autoLogAttempt(name);
 }
 
-// Einstufungs-Regel «Maximal streng» (Emilie, 31.8.2026):
-// Perfect NUR, wenn alle vier Kategorien bewertet und alle perfect sind.
-// Landing miss → Miss. Landung gestanden → mindestens Landed.
-// Ohne Landing-Bewertung entscheidet der Schnitt der bewerteten Kategorien (nie Perfect).
-function fsAttemptOutcome(r) {
-  const cats = ['takeoff','grab','trick','land'];
-  const rated = cats.filter(c => r[c]);
-  if (!rated.length) return null;
-  if (r.land === 'miss') return 'miss';
-  if (cats.every(c => r[c] === 'perfect')) return 'perfect';
-  if (r.land) return 'landed';
-  const score = {miss:1,okay:2,perfect:3};
-  const avg = rated.reduce((a,c)=>a+score[r[c]],0)/rated.length;
-  return avg >= 1.7 ? 'landed' : 'miss';
-}
-
 async function autoLogAttempt(name) {
   const r = sessRatings[name];
   const d = sessAthleteData[name];
-  const result = fsAttemptOutcome(r);
-  if (!result) return;
-  const gesamt = result==='miss'?3:result==='perfect'?10:7;
+  const score = {miss:1,okay:2,perfect:3};
+  const rated = ['takeoff','grab','trick','land'].filter(c => r[c]);
+  if (!rated.length) return;
+  const avg = rated.reduce((a,c)=>a+score[r[c]],0)/rated.length;
+  const result = avg>=2.7?'perfect':avg>=1.7?'landed':'miss';
+  const gesamt = r.land==='miss'?3:avg>=2.7?10:7;
 
   d.stats.attempts++;
   if (result==='landed'||result==='perfect') d.stats.landed++;
@@ -8203,7 +8190,11 @@ async function saveFsLogEdit(idx) {
   const r = sessEditRatings;
   if (!r.takeoff && !r.grab && !r.trick && !r.land) { showToast('Rate at least one category', 'error'); return; }
   const oldResult = e.result;
-  const newResult = fsAttemptOutcome(r);
+  const score = {miss:1,okay:2,perfect:3};
+  // Schnitt über die bewerteten Kategorien — Teilbewertungen sind erlaubt
+  const ratedCats = [r.takeoff, r.grab, r.trick, r.land].filter(Boolean);
+  const avg = ratedCats.reduce((a,v)=>a+score[v],0)/ratedCats.length;
+  const newResult = avg>=2.7?'perfect':avg>=1.7?'landed':'miss';
   const d = sessAthleteData[e.name];
   if (d) {
     if (oldResult==='landed'||oldResult==='perfect') d.stats.landed--;
@@ -8225,7 +8216,7 @@ async function saveFsLogEdit(idx) {
   if (trickChanged) { e.trick = newTrick; e.selectedGrab = newGrab; }
   e.comment = newComment;
   if (e.dbId) {
-    const gesamt = newResult==='miss'?3:newResult==='perfect'?10:7;
+    const gesamt = r.land==='miss'?3:avg>=2.7?10:7;
     const kommentarParts = [[r.takeoff&&`Takeoff:${r.takeoff}`, r.grab&&`Grab:${r.grab}`, r.trick&&`Trick:${r.trick}`, r.land&&`Landing:${r.land}`].filter(Boolean).join(' ')];
     if (newComment) kommentarParts.push(newComment);
     const upd = {
@@ -10913,7 +10904,7 @@ function renderMonTrick() {
           </div>
         </div>
         <div style="flex:1;min-width:170px;font-size:12px;">
-          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#34d399;margin-right:6px;"></span>Perfect (4/4 perfect)</span><b>${s}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#34d399;margin-right:6px;"></span>Perfect</span><b>${s}</b></div>
           <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#4a7dd6;margin-right:6px;"></span>Landed</span><b>${l}</b></div>
           <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#e2001a;margin-right:6px;"></span>Miss</span><b>${f}</b></div>
           <div style="display:flex;justify-content:space-between;padding:6px 0;"><span>Perfect rate</span><b style="color:${FS_MON_STATUS[stKey].color};">${rate}%</b></div>
