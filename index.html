@@ -405,13 +405,13 @@ body.sport-snowboard .sb-ov-card, body.sport-freeski .sb-ov-card { border-radius
 body.sport-snowboard .sb-ov-num, body.sport-freeski .sb-ov-num { font-weight: 800; }
 body.sport-snowboard table th, body.sport-freeski table th { text-transform: uppercase; letter-spacing: .5px; font-size: 10px; color: var(--muted); }
 body.sport-snowboard .chart-card, body.sport-freeski .chart-card { border-radius: 16px; }
-/* Refreshed palette: mint green everywhere (Freeski keeps the classic green) */
-body.sport-snowboard { --success: #34d399; }
-body.sport-snowboard .sb-col-header.mastered { background: rgba(52,211,153,0.15); color: #34d399; border-color: #34d399; }
-body.sport-snowboard .sb-col-body.mastered { border-color: #34d399; }
-body.sport-snowboard .btn-mastered { background: linear-gradient(135deg, #17805a, #34d399); }
-body.sport-snowboard .nb-cat-Competition { background: rgba(52,211,153,0.15); color: #34d399; border-color: #34d399; }
-body.sport-snowboard button[onclick="endSession()"] { background: #34d399 !important; color: #06281c !important; }
+/* Refreshed palette: mint green everywhere — seit 31.8.2026 auch Freeski (Emilies Wunsch: einheitlich) */
+body.sport-snowboard, body.sport-freeski { --success: #34d399; }
+body.sport-snowboard .sb-col-header.mastered, body.sport-freeski .sb-col-header.mastered { background: rgba(52,211,153,0.15); color: #34d399; border-color: #34d399; }
+body.sport-snowboard .sb-col-body.mastered, body.sport-freeski .sb-col-body.mastered { border-color: #34d399; }
+body.sport-snowboard .btn-mastered, body.sport-freeski .btn-mastered { background: linear-gradient(135deg, #17805a, #34d399); }
+body.sport-snowboard .nb-cat-Competition, body.sport-freeski .nb-cat-Competition { background: rgba(52,211,153,0.15); color: #34d399; border-color: #34d399; }
+body.sport-snowboard button[onclick="endSession()"], body.sport-freeski button[onclick="endSession()"] { background: #34d399 !important; color: #06281c !important; }
 /* One typeface everywhere — form controls don't inherit by default */
 body.sport-snowboard button, body.sport-freeski button,
 body.sport-snowboard select, body.sport-freeski select,
@@ -7478,7 +7478,7 @@ async function realityCheck() {
     if (!quals.length) return;
     const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
     if (avgQ >= 70) {
-      flagged.push({ ...s, action: 'upgrade', reason: `QoE ${avgQ}% (≥70%) → Mastered`, avgQ, sessions: sessions.length });
+      flagged.push({ ...s, action: 'upgrade', reason: `QoE ${avgQ}% (≥70%) → Learned`, avgQ, sessions: sessions.length });
     }
   });
 
@@ -7499,7 +7499,7 @@ async function realityCheck() {
       if (!quals.length) return;
       const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
       if (st === 'mastered' && avgQ < 70)  flagged.push({ ...s, grabName: g, action: 'downgrade-grab', reason: `${g}: QoE ${avgQ}% (<70%)`, avgQ, sessions: sessions.length });
-      if (st === 'goal' && avgQ >= 70)     flagged.push({ ...s, grabName: g, action: 'upgrade-grab', reason: `${g}: QoE ${avgQ}% (≥70%) → Mastered`, avgQ, sessions: sessions.length });
+      if (st === 'goal' && avgQ >= 70)     flagged.push({ ...s, grabName: g, action: 'upgrade-grab', reason: `${g}: QoE ${avgQ}% (≥70%) → Learned`, avgQ, sessions: sessions.length });
     });
   });
 
@@ -7533,7 +7533,7 @@ async function realityCheck() {
       <!-- Header -->
       <div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">🔍 Reality Check</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
-        Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} suggestion${flagged.length!==1?'s':''} (Mastered &lt;70% ↓ · Goals ≥70% ↑) · select athletes to apply
+        Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} suggestion${flagged.length!==1?'s':''} (Learned &lt;70% ↓ · Goals ≥70% ↑) · select athletes to apply
       </div>
       <!-- Search + select all -->
       <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
@@ -7599,7 +7599,7 @@ async function applyRealityCheckSelected(flagged, btn) {
   }
   if (error) { showToast('Error: '+error.message, 'error'); btn.textContent='Apply selected'; btn.disabled=false; return; }
   btn.closest('[style*=inset]').remove();
-  showToast(`✅ ${downIds.length} → Goal · ${upIds.length} → Mastered · ${grabSel.length} grab update${grabSel.length!==1?'s':''} (${checked.length} athlete${checked.length!==1?'s':''})`, 'success');
+  showToast(`✅ ${downIds.length} → Goal · ${upIds.length} → Learned · ${grabSel.length} grab update${grabSel.length!==1?'s':''} (${checked.length} athlete${checked.length!==1?'s':''})`, 'success');
   loadDB();
 }
 
@@ -9193,7 +9193,7 @@ function renderStandort() {
   document.getElementById('sb-overview').innerHTML = `
     <div class="sb-ov-card">
       <div class="sb-ov-num" style="color:var(--success);">${mastered}</div>
-      <div class="sb-ov-label">Mastered</div>
+      <div class="sb-ov-label">Learned Tricks</div>
     </div>
     <div class="sb-ov-card">
       <div class="sb-ov-num" style="color:var(--warn);">${goale}</div>
@@ -9274,7 +9274,7 @@ function renderStandort() {
 
   document.getElementById('sb-columns').innerHTML = `
     <div>
-      <div class="sb-col-header mastered">✅ MASTERED <span style="opacity:.6;font-size:13px;">(${bList.length})</span></div>
+      <div class="sb-col-header mastered">✅ LEARNED TRICKS <span style="opacity:.6;font-size:13px;">(${bList.length})</span></div>
       <div class="sb-col-body mastered">${renderList(bList, 'No entries yet')}</div>
     </div>
     <div>
@@ -12172,7 +12172,7 @@ const fragments = {
     <div style="font-size:12px;color:var(--muted);">Compare assessment with actual session data</div>
     <button onclick="realityCheck()" style="padding:8px 16px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
   </div>`,
-  grabBlock: `        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(1× click = ✓ Mastered · 2× = 🎯 Goal · 3× = off · L = Lead)</span></label>
+  grabBlock: `        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(1× click = ✓ Learned · 2× = 🎯 Goal · 3× = off · L = Lead)</span></label>
           <div id="sb-grab-wrap" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0;">
             <input type="hidden" id="sb-grab" value="">
           </div>
@@ -12273,7 +12273,7 @@ document.addEventListener('DOMContentLoaded', async function bootSport(){
         </select></div>
       <div class="form-group sbe-kicker"><label>Axis</label>
         <select id="sbe-achse" onchange="updateFwdSwBtn('sbe')"></select></div>
-      <div class="form-group sbe-kicker" style="grid-column:1/-1;"><label>Grabs <span style="font-size:10px;color:var(--muted);font-weight:400;">(1× tap = ✓ Mastered · 2× = 🎯 Goal · 3× = off)</span></label>
+      <div class="form-group sbe-kicker" style="grid-column:1/-1;"><label>Grabs <span style="font-size:10px;color:var(--muted);font-weight:400;">(1× tap = ✓ Learned · 2× = 🎯 Goal · 3× = off)</span></label>
         <div id="sbe-grab-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;">
           <input type="hidden" id="sbe-grab" value=""></div></div>
       <div class="form-group sbe-kicker"><label>Style Element</label>
@@ -12302,7 +12302,7 @@ document.addEventListener('DOMContentLoaded', async function bootSport(){
         </select></div>
       <div class="form-group" style="grid-column:1/-1;"><label>Status</label>
         <select id="sbe-status"><option value="">— select —</option>
-          <option value="mastered">Mastered</option>
+          <option value="mastered">Learned</option>
           <option value="goal">Goal / In progress</option>
           <option value="erreicht">Achieved</option>
         </select></div>
