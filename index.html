@@ -6798,6 +6798,7 @@ function showPage(id, btn) {
   if (id === 'entwicklung') loadEntwicklung();
   if (id === 'erfassen') initSessionSetup();
   if (id === 'monitoring') loadMonitoring();
+  if (id === 'sessionreport') loadReportsTab();
   if (typeof updateMobileNav === 'function') updateMobileNav(id);
 }
 
@@ -7338,7 +7339,7 @@ async function loadDB() {
 }
 
 async function deleteSessionReport(id, withTricks) {
-  const report = dbSessionReports.find(r => r.id === id);
+  const report = dbSessionReports.find(r => r.id === id) || _sbRepList.find(r => r.id === id);
   if (!withTricks) {
     if (!confirm('Delete this session report?')) return;
     const {error} = await db.from('session_reports').delete().eq('id', id);
@@ -7366,11 +7367,12 @@ async function deleteSessionReport(id, withTricks) {
     if (error) { showToast('Error: '+error.message, 'error'); return; }
     showToast('Session + all trick entries deleted', 'success');
   }
-  loadDB();
+  if (document.getElementById('page-sessionreport')?.classList.contains('active')) loadReportsTab();
+  else loadDB();
 }
 
 async function rebuildReportFromTimestamps(id, silent=false) {
-  const report = dbSessionReports.find(r => r.id === id);
+  const report = dbSessionReports.find(r => r.id === id) || _sbRepList.find(r => r.id === id);
   if (!report) return;
   if (!silent) showToast('Rebuilding…', 'success');
   const athletes = Array.isArray(report.athletes) ? report.athletes : [];
@@ -7396,6 +7398,8 @@ async function rebuildReportFromTimestamps(id, silent=false) {
     athleteEntries[name].push({
       trick: e.trickaufbau || '—', result,
       takeoff: parseSubRating(e.kommentar,'Takeoff'), grab: parseSubRating(e.kommentar,'Grab'), trick_r: parseSubRating(e.kommentar,'Trick'), land: parseSubRating(e.kommentar,'Landing'),
+      time: e.created_at ? new Date(e.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'Europe/Zurich'}) : null,
+      comment: ((e.kommentar||'').split(' | ')[1] || '').trim() || undefined,
       dbId: e.id
     });
   });
@@ -7407,15 +7411,20 @@ async function rebuildReportFromTimestamps(id, silent=false) {
     const qualityPct = ents.length ? Math.round(ents.reduce((a,e)=>a+qoeOfLogEntry(e),0)/ents.length) : null;
     const note = existingNotes[shortName(name)] || '';
     const trickIds = ents.map(e=>e.dbId).filter(Boolean);
-    return {athlet: shortName(name), totalAtt, totalLand, qualityPct, tricks: trickList, note, trickIds};
+    const attempts = ents.map(e => ({trick: e.trick, result: e.result,
+      takeoff: e.takeoff||null, grab: e.grab||null, trick_r: e.trick_r||null, land: e.land||null,
+      time: e.time||null, dbId: e.dbId||null, comment: e.comment}));
+    return {athlet: shortName(name), totalAtt, totalLand, qualityPct, tricks: trickList, note, trickIds, attempts};
   });
 
   const {error: updErr} = await db.from('session_reports').update({trick_data: trickData}).eq('id', id);
   if (updErr) { if (!silent) showToast('Error saving: '+updErr.message, 'error'); return; }
   if (!silent) showToast('Report rebuilt from timestamps', 'success');
-  // Update local cache so the report is current without re-fetching
+  // Update local caches so the report is current without re-fetching
   const idx = dbSessionReports.findIndex(r => r.id === id);
   if (idx >= 0) dbSessionReports[idx].trick_data = trickData;
+  const ri = _sbRepList.findIndex(r => r.id === id);
+  if (ri >= 0) _sbRepList[ri].trick_data = trickData;
 }
 
 function renderSessionReports() {
@@ -8417,7 +8426,10 @@ async function saveSessionReport(duration, location, conditions, comments, athle
     const qualityPct = ents.length ? Math.round(ents.reduce((a,e)=>a+qoeOfLogEntry(e),0)/ents.length) : null;
     const note = (athleteNotes||{})[shortName(name)] || '';
     const trickIds = ents.map(e=>e.dbId).filter(Boolean);
-    return {athlet: shortName(name), totalAtt, totalLand, qualityPct, tricks: trickList, note, trickIds};
+    const attempts = ents.map(e => ({trick: e.trick || '—', result: e.result,
+      takeoff: e.takeoff||null, grab: e.grab||null, trick_r: e.trick_r||null, land: e.land||null,
+      time: e.time||null, dbId: e.dbId||null, comment: e.comment || undefined}));
+    return {athlet: shortName(name), totalAtt, totalLand, qualityPct, tricks: trickList, note, trickIds, attempts};
   });
 
   const row = {
@@ -8441,26 +8453,18 @@ async function saveSessionReport(duration, location, conditions, comments, athle
   if (error) { showToast('Error saving report: ' + error.message, 'error'); }
   else {
     showToast('Session report saved', 'success');
-    const savedAthletes = [...sessSelectedAthletes];
-    const savedSessLog = [...sessLog];
+    try { openSessionReportView(row); } catch(e) { console.error(e); }
     resetSession();
-    // Offer to view report
     setTimeout(async () => {
       const {data} = await db.from('session_reports').select('*').eq('app','freeski').order('created_at',{ascending:false}).limit(1);
-      if (data && data[0]) {
-        const toastEl = document.getElementById('toast');
-        if (toastEl) {
-          toastEl.innerHTML = `Session report saved. <a href="#" onclick="event.preventDefault();openReportPrint(window._lastReport)" style="color:#fff;text-decoration:underline;">View</a>`;
-          window._lastReport = data[0];
-        }
-      }
+      if (data && data[0]) { window._lastReport = data[0]; }
     }, 500);
   }
 }
 
 async function loadLastSessionReport() {
   const {data} = await db.from('session_reports').select('*').eq('app','freeski').order('created_at',{ascending:false}).limit(1);
-  if (data && data[0]) openReportPrint(data[0]);
+  if (data && data[0]) openSessionReportView(data[0]);
 }
 
 function openReportPrint(report) {
@@ -8632,7 +8636,7 @@ function openReportPrint(report) {
 async function viewSessionReportByDate(date) {
   const {data, error} = await db.from('session_reports').select('*').eq('datum', date).eq('app','freeski');
   if (error || !data || data.length === 0) { showToast('No session report found for this date', 'error'); return; }
-  if (data.length === 1) { openReportPrint(data[0]); return; }
+  if (data.length === 1) { openSessionReportView(data[0]); return; }
   // Multiple reports: show picker
   let existingModal = document.getElementById('sr-pick-modal');
   if (existingModal) existingModal.remove();
@@ -9806,14 +9810,37 @@ function syncTrickNameLocally(dbId, newTrick) {
 
 let _fsRawEditId = null;
 
+// Raw-Entry-Aktionen laufen jetzt auch auf der Reports-Seite (ohne Development-Analytics):
+// dort existiert #ev-trick-analytics nicht — dann die Liste direkt neu zeichnen.
+function fsRawRerender() {
+  if (document.getElementById('ev-trick-analytics')) { renderTrickAnalytics(); return; }
+  renderRawEntries(_taData, document.getElementById('dbraw-athlete')?.value || 'all entries');
+}
+
+// Reports-Seite: Raw Entries pro Athlet:in laden (gleiches Query wie Development)
+async function dbRawLoad() {
+  const athlet = document.getElementById('dbraw-athlete')?.value;
+  const wrap = document.getElementById('ev-raw-wrap');
+  if (!wrap) return;
+  if (!athlet) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+  const {data, error} = await db.from('tricks').select('*').eq('athlet', athlet).order('datum', {ascending:true});
+  if (error) { showToast('Error: ' + error.message, 'error'); wrap.innerHTML = ''; return; }
+  _taData = (data || []).filter(t => t.trickaufbau);
+  _fsRawEditId = null;
+  renderRawEntries(_taData, athlet);
+  const list = document.getElementById('ev-raw-list');
+  if (list) { list.style.display = 'block'; const arr = wrap.querySelector('.raw-arrow'); if (arr) arr.textContent = '▼'; }
+}
+
 function editRawEntry(id) {
   _fsRawEditId = _fsRawEditId === id ? null : id;
-  renderTrickAnalytics();
+  fsRawRerender();
 }
 
 function cancelRawEdit() {
   _fsRawEditId = null;
-  renderTrickAnalytics();
+  fsRawRerender();
 }
 
 async function saveRawEdit(id) {
@@ -9833,7 +9860,7 @@ async function saveRawEdit(id) {
 
   syncTrickNameLocally(id, newTrick);
   _fsRawEditId = null;
-  renderTrickAnalytics();
+  fsRawRerender();
   renderSessionLog();
   saveSessionState();
   showToast('Entry updated', 'success');
@@ -9856,7 +9883,7 @@ async function deleteRawEntry(id) {
     if (btn) btn.querySelector('span').childNodes[1].textContent = ` Raw Entries (${remaining})`;
   }
   // Refresh charts
-  renderTrickAnalytics();
+  fsRawRerender();
 }
 
 function setStatsMode(mode) {
@@ -11026,6 +11053,472 @@ function fsMonCatChart(rows) {
   return `<div style="overflow-x:auto;"><svg width="${PAD + chartW}" height="${H + 36}" style="display:block;">${grid}${lines}${dots}${labels}${axisTitle}</svg></div>`;
 }
 
+// ═══════ REPORTS-TAB — interaktiver Session-Report-Viewer (SB-Struktur, FS-Logik: QoE statt KPIs) ═══════
+let _sbRepList = [];
+let _sbRepTyp = '';
+let _sbRepRange = 'all';
+let _sbRepFrom = '';
+let _sbRepTo = '';
+let _sbRepSelIdx = -1;
+let _sbRV = null;          // {report, groups} des offenen Reports
+let _sbRVEditable = false; // Edit nur im Reports-Tab, nicht im Modal nach Session-Ende
+let _sbRVEdit = null;      // {ai, ti, i} während ein Versuch editiert wird
+let _sbRVEditCats = {};    // {takeoff, grab, trick, land} → miss|okay|perfect|null
+
+function sbRepSetTyp(v) { _sbRepTyp = v; renderReportsList(); }
+function sbRepSetRange(v) { _sbRepRange = v; renderReportsList(); }
+function sbRepApplyCustom() {
+  _sbRepFrom = document.getElementById('rep-date-from')?.value || '';
+  _sbRepTo = document.getElementById('rep-date-to')?.value || '';
+  renderReportsList();
+}
+function sbRepRangeBounds() {
+  const now = new Date();
+  const y = now.getMonth() + 1 >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+  if (_sbRepRange === 'season') return {from: y + '-05-01', to: ''};
+  if (_sbRepRange === 'last')   return {from: (y-1) + '-05-01', to: y + '-04-30'};
+  if (_sbRepRange === 'custom') return {from: _sbRepFrom || '', to: _sbRepTo || ''};
+  return {from: '', to: ''};
+}
+
+async function loadReportsTab() {
+  const root = document.getElementById('sbrep-root');
+  if (!root) return;
+  root.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+  const {data, error} = await db.from('session_reports').select('*').eq('app','freeski')
+    .order('datum', {ascending:false}).order('created_at', {ascending:false}).limit(200);
+  if (error) { root.innerHTML = '<div style="color:var(--muted);padding:16px;">Error loading reports: '+error.message+'</div>'; return; }
+  _sbRepList = data || [];
+  renderReportsList();
+}
+
+function renderReportsList() {
+  const root = document.getElementById('sbrep-root');
+  if (!root) return;
+  if (!_sbRepList.length) {
+    root.innerHTML = '<div class="card" style="padding:20px;color:var(--muted);">No session reports yet.</div>';
+    return;
+  }
+  const {from: repFrom, to: repTo} = sbRepRangeBounds();
+  const filtered = _sbRepList.map((r, i) => ({r, i}))
+    .filter(x => !_sbRepTyp || x.r.session_type === _sbRepTyp)
+    .filter(x => !repFrom || (x.r.datum || '') >= repFrom)
+    .filter(x => !repTo || (x.r.datum || '') <= repTo)
+    .filter(x => GROUP_FILTER === 'all' || (Array.isArray(x.r.athletes) && x.r.athletes.some(n => SESS_ALL_ATHLETES.some(a => a.name === n))));
+  const rows = filtered.map(({r, i}) => {
+    const dateStr = r.datum ? (() => { const p=r.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '—';
+    const typeShort = SESS_TYPE_SHORT[r.session_type]||r.session_type||'—';
+    const athStr = Array.isArray(r.athletes) ? r.athletes.map(a=>shortName(a)).join(', ') : '';
+    const att = Array.isArray(r.trick_data) ? r.trick_data.reduce((s,a)=>s+(a.totalAtt||0),0) : 0;
+    const durStr = r.duration_min ? (r.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
+    return `<div onclick="sbOpenReportInline(${i})" style="display:flex;align-items:center;gap:12px;padding:13px 6px;border-bottom:1px solid var(--border);cursor:pointer;">
+      <div style="min-width:64px;font-size:14px;font-weight:700;color:#39c3d4;">${dateStr}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;color:var(--text);font-weight:600;">${typeShort} · ${durStr}${r.location ? ' · '+r.location : ''}</div>
+        <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${athStr}</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);flex-shrink:0;">${att ? att+' att.' : ''}</div>
+      <div style="color:#39c3d4;font-size:14px;flex-shrink:0;">→</div>
+    </div>`;
+  }).join('');
+  const dateInput = id => `<input type="date" id="${id}" value="${id==='rep-date-from'?_sbRepFrom:_sbRepTo}" onchange="sbRepApplyCustom()" style="padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:'Poppins',sans-serif;">`;
+  root.innerHTML = `<div class="card" style="padding:20px;">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px;">
+      <div style="flex:1;min-width:160px;">
+        <div style="font-size:20px;font-weight:800;color:var(--text);">Session Reports</div>
+        <div style="font-size:12px;color:var(--muted);">Tap a session to open the report</div>
+      </div>
+      <select onchange="sbRepSetRange(this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+        <option value="all" ${_sbRepRange==='all'?'selected':''}>All time</option>
+        <option value="season" ${_sbRepRange==='season'?'selected':''}>Current season</option>
+        <option value="last" ${_sbRepRange==='last'?'selected':''}>Last season</option>
+        <option value="custom" ${_sbRepRange==='custom'?'selected':''}>Custom period…</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 12px;">
+      ${fsTypeChipsHtml(_sbRepTyp, 'sbRepSetTyp')}
+      ${_sbRepRange==='custom' ? `<div style="display:flex;align-items:center;gap:6px;">${dateInput('rep-date-from')}<span style="color:var(--muted);">–</span>${dateInput('rep-date-to')}</div>` : ''}
+    </div>
+    ${rows || '<div style="color:var(--muted);padding:12px;">No reports match the current filters.</div>'}
+  </div>`;
+}
+
+async function sbOpenReportInline(i) {
+  let report = _sbRepList[i];
+  if (!report) return;
+  _sbRepSelIdx = i;
+  _sbRVEdit = null;
+  // Ältere FS-Reports haben keine attempts (oder ohne dbIds) — einmalig aus der tricks-Tabelle rekonstruieren
+  const hasAttempts = Array.isArray(report.trick_data) && report.trick_data.some(a => Array.isArray(a.attempts) && a.attempts.length);
+  const missingIds = hasAttempts && report.trick_data.some(a => Array.isArray(a.attempts) && a.attempts.some(x => !x.dbId));
+  if (report.id && (!hasAttempts || missingIds)) {
+    await rebuildReportFromTimestamps(report.id, true);
+    report = _sbRepList[i];
+  }
+  const root = document.getElementById('sbrep-root');
+  _sbRVEditable = true;
+  const inner = fsReportInnerHtml(report);
+  if (inner === null) { openReportPrint(report); return; }
+  const dateStr = report.datum ? (() => { const p=report.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+  root.innerHTML = `<div class="card" style="padding:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button onclick="renderReportsList()" style="padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">← Back</button>
+        <div style="font-size:16px;font-weight:800;color:var(--text);">Session Report · ${dateStr}</div>
+      </div>
+      <button onclick="sbRVPrintPdf()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">PDF</button>
+    </div>
+    ${inner}
+    <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px;display:flex;justify-content:center;">
+      <button onclick="sbRepDeleteCurrent()" style="padding:10px 20px;border-radius:8px;background:none;border:1px solid #e2001a;color:#e2001a;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">🗑 Delete session (report + all attempts)</button>
+    </div>
+  </div>`;
+  window.scrollTo(0,0);
+}
+
+function sbRepDeleteCurrent() {
+  const report = _sbRV && _sbRV.report;
+  if (!report || !report.id) return;
+  deleteSessionReport(report.id, true);
+}
+
+function fsGroupAttempts(attempts) {
+  const groups = [], byTrick = {};
+  (attempts||[]).forEach(a => {
+    const key = a.trick || '—';
+    if (!byTrick[key]) { byTrick[key] = {trick:key, attempts:[]}; groups.push(byTrick[key]); }
+    byTrick[key].attempts.push(a);
+  });
+  return groups;
+}
+
+// Balken = QoE des Versuchs (0–100%), rot = Miss; Linie = laufender Ø-QoE.
+// Mit beschrifteter Y-Achse (%) und X-Achse (Versuchsnummer).
+function fsTrickChartSvg(g, ai, ti) {
+  const n = g.attempts.length;
+  const H = 90, PAD = 30, barW = n > 14 ? 14 : 22, gap = n > 14 ? 5 : 8;
+  const yOf = p => H - p/100 * (H - 8);
+  let grid = '';
+  [0, 50, 100].forEach(p => {
+    grid += `<line x1="${PAD}" y1="${yOf(p).toFixed(1)}" x2="${PAD + n*(barW+gap)}" y2="${yOf(p).toFixed(1)}" stroke="var(--border)" stroke-width="1" ${p ? 'stroke-dasharray="2 4"' : ''}/>`;
+    grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
+  });
+  let qoeSum = 0;
+  const pts = [];
+  let labels = '';
+  const bars = g.attempts.map((a, i) => {
+    const q = qoeOfLogEntry(a);
+    qoeSum += q;
+    pts.push([PAD + i*(barW+gap) + barW/2, yOf(qoeSum/(i+1)).toFixed(1)]);
+    const isMiss = a.result === 'miss';
+    const h = Math.max(5, q/100 * (H - 8));
+    const x = PAD + i*(barW+gap);
+    labels += `<text x="${x + barW/2}" y="${H + 12}" text-anchor="middle" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${i+1}</text>`;
+    return `<rect x="${x}" y="${(H-h).toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" rx="3" fill="${isMiss?'#e2001a':'#4a7dd6'}" style="cursor:pointer;" onclick="sbRVShowDetail(${ai},${ti},${i})"/>`;
+  }).join('');
+  const w = PAD + Math.max(n*(barW+gap), 40);
+  const axisTitle = `<text x="${PAD + (w-PAD)/2}" y="${H + 24}" text-anchor="middle" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
+  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+28}" style="display:block;">${grid}${bars}
+    ${n>1?`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#9aa8b8" stroke-width="1.5" opacity="0.75"/>`:''}
+    ${labels}${axisTitle}
+  </svg></div>`;
+}
+
+const FS_RV_CATS = [['takeoff','Take-off'],['trick_r','Trick'],['grab','Grab'],['land','Landing']];
+const FS_RV_ICON = {perfect:'⭐', okay:'✓', miss:'✗'};
+
+function sbRVShowDetail(ai, ti, i) {
+  if (!_sbRV) return;
+  const g = _sbRV.groups[ai][ti];
+  const a = g.attempts[i];
+  const el = document.getElementById(`sbrv-det-${ai}-${ti}`);
+  if (!el || !a) return;
+  if (_sbRVEdit && _sbRVEdit.ai === ai && _sbRVEdit.ti === ti && _sbRVEdit.i === i) {
+    const seg = (cat, label) => {
+      const cur = _sbRVEditCats[cat];
+      return `<div style="display:flex;align-items:center;gap:4px;">
+        <span style="font-size:10px;color:var(--muted);min-width:52px;">${label}</span>
+        ${['miss','okay','perfect'].map(v => {
+          const on = cur === v;
+          const col = v==='miss'?'#e2001a':v==='okay'?'#2d8a4e':'#39c3d4';
+          return `<button onclick="sbRVEditCatSet('${cat}','${v}')" style="padding:4px 8px;border-radius:6px;border:1.5px solid ${on?col:'var(--border)'};background:${on?col+'22':'var(--surface2)'};color:${on?col:'var(--muted)'};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer;">${FS_RV_ICON[v]}</button>`;
+        }).join('')}
+      </div>`;
+    };
+    el.innerHTML = `<div style="background:var(--surface);border:1px solid #39c3d433;border-radius:10px;padding:10px;margin-top:4px;">
+      <div style="font-size:11px;font-weight:700;color:#39c3d4;margin-bottom:8px;">Edit attempt ${i+1} — ${g.trick} <span style="font-weight:400;color:var(--muted);">(tap again to unset a category)</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">${FS_RV_CATS.map(([c,l]) => seg(c,l)).join('')}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button onclick="sbRVEditSave()" style="padding:6px 14px;border-radius:8px;border:2px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Save</button>
+        <button onclick="sbRVEditCancel()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button>
+        <button onclick="sbRVEditDelete()" style="margin-left:auto;padding:6px 12px;border-radius:8px;background:none;border:1px solid #e2001a55;color:#e2001a;font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">🗑 Delete attempt</button>
+      </div>
+    </div>`;
+    return;
+  }
+  const q = qoeOfLogEntry(a);
+  const resCol = a.result==='miss' ? '#e2001a' : a.result==='perfect' ? '#39c3d4' : '#34d399';
+  const resLbl = a.result==='miss' ? 'Miss' : a.result==='perfect' ? 'Perfect' : 'Landed';
+  const catStr = FS_RV_CATS.map(([c,l]) => a[c] ? `${l} ${FS_RV_ICON[a[c]]}` : null).filter(Boolean).join(' · ');
+  let txt = `<span style="color:${resCol};font-weight:600;">Attempt ${i+1} — ${resLbl} · QoE ${q}%</span>`
+    + (catStr ? ` <span style="color:var(--muted);">${catStr}</span>` : ' <span style="color:var(--muted);">(no category data)</span>');
+  if (a.comment) txt += ` <span style="color:var(--muted);">— ${a.comment}</span>`;
+  if (a.time) txt += ` <span style="color:var(--muted);font-size:10px;">${a.time}</span>`;
+  if (_sbRVEditable && _sbRV.report && _sbRV.report.id && a.dbId) {
+    txt += ` <button onclick="sbRVEditStart(${ai},${ti},${i})" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:1px 7px;font-size:10px;">✏️ Edit</button>`;
+  }
+  el.innerHTML = txt;
+}
+
+function sbRVEditStart(ai, ti, i) {
+  const a = _sbRV.groups[ai][ti].attempts[i];
+  _sbRVEdit = {ai, ti, i};
+  _sbRVEditCats = {takeoff: a.takeoff||null, grab: a.grab||null, trick_r: a.trick_r||null, land: a.land||null};
+  sbRVShowDetail(ai, ti, i);
+}
+
+function sbRVEditCatSet(cat, val) {
+  _sbRVEditCats[cat] = _sbRVEditCats[cat] === val ? null : val;
+  const {ai, ti, i} = _sbRVEdit;
+  sbRVShowDetail(ai, ti, i);
+}
+
+function sbRVEditCancel() {
+  const e = _sbRVEdit;
+  _sbRVEdit = null;
+  if (e) sbRVShowDetail(e.ai, e.ti, e.i);
+}
+
+function fsRVRecomputeTd(td) {
+  const ents = td.attempts.map(x => ({trick: x.trick, result: x.result, takeoff: x.takeoff, grab: x.grab, trick_r: x.trick_r, land: x.land}));
+  td.tricks = buildFsTrickBlocks(ents);
+  td.totalAtt = td.tricks.reduce((s,t)=>s+t.att,0);
+  td.totalLand = td.tricks.reduce((s,t)=>s+t.land,0);
+  td.qualityPct = ents.length ? Math.round(ents.reduce((a,e)=>a+qoeOfLogEntry(e),0)/ents.length) : null;
+}
+
+async function sbRVEditDelete() {
+  if (!_sbRVEdit || !_sbRV) return;
+  if (!confirm('Delete this attempt? It will be removed from the report and the database.')) return;
+  const {ai, ti, i} = _sbRVEdit;
+  const report = _sbRV.report;
+  const a = _sbRV.groups[ai][ti].attempts[i];
+  if (a.dbId) {
+    const {error} = await db.from('tricks').delete().eq('id', a.dbId);
+    if (error) { showToast('Error deleting: ' + error.message, 'error'); return; }
+  }
+  const td = report.trick_data[ai];
+  const idx = td.attempts.indexOf(a);
+  if (idx >= 0) td.attempts.splice(idx, 1);
+  if (a.dbId && Array.isArray(td.trickIds)) {
+    const tIdx = td.trickIds.indexOf(a.dbId);
+    if (tIdx >= 0) td.trickIds.splice(tIdx, 1);
+  }
+  fsRVRecomputeTd(td);
+  if (report.id) {
+    const {error: rErr} = await db.from('session_reports').update({trick_data: report.trick_data}).eq('id', report.id);
+    if (rErr) { showToast('Error saving report: ' + rErr.message, 'error'); return; }
+  }
+  sbMonRows = null;
+  _sbRVEdit = null;
+  if (_sbRepSelIdx >= 0) {
+    const sy = window.scrollY;
+    await sbOpenReportInline(_sbRepSelIdx);
+    window.scrollTo(0, sy);
+  }
+  showToast('Attempt deleted', 'success');
+}
+
+async function sbRVEditSave() {
+  if (!_sbRVEdit || !_sbRV) return;
+  const {ai, ti, i} = _sbRVEdit;
+  const report = _sbRV.report;
+  const a = _sbRV.groups[ai][ti].attempts[i]; // gleiche Objekt-Referenz wie in report.trick_data
+  const r = _sbRVEditCats;
+  const score = {miss:1,okay:2,perfect:3};
+  const rated = ['takeoff','grab','trick_r','land'].filter(c => r[c]);
+  if (!rated.length) { showToast('Rate at least one category', 'error'); return; }
+  // Gleiche Ableitung wie die Live-Erfassung (autoLogAttempt)
+  const avg = rated.reduce((s,c)=>s+score[r[c]],0)/rated.length;
+  const gesamt = r.land==='miss' ? 3 : avg>=2.7 ? 10 : 7;
+  const result = gesamt===10 ? 'perfect' : gesamt===7 ? 'landed' : 'miss';
+  // 1. tricks-Zeile aktualisieren (kommentar: Kategorien neu, freien Kommentar erhalten)
+  if (a.dbId) {
+    const kommentarParts = [[r.takeoff&&`Takeoff:${r.takeoff}`, r.grab&&`Grab:${r.grab}`, r.trick_r&&`Trick:${r.trick_r}`, r.land&&`Landing:${r.land}`].filter(Boolean).join(' ')];
+    if (a.comment) kommentarParts.push(a.comment);
+    const {error} = await db.from('tricks').update({
+      gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
+      gelandet: result==='miss'?'No':'Yes',
+      kommentar: kommentarParts.join(' | ')
+    }).eq('id', a.dbId);
+    if (error) { showToast('Error saving: ' + error.message, 'error'); return; }
+  }
+  // 2. Report-JSON aktualisieren (Versuch + Blöcke/Totale neu rechnen)
+  a.result = result; a.takeoff = r.takeoff||null; a.grab = r.grab||null; a.trick_r = r.trick_r||null; a.land = r.land||null;
+  fsRVRecomputeTd(report.trick_data[ai]);
+  if (report.id) {
+    const {error: rErr} = await db.from('session_reports').update({trick_data: report.trick_data}).eq('id', report.id);
+    if (rErr) { showToast('Error saving report: ' + rErr.message, 'error'); return; }
+  }
+  sbMonRows = null; // Monitoring-Cache ist jetzt veraltet
+  _sbRVEdit = null;
+  if (_sbRepSelIdx >= 0) {
+    const sy = window.scrollY;
+    await sbOpenReportInline(_sbRepSelIdx);
+    window.scrollTo(0, sy);
+  }
+  showToast('Attempt updated', 'success');
+}
+
+function fsReportInnerHtml(report) {
+  const trickData = Array.isArray(report.trick_data) ? report.trick_data : [];
+  const hasAttempts = trickData.some(a => Array.isArray(a.attempts) && a.attempts.length);
+  if (!hasAttempts) return null;
+  _sbRV = {report, groups: trickData.map(a => fsGroupAttempts(a.attempts))};
+  const typeShort = SESS_TYPE_SHORT[report.session_type]||report.session_type||'—';
+
+  const sections = trickData.map((a, ai) => {
+    const attempts = a.attempts || [];
+    if (!attempts.length) return '';
+    const groups = _sbRV.groups[ai];
+    const qoes = attempts.map(qoeOfLogEntry);
+    const athQoe = qoes.length ? Math.round(qoes.reduce((s,v)=>s+v,0)/qoes.length) : 0;
+    const athLanded = attempts.filter(x=>x.result!=='miss').length;
+    const athLandedPct = attempts.length ? Math.round(athLanded/attempts.length*100) : 0;
+    const cards = groups.map((g, ti) => {
+      const n = g.attempts.length;
+      const landed = g.attempts.filter(x=>x.result!=='miss').length;
+      const missed = n - landed;
+      const gQoes = g.attempts.map(qoeOfLogEntry);
+      const gQoe = gQoes.length ? Math.round(gQoes.reduce((s,v)=>s+v,0)/gQoes.length) : 0;
+      const qoeCol = gQoe >= 70 ? '#34d399' : gQoe >= 50 ? '#f59e0b' : '#e2001a';
+      let fatigue = '';
+      if (n >= 6) {
+        const half = Math.floor(n/2);
+        const q1 = g.attempts.slice(0,half).map(qoeOfLogEntry);
+        const q2 = g.attempts.slice(half).map(qoeOfLogEntry);
+        const a1 = q1.reduce((s,v)=>s+v,0)/q1.length, a2 = q2.reduce((s,v)=>s+v,0)/q2.length;
+        if (a2 < a1 - 15) fatigue = `<span style="color:#f59e0b;">↘ QoE drops in 2nd half</span>`;
+      }
+      return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;">
+          <div style="font-size:14px;font-weight:700;color:var(--text);">${g.trick}</div>
+          <div style="font-size:11px;color:var(--muted);">${n} attempt${n!==1?'s':''}</div>
+        </div>
+        ${fsTrickChartSvg(g, ai, ti)}
+        <div id="sbrv-det-${ai}-${ti}" style="font-size:11px;color:var(--muted);min-height:16px;margin:2px 0 8px;">Tap a bar for details</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
+          <span><b style="color:#34d399;">${landed}</b> landed</span>
+          <span><b style="color:#e2001a;">${missed}</b> missed</span>
+          <span>Ø QoE <b style="color:${qoeCol};">${gQoe}%</b></span>
+          ${fatigue}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <div style="font-size:17px;font-weight:800;color:#39c3d4;">${a.athlet}</div>
+        <div style="font-size:11px;color:var(--muted);">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · ${athLandedPct}% landed · Ø QoE <b style="color:var(--text);">${athQoe}%</b></div>
+      </div>
+      ${cards}
+      ${a.note ? `<div style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border-radius:8px;padding:8px 10px;">Note: ${a.note}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  return `<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">${typeShort}${report.location ? ' · '+report.location : ''}${report.duration_min ? ' · '+report.duration_min+' min' : ''}</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:14px;">
+      <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Attempt (bar height = QoE)</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#e2001a;border-radius:2px;vertical-align:-1px;"></span> Miss</span>
+      <span><span style="display:inline-block;width:14px;height:2px;background:#9aa8b8;vertical-align:3px;"></span> running Ø QoE</span>
+    </div>
+    ${sections}`;
+}
+
+function openSessionReportView(report) {
+  _sbRVEditable = false;
+  _sbRVEdit = null;
+  const inner = fsReportInnerHtml(report);
+  if (inner === null) { openReportPrint(report); return; }
+  const dateStr = report.datum ? (() => { const p=report.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+  document.getElementById('sbrv-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'sbrv-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2100;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;';
+  modal.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;max-width:640px;width:100%;margin:auto 0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+      <div style="font-size:16px;font-weight:800;color:var(--text);">Session Report · ${dateStr}</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="sbRVPrintPdf()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">PDF</button>
+        <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
+      </div>
+    </div>
+    ${inner}
+  </div>`;
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+// PDF nutzt dasselbe Markup wie die Web-Ansicht (fsReportInnerHtml)
+function sbRVPrintPdf() {
+  const report = _sbRV && _sbRV.report;
+  if (!report) { showToast('No report open', 'error'); return; }
+  const inner = fsReportInnerHtml(report);
+  if (inner === null) { openReportPrint(report); return; }
+
+  const dateStr = report.datum ? (() => { const p=report.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+  const athleteStr = Array.isArray(report.athletes) ? report.athletes.map(a=>shortName(a)).join(', ') : (report.athletes||'');
+  const condLabel = report.conditions ? (report.conditions+'/5 '+(['','Poor','Below Average','Average','Good','Excellent'][report.conditions]||'')) : '—';
+  const printable = inner
+    .replace(/<div id="sbrv-det-\d+-\d+"[^>]*>Tap a bar for details<\/div>/g, '')
+    .replace(/ onclick="sbRVShowDetail\([^"]*\)"/g, '')
+    .replace(/cursor:pointer;/g, '');
+  const today = new Date().toLocaleDateString('de-CH');
+
+  const win = window.open('', '_blank');
+  if (!win) { showToast('Please allow pop-ups to export the PDF', 'error'); return; }
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Session Report ${dateStr} — Freeski</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#060f1a; --surface:#0c1a2b; --surface2:#112236; --border:#1a3450;
+          --accent2:#39c3d4; --text:#e8edf2; --muted:#6b8299; --success:#34d399; --danger:#e2001a; }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{font-family:'Poppins',-apple-system,'Helvetica Neue',Arial,sans-serif;background:var(--bg);
+       color:var(--text);padding:28px 32px;max-width:820px;margin:0 auto;}
+  .print-btn{margin-bottom:20px;}
+  .print-btn button{padding:9px 22px;background:var(--accent2);color:#060f1a;border:none;border-radius:8px;
+       font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+  h1{font-size:20px;font-weight:800;margin-bottom:10px;}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 26px;border-top:1px solid var(--border);
+        border-bottom:1px solid var(--border);padding:10px 0;margin-bottom:16px;}
+  .meta div{font-size:11px;color:var(--muted);}
+  .meta b{display:block;color:var(--text);font-size:12px;font-weight:600;margin-top:2px;}
+  .comments{background:var(--surface2);border-left:3px solid var(--accent2);border-radius:8px;
+            padding:10px 12px;font-size:12px;margin-bottom:18px;}
+  svg{max-width:100%;height:auto;}
+  footer{margin-top:24px;border-top:1px solid var(--border);padding-top:10px;font-size:10px;
+         color:var(--muted);display:flex;justify-content:space-between;}
+  @media print{
+    .print-btn{display:none;}
+    body{padding:12mm;max-width:none;}
+    @page{size:A4;margin:0;}
+    div[style*="border-radius:12px"]{break-inside:avoid;page-break-inside:avoid;}
+  }
+</style></head><body>
+  <div class="print-btn"><button onclick="window.print()">Print / Save as PDF</button></div>
+  <h1>Session Report · ${dateStr}</h1>
+  <div class="meta">
+    <div>ATHLETES<b>${athleteStr||'—'}</b></div>
+    <div>LOCATION<b>${(report.location||'—')}${report.jump_size ? ' · Jump '+report.jump_size : ''}</b></div>
+    <div>CONDITIONS<b>${condLabel}</b></div>
+  </div>
+  ${report.comments ? `<div class="comments"><b>Coach comments:</b> ${report.comments}</div>` : ''}
+  ${printable}
+  <footer><span>Swiss-Ski Trick Analyses — Freeski</span><span>Generated ${today}</span></footer>
+</body></html>`);
+  win.document.close();
+}
+
 const fragments = {
   evMain: `    <div class="chart-grid single">
       <div class="chart-card" id="ev-analytics-card">
@@ -11066,28 +11559,46 @@ const fragments = {
 };
 function init() {
   initStandortGrabs();
-  // Monitoring-Tab einblenden (als letzte Seite, wie im Snowboard)
-  ['nav-tab-monitoring','mobile-nav-monitoring'].forEach(id => {
+  // Gleiche Tab-Struktur wie Snowboard: Assessment · Session · Reports · Monitoring.
+  // Reports = die geteilte page-sessionreport (inkl. SB-Reports-Icon); Development und
+  // Database sind versteckt (DOM bleibt — Reality Check/PDF nutzen deren Elemente).
+  ['nav-tab-monitoring','mobile-nav-monitoring','nav-tab-sessionreport','mobile-nav-sessionreport'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = '';
   });
-  // Database-Seite entschlacken: Session Performance / Athlete-PDF / Team-PDF /
-  // Reality Check sind jetzt im Monitoring — Karten verstecken, DOM bleibt
-  // (die Monitoring-Buttons nutzen deren Selects via sbMonSyncSelects).
-  // Sichtbar bleibt nur die Session-Reports-Liste → Tab heisst neu «Reports».
-  ['perf-table','ar-athlete-sel','tr-season-sel'].forEach(id => {
-    const card = document.getElementById(id)?.closest('.card');
-    if (card) card.style.display = 'none';
+  const orders = [['standort',0],['erfassen',1],['sessionreport',2],['monitoring',3]];
+  const deskTabs = document.querySelectorAll('.nav-tabs .nav-tab');
+  const deskMap = {standort:deskTabs[0], erfassen:deskTabs[1], entwicklung:deskTabs[2], datenbank:deskTabs[3],
+    monitoring:document.getElementById('nav-tab-monitoring'), sessionreport:document.getElementById('nav-tab-sessionreport')};
+  const mobBtns = document.querySelectorAll('.mobile-nav-btn');
+  const mobMap = {standort:mobBtns[0], erfassen:mobBtns[1], entwicklung:mobBtns[2], datenbank:mobBtns[3],
+    monitoring:document.getElementById('mobile-nav-monitoring'), sessionreport:document.getElementById('mobile-nav-sessionreport')};
+  orders.forEach(([key, o]) => {
+    if (deskMap[key]) deskMap[key].style.order = o;
+    if (mobMap[key]) mobMap[key].style.order = o;
   });
-  const rcCard = document.querySelector('#page-datenbank [onclick="realityCheck()"]')?.closest('.card');
-  if (rcCard) rcCard.style.display = 'none';
-  const deskDb = document.querySelectorAll('.nav-tabs .nav-tab')[3];
-  if (deskDb) deskDb.textContent = 'Reports';
-  const mobDb = document.querySelectorAll('.mobile-nav-btn')[3];
-  if (mobDb) [...mobDb.childNodes].forEach(nd => { if (nd.nodeType === 3 && nd.textContent.trim()) nd.textContent = 'Reports'; });
+  ['entwicklung','datenbank'].forEach(key => {
+    if (deskMap[key]) deskMap[key].style.display = 'none';
+    if (mobMap[key]) mobMap[key].style.display = 'none';
+  });
+  // Raw-Entries-Karte unten auf der Reports-Seite (einziger Ort für Einzel-Korrekturen)
+  const repPage = document.getElementById('page-sessionreport');
+  if (repPage && !document.getElementById('dbraw-athlete')) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.cssText = 'margin-top:20px;padding:20px;';
+    card.innerHTML = `
+      <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:2px;">Raw Entries</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Inspect, edit or delete individual attempts.</div>
+      <select id="dbraw-athlete" onchange="dbRawLoad()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;min-width:200px;">
+        <option value="">— Select athlete —</option>${CFG.athleteOptgroups}
+      </select>
+      <div id="ev-raw-wrap" style="margin-top:16px;"></div>`;
+    repPage.appendChild(card);
+  }
   document.body.classList.add('sport-freeski');
 }
-return { fragments, init, showPage, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, logRatedAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
+return { fragments, init, showPage, dbRawLoad, loadReportsTab, renderReportsList, sbOpenReportInline, sbRepSetTyp, sbRepSetRange, sbRepApplyCustom, sbRepDeleteCurrent, sbRVPrintPdf, sbRVShowDetail, sbRVEditStart, sbRVEditCatSet, sbRVEditCancel, sbRVEditDelete, sbRVEditSave, openSessionReportView, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, logRatedAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
 })();
 
 // ═══════════════ SPORT BOOT ═══════════════
