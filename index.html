@@ -10491,9 +10491,10 @@ function initStandortGrabs() {
 }
 
 // ═══════ MONITORING (Team → Athlete → Trick) — Freeski-Fassung des Snowboard-Monitorings ═══════
-// Gleiche Optik/Struktur wie SB; angepasst an die FS-Daten: Outcome aus gesamt/gelandet
-// (10=Stomped/Perfect, gelandet=Landed, sonst Failed), Richtungen Left/Right/Switch,
-// Kategorie-Qualität (Take-off/Trick/Grab/Landing aus kommentar) statt SB-KPIs, kein fail_grund.
+// Gleiche Optik/Struktur wie SB, aber Freeski rechnet in PROZENTEN statt Klassen (Emilie, 31.8.2026):
+// Hauptmetrik = Ø QoE (Kategorie-Bewertungen: miss 0% · okay 50% · perfect 100%, via qoeOf),
+// Status-Schwellen wie die Session-Performance-Tabelle (≥70 Ready · ≥50 Building · sonst Critical),
+// Landed-Quote (gelandet/gesamt≥10) als Konstanz-Zweitwert. Kein Perfect/Landed/Miss-Tripel.
 let sbMonRows = null;          // cached attempt rows (tricks table, all pages)
 let sbMonRange = 'season';     // 'season' | 'last' | 'all' | 'custom'
 let sbMonFrom = '';            // custom range bounds (YYYY-MM-DD)
@@ -10519,9 +10520,13 @@ function fsTypeChipsHtml(current, handler) {
     `<button onclick="${handler}('${v}')" style="padding:6px 14px;border-radius:999px;border:1.5px solid ${current===v?'#39c3d4':'var(--border)'};background:${current===v?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${current===v?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">${l}</button>`).join('')}</div>`;
 }
 
-function fsMonOutcome(t) {
-  if ((t.gesamt||0) >= 10) return 'stomped';
-  return t.gelandet === 'Yes' ? 'landed' : 'failed';
+function fsMonLanded(t) {
+  return (t.gesamt||0) >= 10 || t.gelandet === 'Yes';
+}
+
+function fsMonAvgQoe(rows) {
+  const qs = rows.map(qoeOf).filter(v => v !== null);
+  return qs.length ? Math.round(qs.reduce((a,b)=>a+b,0)/qs.length) : null;
 }
 
 // Aggregations-Key: Grab-Suffix (« — Grab») strippen, damit ein Trick über alle Grabs zusammenläuft
@@ -10578,29 +10583,35 @@ function sbMonFiltered() {
   return rows;
 }
 
-function sbMonStatusKey(att, stomped) {
+function sbMonStatusKey(att, qoe) {
   if (att < 5) return 'lowdata';
-  const r = stomped / att;
-  return r >= 0.7 ? 'ready' : r >= 0.4 ? 'building' : 'critical';
+  return qoe >= 70 ? 'ready' : qoe >= 50 ? 'building' : 'critical';
 }
 
 function sbMonTrickAgg(rows) {
   const map = {};
   rows.forEach(t => {
     const key = fsMonKey(t.trickaufbau);
-    if (!map[key]) map[key] = {trick:key, att:0, stomped:0, landed:0, failed:0, rows:[]};
+    if (!map[key]) map[key] = {trick:key, att:0, landed:0, qoeVals:[], rows:[]};
     const m = map[key];
-    m.att++; m[fsMonOutcome(t)]++; m.rows.push(t);
+    m.att++;
+    if (fsMonLanded(t)) m.landed++;
+    const q = qoeOf(t);
+    if (q !== null) m.qoeVals.push(q);
+    m.rows.push(t);
   });
-  return Object.values(map);
+  const list = Object.values(map);
+  list.forEach(m => m.qoe = m.qoeVals.length ? Math.round(m.qoeVals.reduce((a,b)=>a+b,0)/m.qoeVals.length) : 0);
+  return list;
 }
 
+// Trend über die Ø-QoE der letzten Session vs. Schnitt der 3 davor (±5 Prozentpunkte)
 function sbMonTrend(rows) {
   const by = {};
   rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
   const dates = Object.keys(by).sort();
   if (dates.length < 2) return null;
-  const rate = d => by[d].filter(x => fsMonOutcome(x) === 'stomped').length / by[d].length;
+  const rate = d => (fsMonAvgQoe(by[d]) ?? 0) / 100;
   const last = rate(dates[dates.length - 1]);
   const prev = dates.slice(0, -1).slice(-3);
   const prevAvg = prev.reduce((a, d) => a + rate(d), 0) / prev.length;
@@ -10626,11 +10637,11 @@ function sbMonRing(pct, color, size, stroke) {
   </svg>`;
 }
 
-function sbMonDonut(s, l, f, size) {
-  const total = s + l + f;
+function sbMonDonut(landed, missed, size) {
+  const total = landed + missed;
   const stroke = 14, r = (size - stroke) / 2, c = 2 * Math.PI * r;
   if (!total) return sbMonRing(0, 'var(--border)', size, stroke);
-  const segs = [[s, '#34d399'], [l, '#4a7dd6'], [f, '#e2001a']];
+  const segs = [[landed, '#34d399'], [missed, '#e2001a']];
   let off = 0, out = '';
   segs.forEach(([n, col]) => {
     if (!n) return;
@@ -10744,12 +10755,11 @@ function renderMonTeam() {
       const i = _monAthletes.indexOf(a.name);
       const ar = byAth[a.name] || [];
       const att = ar.length;
-      const stomped = ar.filter(t => fsMonOutcome(t) === 'stomped').length;
-      const rate = att ? stomped / att : 0;
+      const qoe = fsMonAvgQoe(ar);
       const cnt = {ready:0, building:0, critical:0, lowdata:0};
-      sbMonTrickAgg(ar).forEach(tr => cnt[sbMonStatusKey(tr.att, tr.stomped)]++);
+      sbMonTrickAgg(ar).forEach(tr => cnt[sbMonStatusKey(tr.att, tr.qoe)]++);
       const initials = a.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
-      const ringColor = att < 5 ? '#6b8299' : rate >= 0.7 ? '#34d399' : rate >= 0.4 ? '#f59e0b' : '#e2001a';
+      const ringColor = att < 5 || qoe === null ? '#6b8299' : qoe >= 70 ? '#34d399' : qoe >= 50 ? '#f59e0b' : '#e2001a';
       return `<div onclick="sbMonOpenAthlete(${i})" style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
           <div style="width:34px;height:34px;border-radius:50%;background:rgba(57,195,212,0.15);color:#39c3d4;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">${initials}</div>
@@ -10759,10 +10769,10 @@ function renderMonTeam() {
           </div>
         </div>
         <div style="display:flex;justify-content:center;position:relative;margin-bottom:12px;">
-          ${sbMonRing(rate, ringColor, 92, 9)}
+          ${sbMonRing((qoe||0)/100, ringColor, 92, 9)}
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-            <div style="font-size:17px;font-weight:800;color:var(--text);">${att ? Math.round(rate*100)+'%' : '—'}</div>
-            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Perfect rate</div>
+            <div style="font-size:17px;font-weight:800;color:var(--text);">${att && qoe !== null ? qoe+'%' : '—'}</div>
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Ø QoE</div>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;text-align:center;border-top:1px solid var(--border);padding-top:10px;">
@@ -10780,7 +10790,7 @@ function renderMonTeam() {
   }).join('');
   root.innerHTML = `<div class="card" style="padding:20px;">
     ${monHeaderHtml('Team Monitoring', rows.length + ' attempts · ' + sbMonPeriodLabel(), false)}
-    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Trick status: ≥70% perfect rate = <b style="color:#34d399;">Ready</b> · 40–69% = <b style="color:#f59e0b;">Building</b> · &lt;40% = <b style="color:#e2001a;">Critical</b> · fewer than 5 attempts = Low data</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Ø QoE = average execution quality (Miss 0% · Okay 50% · Perfect 100% per rated category) · Trick status: ≥70% = <b style="color:#34d399;">Ready</b> · 50–69% = <b style="color:#f59e0b;">Building</b> · &lt;50% = <b style="color:#e2001a;">Critical</b> · fewer than 5 attempts = Low data</div>
     ${sections || '<div style="color:var(--muted);padding:12px;">No athletes configured.</div>'}
     <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
       <button onclick="sbMonRealityCheck()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
@@ -10794,8 +10804,8 @@ function renderMonAthlete() {
   const name = sbMonView.athlete;
   const rows = sbMonFiltered().filter(t => t.athlet === name);
   const att = rows.length;
-  const stomped = rows.filter(t => fsMonOutcome(t) === 'stomped').length;
-  const rate = att ? Math.round(stomped/att*100) : 0;
+  const qoe = fsMonAvgQoe(rows);
+  const landedPct = att ? Math.round(rows.filter(fsMonLanded).length/att*100) : 0;
 
   // Direction balance (session attempts only)
   const dirCnt = {};
@@ -10820,20 +10830,22 @@ function renderMonAthlete() {
       .sort((a, b) => b.att - a.att);
     if (!list.length) return '';
     const cards = list.map(tr => {
-      const st = sbMonStatusKey(tr.att, tr.stomped);
+      const st = sbMonStatusKey(tr.att, tr.qoe);
       const stInfo = FS_MON_STATUS[st];
-      const r = tr.att ? Math.round(tr.stomped/tr.att*100) : 0;
-      const rateCol = st==='lowdata' ? 'var(--muted)' : stInfo.color;
+      const qoeCol = st==='lowdata' ? 'var(--muted)' : stInfo.color;
+      const lp = tr.att ? Math.round(tr.landed/tr.att*100) : 0;
       const trend = sbMonTrend(tr.rows);
       return `<div onclick="sbMonOpenTrick(${tr._i})" style="background:var(--surface2);border:1px solid ${st==='critical' ? 'rgba(226,0,26,0.45)' : 'var(--border)'};border-radius:12px;padding:13px 14px;cursor:pointer;">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${tr.trick}</div>
         <div style="display:flex;gap:12px;align-items:center;">
-          <div style="font-size:24px;font-weight:800;color:${rateCol};flex-shrink:0;">${r}%</div>
+          <div style="flex-shrink:0;text-align:center;">
+            <div style="font-size:24px;font-weight:800;color:${qoeCol};">${tr.qoe}%</div>
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Ø QoE</div>
+          </div>
           <div style="flex:1;font-size:10px;color:var(--muted);line-height:1.7;">
-            <div style="display:flex;justify-content:space-between;"><span>Total</span><b style="color:var(--text);">${tr.att}</b></div>
-            <div style="display:flex;justify-content:space-between;"><span style="color:#34d399;">Perfect</span><b style="color:#34d399;">${tr.stomped}</b></div>
-            <div style="display:flex;justify-content:space-between;"><span style="color:#4a7dd6;">Landed</span><b style="color:#4a7dd6;">${tr.landed}</b></div>
-            <div style="display:flex;justify-content:space-between;"><span style="color:#e2001a;">Miss</span><b style="color:#e2001a;">${tr.failed}</b></div>
+            <div style="display:flex;justify-content:space-between;"><span>Attempts</span><b style="color:var(--text);">${tr.att}</b></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:#34d399;">Landed</span><b style="color:#34d399;">${lp}%</b></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:#e2001a;">Missed</span><b style="color:#e2001a;">${tr.att - tr.landed}</b></div>
           </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:10px;">
@@ -10849,7 +10861,7 @@ function renderMonAthlete() {
   }).join('');
 
   root.innerHTML = `<div class="card" style="padding:20px;">
-    ${monHeaderHtml(name, att + ' attempts · ' + stomped + ' perfect · <b>' + rate + '% perfect rate</b> · ' + sbMonPeriodLabel(), true)}
+    ${monHeaderHtml(name, att + ' attempts · Ø QoE <b>' + (qoe !== null ? qoe + '%' : '—') + '</b> · ' + landedPct + '% landed · ' + sbMonPeriodLabel(), true)}
     ${balanceBar}
     ${groups || '<div style="color:var(--muted);padding:12px;">No session attempts in this period.</div>'}
     <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;justify-content:center;">
@@ -10863,13 +10875,14 @@ function renderMonTrick() {
   const name = sbMonView.athlete, trick = sbMonView.trick;
   const rows = sbMonFiltered().filter(t => t.athlet === name && fsMonKey(t.trickaufbau) === trick)
     .sort((a, b) => (a.datum||'').localeCompare(b.datum||'') || (a.created_at||'').localeCompare(b.created_at||''));
-  const s = rows.filter(t => fsMonOutcome(t) === 'stomped').length;
-  const l = rows.filter(t => fsMonOutcome(t) === 'landed').length;
-  const f = rows.filter(t => fsMonOutcome(t) === 'failed').length;
   const n = rows.length;
-  const rate = n ? Math.round(s/n*100) : 0;
-  const stKey = sbMonStatusKey(n, s);
+  const landed = rows.filter(fsMonLanded).length;
+  const missed = n - landed;
+  const landedPct = n ? Math.round(landed/n*100) : 0;
+  const qoe = fsMonAvgQoe(rows);
+  const stKey = sbMonStatusKey(n, qoe ?? 0);
   const trend = sbMonTrend(rows);
+  const qoeCol = q => q >= 70 ? '#34d399' : q >= 50 ? '#f59e0b' : '#e2001a';
 
   // Kategorie-Qualität aus den Teilbewertungen im kommentar (Miss 0% · Okay 50% · Perfect 100%)
   const catScore = {perfect:100, okay:50, miss:0};
@@ -10880,14 +10893,9 @@ function renderMonTrick() {
     }).filter(v => v !== null);
     if (!vals.length) return '';
     const pct = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
-    const col = pct >= 70 ? '#34d399' : pct >= 50 ? '#f59e0b' : '#e2001a';
-    return `<span style="border:1px solid ${col};color:${col};border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;">${label} ${pct}%</span>`;
+    return `<span style="border:1px solid ${qoeCol(pct)};color:${qoeCol(pct)};border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;">${label} ${pct}%</span>`;
   }).filter(Boolean).join(' ')
     || `<span style="font-size:11px;color:var(--muted);">No category ratings yet — fills up with new session logs</span>`;
-
-  // Ø QoE über alle Versuche mit Bewertung
-  const qoeVals = rows.map(t => qoeOf(t)).filter(v => v !== null);
-  const avgQoe = qoeVals.length ? Math.round(qoeVals.reduce((a, b) => a + b, 0) / qoeVals.length) : null;
 
   root.innerHTML = `<div class="card" style="padding:20px;">
     ${monHeaderHtml(trick, name, true)}
@@ -10897,19 +10905,17 @@ function renderMonTrick() {
       </div>
       <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
         <div style="position:relative;flex-shrink:0;">
-          ${sbMonDonut(s, l, f, 130)}
+          ${sbMonRing((qoe||0)/100, qoe === null ? 'var(--border)' : qoeCol(qoe), 130, 14)}
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-            <div style="font-size:26px;font-weight:800;color:var(--text);">${n}</div>
-            <div style="font-size:9px;color:var(--muted);">attempts</div>
+            <div style="font-size:26px;font-weight:800;color:var(--text);">${qoe !== null ? qoe+'%' : '—'}</div>
+            <div style="font-size:9px;color:var(--muted);">Ø QoE</div>
           </div>
         </div>
         <div style="flex:1;min-width:170px;font-size:12px;">
-          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#34d399;margin-right:6px;"></span>Perfect</span><b>${s}</b></div>
-          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#4a7dd6;margin-right:6px;"></span>Landed</span><b>${l}</b></div>
-          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#e2001a;margin-right:6px;"></span>Miss</span><b>${f}</b></div>
-          <div style="display:flex;justify-content:space-between;padding:6px 0;"><span>Perfect rate</span><b style="color:${FS_MON_STATUS[stKey].color};">${rate}%</b></div>
-          ${avgQoe !== null ? `<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>Ø QoE</span><b style="color:${avgQoe >= 70 ? '#34d399' : avgQoe >= 50 ? '#f59e0b' : '#e2001a'};">${avgQoe}%</b></div>` : ''}
-          ${trend ? `<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>Trend</span>${sbMonTrendHtml(trend)}</div>` : ''}
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Attempts</span><b>${n}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#34d399;margin-right:6px;"></span>Landed</span><b style="color:#34d399;">${landed} (${landedPct}%)</b></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#e2001a;margin-right:6px;"></span>Missed</span><b style="color:#e2001a;">${missed}</b></div>
+          ${trend ? `<div style="display:flex;justify-content:space-between;padding:6px 0;"><span>QoE trend</span>${sbMonTrendHtml(trend)}</div>` : ''}
         </div>
       </div>
       <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
@@ -10921,8 +10927,8 @@ function renderMonTrick() {
       <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Progress over sessions</div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:8px;">
         <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Volume (attempts)</span>
-        <span><span style="display:inline-block;width:14px;height:2px;background:#34d399;vertical-align:3px;"></span> Success rate (Landed+Perfect)</span>
-        <span><span style="display:inline-block;width:14px;height:2px;background:#f59e0b;vertical-align:3px;border-bottom:2px dashed #f59e0b;background:none;"></span> Perfect rate</span>
+        <span><span style="display:inline-block;width:14px;height:2px;background:#34d399;vertical-align:3px;"></span> Ø QoE</span>
+        <span><span style="display:inline-block;width:14px;height:2px;background:#f59e0b;vertical-align:3px;border-bottom:2px dashed #f59e0b;background:none;"></span> Landed rate</span>
       </div>
       ${sbMonTimeChart(rows)}
       <div style="font-size:10px;color:var(--muted);margin-top:8px;">⚠ Sessions with fewer than 5 attempts — rates are statistically weak.</div>
@@ -10937,16 +10943,16 @@ function sbMonTimeChart(rows) {
   if (!dates.length) return '<div style="color:var(--muted);font-size:12px;">No data.</div>';
   const H = 110, slot = 46, barW = 26;
   const maxN = Math.max(...dates.map(d => by[d].length));
-  const sPts = [], stPts = [];
+  const qPts = [], lPts = [];
   let bars = '', labels = '';
   dates.forEach((d, i) => {
     const rs = by[d], nn = rs.length;
-    const succ = rs.filter(x => fsMonOutcome(x) !== 'failed').length / nn;
-    const st = rs.filter(x => fsMonOutcome(x) === 'stomped').length / nn;
+    const q = (fsMonAvgQoe(rs) ?? 0) / 100;
+    const lr = rs.filter(fsMonLanded).length / nn;
     const h = Math.max(6, nn / maxN * (H - 12));
     const x = i * slot + (slot - barW) / 2;
-    sPts.push([i * slot + slot/2, (H - succ * (H - 12)).toFixed(1)]);
-    stPts.push([i * slot + slot/2, (H - st * (H - 12)).toFixed(1)]);
+    qPts.push([i * slot + slot/2, (H - q * (H - 12)).toFixed(1)]);
+    lPts.push([i * slot + slot/2, (H - lr * (H - 12)).toFixed(1)]);
     bars += `<rect x="${x}" y="${(H - h).toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" rx="3" fill="#4a7dd6" opacity="${(0.35 + 0.65 * nn / maxN).toFixed(2)}"/>`;
     const lbl = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' : d;
     labels += `<text x="${i * slot + slot/2}" y="${H + 15}" text-anchor="middle" font-size="9" fill="${nn < 5 ? '#f59e0b' : '#6b8299'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
@@ -10955,8 +10961,8 @@ function sbMonTimeChart(rows) {
   const w = dates.length * slot;
   return `<div style="overflow-x:auto;"><svg width="${w}" height="${H + 22}" style="display:block;">
     ${bars}
-    ${dates.length > 1 ? `<polyline points="${line(sPts)}" fill="none" stroke="#34d399" stroke-width="2"/>
-    <polyline points="${line(stPts)}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 3"/>` : ''}
+    ${dates.length > 1 ? `<polyline points="${line(qPts)}" fill="none" stroke="#34d399" stroke-width="2"/>
+    <polyline points="${line(lPts)}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 3"/>` : ''}
     ${labels}
   </svg></div>`;
 }
