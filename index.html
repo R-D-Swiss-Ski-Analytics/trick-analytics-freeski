@@ -11259,7 +11259,8 @@ function sbRVShowDetail(ai, ti, i) {
   const q = qoeOfLogEntry(a);
   const resCol = a.result==='miss' ? '#e2001a' : a.result==='perfect' ? '#39c3d4' : '#34d399';
   const resLbl = a.result==='miss' ? 'Miss' : a.result==='perfect' ? 'Perfect' : 'Landed';
-  const catStr = FS_RV_CATS.map(([c,l]) => a[c] ? `${l} ${FS_RV_ICON[a[c]]}` : null).filter(Boolean).join(' · ');
+  const catCol = {perfect:'#39c3d4', okay:'#2d8a4e', miss:'#e2001a'};
+  const catStr = FS_RV_CATS.map(([c,l]) => a[c] ? `${l} <b style="color:${catCol[a[c]]};">${FS_RV_ICON[a[c]]}</b>` : null).filter(Boolean).join(' · ');
   let txt = `<span style="color:${resCol};font-weight:600;">Attempt ${i+1} — ${resLbl} · QoE ${q}%</span>`
     + (catStr ? ` <span style="color:var(--muted);">${catStr}</span>` : ' <span style="color:var(--muted);">(no category data)</span>');
   if (a.comment) txt += ` <span style="color:var(--muted);">— ${a.comment}</span>`;
@@ -11430,6 +11431,7 @@ function fsReportInnerHtml(report) {
       <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Attempt (bar height = QoE)</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#e2001a;border-radius:2px;vertical-align:-1px;"></span> Miss</span>
       <span><span style="display:inline-block;width:14px;height:2px;background:#9aa8b8;vertical-align:3px;"></span> running Ø QoE</span>
+      <span style="border-left:1px solid var(--border);padding-left:14px;">Ratings: <b style="color:#39c3d4;">⭐ Perfect</b> · <b style="color:#2d8a4e;">✓ Okay</b> · <b style="color:#e2001a;">✗ Miss</b></span>
     </div>
     ${sections}`;
 }
