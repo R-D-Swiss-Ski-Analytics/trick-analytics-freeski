@@ -11192,15 +11192,14 @@ function fsGroupAttempts(attempts) {
   return groups;
 }
 
-// Pro Versuch vier Kategorie-Balken (Take-off/Trick/Grab/Landing, Höhe = Bewertung 0/50/100%),
-// Miss-Versuche mit rotem Band + roter Nummer; graue Linie = laufender Ø-QoE.
-// Farben wie das Kategorie-Verlaufs-Chart im Monitoring. Mit X/Y-Achsenbeschriftung.
+// Kategorie-Linien wie im Monitoring (letzte Ebene): pro Kategorie eine Linie mit Punkten
+// über die Versuche (0/50/100% je Ampel-Bewertung), leicht versetzt, damit sich Linien auf
+// gleicher Höhe nicht verdecken. Weisse Linie = laufender Ø-QoE. ✗/rote Nummer = Miss.
 const FS_RV_CHART_CATS = [['takeoff','#39c3d4'],['trick_r','#4a7dd6'],['grab','#a78bfa'],['land','#34d399']];
 function fsTrickChartSvg(g, ai, ti) {
   const n = g.attempts.length;
-  const H = 90, PAD = 30, catW = 6, catGap = 1;
-  const groupW = 4*catW + 3*catGap, gap = 10, slot = groupW + gap;
-  const yOf = p => H - p/100 * (H - 8);
+  const H = 100, PAD = 34, slot = n > 14 ? 26 : 34;
+  const yOf = p => H - p/100 * (H - 14);
   const SCORE = {perfect:100, okay:50, miss:0};
   let grid = '';
   [0, 50, 100].forEach(p => {
@@ -11208,32 +11207,40 @@ function fsTrickChartSvg(g, ai, ti) {
     grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
   });
   let qoeSum = 0;
-  const pts = [];
-  let marks = '', bars = '', labels = '', hits = '';
+  const qoePts = [];
+  let marks = '', labels = '', hits = '';
   g.attempts.forEach((a, i) => {
     const q = qoeOfLogEntry(a);
     qoeSum += q;
-    const gx = PAD + i*slot;
-    pts.push([gx + groupW/2, yOf(qoeSum/(i+1)).toFixed(1)]);
+    const cx = PAD + i*slot + slot/2;
+    qoePts.push([cx, yOf(qoeSum/(i+1)).toFixed(1)]);
     const isMiss = a.result === 'miss';
-    if (isMiss) marks += `<rect x="${gx-3}" y="2" width="${groupW+6}" height="${H-2}" fill="rgba(226,0,26,0.05)" rx="3"/>
-      <text x="${gx + groupW/2}" y="11" text-anchor="middle" font-size="9" font-weight="700" fill="#e2001a" font-family="Poppins,sans-serif">✗</text>`;
-    FS_RV_CHART_CATS.forEach(([c, col], k) => {
+    if (isMiss) marks += `<rect x="${PAD + i*slot + 2}" y="2" width="${slot-4}" height="${H-2}" fill="rgba(226,0,26,0.05)" rx="3"/>
+      <text x="${cx}" y="11" text-anchor="middle" font-size="9" font-weight="700" fill="#e2001a" font-family="Poppins,sans-serif">✗</text>`;
+    labels += `<text x="${cx}" y="${H + 12}" text-anchor="middle" font-size="8" font-weight="${isMiss?'700':'400'}" fill="${isMiss?'#e2001a':'#6b8299'}" font-family="Poppins,sans-serif">${i+1}</text>`;
+    hits += `<rect x="${PAD + i*slot}" y="0" width="${slot}" height="${H+14}" fill="transparent" style="cursor:pointer;" onclick="sbRVShowDetail(${ai},${ti},${i})"/>`;
+  });
+  // Kategorie-Linien mit leichtem Versatz (Reihenfolge wie Legende); Lücken = nicht bewertet
+  let catLines = '', catDots = '';
+  FS_RV_CHART_CATS.forEach(([c, col], k) => {
+    const dy = (k - 1.5) * 2.6;
+    const pts = [];
+    g.attempts.forEach((a, i) => {
       const v = SCORE[a[c]];
       if (v === undefined) return;
-      const h = Math.max(4, v/100 * (H - 8));
-      bars += `<rect x="${gx + k*(catW+catGap)}" y="${(H-h).toFixed(1)}" width="${catW}" height="${h.toFixed(1)}" rx="1.5" fill="${col}"/>`;
+      pts.push([PAD + i*slot + slot/2, (yOf(v) + dy).toFixed(1)]);
     });
-    labels += `<text x="${gx + groupW/2}" y="${H + 12}" text-anchor="middle" font-size="8" font-weight="${isMiss?'700':'400'}" fill="${isMiss?'#e2001a':'#6b8299'}" font-family="Poppins,sans-serif">${i+1}</text>`;
-    hits += `<rect x="${gx-3}" y="0" width="${slot}" height="${H+14}" fill="transparent" style="cursor:pointer;" onclick="sbRVShowDetail(${ai},${ti},${i})"/>`;
+    if (!pts.length) return;
+    if (pts.length > 1) catLines += `<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="1.8" opacity="0.85"/>`;
+    pts.forEach(p => { catDots += `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="${col}"/>`; });
   });
   const w = PAD + Math.max(n*slot, 40);
   const axisTitle = `<text x="${PAD + (w-PAD)/2}" y="${H + 24}" text-anchor="middle" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
-  const lineDots = pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#e8edf2" stroke="#0c1a2b" stroke-width="1"/>`).join('');
-  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+28}" style="display:block;">${grid}${marks}${bars}
-    ${n>1?`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#e8edf2" stroke-width="2"/>`:''}
-    ${lineDots}
-    <rect id="sbrv-sel-${ai}-${ti}" x="0" y="1" width="${groupW+6}" height="${H+18}" fill="none" stroke="#39c3d4" stroke-width="1.5" rx="4" style="display:none;"/>
+  const qoeDots = qoePts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#e8edf2" stroke="#0c1a2b" stroke-width="1"/>`).join('');
+  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+28}" style="display:block;">${grid}${marks}${catLines}${catDots}
+    ${n>1?`<polyline points="${qoePts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#e8edf2" stroke-width="2"/>`:''}
+    ${qoeDots}
+    <rect id="sbrv-sel-${ai}-${ti}" x="0" y="1" width="${slot}" height="${H+18}" fill="none" stroke="#39c3d4" stroke-width="1.5" rx="4" style="display:none;"/>
     ${labels}${axisTitle}${hits}
   </svg></div>`;
 }
@@ -11250,8 +11257,8 @@ function sbRVShowDetail(ai, ti, i) {
   // Ausgewählten Versuch im Chart markieren (Konstanten identisch zu fsTrickChartSvg)
   const selRect = document.getElementById(`sbrv-sel-${ai}-${ti}`);
   if (selRect) {
-    const PAD = 30, groupW = 4*6 + 3*1, slot = groupW + 10;
-    selRect.setAttribute('x', PAD + i*slot - 3);
+    const PAD = 34, slot = g.attempts.length > 14 ? 26 : 34;
+    selRect.setAttribute('x', PAD + i*slot);
     selRect.style.display = '';
   }
   if (_sbRVEdit && _sbRVEdit.ai === ai && _sbRVEdit.ti === ti && _sbRVEdit.i === i) {
@@ -11449,7 +11456,7 @@ function fsReportInnerHtml(report) {
 
   return `<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">${typeShort}${report.location ? ' · '+report.location : ''}${report.duration_min ? ' · '+report.duration_min+' min' : ''}</div>
     <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:14px;">
-      <span>Bars per attempt (height = rating 0/50/100%):</span>
+      <span>Category lines (0/50/100% per rating):</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#39c3d4;border-radius:2px;vertical-align:-1px;"></span> Take-off</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Trick</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#a78bfa;border-radius:2px;vertical-align:-1px;"></span> Grab</span>
