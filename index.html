@@ -11216,7 +11216,8 @@ function fsTrickChartSvg(g, ai, ti) {
     const gx = PAD + i*slot;
     pts.push([gx + groupW/2, yOf(qoeSum/(i+1)).toFixed(1)]);
     const isMiss = a.result === 'miss';
-    if (isMiss) marks += `<rect x="${gx-3}" y="2" width="${groupW+6}" height="${H-2}" fill="rgba(226,0,26,0.12)" rx="3"/>`;
+    if (isMiss) marks += `<rect x="${gx-3}" y="2" width="${groupW+6}" height="${H-2}" fill="rgba(226,0,26,0.05)" rx="3"/>
+      <text x="${gx + groupW/2}" y="11" text-anchor="middle" font-size="9" font-weight="700" fill="#e2001a" font-family="Poppins,sans-serif">✗</text>`;
     FS_RV_CHART_CATS.forEach(([c, col], k) => {
       const v = SCORE[a[c]];
       if (v === undefined) return;
@@ -11228,8 +11229,11 @@ function fsTrickChartSvg(g, ai, ti) {
   });
   const w = PAD + Math.max(n*slot, 40);
   const axisTitle = `<text x="${PAD + (w-PAD)/2}" y="${H + 24}" text-anchor="middle" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
+  const lineDots = pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2" fill="#9aa8b8" opacity="0.9"/>`).join('');
   return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+28}" style="display:block;">${grid}${marks}${bars}
     ${n>1?`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#9aa8b8" stroke-width="1.5" opacity="0.75"/>`:''}
+    ${lineDots}
+    <rect id="sbrv-sel-${ai}-${ti}" x="0" y="1" width="${groupW+6}" height="${H+18}" fill="none" stroke="#39c3d4" stroke-width="1.5" rx="4" style="display:none;"/>
     ${labels}${axisTitle}${hits}
   </svg></div>`;
 }
@@ -11243,6 +11247,13 @@ function sbRVShowDetail(ai, ti, i) {
   const a = g.attempts[i];
   const el = document.getElementById(`sbrv-det-${ai}-${ti}`);
   if (!el || !a) return;
+  // Ausgewählten Versuch im Chart markieren (Konstanten identisch zu fsTrickChartSvg)
+  const selRect = document.getElementById(`sbrv-sel-${ai}-${ti}`);
+  if (selRect) {
+    const PAD = 30, groupW = 4*6 + 3*1, slot = groupW + 10;
+    selRect.setAttribute('x', PAD + i*slot - 3);
+    selRect.style.display = '';
+  }
   if (_sbRVEdit && _sbRVEdit.ai === ai && _sbRVEdit.ti === ti && _sbRVEdit.i === i) {
     const seg = (cat, label) => {
       const cur = _sbRVEditCats[cat];
