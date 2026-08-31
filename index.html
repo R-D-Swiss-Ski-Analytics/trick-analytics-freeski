@@ -1200,9 +1200,9 @@ function showOtpGate(email) {
   gate.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;';
   gate.innerHTML = `<form id="otp-form" style="width:100%;max-width:360px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;">
     <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:2px;">${CFG.title}</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">We sent a 6-digit code to<br><b>${email}</b> — enter it below.</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">We sent a code to<br><b>${email}</b> — enter it below.</div>
     <label style="display:block;margin-bottom:4px;">Code</label>
-    <input type="text" id="otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required style="margin-bottom:6px;text-align:center;font-size:20px;letter-spacing:6px;">
+    <input type="text" id="otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required style="margin-bottom:6px;text-align:center;font-size:20px;letter-spacing:4px;">
     <div id="otp-err" style="min-height:16px;font-size:11px;color:#e2001a;margin-bottom:10px;"></div>
     <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Verify code</button>
     <div style="text-align:center;margin-top:12px;"><a href="#" onclick="showAuthGate();return false;" style="font-size:11px;color:var(--muted);">Back to login</a></div>
