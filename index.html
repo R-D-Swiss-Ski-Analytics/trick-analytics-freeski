@@ -3894,7 +3894,7 @@ function sbGroupAttempts(attempts) {
 
 function sbTrickChartSvg(g, ai, ti) {
   const n = g.attempts.length;
-  const H = 90, TOP = 12, PADL = 26, PADR = 34, barW = n > 14 ? 14 : 22, gap = n > 14 ? 5 : 8;
+  const H = 90, TOP = 12, PADL = 26, PADR = 6, barW = n > 14 ? 14 : 22, gap = n > 14 ? 5 : 8;
   const PH = H - TOP;
   const chartW = n*(barW+gap);
   let grid = '';
@@ -3903,10 +3903,6 @@ function sbTrickChartSvg(g, ai, ti) {
     const y = H - s/5*PH;
     grid += `<line x1="${PADL}" y1="${y.toFixed(1)}" x2="${PADL + chartW}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1" ${s ? 'stroke-dasharray="2 4"' : ''}/>`;
     grid += `<text x="${PADL - 4}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${s}★</text>`;
-  });
-  [0, 50, 100].forEach(p => {
-    const y = H - p/100*PH;
-    grid += `<text x="${PADL + chartW + 4}" y="${(y + 3).toFixed(1)}" text-anchor="start" font-size="8" fill="#9aa8b8" font-family="Poppins,sans-serif">${p}%</text>`;
   });
   let stompCum = 0;
   const pts = [];
@@ -4209,7 +4205,7 @@ ${report.comments ? `<div style="background:var(--surface2);border-left:3px soli
     <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:14px;">
       <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Landed/Stomped (height = stars)</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#e2001a;border-radius:2px;vertical-align:-1px;"></span> Failed</span>
-      <span><span style="display:inline-block;width:14px;height:2px;background:#9aa8b8;vertical-align:3px;"></span> running stomp rate</span>
+      <span><span style="display:inline-block;width:14px;height:2px;background:#9aa8b8;vertical-align:3px;"></span> running stomp rate (0–100%)</span>
     </div>
     ${sections}`;
 }
