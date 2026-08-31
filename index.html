@@ -11229,9 +11229,9 @@ function fsTrickChartSvg(g, ai, ti) {
   });
   const w = PAD + Math.max(n*slot, 40);
   const axisTitle = `<text x="${PAD + (w-PAD)/2}" y="${H + 24}" text-anchor="middle" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
-  const lineDots = pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2" fill="#9aa8b8" opacity="0.9"/>`).join('');
+  const lineDots = pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#e8edf2" stroke="#0c1a2b" stroke-width="1"/>`).join('');
   return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+28}" style="display:block;">${grid}${marks}${bars}
-    ${n>1?`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#9aa8b8" stroke-width="1.5" opacity="0.75"/>`:''}
+    ${n>1?`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#e8edf2" stroke-width="2"/>`:''}
     ${lineDots}
     <rect id="sbrv-sel-${ai}-${ti}" x="0" y="1" width="${groupW+6}" height="${H+18}" fill="none" stroke="#39c3d4" stroke-width="1.5" rx="4" style="display:none;"/>
     ${labels}${axisTitle}${hits}
@@ -11454,8 +11454,8 @@ function fsReportInnerHtml(report) {
       <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Trick</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#a78bfa;border-radius:2px;vertical-align:-1px;"></span> Grab</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#34d399;border-radius:2px;vertical-align:-1px;"></span> Landing</span>
-      <span><span style="display:inline-block;width:14px;height:2px;background:#9aa8b8;vertical-align:3px;"></span> running Ø QoE</span>
-      <span><b style="color:#e2001a;">Red band/number</b> = Miss</span>
+      <span><span style="display:inline-block;width:14px;height:2px;background:#e8edf2;vertical-align:3px;"></span> running Ø QoE</span>
+      <span><b style="color:#e2001a;">✗ / red number</b> = Miss</span>
     </div>
     ${sections}`;
 }
