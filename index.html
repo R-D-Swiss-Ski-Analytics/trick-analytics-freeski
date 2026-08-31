@@ -1122,7 +1122,7 @@ function showAuthGate(msg) {
     <input type="password" id="auth-pass" autocomplete="current-password" required style="margin-bottom:6px;">
     <div id="auth-err" style="min-height:16px;font-size:11px;color:#e2001a;margin-bottom:10px;">${msg||''}</div>
     <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Sign in</button>
-    <div style="text-align:center;margin-top:12px;"><a href="#" onclick="authForgotPassword();return false;" style="font-size:11px;color:var(--muted);">Forgot password?</a></div>
+    <div style="text-align:center;margin-top:12px;"><a href="#" onclick="authForgotPassword();return false;" style="font-size:11px;color:var(--muted);">Forgot password?</a> <span style="font-size:11px;color:var(--muted);">·</span> <a href="#" onclick="authHaveCode();return false;" style="font-size:11px;color:var(--muted);">Have a code?</a></div>
   </form>`;
   document.body.appendChild(gate);
   document.getElementById('auth-form').addEventListener('submit', async e => {
@@ -1190,6 +1190,14 @@ async function authForgotPassword() {
     err.textContent = 'Error: ' + error.message;
     return;
   }
+  showOtpGate(email);
+}
+
+// Code-Eingabe öffnen ohne neue Mail auszulösen (Mail-Stundenlimit, verspätete Mail)
+function authHaveCode() {
+  const email = (document.getElementById('auth-email')?.value || '').trim();
+  const err = document.getElementById('auth-err');
+  if (!email) { err.textContent = 'Enter your e-mail above first, then tap the link again.'; return; }
   showOtpGate(email);
 }
 
