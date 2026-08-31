@@ -6763,6 +6763,7 @@ function sbMonTimeChart(rows) {
 // «Current status» = neuester Kommentar (V1); LLM-Synthese via Edge Function ist Phase 2.
 let _monTimeBy = {};
 let _monCmts = [];
+let _monStatus = null;   // KI-Status aus trick_status (Edge Function), null = keiner
 let _monCmtHistOpen = false;
 const MON_PLATEAU_TOL = 5; // Prozentpunkte über 3 Sessions — offener Parameter, an echten Daten testen
 
@@ -6856,6 +6857,7 @@ function sbMonCoachingHtml(rows) {
     <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;">
         <span style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:600;">Coach comment · Current status</span>
+        <span id="mon-cmt-ai-tag" style="font-size:10px;color:#4a7dd6;font-weight:600;display:none;">AI summary</span>
         <a href="#" id="mon-cmt-hist-link" onclick="sbMonToggleHistory();return false;" style="font-size:11px;color:#39c3d4;display:none;">History</a>
       </div>
       <div id="mon-cmt-status" style="font-size:13px;color:var(--text);min-height:18px;">Loading…</div>
@@ -6961,6 +6963,12 @@ async function sbMonLoadComments() {
     return;
   }
   _monCmts = data || [];
+  _monStatus = null;
+  try {
+    const {data: st} = await db.from('trick_status').select('status_text,updated_at')
+      .eq('athlet', sbMonView.athlete).eq('trick', sbMonView.trick).maybeSingle();
+    if (st && st.status_text) _monStatus = st;
+  } catch (e) { /* Tabelle/Function noch nicht eingerichtet → neuester Kommentar */ }
   sbMonRenderComments();
 }
 
@@ -6971,9 +6979,16 @@ function sbMonRenderComments() {
   if (!st) return;
   const fmt = d => { if (!d) return ''; const p = String(d).split('-'); return p.length===3 ? p[2]+'.'+p[1]+'.'+p[0].slice(2) : d; };
   const cur = _monCmts[0];
-  st.innerHTML = cur
-    ? `${cur.kommentar} <span style="color:var(--muted);font-size:11px;">(${fmt(cur.datum)})</span>`
-    : '<span style="color:var(--muted);">No comments yet.</span>';
+  const aiTag = document.getElementById('mon-cmt-ai-tag');
+  if (_monStatus) {
+    st.innerHTML = `${_monStatus.status_text} <span style="color:var(--muted);font-size:11px;">(${fmt(String(_monStatus.updated_at).slice(0,10))})</span>`;
+    if (aiTag) aiTag.style.display = '';
+  } else {
+    st.innerHTML = cur
+      ? `${cur.kommentar} <span style="color:var(--muted);font-size:11px;">(${fmt(cur.datum)})</span>`
+      : '<span style="color:var(--muted);">No comments yet.</span>';
+    if (aiTag) aiTag.style.display = 'none';
+  }
   if (link) {
     link.style.display = _monCmts.length ? '' : 'none';
     link.textContent = (_monCmtHistOpen ? 'Hide history' : 'History') + ` (${_monCmts.length})`;
@@ -7002,6 +7017,12 @@ async function sbMonSaveComment() {
   inp.value = '';
   showToast('Comment saved', 'success');
   sbMonLoadComments();
+  // KI-Zusammenfassung im Hintergrund aktualisieren (Edge Function; fehlt sie, bleibt der neueste Kommentar stehen)
+  try {
+    db.functions.invoke('trick-status', {body: {athlet: sbMonView.athlete, trick: sbMonView.trick}})
+      .then(res => { if (res && !res.error) sbMonLoadComments(); })
+      .catch(() => {});
+  } catch (e) { /* functions-API nicht verfügbar */ }
 }
 
 const fragments = {
