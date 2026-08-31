@@ -3894,17 +3894,18 @@ function sbGroupAttempts(attempts) {
 
 function sbTrickChartSvg(g, ai, ti) {
   const n = g.attempts.length;
-  const H = 90, PADL = 26, PADR = 34, barW = n > 14 ? 14 : 22, gap = n > 14 ? 5 : 8;
+  const H = 90, TOP = 12, PADL = 26, PADR = 34, barW = n > 14 ? 14 : 22, gap = n > 14 ? 5 : 8;
+  const PH = H - TOP;
   const chartW = n*(barW+gap);
   let grid = '';
   // Linke Achse: Sterne (Balkenhöhe), rechte Achse: % (laufende Stomp-Rate-Linie)
   [0, 3, 5].forEach(s => {
-    const y = H - s/5*H;
+    const y = H - s/5*PH;
     grid += `<line x1="${PADL}" y1="${y.toFixed(1)}" x2="${PADL + chartW}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1" ${s ? 'stroke-dasharray="2 4"' : ''}/>`;
     grid += `<text x="${PADL - 4}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${s}★</text>`;
   });
   [0, 50, 100].forEach(p => {
-    const y = H - p/100*H*0.96;
+    const y = H - p/100*PH;
     grid += `<text x="${PADL + chartW + 4}" y="${(y + 3).toFixed(1)}" text-anchor="start" font-size="8" fill="#9aa8b8" font-family="Poppins,sans-serif">${p}%</text>`;
   });
   let stompCum = 0;
@@ -3915,12 +3916,12 @@ function sbTrickChartSvg(g, ai, ti) {
     pts.push(stompCum / (i+1));
     const isFail = a.outcome === 'failed';
     const st = typeof a.sterne === 'number' ? a.sterne : (a.outcome==='stomped' ? 5 : 3);
-    const h = isFail ? 6 : Math.max(12, st/5*H);
+    const h = isFail ? 6 : Math.max(12, st/5*PH);
     const x = PADL + i*(barW+gap);
     labels += `<text x="${x + barW/2}" y="${H + 12}" text-anchor="middle" font-size="8" font-weight="${isFail?'700':'400'}" fill="${isFail?'#e2001a':'#6b8299'}" font-family="Poppins,sans-serif">${i+1}</text>`;
     return `<rect x="${x}" y="${H-h}" width="${barW}" height="${h}" rx="3" fill="${isFail?'#e2001a':'#4a7dd6'}" style="cursor:pointer;" onclick="sbRVShowDetail(${ai},${ti},${i})"/>`;
   }).join('');
-  const line = pts.map((p,i) => `${PADL + i*(barW+gap)+barW/2},${(H - p*H*0.96).toFixed(1)}`).join(' ');
+  const line = pts.map((p,i) => `${PADL + i*(barW+gap)+barW/2},${(H - p*PH).toFixed(1)}`).join(' ');
   const w = PADL + Math.max(chartW, 40) + PADR;
   const axisTitle = `<text x="${PADL + chartW/2}" y="${H + 24}" text-anchor="middle" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
   return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+28}" style="display:block;">${grid}${bars}
