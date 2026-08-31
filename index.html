@@ -3894,22 +3894,38 @@ function sbGroupAttempts(attempts) {
 
 function sbTrickChartSvg(g, ai, ti) {
   const n = g.attempts.length;
-  const H = 90, barW = n > 14 ? 14 : 22, gap = n > 14 ? 5 : 8;
+  const H = 90, PADL = 26, PADR = 34, barW = n > 14 ? 14 : 22, gap = n > 14 ? 5 : 8;
+  const chartW = n*(barW+gap);
+  let grid = '';
+  // Linke Achse: Sterne (Balkenhöhe), rechte Achse: % (laufende Stomp-Rate-Linie)
+  [0, 3, 5].forEach(s => {
+    const y = H - s/5*H;
+    grid += `<line x1="${PADL}" y1="${y.toFixed(1)}" x2="${PADL + chartW}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1" ${s ? 'stroke-dasharray="2 4"' : ''}/>`;
+    grid += `<text x="${PADL - 4}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${s}★</text>`;
+  });
+  [0, 50, 100].forEach(p => {
+    const y = H - p/100*H*0.96;
+    grid += `<text x="${PADL + chartW + 4}" y="${(y + 3).toFixed(1)}" text-anchor="start" font-size="8" fill="#9aa8b8" font-family="Poppins,sans-serif">${p}%</text>`;
+  });
   let stompCum = 0;
   const pts = [];
+  let labels = '';
   const bars = g.attempts.map((a, i) => {
     if (a.outcome === 'stomped') stompCum++;
     pts.push(stompCum / (i+1));
     const isFail = a.outcome === 'failed';
     const st = typeof a.sterne === 'number' ? a.sterne : (a.outcome==='stomped' ? 5 : 3);
     const h = isFail ? 6 : Math.max(12, st/5*H);
-    const x = i*(barW+gap);
+    const x = PADL + i*(barW+gap);
+    labels += `<text x="${x + barW/2}" y="${H + 12}" text-anchor="middle" font-size="8" font-weight="${isFail?'700':'400'}" fill="${isFail?'#e2001a':'#6b8299'}" font-family="Poppins,sans-serif">${i+1}</text>`;
     return `<rect x="${x}" y="${H-h}" width="${barW}" height="${h}" rx="3" fill="${isFail?'#e2001a':'#4a7dd6'}" style="cursor:pointer;" onclick="sbRVShowDetail(${ai},${ti},${i})"/>`;
   }).join('');
-  const line = pts.map((p,i) => `${i*(barW+gap)+barW/2},${(H - p*H*0.96).toFixed(1)}`).join(' ');
-  const w = Math.max(n*(barW+gap), 40);
-  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+4}" style="display:block;">${bars}
+  const line = pts.map((p,i) => `${PADL + i*(barW+gap)+barW/2},${(H - p*H*0.96).toFixed(1)}`).join(' ');
+  const w = PADL + Math.max(chartW, 40) + PADR;
+  const axisTitle = `<text x="${PADL + chartW/2}" y="${H + 24}" text-anchor="middle" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
+  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+28}" style="display:block;">${grid}${bars}
     ${n>1?`<polyline points="${line}" fill="none" stroke="#9aa8b8" stroke-width="1.5" opacity="0.75"/>`:''}
+    ${labels}${axisTitle}
   </svg></div>`;
 }
 
@@ -4323,10 +4339,10 @@ async function sbOpenReportInline(i) {
   if (!report) return;
   _sbRepSelIdx = i;
   _sbRVEdit = null;
-  // Older reports lack per-attempt dbIds — rebuild once so edits hit the right DB rows
-  const needIds = report.id && Array.isArray(report.trick_data)
-    && report.trick_data.some(a => Array.isArray(a.attempts) && a.attempts.length && a.attempts.some(x => !x.dbId));
-  if (needIds) {
+  // Ältere Reports ohne attempts (oder ohne dbIds) — einmalig aus der tricks-Tabelle rekonstruieren
+  const hasAttempts = Array.isArray(report.trick_data) && report.trick_data.some(a => Array.isArray(a.attempts) && a.attempts.length);
+  const missingIds = hasAttempts && report.trick_data.some(a => Array.isArray(a.attempts) && a.attempts.some(x => !x.dbId));
+  if (report.id && (!hasAttempts || missingIds)) {
     await rebuildReportFromTimestamps(report.id, true);
     report = _sbRepList[i];
   }
@@ -6697,8 +6713,15 @@ function sbMonTimeChart(rows) {
   rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
   const dates = Object.keys(by).sort().slice(-12);
   if (!dates.length) return '<div style="color:var(--muted);font-size:12px;">No data.</div>';
-  const H = 110, slot = 46, barW = 26;
+  const H = 110, slot = 46, barW = 26, PAD = 34;
   const maxN = Math.max(...dates.map(d => by[d].length));
+  const chartW = dates.length * slot;
+  const yOf = p => H - p/100 * (H - 12);
+  let grid = '';
+  [0, 25, 50, 75, 100].forEach(p => {
+    grid += `<line x1="${PAD}" y1="${yOf(p).toFixed(1)}" x2="${PAD + chartW}" y2="${yOf(p).toFixed(1)}" stroke="var(--border)" stroke-width="1" ${p ? 'stroke-dasharray="2 4"' : ''}/>`;
+    grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
+  });
   const sPts = [], stPts = [];
   let bars = '', labels = '';
   dates.forEach((d, i) => {
@@ -6706,20 +6729,24 @@ function sbMonTimeChart(rows) {
     const succ = rs.filter(x => sbMonOutcome(x) !== 'failed').length / nn;
     const st = rs.filter(x => sbMonOutcome(x) === 'stomped').length / nn;
     const h = Math.max(6, nn / maxN * (H - 12));
-    const x = i * slot + (slot - barW) / 2;
-    sPts.push([i * slot + slot/2, (H - succ * (H - 12)).toFixed(1)]);
-    stPts.push([i * slot + slot/2, (H - st * (H - 12)).toFixed(1)]);
+    const x = PAD + i * slot + (slot - barW) / 2;
+    const cx = PAD + i * slot + slot/2;
+    sPts.push([cx, (H - succ * (H - 12)).toFixed(1)]);
+    stPts.push([cx, (H - st * (H - 12)).toFixed(1)]);
     bars += `<rect x="${x}" y="${(H - h).toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" rx="3" fill="#4a7dd6" opacity="${(0.35 + 0.65 * nn / maxN).toFixed(2)}"/>`;
+    bars += `<text x="${cx}" y="${(H - h - 3).toFixed(1)}" text-anchor="middle" font-size="8" fill="#4a7dd6" font-family="Poppins,sans-serif">${nn}</text>`;
     const lbl = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' : d;
-    labels += `<text x="${i * slot + slot/2}" y="${H + 15}" text-anchor="middle" font-size="9" fill="${nn < 5 ? '#f59e0b' : '#6b8299'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
+    labels += `<text x="${cx}" y="${H + 15}" text-anchor="middle" font-size="9" fill="${nn < 5 ? '#f59e0b' : '#6b8299'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
   });
   const line = pts => pts.map(p => p.join(',')).join(' ');
-  const w = dates.length * slot;
-  return `<div style="overflow-x:auto;"><svg width="${w}" height="${H + 22}" style="display:block;">
+  const axisTitle = `<text x="${PAD + chartW/2}" y="${H + 30}" text-anchor="middle" font-size="9" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Sessions</text>`;
+  return `<div style="overflow-x:auto;"><svg width="${PAD + chartW}" height="${H + 36}" style="display:block;">
+    ${grid}
     ${bars}
     ${dates.length > 1 ? `<polyline points="${line(sPts)}" fill="none" stroke="#34d399" stroke-width="2"/>
     <polyline points="${line(stPts)}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 3"/>` : ''}
     ${labels}
+    ${axisTitle}
   </svg></div>`;
 }
 
