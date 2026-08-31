@@ -10513,6 +10513,17 @@ const FS_MON_STATUS = {
 const FS_MON_DIR_COLORS = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b','Other':'#6b8299'};
 const FS_MON_DIRS = ['Left','Right','Switch Left','Switch Right','Other'];
 const FS_MON_CATS = [['Takeoff','Take-off'],['Trick','Trick'],['Grab','Grab'],['Landing','Landing']];
+const FS_MON_CAT_COLORS = {'Takeoff':'#39c3d4','Trick':'#4a7dd6','Grab':'#a78bfa','Landing':'#34d399'};
+
+// Ø einer Kategorie (0–100) über Zeilen; null, wenn nie bewertet
+function fsMonCatAvg(rows, key) {
+  const catScore = {perfect:100, okay:50, miss:0};
+  const vals = rows.map(t => {
+    const m = (t.kommentar || '').match(new RegExp(key + ':(\\w+)'));
+    return m && catScore[m[1]] !== undefined ? catScore[m[1]] : null;
+  }).filter(v => v !== null);
+  return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
+}
 const FS_TYPE_FILTERS = [['','All'],['Landing Bag','Bag'],['Jump On-Snow','On-Snow'],['Big Air Competition','Comp']];
 
 function fsTypeChipsHtml(current, handler) {
@@ -10885,14 +10896,9 @@ function renderMonTrick() {
   const qoeCol = q => q >= 70 ? '#34d399' : q >= 50 ? '#f59e0b' : '#e2001a';
 
   // Kategorie-Qualität aus den Teilbewertungen im kommentar (Miss 0% · Okay 50% · Perfect 100%)
-  const catScore = {perfect:100, okay:50, miss:0};
   const catChips = FS_MON_CATS.map(([key, label]) => {
-    const vals = rows.map(t => {
-      const m = (t.kommentar || '').match(new RegExp(key + ':(\\w+)'));
-      return m && catScore[m[1]] !== undefined ? catScore[m[1]] : null;
-    }).filter(v => v !== null);
-    if (!vals.length) return '';
-    const pct = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+    const pct = fsMonCatAvg(rows, key);
+    if (pct === null) return '';
     return `<span style="border:1px solid ${qoeCol(pct)};color:${qoeCol(pct)};border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;">${label} ${pct}%</span>`;
   }).filter(Boolean).join(' ')
     || `<span style="font-size:11px;color:var(--muted);">No category ratings yet — fills up with new session logs</span>`;
@@ -10933,7 +10939,46 @@ function renderMonTrick() {
       ${sbMonTimeChart(rows)}
       <div style="font-size:10px;color:var(--muted);margin-top:8px;">⚠ Sessions with fewer than 5 attempts — rates are statistically weak.</div>
     </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Category quality over sessions</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:8px;">
+        ${FS_MON_CATS.map(([key, label]) => `<span><span style="display:inline-block;width:14px;height:2px;background:${FS_MON_CAT_COLORS[key]};vertical-align:3px;"></span> ${label}</span>`).join('')}
+      </div>
+      ${fsMonCatChart(rows)}
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;">Ø per session and category (Miss 0% · Okay 50% · Perfect 100%). Gaps = category not rated in that session.</div>
+    </div>
   </div>`;
+}
+
+// Vier Kategorie-Linien (Ø pro Session), gleiche Zeitachse wie sbMonTimeChart
+function fsMonCatChart(rows) {
+  const by = {};
+  rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
+  const dates = Object.keys(by).sort().slice(-12);
+  if (!dates.length) return '<div style="color:var(--muted);font-size:12px;">No data.</div>';
+  const H = 110, slot = 46;
+  let lines = '', dots = '', labels = '', grid = '';
+  [25, 50, 75].forEach(p => {
+    const y = (H - p/100 * (H - 12)).toFixed(1);
+    grid += `<line x1="0" y1="${y}" x2="${dates.length * slot}" y2="${y}" stroke="var(--border)" stroke-width="1" stroke-dasharray="2 4"/>`;
+  });
+  FS_MON_CATS.forEach(([key]) => {
+    const pts = [];
+    dates.forEach((d, i) => {
+      const v = fsMonCatAvg(by[d], key);
+      if (v !== null) pts.push([i * slot + slot/2, (H - v/100 * (H - 12)).toFixed(1)]);
+    });
+    if (!pts.length) return;
+    const col = FS_MON_CAT_COLORS[key];
+    if (pts.length > 1) lines += `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="2" opacity="0.9"/>`;
+    pts.forEach(p => { dots += `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="${col}"/>`; });
+  });
+  dates.forEach((d, i) => {
+    const nn = by[d].length;
+    const lbl = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' : d;
+    labels += `<text x="${i * slot + slot/2}" y="${H + 15}" text-anchor="middle" font-size="9" fill="${nn < 5 ? '#f59e0b' : '#6b8299'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
+  });
+  return `<div style="overflow-x:auto;"><svg width="${dates.length * slot}" height="${H + 22}" style="display:block;">${grid}${lines}${dots}${labels}</svg></div>`;
 }
 
 function sbMonTimeChart(rows) {
