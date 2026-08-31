@@ -9020,6 +9020,11 @@ async function loadStandort() {
 function renderSbDirRadar() {
   const wrap = document.getElementById('sb-dir-radar-wrap');
   if (!wrap) return;
+  // Auf Emilies Wunsch (31.8.2026): Direction-Balance-Radar + Session-Balken
+  // im Freeski-Assessment ausgeblendet (Monitoring deckt das ab).
+  wrap.style.display = 'none';
+  wrap.innerHTML = '';
+  return;
 
   const mastered = sbData.filter(e => e.status === 'mastered');
   const goals    = sbData.filter(e => e.status === 'goal');
