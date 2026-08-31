@@ -15,7 +15,7 @@
   :root {
     --bg: #060f1a; --surface: #0c1a2b; --surface2: #112236;
     --border: #1a3450; --accent: #ffffff; --accent2: #39c3d4;
-    --text: #e8edf2; --muted: #6b8299; --success: #2d8a4e; --danger: #e2001a;
+    --text: #e8edf2; --muted: #6b8299; --success: #34d399; --danger: #e2001a;
     --warn: #f59e0b;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -129,7 +129,7 @@
   .nb-cat-Mindset    { background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid #f59e0b; }
   .nb-cat-Behaviour   { background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid #a78bfa; }
   
-  .nb-cat-Competition { background:rgba(45,138,78,0.15);color:#2d8a4e;border:1px solid #2d8a4e; }
+  .nb-cat-Competition { background:rgba(52,211,153,0.15);color:#34d399;border:1px solid #34d399; }
   .nb-cat-General     { background:rgba(107,130,153,0.15);color:#6b8299;border:1px solid #6b8299; }
   .sess-type-btn { padding:10px 18px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s; }
   .sess-type-btn.active { background:rgba(57,195,212,0.15);border-color:#39c3d4;color:#39c3d4; }
@@ -147,13 +147,13 @@
     font-family: 'Poppins', sans-serif; font-size: 15px; letter-spacing: 0.5px;
     padding: 10px 14px; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 8px;
   }
-  .sb-col-header.mastered { background: rgba(45,138,78,0.15); color: #2d8a4e; border: 1px solid #2d8a4e; border-bottom: none; }
+  .sb-col-header.mastered { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid #34d399; border-bottom: none; }
   .sb-col-header.goal       { background: #1a1a05; color: #f59e0b; border: 1px solid #f59e0b; border-bottom: none; }
   .sb-col-body {
     border-radius: 0 0 8px 8px; min-height: 80px;
     border: 1px solid var(--border); background: var(--surface2);
   }
-  .sb-col-body.mastered { border-color: #2d8a4e; }
+  .sb-col-body.mastered { border-color: #34d399; }
   .sb-col-body.goal       { border-color: #f59e0b; }
 
   .sb-trick-row {
@@ -183,7 +183,7 @@
   /* Entry form — reuses same fields as Erfassen */
   .sb-form-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
   .btn-mastered {
-    background: linear-gradient(135deg, #1a5c38, #2d8a4e); color: white; border: none;
+    background: linear-gradient(135deg, #1a5c38, #34d399); color: white; border: none;
     border-radius: 8px; padding: 13px; font-family: 'Poppins', sans-serif;
     font-size: 18px; letter-spacing: 0.5px; cursor: pointer; transition: opacity .2s;
   }
@@ -502,7 +502,7 @@ body.sport-snowboard textarea, body.sport-freeski textarea { font-family: 'Poppi
       <div style="display:flex;gap:10px;">
         <button onclick="addAthleteToSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">+ Add Athlete</button>
         <button onclick="cancelSession()" style="padding:9px 16px;background:none;border:1px solid #e2001a;border-radius:8px;color:#e2001a;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✕ Cancel</button>
-        <button onclick="endSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✓ End Session</button>
+        <button onclick="endSession()" style="padding:9px 18px;background:#34d399;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✓ End Session</button>
       </div>
     </div>
 
@@ -1082,10 +1082,10 @@ const SPORT_CONFIGS = {
 };
 const CFG = SPORT_CONFIGS[SPORT];
 // Snowboard uses the refreshed mint green; Freeski keeps the classic palette
-const UI_GREEN      = SPORT === 'snowboard' ? '#34d399' : '#2d8a4e';
+const UI_GREEN      = '#34d399';  // seit 31.8.2026 beide Sportarten Mint
 const UI_GREEN_TEXT = SPORT === 'snowboard' ? '#34d399' : '#4ade80';
-const UI_GREEN_BG25 = SPORT === 'snowboard' ? 'rgba(52,211,153,0.25)' : 'rgba(45,138,78,0.25)';
-const UI_GREEN_BG20 = SPORT === 'snowboard' ? 'rgba(52,211,153,0.2)'  : 'rgba(45,138,78,0.2)';
+const UI_GREEN_BG25 = SPORT === 'snowboard' ? 'rgba(52,211,153,0.25)' : 'rgba(52,211,153,0.25)';
+const UI_GREEN_BG20 = SPORT === 'snowboard' ? 'rgba(52,211,153,0.2)'  : 'rgba(52,211,153,0.2)';
 
 // ═══════════════ GEMEINSAMER KERN (identisch in beiden Apps) ═══════════════
 const SUPABASE_URL = CFG.supabaseUrl;
@@ -7310,7 +7310,7 @@ function renderSessionPerformance() {
 
   // Status basiert auf der Quality of Execution (Schnitt der bewerteten Kategorien)
   function status(qoe) {
-    if (qoe >= 70) return {icon:'🟢', label:'Ready', color:'#2d8a4e'};
+    if (qoe >= 70) return {icon:'🟢', label:'Ready', color:'#34d399'};
     if (qoe >= 50) return {icon:'🟡', label:'Developing', color:'#f59e0b'};
     return {icon:'🔴', label:'Not ready', color:'#e2001a'};
   }
@@ -7358,8 +7358,8 @@ function renderSessionPerformance() {
   // Sort athletes alphabetically (no ranking)
   const athList = Object.keys(athTricks).sort();
 
-  const bkg  = {'🟢':'rgba(45,138,78,0.12)','🟡':'rgba(245,158,11,0.1)','🔴':'rgba(226,0,26,0.08)'};
-  const brd  = {'🟢':'rgba(45,138,78,0.4)', '🟡':'rgba(245,158,11,0.4)','🔴':'rgba(226,0,26,0.3)'};
+  const bkg  = {'🟢':'rgba(52,211,153,0.12)','🟡':'rgba(245,158,11,0.1)','🔴':'rgba(226,0,26,0.08)'};
+  const brd  = {'🟢':'rgba(52,211,153,0.4)', '🟡':'rgba(245,158,11,0.4)','🔴':'rgba(226,0,26,0.3)'};
 
   el.innerHTML = `
     <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
@@ -7395,7 +7395,7 @@ function renderSessionPerformance() {
             ${entries.length ? entries.map(([trick, s]) => {
               const qoe      = avgOf(s.qoeVals);
               const st       = status(qoe);
-              const colFor   = v => v>=70?'#2d8a4e':v>=50?'#f59e0b':'#e2001a';
+              const colFor   = v => v>=70?'#34d399':v>=50?'#f59e0b':'#e2001a';
               return `<div style="background:${bkg[st.icon]};border:1px solid ${brd[st.icon]};border-radius:8px;padding:6px 10px;margin-bottom:5px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
                   <span style="font-size:12px;color:var(--text);flex:1;">${trick}</span>
@@ -7560,7 +7560,7 @@ async function realityCheck() {
                   <div style="font-size:12px;color:var(--text);font-weight:500;">${rcTrickDesc(f)}</div>
                   ${f.disziplin?`<div style="font-size:10px;color:var(--muted);margin-top:1px;">${f.disziplin}</div>`:''}
                 </div>
-                <span style="font-size:11px;color:${f.action.startsWith('upgrade')?'#2d8a4e':'#f59e0b'};white-space:nowrap;font-weight:600;">${f.action.startsWith('upgrade')?'↑':'↓'} ${f.reason}</span>
+                <span style="font-size:11px;color:${f.action.startsWith('upgrade')?'#34d399':'#f59e0b'};white-space:nowrap;font-weight:600;">${f.action.startsWith('upgrade')?'↑':'↓'} ${f.reason}</span>
               </div>`).join('')}
           </div>`).join('')}
       </div>
@@ -7994,7 +7994,7 @@ function openTeamPdfReport() {
     const sessRows = Object.entries(byTrick).sort((a,b)=>b[1].att-a[1].att).map(([trick,s]) => {
       const lp = qoeAvg(s.qoeVals) ?? 0;
       const typeStr = [...s.type].map(t=>({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[t]||t)).join(', ');
-      return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#2d8a4e':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:11px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
+      return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#34d399':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:11px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
     }).join('');
 
     // ── Assessment data ──
@@ -8004,10 +8004,10 @@ function openTeamPdfReport() {
       .filter(t => t.athlet===athlet && t.grab_status && typeof t.grab_status==='object')
       .map(e => Object.entries(e.grab_status)
         .filter(([,s2]) => s2===st)
-        .map(([g]) => `<tr><td>${e.trick_label||'—'} — ${g}</td><td>${e.disziplin||'—'}</td><td style="color:${st==='mastered'?'#2d8a4e':'#f59e0b'};font-weight:600">${st==='mastered'?'Mastered':'Goal'}</td></tr>`)
+        .map(([g]) => `<tr><td>${e.trick_label||'—'} — ${g}</td><td>${e.disziplin||'—'}</td><td style="color:${st==='mastered'?'#34d399':'#f59e0b'};font-weight:600">${st==='mastered'?'Learned':'Goal'}</td></tr>`)
         .join(''))
       .join('');
-    const mastRows = mastered.map(e=>`<tr><td>${e.trick_label||'—'}</td><td>${e.disziplin||'—'}</td><td style="color:#2d8a4e;font-weight:600">Mastered</td></tr>`).join('') + grabRowsFor('mastered');
+    const mastRows = mastered.map(e=>`<tr><td>${e.trick_label||'—'}</td><td>${e.disziplin||'—'}</td><td style="color:#34d399;font-weight:600">Learned</td></tr>`).join('') + grabRowsFor('mastered');
     const goalRows = goals.map(e=>`<tr><td>${e.trick_label||'—'}</td><td>${e.disziplin||'—'}</td><td style="color:#f59e0b;font-weight:600">Goal</td></tr>`).join('') + grabRowsFor('goal');
 
     return `<div class="ath-block">
@@ -8249,7 +8249,7 @@ function renderLiveSession() {
             <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">${label}</div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
               ${[['miss','✗ MISS','#e2001a','rgba(226,0,26,0.1)'],
-                 ['okay','✓ OKAY','#2d8a4e','rgba(45,138,78,0.1)'],
+                 ['okay','✓ OKAY','#34d399','rgba(52,211,153,0.1)'],
                  ['perfect','⭐ PERFECT','#39c3d4','rgba(57,195,212,0.1)']].map(([val,lbl,col,bg]) => {
                    const active = sessRatings[name]?.[cat] === val;
                    return `<button onclick="setSessRating('${name}','${cat}','${val}',this)"
@@ -8281,8 +8281,8 @@ function setSessRating(name, cat, val, btn) {
   sessRatings[name][cat] = val;
   // Update button styles inline
   const sid = name.replace(/\s/g,'_');
-  const colMap = {miss:'#e2001a', okay:'#2d8a4e', perfect:'#39c3d4'};
-  const bgMap = {miss:'rgba(226,0,26,0.1)', okay:'rgba(45,138,78,0.1)', perfect:'rgba(57,195,212,0.1)'};
+  const colMap = {miss:'#e2001a', okay:'#34d399', perfect:'#39c3d4'};
+  const bgMap = {miss:'rgba(226,0,26,0.1)', okay:'rgba(52,211,153,0.1)', perfect:'rgba(57,195,212,0.1)'};
   ['miss','okay','perfect'].forEach(v => {
     const b = document.getElementById(`sr-${sid}-${cat}-${v}`);
     if (!b) return;
@@ -8323,7 +8323,7 @@ async function autoLogAttempt(name) {
 
   const sid = name.replace(/\s/g,'_');
   const col = document.getElementById('sess-col-'+sid);
-  if (col) { col.style.background=result==='miss'?'rgba(226,0,26,0.2)':result==='perfect'?'rgba(57,195,212,0.2)':'rgba(45,138,78,0.2)'; setTimeout(()=>{col.style.background='';},300); }
+  if (col) { col.style.background=result==='miss'?'rgba(226,0,26,0.2)':result==='perfect'?'rgba(57,195,212,0.2)':'rgba(52,211,153,0.2)'; setTimeout(()=>{col.style.background='';},300); }
   sessPlayLogSound(result);
 
   const commentEl = document.getElementById('sess-comment-'+sid);
@@ -8395,7 +8395,7 @@ async function logAttempt(name, result) {
 
   // Flash feedback
   const col = document.getElementById('sess-col-'+name.replace(/\s/g,'_'));
-  const flashColor = result==='miss'?'rgba(226,0,26,0.2)':result==='landed'?'rgba(45,138,78,0.2)':'rgba(57,195,212,0.2)';
+  const flashColor = result==='miss'?'rgba(226,0,26,0.2)':result==='landed'?'rgba(52,211,153,0.2)':'rgba(57,195,212,0.2)';
   col.style.background = flashColor;
   setTimeout(()=>{ col.style.background=''; }, 250);
   sessPlayLogSound(result);
@@ -8432,7 +8432,7 @@ function renderSessionLog() {
     : sessLog.map((e,i)=>({...e,_i:i}));
   el.innerHTML = filtered.slice(0,30).map(e=>{ const i=e._i;
     const icon = e.result==='miss'?'✗':e.result==='perfect'?'⭐':'✓';
-    const col = e.result==='miss'?'#e2001a':e.result==='perfect'?'#39c3d4':'#2d8a4e';
+    const col = e.result==='miss'?'#e2001a':e.result==='perfect'?'#39c3d4':'#34d399';
     const ratingStr = [e.takeoff&&`TO:${e.takeoff}`, e.trick_r&&`T:${e.trick_r}`, e.grab&&`G:${e.grab}`, e.land&&`L:${e.land}`].filter(Boolean).join(' ');
     const ratings = ratingStr ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">[${ratingStr}]</span>` : '';
     const isEditing = sessEditIdx === i;
@@ -8447,10 +8447,10 @@ function renderSessionLog() {
       editRow = `<div style="padding:8px 12px 8px 38px;display:flex;flex-direction:column;gap:6px;">
         <input type="text" id="sess-edit-trick" value="${tg.base.replace(/"/g,'&quot;')}" placeholder="Trick name" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
         ${grabSelectHtml('sess-edit-grab', assessGrabList(), tg.grab)}
-        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">T-off</span>${catBtn('takeoff','miss','Miss','#e2001a')}${catBtn('takeoff','okay','Okay','#2d8a4e')}${catBtn('takeoff','perfect','Perfect','#39c3d4')}</div>
-        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Trick</span>${catBtn('trick','miss','Miss','#e2001a')}${catBtn('trick','okay','Okay','#2d8a4e')}${catBtn('trick','perfect','Perfect','#39c3d4')}</div>
-        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>${catBtn('grab','miss','Miss','#e2001a')}${catBtn('grab','okay','Okay','#2d8a4e')}${catBtn('grab','perfect','Perfect','#39c3d4')}</div>
-        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Land</span>${catBtn('land','miss','Miss','#e2001a')}${catBtn('land','okay','Okay','#2d8a4e')}${catBtn('land','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">T-off</span>${catBtn('takeoff','miss','Miss','#e2001a')}${catBtn('takeoff','okay','Okay','#34d399')}${catBtn('takeoff','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Trick</span>${catBtn('trick','miss','Miss','#e2001a')}${catBtn('trick','okay','Okay','#34d399')}${catBtn('trick','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>${catBtn('grab','miss','Miss','#e2001a')}${catBtn('grab','okay','Okay','#34d399')}${catBtn('grab','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Land</span>${catBtn('land','miss','Miss','#e2001a')}${catBtn('land','okay','Okay','#34d399')}${catBtn('land','perfect','Perfect','#39c3d4')}</div>
         <input type="text" id="sess-edit-comment" value="${(e.comment||'').replace(/"/g,'&quot;')}" placeholder="Comment (optional)" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
         <div style="display:flex;gap:8px;margin-top:2px;"><button onclick="saveFsLogEdit(${i})" style="padding:6px 16px;border-radius:8px;background:#39c3d4;border:none;color:#060f1a;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;">Save</button><button onclick="cancelFsEdit()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button></div>
       </div>`;
@@ -9101,15 +9101,15 @@ function renderSbDirRadar() {
   // Mastered polygon (green solid)
   if(mastered.length){
     ctx.setLineDash([]);
-    ctx.strokeStyle='#2d8a4e'; ctx.lineWidth=1.5;
+    ctx.strokeStyle='#34d399'; ctx.lineWidth=1.5;
     ctx.beginPath();
     angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*mastVals[i],y=cy+Math.sin(a)*r*mastVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-    ctx.closePath(); ctx.fillStyle='rgba(45,138,78,0.45)'; ctx.fill(); ctx.stroke();
+    ctx.closePath(); ctx.fillStyle='rgba(52,211,153,0.45)'; ctx.fill(); ctx.stroke();
     // Dots at vertices
     angles.forEach((a,i)=>{
       const x=cx+Math.cos(a)*r*mastVals[i], y=cy+Math.sin(a)*r*mastVals[i];
       ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI);
-      ctx.fillStyle='#2d8a4e'; ctx.fill();
+      ctx.fillStyle='#34d399'; ctx.fill();
       ctx.strokeStyle='#0b1929'; ctx.lineWidth=1.5; ctx.stroke();
     });
   }
@@ -9121,7 +9121,7 @@ function renderSbDirRadar() {
     ctx.textAlign=align; ctx.textBaseline='middle';
     ctx.font='bold 12px Poppins,sans-serif'; ctx.fillStyle='#e8edf2';
     ctx.fillText(DIRS[i], lx, ly-14);
-    ctx.font='bold 13px Poppins,sans-serif'; ctx.fillStyle='#2d8a4e';
+    ctx.font='bold 13px Poppins,sans-serif'; ctx.fillStyle='#34d399';
     ctx.fillText('✓ '+mastC[DIRS[i]], lx, ly+2);
     ctx.font='bold 13px Poppins,sans-serif'; ctx.fillStyle='#f59e0b';
     ctx.fillText('◎ '+goalC[DIRS[i]], lx, ly+17);
@@ -9130,7 +9130,7 @@ function renderSbDirRadar() {
   // Legend
   const legY = H-18;
   ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillStyle='#2d8a4e'; ctx.font='bold 11px Poppins,sans-serif';
+  ctx.fillStyle='#34d399'; ctx.font='bold 11px Poppins,sans-serif';
   ctx.fillText('— Mastered', cx-52, legY);
   ctx.fillStyle='#f59e0b';
   ctx.setLineDash([5,3]);
@@ -9652,11 +9652,11 @@ async function loadEntwicklung() {
       verlaufEl.innerHTML = rows.map((r, i) => {
         const dateStr = new Date(r.date).toLocaleDateString('de-CH', { day:'2-digit', month:'2-digit', year:'numeric' });
         const newBadge = r.newTricks.length > 0
-          ? `<span style="background:rgba(45,138,78,0.15);color:#2d8a4e;border:1px solid #2d8a4e;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:8px;">+${r.newTricks.length} neu</span>`
+          ? `<span style="background:rgba(52,211,153,0.15);color:#34d399;border:1px solid #34d399;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:8px;">+${r.newTricks.length} neu</span>`
           : '';
         const newList = r.newTricks.length > 0
-          ? `<div style="margin-top:6px;padding-left:12px;border-left:2px solid #2d8a4e;">${r.newTricks.map(t =>
-              `<span style="display:inline-block;background:rgba(45,138,78,0.12);color:#2d8a4e;border-radius:10px;padding:2px 8px;font-size:11px;margin:2px;">${t}</span>`
+          ? `<div style="margin-top:6px;padding-left:12px;border-left:2px solid #34d399;">${r.newTricks.map(t =>
+              `<span style="display:inline-block;background:rgba(52,211,153,0.12);color:#34d399;border-radius:10px;padding:2px 8px;font-size:11px;margin:2px;">${t}</span>`
             ).join('')}</div>`
           : '';
         const borderTop = i > 0 ? 'border-top:1px solid var(--border);' : '';
@@ -9706,7 +9706,7 @@ async function loadEntwicklung() {
         <tbody>
           ${rows.map(([trick, s]) => {
             const pct = qoeAvg(s.qoeVals) ?? 0;
-            const barColor = pct >= 70 ? '#2d8a4e' : pct >= 40 ? '#f59e0b' : '#e2001a';
+            const barColor = pct >= 70 ? '#34d399' : pct >= 40 ? '#f59e0b' : '#e2001a';
             const dates = [...s.dates].sort().map(d => new Date(d).toLocaleDateString('de-CH', {day:'2-digit',month:'2-digit'})).join(', ');
             const parts = trick.split(' — ');
             return `<tr style="border-bottom:1px solid var(--border);">
@@ -9856,7 +9856,7 @@ function appendTrendChart(allData, highlightDate) {
   }));
   const hasComp = pts.some(p=>p.grab!==null);
   const legend = hasComp ? `<div style="display:flex;gap:16px;font-size:11px;margin-bottom:6px;">
-    <span style="color:#2d8a4e;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span><span style="color:#a78bfa;">● Take-off</span>
+    <span style="color:#34d399;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span><span style="color:#a78bfa;">● Take-off</span>
   </div>` : '';
   const cid = 'trend-chart-'+Date.now();
   const div = document.createElement('div');
@@ -9887,7 +9887,7 @@ function appendTrendChart(allData, highlightDate) {
     pts.forEach((p,i)=>{if(p.isHighlight){ctx.fillStyle='rgba(57,195,212,0.08)';ctx.fillRect(xs[i]-20,pad.t,40,H-pad.t-pad.b);}});
 
     // Draw chart with mini-bars per date + connecting lines
-    const colMap = {'landing':'#2d8a4e','trick':'#39c3d4','grab':'#f59e0b','single':'#39c3d4'};
+    const colMap = {'landing':'#34d399','trick':'#39c3d4','grab':'#f59e0b','single':'#39c3d4'};
 
     function drawConnectLine(values, col) {
       const pts2 = values.map((v,i)=>v!==null?{x:xs[i],y:toY(v)}:null).filter(Boolean);
@@ -9900,7 +9900,7 @@ function appendTrendChart(allData, highlightDate) {
     function drawBars(pt, x, isHi) {
       if(_hc && pt.grab!==null) {
         // Mini-Balken pro Kategorie: Take-off, Grab, Trick, Landing
-        const comps = [['takeoff','#a78bfa'],['grab','#f59e0b'],['trick','#39c3d4'],['landing','#2d8a4e']];
+        const comps = [['takeoff','#a78bfa'],['grab','#f59e0b'],['trick','#39c3d4'],['landing','#34d399']];
         const bw = barW; const gap = 2;
         const totalW = comps.length*(bw+gap)-gap;
         comps.forEach(([key,col],ci) => {
@@ -9933,7 +9933,7 @@ function appendTrendChart(allData, highlightDate) {
       drawConnectLine(pts.map(p=>p.takeoff), '#a78bfa');
       drawConnectLine(pts.map(p=>p.grab), '#f59e0b');
       drawConnectLine(pts.map(p=>p.trick), '#39c3d4');
-      drawConnectLine(pts.map(p=>p.landing), '#2d8a4e');
+      drawConnectLine(pts.map(p=>p.landing), '#34d399');
     } else {
       drawConnectLine(pts.map(p=>p.qoe), '#39c3d4');
     }
@@ -9971,7 +9971,7 @@ function appendTrendChart(allData, highlightDate) {
       tt.innerHTML =
         `<div style="font-weight:700;color:#e8edf2;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">${fmtD(p.d)} &nbsp;·&nbsp; ${p.att} attempts</div>`
         +`<div style="color:#39c3d4;">⭐ Stomped: <b>${p.stomped}×</b></div>`
-        +`<div style="color:#2d8a4e;">✓ Landed&nbsp;: <b>${lo}×</b></div>`
+        +`<div style="color:#34d399;">✓ Landed&nbsp;: <b>${lo}×</b></div>`
         +`<div style="color:#e2001a;">✗ Missed&nbsp;: <b>${ms}×</b></div>`
         +`<div style="color:#6b8299;margin-top:4px;">QoE: <b style="color:#39c3d4;">${p.qoe!==null?p.qoe+'%':'—'}</b></div>`;
       tt.style.display='block';
@@ -9989,7 +9989,7 @@ function renderSessionSummary(data, sessionLabel) {
   if (!data.length) { el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;">No data for this session.</div>'; return; }
 
   function pr(k,d){ const m=(d.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
-  const colQ = v => v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
+  const colQ = v => v>=70?'#34d399':v>=40?'#f59e0b':'#e2001a';
 
   // Group by trick
   const tmap = {};
@@ -10034,7 +10034,7 @@ function renderSessionSummary(data, sessionLabel) {
 
     const compBars = hasComp ? `
       <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
-        ${[['Take-off',toAvg,'#a78bfa'],['Grab',gAvg,'#f59e0b'],['Trick',tAvg,'#39c3d4'],['Landing',lAvg,'#2d8a4e']].map(([lbl,val,col])=>
+        ${[['Take-off',toAvg,'#a78bfa'],['Grab',gAvg,'#f59e0b'],['Trick',tAvg,'#39c3d4'],['Landing',lAvg,'#34d399']].map(([lbl,val,col])=>
           val!==null?`<div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:11px;color:var(--muted);min-width:52px;">${lbl}</span>
             <div style="flex:1;background:var(--border);border-radius:3px;height:8px;">
@@ -10103,7 +10103,7 @@ function renderRawEntries(entries, subtitle) {
             <span style="color:var(--muted);font-size:10px;">${typShort(e.typ)}</span>
             <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${e.trickaufbau||''}">${e.trickaufbau||'—'}</span>
             ${(() => { const q = qoeOf(e); return q!==null
-              ? `<span style="color:${q>=70?'#2d8a4e':q>=40?'#f59e0b':'#e2001a'};font-weight:700;">${q}%</span>`
+              ? `<span style="color:${q>=70?'#34d399':q>=40?'#f59e0b':'#e2001a'};font-weight:700;">${q}%</span>`
               : `<span style="color:var(--muted);">—</span>`; })()}
             <span style="color:var(--muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${fmtKom(e.kommentar)}</span>
             <button onclick="editRawEntry(${e.id})" title="Edit entry"
@@ -10290,7 +10290,7 @@ function renderTrickAnalytics() {
     if(el) el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;">No session data yet.</div>';
     return;
   }
-  const colQ = v=>v>=70?'#2d8a4e':v>=40?'#f59e0b':'#e2001a';
+  const colQ = v=>v>=70?'#34d399':v>=40?'#f59e0b':'#e2001a';
   const sel = document.getElementById('ev-trick-sel');
   const dateSel = document.getElementById('ev-date-sel');
   const chosen = sel ? sel.value : '';
@@ -10442,7 +10442,7 @@ function renderTrickAnalytics() {
         const hasComp = s.grab.length>0;
         const toA=avg(s.takeoff),gA=avg(s.grab),tA=avg(s.trick),lA=avg(s.land_r);
         const trickQoe=qoeAvg(s.qoeVals);
-        const bars = hasComp ? [['Take-off',toA,'#a78bfa'],['Grab',gA,'#f59e0b'],['Trick',tA,'#39c3d4'],['Landing',lA,'#2d8a4e']].map(([lbl,val,col])=>
+        const bars = hasComp ? [['Take-off',toA,'#a78bfa'],['Grab',gA,'#f59e0b'],['Trick',tA,'#39c3d4'],['Landing',lA,'#34d399']].map(([lbl,val,col])=>
           val!==null?`<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
             <span style="font-size:10px;color:var(--muted);min-width:48px;">${lbl}</span>
             <div style="flex:1;background:var(--border);border-radius:3px;height:7px;">
@@ -10556,7 +10556,7 @@ function renderTrickAnalytics() {
       </div>`;
 
   const legend = hasComp ? `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;font-size:11px;">
-    <span style="color:#2d8a4e;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span><span style="color:#a78bfa;">● Take-off</span>
+    <span style="color:#34d399;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span><span style="color:#a78bfa;">● Take-off</span>
   </div>` : '';
 
   // Direction distribution for overall/trick view
@@ -10620,7 +10620,7 @@ function renderTrickAnalytics() {
     }
     function drawBars(pt,x){
       if(hasComp&&pt.grab!==null){
-        const comps=[['takeoff','#a78bfa'],['grab','#f59e0b'],['trick','#39c3d4'],['landing','#2d8a4e']];
+        const comps=[['takeoff','#a78bfa'],['grab','#f59e0b'],['trick','#39c3d4'],['landing','#34d399']];
         const bw=barW,gap=2,totalW=comps.length*(bw+gap)-gap;
         comps.forEach(([key,col],ci)=>{
           const val=pt[key]; if(val===null)return;
@@ -10637,7 +10637,7 @@ function renderTrickAnalytics() {
       }
     }
 
-    if(hasComp){drawConn(pts.map(p=>p.takeoff),'#a78bfa');drawConn(pts.map(p=>p.grab),'#f59e0b');drawConn(pts.map(p=>p.trick),'#39c3d4');drawConn(pts.map(p=>p.landing),'#2d8a4e');}
+    if(hasComp){drawConn(pts.map(p=>p.takeoff),'#a78bfa');drawConn(pts.map(p=>p.grab),'#f59e0b');drawConn(pts.map(p=>p.trick),'#39c3d4');drawConn(pts.map(p=>p.landing),'#34d399');}
     else drawConn(pts.map(p=>p.qoe),'#39c3d4');
     pts.forEach((p,i)=>drawBars(p,xs[i]));
 
@@ -10660,7 +10660,7 @@ function renderTrickAnalytics() {
     const dSign = (curr,prev) => {
       if(curr===null||prev===null||curr===undefined||prev===undefined) return '';
       const d=curr-prev;
-      return d>0?`<span style="color:#2d8a4e;font-weight:700;"> +${d}%</span>`
+      return d>0?`<span style="color:#34d399;font-weight:700;"> +${d}%</span>`
             :d<0?`<span style="color:#e2001a;font-weight:700;"> ${d}%</span>`
             :`<span style="color:#6b8299;"> ±0%</span>`;
     };
@@ -10678,7 +10678,7 @@ function renderTrickAnalytics() {
         if(p.takeoff!==null) html+=`<div style="color:#a78bfa;">Take-off: <b>${p.takeoff}%</b>${isFirst?'':dSign(p.takeoff,pv?.takeoff)}</div>`;
         html+=`<div style="color:#f59e0b;">Grab &nbsp;&nbsp;: <b>${p.grab??'—'}%</b>${isFirst?'':dSign(p.grab,pv?.grab)}</div>`;
         html+=`<div style="color:#39c3d4;">Trick &nbsp;: <b>${p.trick??'—'}%</b>${isFirst?'':dSign(p.trick,pv?.trick)}</div>`;
-        html+=`<div style="color:#2d8a4e;">Landing: <b>${p.landing??'—'}%</b>${isFirst?'':dSign(p.landing,pv?.landing)}</div>`;
+        html+=`<div style="color:#34d399;">Landing: <b>${p.landing??'—'}%</b>${isFirst?'':dSign(p.landing,pv?.landing)}</div>`;
       } else {
         html+=`<div style="color:#39c3d4;">QoE: <b>${p.qoe!==null?p.qoe+'%':'—'}</b>${isFirst?'':dSign(p.qoe,pv?.qoe)}</div>`;
       }
@@ -10795,7 +10795,7 @@ let sbAssessGrabMatrix = {};
 
 function styleFsGrabSeg(btn, label, st) {
   btn.textContent = st === 'mastered' ? '✓ ' + label : st === 'goal' ? '🎯 ' + label : label;
-  btn.style.background = st === 'mastered' ? 'rgba(45,138,78,0.3)' : st === 'goal' ? 'rgba(245,158,11,0.25)' : '#112236';
+  btn.style.background = st === 'mastered' ? 'rgba(52,211,153,0.3)' : st === 'goal' ? 'rgba(245,158,11,0.25)' : '#112236';
   btn.style.color = st === 'mastered' ? '#4ade80' : st === 'goal' ? '#f59e0b' : '#6b8299';
 }
 
@@ -11583,7 +11583,7 @@ function sbRVShowDetail(ai, ti, i) {
         <span style="font-size:10px;color:var(--muted);min-width:52px;">${label}</span>
         ${['miss','okay','perfect'].map(v => {
           const on = cur === v;
-          const col = v==='miss'?'#e2001a':v==='okay'?'#2d8a4e':'#39c3d4';
+          const col = v==='miss'?'#e2001a':v==='okay'?'#34d399':'#39c3d4';
           return `<button onclick="sbRVEditCatSet('${cat}','${v}')" style="padding:4px 8px;border-radius:6px;border:1.5px solid ${on?col:'var(--border)'};background:${on?col+'22':'var(--surface2)'};color:${on?col:'var(--muted)'};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer;">${FS_RV_ICON[v]}</button>`;
         }).join('')}
       </div>`;
@@ -11602,7 +11602,7 @@ function sbRVShowDetail(ai, ti, i) {
   const q = qoeOfLogEntry(a);
   const resCol = a.result==='miss' ? '#e2001a' : a.result==='perfect' ? '#39c3d4' : '#34d399';
   const resLbl = a.result==='miss' ? 'Miss' : a.result==='perfect' ? 'Perfect' : 'Landed';
-  const catCol = {perfect:'#39c3d4', okay:'#2d8a4e', miss:'#e2001a'};
+  const catCol = {perfect:'#39c3d4', okay:'#34d399', miss:'#e2001a'};
   const catStr = FS_RV_CATS.map(([c,l]) => a[c] ? `${l} <b style="color:${catCol[a[c]]};">${FS_RV_ICON[a[c]]}</b>` : null).filter(Boolean).join(' · ');
   let txt = `<span style="color:${resCol};font-weight:600;">Attempt ${i+1} — ${resLbl} · QoE ${q}%</span>`
     + (catStr ? ` <span style="color:var(--muted);">${catStr}</span>` : ' <span style="color:var(--muted);">(no category data)</span>');
