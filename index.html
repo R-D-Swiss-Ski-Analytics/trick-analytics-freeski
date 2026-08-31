@@ -390,20 +390,21 @@
   }
 </style>
 <style>
-/* ── Snowboard visual refresh: match the Monitoring/Reports look on all pages ── */
-body.sport-snowboard .card { border-radius: 16px; }
-body.sport-snowboard .card-title { color: var(--text); font-weight: 700; font-size: 16px; border-bottom: none; padding-bottom: 0; }
-body.sport-snowboard select,
-body.sport-snowboard input[type="text"],
-body.sport-snowboard input[type="number"],
-body.sport-snowboard input[type="date"],
-body.sport-snowboard textarea { border-radius: 10px; }
-body.sport-snowboard .btn-secondary { border-radius: 999px; }
-body.sport-snowboard .nav-tab { border-radius: 999px; }
-body.sport-snowboard .sb-ov-card { border-radius: 14px; }
-body.sport-snowboard .sb-ov-num { font-weight: 800; }
-body.sport-snowboard table th { text-transform: uppercase; letter-spacing: .5px; font-size: 10px; color: var(--muted); }
-body.sport-snowboard .chart-card { border-radius: 16px; }
+/* ── Visual refresh (Snowboard-Look): Layout-Regeln gelten für BEIDE Sportarten,
+   die Mint-Palette darunter bleibt Snowboard-only (Freeski behält sein klassisches Grün) ── */
+body.sport-snowboard .card, body.sport-freeski .card { border-radius: 16px; }
+body.sport-snowboard .card-title, body.sport-freeski .card-title { color: var(--text); font-weight: 700; font-size: 16px; border-bottom: none; padding-bottom: 0; }
+body.sport-snowboard select, body.sport-freeski select,
+body.sport-snowboard input[type="text"], body.sport-freeski input[type="text"],
+body.sport-snowboard input[type="number"], body.sport-freeski input[type="number"],
+body.sport-snowboard input[type="date"], body.sport-freeski input[type="date"],
+body.sport-snowboard textarea, body.sport-freeski textarea { border-radius: 10px; }
+body.sport-snowboard .btn-secondary, body.sport-freeski .btn-secondary { border-radius: 999px; }
+body.sport-snowboard .nav-tab, body.sport-freeski .nav-tab { border-radius: 999px; }
+body.sport-snowboard .sb-ov-card, body.sport-freeski .sb-ov-card { border-radius: 14px; }
+body.sport-snowboard .sb-ov-num, body.sport-freeski .sb-ov-num { font-weight: 800; }
+body.sport-snowboard table th, body.sport-freeski table th { text-transform: uppercase; letter-spacing: .5px; font-size: 10px; color: var(--muted); }
+body.sport-snowboard .chart-card, body.sport-freeski .chart-card { border-radius: 16px; }
 /* Refreshed palette: mint green everywhere (Freeski keeps the classic green) */
 body.sport-snowboard { --success: #34d399; }
 body.sport-snowboard .sb-col-header.mastered { background: rgba(52,211,153,0.15); color: #34d399; border-color: #34d399; }
@@ -412,10 +413,10 @@ body.sport-snowboard .btn-mastered { background: linear-gradient(135deg, #17805a
 body.sport-snowboard .nb-cat-Competition { background: rgba(52,211,153,0.15); color: #34d399; border-color: #34d399; }
 body.sport-snowboard button[onclick="endSession()"] { background: #34d399 !important; color: #06281c !important; }
 /* One typeface everywhere — form controls don't inherit by default */
-body.sport-snowboard button,
-body.sport-snowboard select,
-body.sport-snowboard input,
-body.sport-snowboard textarea { font-family: 'Poppins', sans-serif; }
+body.sport-snowboard button, body.sport-freeski button,
+body.sport-snowboard select, body.sport-freeski select,
+body.sport-snowboard input, body.sport-freeski input,
+body.sport-snowboard textarea, body.sport-freeski textarea { font-family: 'Poppins', sans-serif; }
 </style>
 </head>
 <body>
@@ -6796,6 +6797,7 @@ function showPage(id, btn) {
   if (id === 'datenbank') loadDB();
   if (id === 'entwicklung') loadEntwicklung();
   if (id === 'erfassen') initSessionSetup();
+  if (id === 'monitoring') loadMonitoring();
   if (typeof updateMobileNav === 'function') updateMobileNav(id);
 }
 
@@ -10488,6 +10490,477 @@ function initStandortGrabs() {
   });
 }
 
+// ═══════ MONITORING (Team → Athlete → Trick) — Freeski-Fassung des Snowboard-Monitorings ═══════
+// Gleiche Optik/Struktur wie SB; angepasst an die FS-Daten: Outcome aus gesamt/gelandet
+// (10=Stomped/Perfect, gelandet=Landed, sonst Failed), Richtungen Left/Right/Switch,
+// Kategorie-Qualität (Take-off/Trick/Grab/Landing aus kommentar) statt SB-KPIs, kein fail_grund.
+let sbMonRows = null;          // cached attempt rows (tricks table, all pages)
+let sbMonRange = 'season';     // 'season' | 'last' | 'all' | 'custom'
+let sbMonFrom = '';            // custom range bounds (YYYY-MM-DD)
+let sbMonTo = '';
+let sbMonTyp = '';             // '' | session type
+let sbMonView = {level:'team', athlete:null, trick:null};
+let _monAthletes = [];
+let _monTricks = [];
+
+const FS_MON_STATUS = {
+  ready:    {label:'Ready',    color:'#34d399'},
+  building: {label:'Building', color:'#f59e0b'},
+  critical: {label:'Critical', color:'#e2001a'},
+  lowdata:  {label:'Low data', color:'#6b8299'},
+};
+const FS_MON_DIR_COLORS = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b','Other':'#6b8299'};
+const FS_MON_DIRS = ['Left','Right','Switch Left','Switch Right','Other'];
+const FS_MON_CATS = [['Takeoff','Take-off'],['Trick','Trick'],['Grab','Grab'],['Landing','Landing']];
+const FS_TYPE_FILTERS = [['','All'],['Landing Bag','Bag'],['Jump On-Snow','On-Snow'],['Big Air Competition','Comp']];
+
+function fsTypeChipsHtml(current, handler) {
+  return `<div style="display:flex;gap:6px;flex-wrap:wrap;">${FS_TYPE_FILTERS.map(([v,l]) =>
+    `<button onclick="${handler}('${v}')" style="padding:6px 14px;border-radius:999px;border:1.5px solid ${current===v?'#39c3d4':'var(--border)'};background:${current===v?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${current===v?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">${l}</button>`).join('')}</div>`;
+}
+
+function fsMonOutcome(t) {
+  if ((t.gesamt||0) >= 10) return 'stomped';
+  return t.gelandet === 'Yes' ? 'landed' : 'failed';
+}
+
+// Aggregations-Key: Grab-Suffix (« — Grab») strippen, damit ein Trick über alle Grabs zusammenläuft
+function fsMonKey(label) {
+  return ((label || '—').split(' — ')[0] || '').trim() || '—';
+}
+
+function fsMonDir(name) {
+  if (!name) return 'Other';
+  if (name.includes('Switch Left'))  return 'Switch Left';
+  if (name.includes('Switch Right')) return 'Switch Right';
+  if (name.includes('Left'))  return 'Left';
+  if (name.includes('Right')) return 'Right';
+  return 'Other';
+}
+
+async function sbMonFetchAll() {
+  let all = [], from = 0;
+  while (true) {
+    const {data, error} = await db.from('tricks').select('*').order('id', {ascending:true}).range(from, from + 999);
+    if (error) { showToast('Error loading data: ' + error.message, 'error'); return sbMonRows || []; }
+    all = all.concat(data || []);
+    if (!data || data.length < 1000) break;
+    from += 1000;
+  }
+  sbMonRows = all;
+  return all;
+}
+
+function sbMonRangeBounds() {
+  const now = new Date();
+  const y = now.getMonth() + 1 >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+  if (sbMonRange === 'season') return {from: y + '-05-01', to: ''};
+  if (sbMonRange === 'last')   return {from: (y-1) + '-05-01', to: y + '-04-30'};
+  if (sbMonRange === 'custom') return {from: sbMonFrom || '', to: sbMonTo || ''};
+  return {from: '', to: ''};
+}
+
+function sbMonPeriodLabel() {
+  const fmt = d => { if (!d) return '…'; const p = d.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); };
+  const typ = sbMonTyp ? ' · ' + (SESS_TYPE_SHORT[sbMonTyp]||sbMonTyp) : '';
+  if (sbMonRange === 'season') return 'current season' + typ;
+  if (sbMonRange === 'last')   return 'last season' + typ;
+  if (sbMonRange === 'custom') return fmt(sbMonFrom) + ' – ' + fmt(sbMonTo) + typ;
+  return 'all time' + typ;
+}
+
+function sbMonFiltered() {
+  let rows = sbMonRows || [];
+  const {from, to} = sbMonRangeBounds();
+  if (from) rows = rows.filter(t => (t.datum || '') >= from);
+  if (to)   rows = rows.filter(t => (t.datum || '') <= to);
+  if (sbMonTyp) rows = rows.filter(t => t.typ === sbMonTyp);
+  return rows;
+}
+
+function sbMonStatusKey(att, stomped) {
+  if (att < 5) return 'lowdata';
+  const r = stomped / att;
+  return r >= 0.7 ? 'ready' : r >= 0.4 ? 'building' : 'critical';
+}
+
+function sbMonTrickAgg(rows) {
+  const map = {};
+  rows.forEach(t => {
+    const key = fsMonKey(t.trickaufbau);
+    if (!map[key]) map[key] = {trick:key, att:0, stomped:0, landed:0, failed:0, rows:[]};
+    const m = map[key];
+    m.att++; m[fsMonOutcome(t)]++; m.rows.push(t);
+  });
+  return Object.values(map);
+}
+
+function sbMonTrend(rows) {
+  const by = {};
+  rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
+  const dates = Object.keys(by).sort();
+  if (dates.length < 2) return null;
+  const rate = d => by[d].filter(x => fsMonOutcome(x) === 'stomped').length / by[d].length;
+  const last = rate(dates[dates.length - 1]);
+  const prev = dates.slice(0, -1).slice(-3);
+  const prevAvg = prev.reduce((a, d) => a + rate(d), 0) / prev.length;
+  const diff = last - prevAvg;
+  if (diff >= 0.05) return {dir:'up', diff};
+  if (diff <= -0.05) return {dir:'down', diff};
+  return {dir:'flat', diff};
+}
+
+function sbMonTrendHtml(tr) {
+  if (!tr) return '';
+  if (tr.dir === 'up') return `<span style="color:#34d399;font-weight:600;">↗ rising${tr.diff ? ', +' + Math.round(tr.diff*100) + '%' : ''}</span>`;
+  if (tr.dir === 'down') return `<span style="color:#e2001a;font-weight:600;">↘ falling${tr.diff ? ', ' + Math.round(tr.diff*100) + '%' : ''}</span>`;
+  return `<span style="color:var(--muted);font-weight:600;">→ stable</span>`;
+}
+
+function sbMonRing(pct, color, size, stroke) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg);">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="var(--border)" stroke-width="${stroke}" fill="none"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${color}" stroke-width="${stroke}" fill="none"
+      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c * (1 - Math.min(1, Math.max(0, pct)))).toFixed(1)}" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function sbMonDonut(s, l, f, size) {
+  const total = s + l + f;
+  const stroke = 14, r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  if (!total) return sbMonRing(0, 'var(--border)', size, stroke);
+  const segs = [[s, '#34d399'], [l, '#4a7dd6'], [f, '#e2001a']];
+  let off = 0, out = '';
+  segs.forEach(([n, col]) => {
+    if (!n) return;
+    const frac = n / total;
+    out += `<circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${col}" stroke-width="${stroke}" fill="none"
+      stroke-dasharray="${(frac * c).toFixed(1)} ${(c - frac * c).toFixed(1)}" stroke-dashoffset="${(-off * c).toFixed(1)}"/>`;
+    off += frac;
+  });
+  return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg);">${out}</svg>`;
+}
+
+async function loadMonitoring() {
+  const root = document.getElementById('mon-root');
+  if (!root) return;
+  if (!sbMonRows) root.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+  await sbMonFetchAll();
+  renderMonitoring();
+}
+
+function renderMonitoring() {
+  const v = sbMonView;
+  if (v.level === 'trick' && v.athlete && v.trick) renderMonTrick();
+  else if (v.level === 'athlete' && v.athlete) renderMonAthlete();
+  else renderMonTeam();
+}
+
+function sbMonSetRange(val) { sbMonRange = val; renderMonitoring(); }
+function sbMonSetTyp(val) { sbMonTyp = val; renderMonitoring(); }
+function sbMonApplyCustom() {
+  sbMonFrom = document.getElementById('mon-date-from')?.value || '';
+  sbMonTo = document.getElementById('mon-date-to')?.value || '';
+  renderMonitoring();
+}
+
+// Sync the Database-page period selects with Monitoring's choice, then reuse the existing exports
+function sbMonSyncSelects(prefix) {
+  const {from, to} = sbMonRangeBounds();
+  const seasonSel = document.getElementById(prefix + '-season-sel');
+  const typSel = document.getElementById(prefix + '-typ-sel');
+  const fromEl = document.getElementById(prefix + '-date-from');
+  const toEl = document.getElementById(prefix + '-date-to');
+  if (seasonSel) seasonSel.value = sbMonRange === 'season' ? 'current' : sbMonRange === 'all' ? 'all' : 'custom';
+  if (fromEl) fromEl.value = from;
+  if (toEl) toEl.value = to;
+  if (typSel) typSel.value = sbMonTyp;
+}
+
+async function sbMonEnsureDbData() {
+  if (!dbAllTricks || !dbAllTricks.length || !dbAllStandort || !dbAllStandort.length) await loadDB();
+}
+
+async function sbMonRealityCheck() {
+  await sbMonEnsureDbData();
+  realityCheck();
+}
+
+async function sbMonTeamPdf() {
+  await sbMonEnsureDbData();
+  sbMonSyncSelects('tr');
+  openTeamPdfReport();
+}
+
+async function sbMonAthletePdf() {
+  await sbMonEnsureDbData();
+  populateAthleteReportDropdown();
+  const sel = document.getElementById('ar-athlete-sel');
+  if (sel) sel.value = sbMonView.athlete || '';
+  sbMonSyncSelects('ar');
+  generateAthleteReport();
+}
+function sbMonOpenAthlete(i) { sbMonView = {level:'athlete', athlete:_monAthletes[i], trick:null}; renderMonitoring(); window.scrollTo(0,0); }
+function sbMonOpenTrick(i) { sbMonView = {level:'trick', athlete:sbMonView.athlete, trick:_monTricks[i] ? _monTricks[i].trick : null}; renderMonitoring(); window.scrollTo(0,0); }
+function sbMonBack() {
+  sbMonView = sbMonView.level === 'trick'
+    ? {level:'athlete', athlete:sbMonView.athlete, trick:null}
+    : {level:'team', athlete:null, trick:null};
+  renderMonitoring();
+}
+
+function monHeaderHtml(title, sub, backable) {
+  const dateInput = id => `<input type="date" id="${id}" value="${id==='mon-date-from'?sbMonFrom:sbMonTo}" onchange="sbMonApplyCustom()" style="padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:'Poppins',sans-serif;">`;
+  return `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+    ${backable ? `<button onclick="sbMonBack()" style="padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">← Back</button>` : ''}
+    <div style="flex:1;min-width:160px;">
+      <div style="font-size:20px;font-weight:800;color:var(--text);">${title}</div>
+      ${sub ? `<div style="font-size:12px;color:var(--muted);">${sub}</div>` : ''}
+    </div>
+    <select onchange="sbMonSetRange(this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+      <option value="season" ${sbMonRange==='season'?'selected':''}>Current season</option>
+      <option value="last" ${sbMonRange==='last'?'selected':''}>Last season</option>
+      <option value="all" ${sbMonRange==='all'?'selected':''}>All time</option>
+      <option value="custom" ${sbMonRange==='custom'?'selected':''}>Custom period…</option>
+    </select>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+    ${fsTypeChipsHtml(sbMonTyp, 'sbMonSetTyp')}
+    ${sbMonRange==='custom' ? `<div style="display:flex;align-items:center;gap:6px;">${dateInput('mon-date-from')}<span style="color:var(--muted);">–</span>${dateInput('mon-date-to')}</div>` : ''}
+  </div>`;
+}
+
+function renderMonTeam() {
+  const root = document.getElementById('mon-root');
+  const rows = sbMonFiltered();
+  const byAth = {};
+  rows.forEach(t => { (byAth[t.athlet] = byAth[t.athlet] || []).push(t); });
+  _monAthletes = SESS_ALL_ATHLETES.map(a => a.name);
+  const sections = SESS_SQUADS.map(sq => {
+    const aths = SESS_ALL_ATHLETES.filter(a => a.squad === sq.key);
+    if (!aths.length) return '';
+    const tiles = aths.map(a => {
+      const i = _monAthletes.indexOf(a.name);
+      const ar = byAth[a.name] || [];
+      const att = ar.length;
+      const stomped = ar.filter(t => fsMonOutcome(t) === 'stomped').length;
+      const rate = att ? stomped / att : 0;
+      const cnt = {ready:0, building:0, critical:0, lowdata:0};
+      sbMonTrickAgg(ar).forEach(tr => cnt[sbMonStatusKey(tr.att, tr.stomped)]++);
+      const initials = a.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+      const ringColor = att < 5 ? '#6b8299' : rate >= 0.7 ? '#34d399' : rate >= 0.4 ? '#f59e0b' : '#e2001a';
+      return `<div onclick="sbMonOpenAthlete(${i})" style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:34px;height:34px;border-radius:50%;background:rgba(57,195,212,0.15);color:#39c3d4;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">${initials}</div>
+          <div style="min-width:0;">
+            <div style="font-weight:700;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.name}</div>
+            <div style="font-size:10px;color:${sq.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sq.label}</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;position:relative;margin-bottom:12px;">
+          ${sbMonRing(rate, ringColor, 92, 9)}
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="font-size:17px;font-weight:800;color:var(--text);">${att ? Math.round(rate*100)+'%' : '—'}</div>
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Perfect rate</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;text-align:center;border-top:1px solid var(--border);padding-top:10px;">
+          <div><div style="font-size:15px;font-weight:800;color:#34d399;">${cnt.ready}</div><div style="font-size:9px;color:var(--muted);">Ready</div></div>
+          <div><div style="font-size:15px;font-weight:800;color:#f59e0b;">${cnt.building}</div><div style="font-size:9px;color:var(--muted);">Building</div></div>
+          <div><div style="font-size:15px;font-weight:800;color:#e2001a;">${cnt.critical}</div><div style="font-size:9px;color:var(--muted);">Critical</div></div>
+        </div>
+        <div style="text-align:center;font-size:11px;color:#39c3d4;margin-top:10px;">View details →</div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:22px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${sq.color};margin-bottom:10px;">${sq.label}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">${tiles}</div>
+    </div>`;
+  }).join('');
+  root.innerHTML = `<div class="card" style="padding:20px;">
+    ${monHeaderHtml('Team Monitoring', rows.length + ' attempts · ' + sbMonPeriodLabel(), false)}
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Trick status: ≥70% perfect rate = <b style="color:#34d399;">Ready</b> · 40–69% = <b style="color:#f59e0b;">Building</b> · &lt;40% = <b style="color:#e2001a;">Critical</b> · fewer than 5 attempts = Low data</div>
+    ${sections || '<div style="color:var(--muted);padding:12px;">No athletes configured.</div>'}
+    <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+      <button onclick="sbMonRealityCheck()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
+      <button onclick="sbMonTeamPdf()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Team PDF</button>
+    </div>
+  </div>`;
+}
+
+function renderMonAthlete() {
+  const root = document.getElementById('mon-root');
+  const name = sbMonView.athlete;
+  const rows = sbMonFiltered().filter(t => t.athlet === name);
+  const att = rows.length;
+  const stomped = rows.filter(t => fsMonOutcome(t) === 'stomped').length;
+  const rate = att ? Math.round(stomped/att*100) : 0;
+
+  // Direction balance (session attempts only)
+  const dirCnt = {};
+  rows.forEach(t => {
+    const d = fsMonDir(fsMonKey(t.trickaufbau));
+    dirCnt[d] = (dirCnt[d]||0) + 1;
+  });
+  const balanceBar = att ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px;">
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:10px;">Direction balance — session data only</div>
+    <div style="display:flex;height:12px;border-radius:999px;overflow:hidden;margin-bottom:10px;">
+      ${FS_MON_DIRS.filter(d => dirCnt[d]).map(d => `<div style="width:${(dirCnt[d]/att*100).toFixed(1)}%;background:${FS_MON_DIR_COLORS[d]};"></div>`).join('')}
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
+      ${FS_MON_DIRS.filter(d => dirCnt[d]).map(d => `<span style="font-size:11px;color:var(--text);"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${FS_MON_DIR_COLORS[d]};margin-right:5px;vertical-align:0;"></span>${d} <b style="color:${FS_MON_DIR_COLORS[d]};">${Math.round(dirCnt[d]/att*100)}%</b></span>`).join('')}
+    </div>
+  </div>` : '';
+
+  const agg = sbMonTrickAgg(rows);
+  _monTricks = agg;
+  const groups = FS_MON_DIRS.map(dir => {
+    const list = agg.map((tr, i) => ({...tr, _i: i})).filter(tr => fsMonDir(tr.trick) === dir)
+      .sort((a, b) => b.att - a.att);
+    if (!list.length) return '';
+    const cards = list.map(tr => {
+      const st = sbMonStatusKey(tr.att, tr.stomped);
+      const stInfo = FS_MON_STATUS[st];
+      const r = tr.att ? Math.round(tr.stomped/tr.att*100) : 0;
+      const rateCol = st==='lowdata' ? 'var(--muted)' : stInfo.color;
+      const trend = sbMonTrend(tr.rows);
+      return `<div onclick="sbMonOpenTrick(${tr._i})" style="background:var(--surface2);border:1px solid ${st==='critical' ? 'rgba(226,0,26,0.45)' : 'var(--border)'};border-radius:12px;padding:13px 14px;cursor:pointer;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${tr.trick}</div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div style="font-size:24px;font-weight:800;color:${rateCol};flex-shrink:0;">${r}%</div>
+          <div style="flex:1;font-size:10px;color:var(--muted);line-height:1.7;">
+            <div style="display:flex;justify-content:space-between;"><span>Total</span><b style="color:var(--text);">${tr.att}</b></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:#34d399;">Perfect</span><b style="color:#34d399;">${tr.stomped}</b></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:#4a7dd6;">Landed</span><b style="color:#4a7dd6;">${tr.landed}</b></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:#e2001a;">Miss</span><b style="color:#e2001a;">${tr.failed}</b></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:10px;">
+          ${trend ? sbMonTrendHtml(trend) : '<span></span>'}
+          <span style="color:${stInfo.color};font-weight:700;">${stInfo.label}</span>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:18px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${FS_MON_DIR_COLORS[dir]};margin-bottom:10px;">${dir}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">${cards}</div>
+    </div>`;
+  }).join('');
+
+  root.innerHTML = `<div class="card" style="padding:20px;">
+    ${monHeaderHtml(name, att + ' attempts · ' + stomped + ' perfect · <b>' + rate + '% perfect rate</b> · ' + sbMonPeriodLabel(), true)}
+    ${balanceBar}
+    ${groups || '<div style="color:var(--muted);padding:12px;">No session attempts in this period.</div>'}
+    <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;justify-content:center;">
+      <button onclick="sbMonAthletePdf()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Athlete Report (PDF)</button>
+    </div>
+  </div>`;
+}
+
+function renderMonTrick() {
+  const root = document.getElementById('mon-root');
+  const name = sbMonView.athlete, trick = sbMonView.trick;
+  const rows = sbMonFiltered().filter(t => t.athlet === name && fsMonKey(t.trickaufbau) === trick)
+    .sort((a, b) => (a.datum||'').localeCompare(b.datum||'') || (a.created_at||'').localeCompare(b.created_at||''));
+  const s = rows.filter(t => fsMonOutcome(t) === 'stomped').length;
+  const l = rows.filter(t => fsMonOutcome(t) === 'landed').length;
+  const f = rows.filter(t => fsMonOutcome(t) === 'failed').length;
+  const n = rows.length;
+  const rate = n ? Math.round(s/n*100) : 0;
+  const stKey = sbMonStatusKey(n, s);
+  const trend = sbMonTrend(rows);
+
+  // Kategorie-Qualität aus den Teilbewertungen im kommentar (Miss 0% · Okay 50% · Perfect 100%)
+  const catScore = {perfect:100, okay:50, miss:0};
+  const catChips = FS_MON_CATS.map(([key, label]) => {
+    const vals = rows.map(t => {
+      const m = (t.kommentar || '').match(new RegExp(key + ':(\\w+)'));
+      return m && catScore[m[1]] !== undefined ? catScore[m[1]] : null;
+    }).filter(v => v !== null);
+    if (!vals.length) return '';
+    const pct = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+    const col = pct >= 70 ? '#34d399' : pct >= 50 ? '#f59e0b' : '#e2001a';
+    return `<span style="border:1px solid ${col};color:${col};border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;">${label} ${pct}%</span>`;
+  }).filter(Boolean).join(' ')
+    || `<span style="font-size:11px;color:var(--muted);">No category ratings yet — fills up with new session logs</span>`;
+
+  // Ø QoE über alle Versuche mit Bewertung
+  const qoeVals = rows.map(t => qoeOf(t)).filter(v => v !== null);
+  const avgQoe = qoeVals.length ? Math.round(qoeVals.reduce((a, b) => a + b, 0) / qoeVals.length) : null;
+
+  root.innerHTML = `<div class="card" style="padding:20px;">
+    ${monHeaderHtml(trick, name, true)}
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
+        ${stKey === 'ready' ? '<span style="border:1px solid #34d399;color:#34d399;border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;background:rgba(52,211,153,0.08);">Comp Ready</span>' : `<span style="border:1px solid ${FS_MON_STATUS[stKey].color};color:${FS_MON_STATUS[stKey].color};border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;">${FS_MON_STATUS[stKey].label}</span>`}
+      </div>
+      <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+        <div style="position:relative;flex-shrink:0;">
+          ${sbMonDonut(s, l, f, 130)}
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="font-size:26px;font-weight:800;color:var(--text);">${n}</div>
+            <div style="font-size:9px;color:var(--muted);">attempts</div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:170px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#34d399;margin-right:6px;"></span>Perfect</span><b>${s}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#4a7dd6;margin-right:6px;"></span>Landed</span><b>${l}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#e2001a;margin-right:6px;"></span>Miss</span><b>${f}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;"><span>Perfect rate</span><b style="color:${FS_MON_STATUS[stKey].color};">${rate}%</b></div>
+          ${avgQoe !== null ? `<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>Ø QoE</span><b style="color:${avgQoe >= 70 ? '#34d399' : avgQoe >= 50 ? '#f59e0b' : '#e2001a'};">${avgQoe}%</b></div>` : ''}
+          ${trend ? `<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>Trend</span>${sbMonTrendHtml(trend)}</div>` : ''}
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Category quality (Take-off · Trick · Grab · Landing)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">${catChips}</div>
+      </div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Progress over sessions</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:8px;">
+        <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Volume (attempts)</span>
+        <span><span style="display:inline-block;width:14px;height:2px;background:#34d399;vertical-align:3px;"></span> Success rate (Landed+Perfect)</span>
+        <span><span style="display:inline-block;width:14px;height:2px;background:#f59e0b;vertical-align:3px;border-bottom:2px dashed #f59e0b;background:none;"></span> Perfect rate</span>
+      </div>
+      ${sbMonTimeChart(rows)}
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;">⚠ Sessions with fewer than 5 attempts — rates are statistically weak.</div>
+    </div>
+  </div>`;
+}
+
+function sbMonTimeChart(rows) {
+  const by = {};
+  rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
+  const dates = Object.keys(by).sort().slice(-12);
+  if (!dates.length) return '<div style="color:var(--muted);font-size:12px;">No data.</div>';
+  const H = 110, slot = 46, barW = 26;
+  const maxN = Math.max(...dates.map(d => by[d].length));
+  const sPts = [], stPts = [];
+  let bars = '', labels = '';
+  dates.forEach((d, i) => {
+    const rs = by[d], nn = rs.length;
+    const succ = rs.filter(x => fsMonOutcome(x) !== 'failed').length / nn;
+    const st = rs.filter(x => fsMonOutcome(x) === 'stomped').length / nn;
+    const h = Math.max(6, nn / maxN * (H - 12));
+    const x = i * slot + (slot - barW) / 2;
+    sPts.push([i * slot + slot/2, (H - succ * (H - 12)).toFixed(1)]);
+    stPts.push([i * slot + slot/2, (H - st * (H - 12)).toFixed(1)]);
+    bars += `<rect x="${x}" y="${(H - h).toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" rx="3" fill="#4a7dd6" opacity="${(0.35 + 0.65 * nn / maxN).toFixed(2)}"/>`;
+    const lbl = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' : d;
+    labels += `<text x="${i * slot + slot/2}" y="${H + 15}" text-anchor="middle" font-size="9" fill="${nn < 5 ? '#f59e0b' : '#6b8299'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
+  });
+  const line = pts => pts.map(p => p.join(',')).join(' ');
+  const w = dates.length * slot;
+  return `<div style="overflow-x:auto;"><svg width="${w}" height="${H + 22}" style="display:block;">
+    ${bars}
+    ${dates.length > 1 ? `<polyline points="${line(sPts)}" fill="none" stroke="#34d399" stroke-width="2"/>
+    <polyline points="${line(stPts)}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 3"/>` : ''}
+    ${labels}
+  </svg></div>`;
+}
+
 const fragments = {
   evMain: `    <div class="chart-grid single">
       <div class="chart-card" id="ev-analytics-card">
@@ -10526,8 +10999,16 @@ const fragments = {
       <div class="form-group full"><label>Coach Comment</label>
         <textarea id="sbe-coach-kommentar" rows="2" placeholder="Coach comment..."></textarea></div>`,
 };
-function init() { initStandortGrabs(); }
-return { fragments, init, showPage, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, logRatedAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
+function init() {
+  initStandortGrabs();
+  // Monitoring-Tab einblenden (als letzte Seite, wie im Snowboard)
+  ['nav-tab-monitoring','mobile-nav-monitoring'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+  document.body.classList.add('sport-freeski');
+}
+return { fragments, init, showPage, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, logRatedAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
 })();
 
 // ═══════════════ SPORT BOOT ═══════════════
