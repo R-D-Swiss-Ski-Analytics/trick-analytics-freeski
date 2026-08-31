@@ -11071,6 +11071,20 @@ function init() {
     const el = document.getElementById(id);
     if (el) el.style.display = '';
   });
+  // Database-Seite entschlacken: Session Performance / Athlete-PDF / Team-PDF /
+  // Reality Check sind jetzt im Monitoring — Karten verstecken, DOM bleibt
+  // (die Monitoring-Buttons nutzen deren Selects via sbMonSyncSelects).
+  // Sichtbar bleibt nur die Session-Reports-Liste → Tab heisst neu «Reports».
+  ['perf-table','ar-athlete-sel','tr-season-sel'].forEach(id => {
+    const card = document.getElementById(id)?.closest('.card');
+    if (card) card.style.display = 'none';
+  });
+  const rcCard = document.querySelector('#page-datenbank [onclick="realityCheck()"]')?.closest('.card');
+  if (rcCard) rcCard.style.display = 'none';
+  const deskDb = document.querySelectorAll('.nav-tabs .nav-tab')[3];
+  if (deskDb) deskDb.textContent = 'Reports';
+  const mobDb = document.querySelectorAll('.mobile-nav-btn')[3];
+  if (mobDb) [...mobDb.childNodes].forEach(nd => { if (nd.nodeType === 3 && nd.textContent.trim()) nd.textContent = 'Reports'; });
   document.body.classList.add('sport-freeski');
 }
 return { fragments, init, showPage, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, logRatedAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
