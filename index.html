@@ -4020,7 +4020,6 @@ function sbRVPrintPdf() {
     <div>LOCATION<b>${(report.location||'—')}${report.jump_size ? ' · Jump '+report.jump_size : ''}</b></div>
     <div>CONDITIONS<b>${condLabel}</b></div>
   </div>
-  ${report.comments ? `<div class="comments"><b>Coach comments:</b> ${report.comments}</div>` : ''}
   ${printable}
   <footer><span>Swiss-Ski Trick Analyses — Snowboard</span><span>Generated ${today}</span></footer>
 </body></html>`);
@@ -4175,6 +4174,7 @@ function sbReportInnerHtml(report) {
           ${topFail ? `<span style="color:#e2001a;">✗ mostly: ${topFail[0]} (${topFail[1]}×)</span>` : ''}
           ${fatigue}
         </div>
+        ${g.attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;">💬 <b style="color:var(--text);">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('')}
       </div>`;
     }).join('');
     return `<div style="margin-bottom:20px;">
@@ -4182,12 +4182,13 @@ function sbReportInnerHtml(report) {
         <div style="font-size:17px;font-weight:800;color:#39c3d4;">${a.athlet}</div>
         <div style="font-size:11px;color:var(--muted);">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · Ø stomp rate <b style="color:var(--text);">${rate}%</b></div>
       </div>
+      ${a.note ? `<div style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border-left:3px solid #f59e0b;border-radius:8px;padding:8px 10px;margin-bottom:10px;">📝 <b>Coach note:</b> ${a.note}</div>` : ''}
       ${cards}
-      ${a.note ? `<div style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border-radius:8px;padding:8px 10px;">Note: ${a.note}</div>` : ''}
     </div>`;
   }).join('');
 
   return `<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">${typeShort}${report.location ? ' · '+report.location : ''}${report.duration_min ? ' · '+report.duration_min+' min' : ''}</div>
+${report.comments ? `<div style="background:var(--surface2);border-left:3px solid #39c3d4;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:14px;"><b style="color:#39c3d4;">Coach comments:</b> ${report.comments}</div>` : ''}
     <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:14px;">
       <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Landed/Stomped (height = stars)</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#e2001a;border-radius:2px;vertical-align:-1px;"></span> Failed</span>
@@ -11442,6 +11443,7 @@ function fsReportInnerHtml(report) {
           <span>Ø QoE <b style="color:${qoeCol};">${gQoe}%</b></span>
           ${fatigue}
         </div>
+        ${g.attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;">💬 <b style="color:var(--text);">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('')}
       </div>`;
     }).join('');
     return `<div style="margin-bottom:20px;">
@@ -11449,12 +11451,13 @@ function fsReportInnerHtml(report) {
         <div style="font-size:17px;font-weight:800;color:#39c3d4;">${a.athlet}</div>
         <div style="font-size:11px;color:var(--muted);">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · ${athLandedPct}% landed · Ø QoE <b style="color:var(--text);">${athQoe}%</b></div>
       </div>
+      ${a.note ? `<div style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border-left:3px solid #f59e0b;border-radius:8px;padding:8px 10px;margin-bottom:10px;">📝 <b>Coach note:</b> ${a.note}</div>` : ''}
       ${cards}
-      ${a.note ? `<div style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border-radius:8px;padding:8px 10px;">Note: ${a.note}</div>` : ''}
     </div>`;
   }).join('');
 
   return `<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">${typeShort}${report.location ? ' · '+report.location : ''}${report.duration_min ? ' · '+report.duration_min+' min' : ''}</div>
+${report.comments ? `<div style="background:var(--surface2);border-left:3px solid #39c3d4;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:14px;"><b style="color:#39c3d4;">Coach comments:</b> ${report.comments}</div>` : ''}
     <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:14px;">
       <span>Category lines (0/50/100% per rating):</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#39c3d4;border-radius:2px;vertical-align:-1px;"></span> Take-off</span>
@@ -11545,7 +11548,6 @@ function sbRVPrintPdf() {
     <div>LOCATION<b>${(report.location||'—')}${report.jump_size ? ' · Jump '+report.jump_size : ''}</b></div>
     <div>CONDITIONS<b>${condLabel}</b></div>
   </div>
-  ${report.comments ? `<div class="comments"><b>Coach comments:</b> ${report.comments}</div>` : ''}
   ${printable}
   <footer><span>Swiss-Ski Trick Analyses — Freeski</span><span>Generated ${today}</span></footer>
 </body></html>`);
