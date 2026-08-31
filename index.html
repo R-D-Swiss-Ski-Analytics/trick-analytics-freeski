@@ -6708,13 +6708,17 @@ function renderMonTrick() {
       </div>
       ${sbMonTimeChart(rows)}
       <div style="font-size:10px;color:var(--muted);margin-top:8px;">⚠ Sessions with fewer than 5 attempts — rates are statistically weak.</div>
+      <div id="mon-time-detail" style="font-size:11px;color:var(--muted);min-height:16px;margin-top:8px;">Tap a bar for session details</div>
     </div>
+    ${sbMonCoachingHtml(rows)}
   </div>`;
+  sbMonLoadComments();
 }
 
 function sbMonTimeChart(rows) {
   const by = {};
   rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
+  _monTimeBy = by;
   const dates = Object.keys(by).sort().slice(-12);
   if (!dates.length) return '<div style="color:var(--muted);font-size:12px;">No data.</div>';
   const H = 110, slot = 46, barW = 26, PAD = 34;
@@ -6737,7 +6741,7 @@ function sbMonTimeChart(rows) {
     const cx = PAD + i * slot + slot/2;
     sPts.push([cx, (H - succ * (H - 12)).toFixed(1)]);
     stPts.push([cx, (H - st * (H - 12)).toFixed(1)]);
-    bars += `<rect x="${x}" y="${(H - h).toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" rx="3" fill="#4a7dd6" opacity="${(0.35 + 0.65 * nn / maxN).toFixed(2)}"/>`;
+    bars += `<rect x="${x}" y="${(H - h).toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" rx="3" fill="#4a7dd6" opacity="${(0.35 + 0.65 * nn / maxN).toFixed(2)}" style="cursor:pointer;" onclick="sbMonTimeSel('${d}')"/>`;
     bars += `<text x="${cx}" y="${(H - h - 3).toFixed(1)}" text-anchor="middle" font-size="8" fill="#4a7dd6" font-family="Poppins,sans-serif">${nn}</text>`;
     const lbl = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' : d;
     labels += `<text x="${cx}" y="${H + 15}" text-anchor="middle" font-size="9" fill="${nn < 5 ? '#f59e0b' : '#6b8299'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
@@ -6752,6 +6756,189 @@ function sbMonTimeChart(rows) {
     ${labels}
     ${axisTitle}
   </svg></div>`;
+}
+
+// ═══════ COACHING ANALYSIS (Trick-Detail, 3. Block) — regelbasiert, Basis letzte 3 Sessions ═══════
+// Effizienz-Rate = Stomp-Rate pro Session (Entscheid Emilie 31.8.2026).
+// «Current status» = neuester Kommentar (V1); LLM-Synthese via Edge Function ist Phase 2.
+let _monTimeBy = {};
+let _monCmts = [];
+let _monCmtHistOpen = false;
+const MON_PLATEAU_TOL = 5; // Prozentpunkte über 3 Sessions — offener Parameter, an echten Daten testen
+
+function sbMonSessions(rows) {
+  const by = {};
+  rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
+  return Object.keys(by).sort().map(d => ({date: d, rows: by[d]}));
+}
+
+function sbMonCoachingHtml(rows) {
+  const GREY = '#6b8299', AMBER = '#f59e0b', RED = '#e2001a';
+  const sessions = sbMonSessions(rows);
+  const nS = sessions.length;
+  const srOf = s => s.rows.filter(x => sbMonOutcome(x) === 'stomped').length / s.rows.length;
+  const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0;
+  const items = [];
+
+  // 1 · Comp-readiness: alle 5 KPI ≥80% erfüllt über das 3-Session-Fenster (Landed+Stomped mit KPI-Daten)
+  const kpiWindowOk = sess => {
+    const atts = sess.flatMap(s => s.rows).filter(t => t.kpis && sbMonOutcome(t) !== 'failed');
+    if (!atts.length) return false;
+    return SB_KPIS.every(([k]) => atts.filter(t => t.kpis[k]).length / atts.length >= 0.8);
+  };
+  if (nS >= 3) {
+    const nowOk = kpiWindowOk(sessions.slice(-3));
+    const prevOk = nS >= 4 && kpiWindowOk(sessions.slice(Math.max(0, nS-6), nS-3));
+    if (nowOk) items.push(['Comp-readiness', 'Reached', GREY]);
+    else if (prevOk) items.push(['Comp-readiness', 'Lost — was reached before', RED]);
+    else items.push(['Comp-readiness', 'Not reached', AMBER]);
+  } else items.push(['Comp-readiness', `Not enough data (${nS}/3 sessions)`, GREY]);
+
+  // 2 · Efficiency trend: Stomp-Rate letzte 3 vs. vorangehende (bis 3) Sessions
+  if (nS >= 4) {
+    const last = avg(sessions.slice(-3).map(srOf));
+    const prev = avg(sessions.slice(Math.max(0, nS-6), nS-3).map(srOf));
+    const diff = Math.round((last - prev) * 100);
+    if (diff <= -5) items.push(['Efficiency trend', `Falling, ${diff}% (3 sessions)`, RED]);
+    else if (diff >= 5) items.push(['Efficiency trend', `Rising, +${diff}% (3 sessions)`, GREY]);
+    else items.push(['Efficiency trend', 'Stable (3 sessions)', GREY]);
+  } else items.push(['Efficiency trend', `Not enough data (${nS}/4 sessions)`, GREY]);
+
+  // 3 · Volume effect: Session-Volumen >150% des Trick-Schnitts UND Stomp-Rate unter Trick-Schnitt
+  if (nS >= 3) {
+    const avgVol = avg(sessions.map(s => s.rows.length));
+    const avgSr = avg(sessions.map(srOf));
+    const flagged = sessions.filter(s => s.rows.length > 1.5 * avgVol && srOf(s) < avgSr);
+    if (flagged.length) items.push(['Volume effect', `Drops at high volume, cause unclear (${flagged.length}×)`, AMBER]);
+    else items.push(['Volume effect', 'No volume effect', GREY]);
+  } else items.push(['Volume effect', `Not enough data (${nS}/3 sessions)`, GREY]);
+
+  // 4 · Plateau: Stomp-Rate-Spanne der letzten 3 Sessions unter Toleranzband
+  if (nS >= 3) {
+    const last3 = sessions.slice(-3).map(s => srOf(s) * 100);
+    const range = Math.max(...last3) - Math.min(...last3);
+    if (range < MON_PLATEAU_TOL) items.push(['Plateau', `Flat over last 3 sessions (±${Math.round(range)}%)`, AMBER]);
+    else items.push(['Plateau', 'None, still moving', GREY]);
+  } else items.push(['Plateau', `Not enough data (${nS}/3 sessions)`, GREY]);
+
+  // 5 · Consistency: Streuung der Stomp-Rate über die letzten (bis 6) Sessions
+  if (nS >= 3) {
+    const vals = sessions.slice(-6).map(s => srOf(s) * 100);
+    const m = avg(vals);
+    const sd = Math.sqrt(avg(vals.map(v => (v - m) ** 2)));
+    if (sd > 15) items.push(['Consistency', 'Irregular, session to session', AMBER]);
+    else items.push(['Consistency', 'Consistent', GREY]);
+  } else items.push(['Consistency', `Not enough data (${nS}/3 sessions)`, GREY]);
+
+  // 6 · Most common fail: häufigster Fail-Grund der letzten 3 Sessions, mit Trendrichtung
+  const last3Rows = sessions.slice(-3).flatMap(s => s.rows);
+  const failCnt = {};
+  last3Rows.forEach(t => { if (sbMonOutcome(t) === 'failed' && t.fail_grund) { const fl = sbFailLabel(t.fail_grund); failCnt[fl] = (failCnt[fl]||0) + 1; } });
+  const top = Object.entries(failCnt).sort((a,b)=>b[1]-a[1])[0];
+  if (top) {
+    const prevRows = sessions.slice(Math.max(0, nS-6), nS-3).flatMap(s => s.rows);
+    const shareNow = last3Rows.length ? top[1] / last3Rows.length : 0;
+    const prevN = prevRows.filter(t => sbMonOutcome(t) === 'failed' && sbFailLabel(t.fail_grund) === top[0]).length;
+    const sharePrev = prevRows.length ? prevN / prevRows.length : 0;
+    const tend = prevRows.length < 3 ? '' : shareNow > sharePrev + 0.05 ? ', increasing' : shareNow < sharePrev - 0.05 ? ', decreasing' : ', stable';
+    items.push(['Most common fail', `${top[0]} (${top[1]}×)${tend}`, tend === ', increasing' ? RED : AMBER]);
+  } else items.push(['Most common fail', 'No fail pattern', GREY]);
+
+  const grid = items.map(([label, txt, col]) => `
+    <div style="border-left:3px solid ${col};padding-left:10px;">
+      <div style="font-size:9px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600;">${label}</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text);">${txt}</div>
+    </div>`).join('');
+
+  return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px;">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">Coaching Analysis</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 24px;">${grid}</div>
+    <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:600;">Coach comment · Current status</span>
+        <a href="#" id="mon-cmt-hist-link" onclick="sbMonToggleHistory();return false;" style="font-size:11px;color:#39c3d4;display:none;">History</a>
+      </div>
+      <div id="mon-cmt-status" style="font-size:13px;color:var(--text);min-height:18px;">Loading…</div>
+      <div id="mon-cmt-history" style="display:none;margin-top:8px;"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:flex-start;">
+        <textarea id="mon-cmt-input" rows="2" placeholder="Add new comment" style="flex:1;resize:vertical;"></textarea>
+        <button onclick="sbMonSaveComment()" style="padding:9px 16px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Save</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function sbMonTimeSel(d) {
+  const el = document.getElementById('mon-time-detail');
+  const rs = _monTimeBy[d];
+  if (!el || !rs) return;
+  const n = rs.length;
+  const s = rs.filter(x => sbMonOutcome(x) === 'stomped').length;
+  const l = rs.filter(x => sbMonOutcome(x) === 'landed').length;
+  const f = n - s - l;
+  const fmt = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' + d.slice(2,4) : d;
+  el.innerHTML = `<b style="color:var(--text);">${fmt}</b> — ${n} attempts ·
+    <span style="color:#39c3d4;">${s} stomped</span> ·
+    <span style="color:#34d399;">${l} landed</span> ·
+    <span style="color:#e2001a;">${f} failed</span> ·
+    <b>${n ? Math.round(s/n*100) : 0}%</b> stomp rate
+    <button onclick="viewSessionReportByDate('${d}')" style="margin-left:8px;padding:3px 10px;border-radius:6px;border:1px solid #39c3d4;background:rgba(57,195,212,0.12);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">Open session report →</button>`;
+}
+
+// ── Trick-Kommentare (Tabelle trick_comments; Key = Athlet + normalisierter Trick) ──
+async function sbMonLoadComments() {
+  const st = document.getElementById('mon-cmt-status');
+  if (!st || !sbMonView.athlete || !sbMonView.trick) return;
+  _monCmts = []; _monCmtHistOpen = false;
+  const {data, error} = await db.from('trick_comments').select('*')
+    .eq('athlet', sbMonView.athlete).eq('trick', sbMonView.trick)
+    .order('datum', {ascending: false}).order('id', {ascending: false});
+  if (error) {
+    st.innerHTML = '<span style="color:var(--muted);font-size:11px;">Comments unavailable — run the trick_comments SQL in Supabase first.</span>';
+    return;
+  }
+  _monCmts = data || [];
+  sbMonRenderComments();
+}
+
+function sbMonRenderComments() {
+  const st = document.getElementById('mon-cmt-status');
+  const link = document.getElementById('mon-cmt-hist-link');
+  const hist = document.getElementById('mon-cmt-history');
+  if (!st) return;
+  const fmt = d => { if (!d) return ''; const p = String(d).split('-'); return p.length===3 ? p[2]+'.'+p[1]+'.'+p[0].slice(2) : d; };
+  const cur = _monCmts[0];
+  st.innerHTML = cur
+    ? `${cur.kommentar} <span style="color:var(--muted);font-size:11px;">(${fmt(cur.datum)})</span>`
+    : '<span style="color:var(--muted);">No comments yet.</span>';
+  if (link) {
+    link.style.display = _monCmts.length ? '' : 'none';
+    link.textContent = (_monCmtHistOpen ? 'Hide history' : 'History') + ` (${_monCmts.length})`;
+  }
+  if (hist) {
+    hist.style.display = _monCmtHistOpen ? '' : 'none';
+    hist.innerHTML = _monCmts.map(c => `<div style="font-size:12px;color:var(--text);padding:6px 0;border-top:1px solid var(--border);">
+      <span style="color:var(--muted);font-size:10px;">${fmt(c.datum)}</span><br>${c.kommentar}</div>`).join('');
+  }
+}
+
+function sbMonToggleHistory() {
+  _monCmtHistOpen = !_monCmtHistOpen;
+  sbMonRenderComments();
+}
+
+async function sbMonSaveComment() {
+  const inp = document.getElementById('mon-cmt-input');
+  const txt = (inp?.value || '').trim();
+  if (!txt) { showToast('Write a comment first', 'error'); return; }
+  const {error} = await db.from('trick_comments').insert({
+    athlet: sbMonView.athlete, trick: sbMonView.trick,
+    datum: new Date().toISOString().slice(0,10), kommentar: txt
+  });
+  if (error) { showToast('Error saving: ' + error.message, 'error'); return; }
+  inp.value = '';
+  showToast('Comment saved', 'success');
+  sbMonLoadComments();
 }
 
 const fragments = {
@@ -6816,7 +7003,7 @@ function init() {
   });
   document.body.classList.add('sport-snowboard');
 }
-return { fragments, init, showPage, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, sbSelectGrab, renderLiveSession, sessSetTrick, logAttempt, logAttemptStart, renderSbDisclosure, toggleSbKpi, commitLandedAttempt, commitFailedAttempt, sbAttemptNo, toggleSbEditKpi, setSbEditFail, saveSbLogEdit, deleteLogEntry, editLogEntry, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, openSessionReportView, sbReportInnerHtml, sbRVShowDetail, sbRVPrintPdf, loadReportsTab, renderReportsList, sbOpenReportInline, sbRepSetTyp, sbRepSetRange, sbRepApplyCustom, sbRepDeleteCurrent, sbRVEditStart, sbRVEditKpiToggle, sbRVEditFailSet, sbRVEditCancel, sbRVEditDelete, sbRVEditSave, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack };
+return { fragments, init, showPage, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, sbSelectGrab, renderLiveSession, sessSetTrick, logAttempt, logAttemptStart, renderSbDisclosure, toggleSbKpi, commitLandedAttempt, commitFailedAttempt, sbAttemptNo, toggleSbEditKpi, setSbEditFail, saveSbLogEdit, deleteLogEntry, editLogEntry, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, openSessionReportView, sbReportInnerHtml, sbRVShowDetail, sbRVPrintPdf, loadReportsTab, renderReportsList, sbOpenReportInline, sbRepSetTyp, sbRepSetRange, sbRepApplyCustom, sbRepDeleteCurrent, sbRVEditStart, sbRVEditKpiToggle, sbRVEditFailSet, sbRVEditCancel, sbRVEditDelete, sbRVEditSave, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonTimeSel, sbMonToggleHistory, sbMonSaveComment, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack };
 })();
 
 // ═══════════════ FREESKI-MODUL ═══════════════
@@ -11224,14 +11411,15 @@ function fsGroupAttempts(attempts) {
   return groups;
 }
 
-// Kategorie-Linien wie im Monitoring (letzte Ebene): pro Kategorie eine Linie mit Punkten
-// über die Versuche (0/50/100% je Ampel-Bewertung), leicht versetzt, damit sich Linien auf
-// gleicher Höhe nicht verdecken. Weisse Linie = laufender Ø-QoE. ✗/rote Nummer = Miss.
+// Pro Versuch vier Kategorie-Balken (Take-off/Trick/Grab/Landing, Höhe = Bewertung 0/50/100%),
+// Miss-Versuche mit rotem Band + roter Nummer; graue Linie = laufender Ø-QoE.
+// Farben wie das Kategorie-Verlaufs-Chart im Monitoring. Mit X/Y-Achsenbeschriftung.
 const FS_RV_CHART_CATS = [['takeoff','#39c3d4'],['trick_r','#4a7dd6'],['grab','#a78bfa'],['land','#34d399']];
 function fsTrickChartSvg(g, ai, ti) {
   const n = g.attempts.length;
-  const H = 100, PAD = 34, slot = n > 14 ? 26 : 34;
-  const yOf = p => H - p/100 * (H - 14);
+  const H = 90, PAD = 30, catW = 6, catGap = 1;
+  const groupW = 4*catW + 3*catGap, gap = 10, slot = groupW + gap;
+  const yOf = p => H - p/100 * (H - 8);
   const SCORE = {perfect:100, okay:50, miss:0};
   let grid = '';
   [0, 50, 100].forEach(p => {
@@ -11239,40 +11427,32 @@ function fsTrickChartSvg(g, ai, ti) {
     grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
   });
   let qoeSum = 0;
-  const qoePts = [];
-  let marks = '', labels = '', hits = '';
+  const pts = [];
+  let marks = '', bars = '', labels = '', hits = '';
   g.attempts.forEach((a, i) => {
     const q = qoeOfLogEntry(a);
     qoeSum += q;
-    const cx = PAD + i*slot + slot/2;
-    qoePts.push([cx, yOf(qoeSum/(i+1)).toFixed(1)]);
+    const gx = PAD + i*slot;
+    pts.push([gx + groupW/2, yOf(qoeSum/(i+1)).toFixed(1)]);
     const isMiss = a.result === 'miss';
-    if (isMiss) marks += `<rect x="${PAD + i*slot + 2}" y="2" width="${slot-4}" height="${H-2}" fill="rgba(226,0,26,0.05)" rx="3"/>
-      <text x="${cx}" y="11" text-anchor="middle" font-size="9" font-weight="700" fill="#e2001a" font-family="Poppins,sans-serif">✗</text>`;
-    labels += `<text x="${cx}" y="${H + 12}" text-anchor="middle" font-size="8" font-weight="${isMiss?'700':'400'}" fill="${isMiss?'#e2001a':'#6b8299'}" font-family="Poppins,sans-serif">${i+1}</text>`;
-    hits += `<rect x="${PAD + i*slot}" y="0" width="${slot}" height="${H+14}" fill="transparent" style="cursor:pointer;" onclick="sbRVShowDetail(${ai},${ti},${i})"/>`;
-  });
-  // Kategorie-Linien mit leichtem Versatz (Reihenfolge wie Legende); Lücken = nicht bewertet
-  let catLines = '', catDots = '';
-  FS_RV_CHART_CATS.forEach(([c, col], k) => {
-    const dy = (k - 1.5) * 2.6;
-    const pts = [];
-    g.attempts.forEach((a, i) => {
+    if (isMiss) marks += `<rect x="${gx-3}" y="2" width="${groupW+6}" height="${H-2}" fill="rgba(226,0,26,0.05)" rx="3"/>
+      <text x="${gx + groupW/2}" y="11" text-anchor="middle" font-size="9" font-weight="700" fill="#e2001a" font-family="Poppins,sans-serif">✗</text>`;
+    FS_RV_CHART_CATS.forEach(([c, col], k) => {
       const v = SCORE[a[c]];
       if (v === undefined) return;
-      pts.push([PAD + i*slot + slot/2, (yOf(v) + dy).toFixed(1)]);
+      const h = Math.max(4, v/100 * (H - 8));
+      bars += `<rect x="${gx + k*(catW+catGap)}" y="${(H-h).toFixed(1)}" width="${catW}" height="${h.toFixed(1)}" rx="1.5" fill="${col}"/>`;
     });
-    if (!pts.length) return;
-    if (pts.length > 1) catLines += `<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="1.8" opacity="0.85"/>`;
-    pts.forEach(p => { catDots += `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="${col}"/>`; });
+    labels += `<text x="${gx + groupW/2}" y="${H + 12}" text-anchor="middle" font-size="8" font-weight="${isMiss?'700':'400'}" fill="${isMiss?'#e2001a':'#6b8299'}" font-family="Poppins,sans-serif">${i+1}</text>`;
+    hits += `<rect x="${gx-3}" y="0" width="${slot}" height="${H+14}" fill="transparent" style="cursor:pointer;" onclick="sbRVShowDetail(${ai},${ti},${i})"/>`;
   });
   const w = PAD + Math.max(n*slot, 40);
   const axisTitle = `<text x="${PAD + (w-PAD)/2}" y="${H + 24}" text-anchor="middle" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
-  const qoeDots = qoePts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#e8edf2" stroke="#0c1a2b" stroke-width="1"/>`).join('');
-  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+28}" style="display:block;">${grid}${marks}${catLines}${catDots}
-    ${n>1?`<polyline points="${qoePts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#e8edf2" stroke-width="2"/>`:''}
-    ${qoeDots}
-    <rect id="sbrv-sel-${ai}-${ti}" x="0" y="1" width="${slot}" height="${H+18}" fill="none" stroke="#39c3d4" stroke-width="1.5" rx="4" style="display:none;"/>
+  const lineDots = pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#e8edf2" stroke="#0c1a2b" stroke-width="1"/>`).join('');
+  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+28}" style="display:block;">${grid}${marks}${bars}
+    ${n>1?`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#e8edf2" stroke-width="2"/>`:''}
+    ${lineDots}
+    <rect id="sbrv-sel-${ai}-${ti}" x="0" y="1" width="${groupW+6}" height="${H+18}" fill="none" stroke="#39c3d4" stroke-width="1.5" rx="4" style="display:none;"/>
     ${labels}${axisTitle}${hits}
   </svg></div>`;
 }
@@ -11289,8 +11469,8 @@ function sbRVShowDetail(ai, ti, i) {
   // Ausgewählten Versuch im Chart markieren (Konstanten identisch zu fsTrickChartSvg)
   const selRect = document.getElementById(`sbrv-sel-${ai}-${ti}`);
   if (selRect) {
-    const PAD = 34, slot = g.attempts.length > 14 ? 26 : 34;
-    selRect.setAttribute('x', PAD + i*slot);
+    const PAD = 30, groupW = 4*6 + 3*1, slot = groupW + 10;
+    selRect.setAttribute('x', PAD + i*slot - 3);
     selRect.style.display = '';
   }
   if (_sbRVEdit && _sbRVEdit.ai === ai && _sbRVEdit.ti === ti && _sbRVEdit.i === i) {
@@ -11497,7 +11677,7 @@ function fsReportInnerHtml(report) {
   return `<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">${typeShort}${report.location ? ' · '+report.location : ''}${report.duration_min ? ' · '+report.duration_min+' min' : ''}</div>
 ${report.comments ? `<div style="background:var(--surface2);border-left:3px solid #39c3d4;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:14px;"><b style="color:#39c3d4;">Coach comments:</b> ${report.comments}</div>` : ''}
     <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:14px;">
-      <span>Category lines (0/50/100% per rating):</span>
+      <span>Bars per attempt (height = rating 0/50/100%):</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#39c3d4;border-radius:2px;vertical-align:-1px;"></span> Take-off</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Trick</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#a78bfa;border-radius:2px;vertical-align:-1px;"></span> Grab</span>
