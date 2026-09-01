@@ -1718,8 +1718,17 @@ async function submitSessionReport(duration) {
     const v = (document.getElementById('sr-ath-'+n.replace(/\s/g,'_'))?.value||'').trim();
     if (v) athleteNotes[shortName(n)] = v;
   });
+  const contestScores = {};
+  sessSelectedAthletes.forEach(n => {
+    const sid = n.replace(/\s/g,'_');
+    const q = parseFloat(document.getElementById('sr-quali-'+sid)?.value);
+    const f = parseFloat(document.getElementById('sr-final-'+sid)?.value);
+    if (Number.isFinite(q) || Number.isFinite(f)) {
+      contestScores[shortName(n)] = {quali: Number.isFinite(q) ? q : null, final: Number.isFinite(f) ? f : null};
+    }
+  });
   document.getElementById('sess-report-modal')?.remove();
-  await saveSessionReport(duration, location, conditions, comments, athleteNotes, jumpSize);
+  await saveSessionReport(duration, location, conditions, comments, athleteNotes, jumpSize, contestScores);
 }
 
 
@@ -2515,7 +2524,11 @@ async function rebuildReportFromTimestamps(id, silent=false) {
   });
 
   const existingNotes = {};
-  (report.trick_data||[]).forEach(a => { if (a.note) existingNotes[a.athlet] = a.note; });
+  const existingScores = {};
+  (report.trick_data||[]).forEach(a => {
+    if (a.note) existingNotes[a.athlet] = a.note;
+    if (a.quali_score != null || a.final_score != null) existingScores[a.athlet] = {q: a.quali_score ?? null, f: a.final_score ?? null};
+  });
 
   const trickData = Object.entries(athleteEntries).map(([name, ents]) => {
     const trickList = buildFsTrickBlocks(ents);
@@ -2528,7 +2541,9 @@ async function rebuildReportFromTimestamps(id, silent=false) {
       sterne: e.sterne, kpis: e.kpis, fail: e.fail, time: e.time,
       dbId: e.dbId || null,
       comment: e.comment || undefined}));
-    return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList, note, trickIds, attempts};
+    const exs = existingScores[shortName(name)] || {};
+    return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList, note, trickIds, attempts,
+      quali_score: exs.q ?? null, final_score: exs.f ?? null};
   });
 
   const {error: updErr} = await db.from('session_reports').update({trick_data: trickData}).eq('id', id);
@@ -3255,13 +3270,29 @@ function sbRunCardHtml(name, d, trickOptions) {
   const elRows = r.elements.map((el, i) => {
     const rate = r.ratings[i] || null;
     const btn = (val, icon, col) => `<button onclick="sbRunRate('${name}',${i},'${val}')" style="padding:8px 12px;border-radius:8px;border:2px solid ${rate===val?col:'var(--border)'};background:${rate===val?col+'22':'var(--surface2)'};color:${rate===val?col:'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;">${icon}</button>`;
+    const hasNote = (el.tags && el.tags.length) || el.note;
+    const noteLine = hasNote ? `<div style="margin:-2px 0 6px 62px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        ${(el.tags||[]).map(t => `<span style="font-size:10px;color:#f59e0b;border:1px solid #f59e0b55;border-radius:999px;padding:2px 8px;">${t}</span>`).join('')}
+        ${el.note ? `<span style="font-size:11px;color:var(--muted);">${el.note}</span>` : ''}
+      </div>` : '';
+    const notePanel = r.noteOpen === i ? `<div style="margin:0 0 8px 30px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;">
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Tags</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
+          ${sbAllFailReasons().map(t => { const on = (el.tags||[]).includes(t); return `<button onclick="sbRunTagToggle('${name}',${i},'${t.replace(/'/g,"\\'")}')" style="padding:5px 10px;border-radius:999px;border:1.5px solid ${on?'#f59e0b':'var(--border)'};background:${on?'rgba(245,158,11,0.15)':'none'};color:${on?'#f59e0b':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">${t}</button>`; }).join('')}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <input value="${(el.note||'').replace(/"/g,'&quot;')}" oninput="sbRunNoteInput('${name}',${i},this.value)" placeholder="Comment (optional)" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+          <button onclick="sbRunNoteToggle('${name}',null)" style="padding:8px 14px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Done</button>
+        </div>
+      </div>` : '';
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);">
       <span style="width:20px;height:20px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0;">${i+1}</span>
       <span style="flex-shrink:0;font-size:9px;font-weight:700;letter-spacing:.5px;color:${el.kind==='rail'?'#a78bfa':'#39c3d4'};border:1px solid ${el.kind==='rail'?'#a78bfa':'#39c3d4'};border-radius:4px;padding:2px 5px;">${el.kind==='rail'?'RAIL':'JUMP'}</span>
       <span style="flex:1;font-size:12px;font-weight:600;color:var(--text);line-height:1.3;">${el.label}</span>
       ${btn('failed','✗','#e2001a')}${btn('landed','✓','#34d399')}${btn('stomped','★','#39c3d4')}
+      <button onclick="sbRunNoteToggle('${name}',${i})" title="Tags / comment" style="background:none;border:1px solid ${hasNote || r.noteOpen === i ?'#f59e0b':'var(--border)'};border-radius:8px;color:${hasNote || r.noteOpen === i ?'#f59e0b':'var(--muted)'};cursor:pointer;font-size:13px;padding:6px 9px;">✎</button>
       <button onclick="sbRunRemoveEl('${name}',${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 4px;">✕</button>
-    </div>`;
+    </div>${noteLine}${notePanel}`;
   }).join('');
 
   let addPanel = '';
@@ -3348,9 +3379,24 @@ function sbRunRate(name, i, val) {
   r.ratings[i] = r.ratings[i] === val ? null : val;
   renderLiveSession();
 }
+function sbRunNoteToggle(name, i) {
+  const r = sbRunState(name);
+  r.noteOpen = (i === null || r.noteOpen === i) ? null : i;
+  renderLiveSession();
+}
+function sbRunTagToggle(name, i, tag) {
+  const el = sbRunState(name).elements[i];
+  el.tags = el.tags || [];
+  const idx = el.tags.indexOf(tag);
+  if (idx >= 0) el.tags.splice(idx, 1); else el.tags.push(tag);
+  renderLiveSession();
+}
+function sbRunNoteInput(name, i, val) {
+  sbRunState(name).elements[i].note = val;   // ohne Re-Render, damit das Tippen flüssig bleibt
+}
 function sbRunSave(name) {
   const r = sbRunState(name);
-  const lines = r.elements.map((el, i) => `${i+1}/${r.elements.length} · ${el.label} → ${r.ratings[i]}`).join('\n');
+  const lines = r.elements.map((el, i) => `${i+1}/${r.elements.length} · ${el.label} → ${r.ratings[i]}${(el.tags||[]).length ? ' · Tags: ' + el.tags.join(', ') : ''}${el.note ? ' · «' + el.note + '»' : ''}`).join('\n');
   alert(`PROTOTYPE — would save as ${r.elements.length} attempts:\n\n${lines}\n\n(typ: ${sessType}, tag: Run ${r.no})`);
   r.no++;
   r.ratings = r.ratings.map(() => null);   // gleicher Run nochmal, Bewertungen zurückgesetzt
@@ -3780,6 +3826,14 @@ function endSession() {
           <input type="text" id="sr-ath-${n.replace(/\\s/g,'_')}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;">
         </div>`).join('')}
       </div>
+      ${sessType && sessType.includes('Competition') ? `<div>
+        <label style="font-size:11px;color:#f59e0b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Contest Results</label>
+        ${sessSelectedAthletes.map(n => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
+          <input type="number" step="0.01" min="0" id="sr-quali-${n.replace(/\\s/g,'_')}" placeholder="Quali score" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;">
+          <input type="number" step="0.01" min="0" id="sr-final-${n.replace(/\\s/g,'_')}" placeholder="Final — empty if not reached" style="flex:1.4;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;">
+        </div>`).join('')}
+      </div>` : ''}
     </div>
     <div style="display:flex;gap:10px;margin-top:20px;">
       <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
@@ -3808,7 +3862,7 @@ function buildFsTrickBlocks(entries) {
   return blocks;
 }
 
-async function saveSessionReport(duration, location, conditions, comments, athleteNotes, jumpSize) {
+async function saveSessionReport(duration, location, conditions, comments, athleteNotes, jumpSize, contestScores) {
   // Geister-Reports verhindern: ohne einen einzigen geloggten Versuch gibt es nichts zu rapportieren
   if (!sessLog.length) { showToast('No attempts logged — session ended without saving a report', 'error'); resetSession(); return; }
   const athleteEntries = {};
@@ -3831,7 +3885,9 @@ async function saveSessionReport(duration, location, conditions, comments, athle
       sterne: e.sterne, kpis: e.kpis, fail: e.fail, time: e.time,
       dbId: e.dbId || null,
       comment: e.comment || undefined}));
-    return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList, note, trickIds, attempts};
+    const cs = (contestScores || {})[shortName(name)] || {};
+    return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList, note, trickIds, attempts,
+      quali_score: cs.quali ?? null, final_score: cs.final ?? null};
   });
 
   const row = {
@@ -4356,7 +4412,7 @@ function sbReportInnerHtml(report) {
     return `<div style="margin-bottom:20px;">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
         <div style="font-size:17px;font-weight:800;color:#39c3d4;">${a.athlet}</div>
-        <div style="font-size:11px;color:var(--muted);">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · Ø stomp rate <b style="color:var(--text);">${rate}%</b></div>
+        <div style="font-size:11px;color:var(--muted);">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · Ø stomp rate <b style="color:var(--text);">${rate}%</b>${a.quali_score != null ? ' · Quali <b style="color:#f59e0b;">' + a.quali_score + '</b>' : ''}${a.final_score != null ? ' · Final <b style="color:#f59e0b;">' + a.final_score + '</b>' : ''}</div>
       </div>
       ${a.note ? `<div style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border-left:3px solid #f59e0b;border-radius:8px;padding:8px 10px;margin-bottom:10px;">📝 <b>Coach note:</b> ${a.note}</div>` : ''}
       ${cards}
@@ -7286,7 +7342,7 @@ function init() {
   document.body.classList.add('sport-snowboard');
   sbLoadCustomFails();   // team-weite Custom-Fail-Tags nachladen
 }
-return { fragments, init, showPage, sbCustomFailPrompt, sbRunToggleAdd, sbRunSetRailType, sbRunAddJump, sbRunAddRailCommit, sbRunRemoveEl, sbRunRate, sbRunSave, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, sbSelectGrab, renderLiveSession, sessSetTrick, logAttempt, logAttemptStart, renderSbDisclosure, toggleSbKpi, commitLandedAttempt, commitFailedAttempt, sbAttemptNo, toggleSbEditKpi, setSbEditFail, saveSbLogEdit, deleteLogEntry, editLogEntry, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, openSessionReportView, sbReportInnerHtml, sbRVShowDetail, sbRVPrintPdf, loadReportsTab, renderReportsList, sbOpenReportInline, sbRepSetTyp, sbRepSetRange, sbRepApplyCustom, sbRepDeleteCurrent, sbRVEditStart, sbRVEditKpiToggle, sbRVEditFailSet, sbRVEditCancel, sbRVEditDelete, sbRVEditSave, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonTimeSel, sbMonOpenTrickReport, sbMonToggleHistory, sbMonSaveComment, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack };
+return { fragments, init, showPage, sbCustomFailPrompt, sbRunToggleAdd, sbRunSetRailType, sbRunAddJump, sbRunAddRailCommit, sbRunRemoveEl, sbRunRate, sbRunNoteToggle, sbRunTagToggle, sbRunNoteInput, sbRunSave, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, sbSelectGrab, renderLiveSession, sessSetTrick, logAttempt, logAttemptStart, renderSbDisclosure, toggleSbKpi, commitLandedAttempt, commitFailedAttempt, sbAttemptNo, toggleSbEditKpi, setSbEditFail, saveSbLogEdit, deleteLogEntry, editLogEntry, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, openSessionReportView, sbReportInnerHtml, sbRVShowDetail, sbRVPrintPdf, loadReportsTab, renderReportsList, sbOpenReportInline, sbRepSetTyp, sbRepSetRange, sbRepApplyCustom, sbRepDeleteCurrent, sbRVEditStart, sbRVEditKpiToggle, sbRVEditFailSet, sbRVEditCancel, sbRVEditDelete, sbRVEditSave, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonTimeSel, sbMonOpenTrickReport, sbMonToggleHistory, sbMonSaveComment, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack };
 })();
 
 // ═══════════════ FREESKI-MODUL ═══════════════
