@@ -1752,7 +1752,8 @@ async function submitSessionReport(duration) {
     const grab = ids => ids.map(id => parseFloat(document.getElementById(id + sid)?.value)).filter(Number.isFinite);
     const quali = grab(['sr-q1-','sr-q2-']);
     const finals = grab(['sr-f1-','sr-f2-','sr-f3-']);
-    if (quali.length || finals.length) contestScores[shortName(n)] = {quali, finals};
+    const rank = parseInt(document.getElementById('sr-rank-' + sid)?.value, 10);
+    if (quali.length || finals.length || Number.isFinite(rank)) contestScores[shortName(n)] = {quali, finals, rank: Number.isFinite(rank) ? rank : null};
   });
   document.getElementById('sess-report-modal')?.remove();
   await saveSessionReport(duration, location, conditions, comments, athleteNotes, jumpSize, contestScores);
@@ -2554,7 +2555,7 @@ async function rebuildReportFromTimestamps(id, silent=false) {
   const existingScores = {};
   (report.trick_data||[]).forEach(a => {
     if (a.note) existingNotes[a.athlet] = a.note;
-    if ((a.quali_scores && a.quali_scores.length) || (a.final_scores && a.final_scores.length)) existingScores[a.athlet] = {q: a.quali_scores || null, f: a.final_scores || null};
+    if ((a.quali_scores && a.quali_scores.length) || (a.final_scores && a.final_scores.length) || a.contest_rank) existingScores[a.athlet] = {q: a.quali_scores || null, f: a.final_scores || null, r: a.contest_rank || null};
   });
 
   const trickData = Object.entries(athleteEntries).map(([name, ents]) => {
@@ -2570,7 +2571,7 @@ async function rebuildReportFromTimestamps(id, silent=false) {
       comment: e.comment || undefined}));
     const exs = existingScores[shortName(name)] || {};
     return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList, note, trickIds, attempts,
-      quali_scores: exs.q ?? null, final_scores: exs.f ?? null};
+      quali_scores: exs.q ?? null, final_scores: exs.f ?? null, contest_rank: exs.r ?? null};
   });
 
   const {error: updErr} = await db.from('session_reports').update({trick_data: trickData}).eq('id', id);
@@ -3937,7 +3938,7 @@ function endSession() {
   const modal = document.createElement('div');
   modal.id = 'sess-report-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
-  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:28px;max-width:480px;width:100%;">
+  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:28px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto;">
     <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;color:#39c3d4;margin-bottom:4px;">Session Complete</div>
     <div style="font-size:13px;color:#6b8299;margin-bottom:20px;">${sessLog.length} attempts logged ·
       <input id="sr-duration" type="number" min="5" step="5" value="${duration}" style="width:70px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:3px 6px;font-family:'Poppins',sans-serif;font-size:13px;text-align:center;"> min
@@ -3969,7 +3970,7 @@ function endSession() {
         <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Athlete Notes</label>
         ${sessSelectedAthletes.map(n => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
-          <input type="text" id="sr-ath-${n.replace(/\\s/g,'_')}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;">
+          <input type="text" id="sr-ath-${n.replace(/\s/g,'_')}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;">
         </div>`).join('')}
       </div>
       ${sessType && sessType.includes('Competition') ? (() => {
@@ -3977,12 +3978,14 @@ function endSession() {
         const inp = (id, ph) => `<input type="number" step="0.01" min="0" id="${id}" placeholder="${ph}" style="width:76px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;text-align:center;">`;
         return `<div>
         <label style="font-size:11px;color:#f59e0b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Contest Results <span style="text-transform:none;font-weight:400;">(Final empty if not reached)</span></label>
-        ${sessSelectedAthletes.map(n => { const sid = n.replace(/\\s/g,'_'); return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+        ${sessSelectedAthletes.map(n => { const sid = n.replace(/\s/g,'_'); return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
           <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
           <span style="font-size:10px;color:#6b8299;font-weight:600;">QUALI</span>
           ${inp('sr-q1-'+sid,'Run 1')}${inp('sr-q2-'+sid,'Run 2')}
           <span style="font-size:10px;color:#6b8299;font-weight:600;margin-left:6px;">FINAL</span>
           ${inp('sr-f1-'+sid,'Run 1')}${inp('sr-f2-'+sid,'Run 2')}${nFinal === 3 ? inp('sr-f3-'+sid,'Run 3') : ''}
+          <span style="font-size:10px;color:#6b8299;font-weight:600;margin-left:6px;">RANK</span>
+          <input type="number" step="1" min="1" id="sr-rank-${sid}" placeholder="#" style="width:56px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;text-align:center;">
         </div>`; }).join('')}
       </div>`; })() : ''}
     </div>
@@ -4039,7 +4042,8 @@ async function saveSessionReport(duration, location, conditions, comments, athle
     const cs = (contestScores || {})[shortName(name)] || {};
     return {athlet: shortName(name), totalAtt, totalLand, tricks: trickList, note, trickIds, attempts,
       quali_scores: cs.quali && cs.quali.length ? cs.quali : null,
-      final_scores: cs.finals && cs.finals.length ? cs.finals : null};
+      final_scores: cs.finals && cs.finals.length ? cs.finals : null,
+      contest_rank: Number.isFinite(cs.rank) ? cs.rank : null};
   });
 
   const row = {
@@ -4564,7 +4568,7 @@ function sbReportInnerHtml(report) {
     return `<div style="margin-bottom:20px;">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
         <div style="font-size:17px;font-weight:800;color:#39c3d4;">${a.athlet}</div>
-        <div style="font-size:11px;color:var(--muted);">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · Ø stomp rate <b style="color:var(--text);">${rate}%</b>${a.quali_scores && a.quali_scores.length ? ' · Quali <b style="color:#f59e0b;">' + a.quali_scores.join(' / ') + '</b>' : ''}${a.final_scores && a.final_scores.length ? ' · Final <b style="color:#f59e0b;">' + a.final_scores.join(' / ') + '</b>' : ''}</div>
+        <div style="font-size:11px;color:var(--muted);">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · Ø stomp rate <b style="color:var(--text);">${rate}%</b>${a.quali_scores && a.quali_scores.length ? ' · Quali <b style="color:#f59e0b;">' + a.quali_scores.join(' / ') + '</b>' : ''}${a.final_scores && a.final_scores.length ? ' · Final <b style="color:#f59e0b;">' + a.final_scores.join(' / ') + '</b>' : ''}${a.contest_rank ? ' · Rank <b style="color:#f59e0b;">' + a.contest_rank + '</b>' : ''}</div>
       </div>
       ${a.note ? `<div style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border-left:3px solid #f59e0b;border-radius:8px;padding:8px 10px;margin-bottom:10px;">📝 <b>Coach note:</b> ${a.note}</div>` : ''}
       ${cards}
@@ -8104,7 +8108,7 @@ async function rebuildReportFromTimestamps(id, silent=false) {
   const existingScores = {};
   (report.trick_data||[]).forEach(a => {
     if (a.note) existingNotes[a.athlet] = a.note;
-    if ((a.quali_scores && a.quali_scores.length) || (a.final_scores && a.final_scores.length)) existingScores[a.athlet] = {q: a.quali_scores || null, f: a.final_scores || null};
+    if ((a.quali_scores && a.quali_scores.length) || (a.final_scores && a.final_scores.length) || a.contest_rank) existingScores[a.athlet] = {q: a.quali_scores || null, f: a.final_scores || null, r: a.contest_rank || null};
   });
 
   const athleteEntries = {};
@@ -8133,7 +8137,7 @@ async function rebuildReportFromTimestamps(id, silent=false) {
       time: e.time||null, dbId: e.dbId||null, comment: e.comment}));
     const exs = existingScores[shortName(name)] || {};
     return {athlet: shortName(name), totalAtt, totalLand, qualityPct, tricks: trickList, note, trickIds, attempts,
-      quali_scores: exs.q ?? null, final_scores: exs.f ?? null};
+      quali_scores: exs.q ?? null, final_scores: exs.f ?? null, contest_rank: exs.r ?? null};
   });
 
   const {error: updErr} = await db.from('session_reports').update({trick_data: trickData}).eq('id', id);
@@ -9034,7 +9038,7 @@ function endSession() {
   const modal = document.createElement('div');
   modal.id = 'sess-report-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
-  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:28px;max-width:480px;width:100%;">
+  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:28px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto;">
     <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;color:#39c3d4;margin-bottom:4px;">Session Complete</div>
     <div style="font-size:13px;color:#6b8299;margin-bottom:20px;">${sessLog.length} attempts logged ·
       <input id="sr-duration" type="number" min="5" step="5" value="${duration}" style="width:70px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:3px 6px;font-family:'Poppins',sans-serif;font-size:13px;text-align:center;"> min
@@ -9066,7 +9070,7 @@ function endSession() {
         <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Athlete Notes</label>
         ${sessSelectedAthletes.map(n => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
-          <input type="text" id="sr-ath-${n.replace(/\\s/g,'_')}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;">
+          <input type="text" id="sr-ath-${n.replace(/\s/g,'_')}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;">
         </div>`).join('')}
       </div>
       ${sessType && sessType.includes('Competition') ? (() => {
@@ -9074,12 +9078,14 @@ function endSession() {
         const inp = (id, ph) => `<input type="number" step="0.01" min="0" id="${id}" placeholder="${ph}" style="width:76px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;text-align:center;">`;
         return `<div>
         <label style="font-size:11px;color:#f59e0b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Contest Results <span style="text-transform:none;font-weight:400;">(Final empty if not reached)</span></label>
-        ${sessSelectedAthletes.map(n => { const sid = n.replace(/\\s/g,'_'); return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+        ${sessSelectedAthletes.map(n => { const sid = n.replace(/\s/g,'_'); return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
           <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
           <span style="font-size:10px;color:#6b8299;font-weight:600;">QUALI</span>
           ${inp('sr-q1-'+sid,'Run 1')}${inp('sr-q2-'+sid,'Run 2')}
           <span style="font-size:10px;color:#6b8299;font-weight:600;margin-left:6px;">FINAL</span>
           ${inp('sr-f1-'+sid,'Run 1')}${inp('sr-f2-'+sid,'Run 2')}${nFinal === 3 ? inp('sr-f3-'+sid,'Run 3') : ''}
+          <span style="font-size:10px;color:#6b8299;font-weight:600;margin-left:6px;">RANK</span>
+          <input type="number" step="1" min="1" id="sr-rank-${sid}" placeholder="#" style="width:56px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;text-align:center;">
         </div>`; }).join('')}
       </div>`; })() : ''}
     </div>
@@ -9174,7 +9180,8 @@ async function saveSessionReport(duration, location, conditions, comments, athle
     const cs = (contestScores || {})[shortName(name)] || {};
     return {athlet: shortName(name), totalAtt, totalLand, qualityPct, tricks: trickList, note, trickIds, attempts,
       quali_scores: cs.quali && cs.quali.length ? cs.quali : null,
-      final_scores: cs.finals && cs.finals.length ? cs.finals : null};
+      final_scores: cs.finals && cs.finals.length ? cs.finals : null,
+      contest_rank: Number.isFinite(cs.rank) ? cs.rank : null};
   });
 
   const row = {
@@ -12241,7 +12248,7 @@ function fsReportInnerHtml(report) {
     return `<div style="margin-bottom:20px;">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
         <div style="font-size:17px;font-weight:800;color:#39c3d4;">${a.athlet}</div>
-        <div style="font-size:11px;color:var(--muted);">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · ${athLandedPct}% landed · Ø QoE <b style="color:var(--text);">${athQoe}%</b>${a.quali_scores && a.quali_scores.length ? ' · Quali <b style="color:#f59e0b;">' + a.quali_scores.join(' / ') + '</b>' : ''}${a.final_scores && a.final_scores.length ? ' · Final <b style="color:#f59e0b;">' + a.final_scores.join(' / ') + '</b>' : ''}</div>
+        <div style="font-size:11px;color:var(--muted);">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · ${athLandedPct}% landed · Ø QoE <b style="color:var(--text);">${athQoe}%</b>${a.quali_scores && a.quali_scores.length ? ' · Quali <b style="color:#f59e0b;">' + a.quali_scores.join(' / ') + '</b>' : ''}${a.final_scores && a.final_scores.length ? ' · Final <b style="color:#f59e0b;">' + a.final_scores.join(' / ') + '</b>' : ''}${a.contest_rank ? ' · Rank <b style="color:#f59e0b;">' + a.contest_rank + '</b>' : ''}</div>
       </div>
       ${a.note ? `<div style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border-left:3px solid #f59e0b;border-radius:8px;padding:8px 10px;margin-bottom:10px;">📝 <b>Coach note:</b> ${a.note}</div>` : ''}
       ${cards}
