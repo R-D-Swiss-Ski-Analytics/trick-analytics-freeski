@@ -6402,12 +6402,13 @@ function sbMonTrickAgg(rows) {
   return Object.values(map);
 }
 
-function sbMonTrend(rows) {
+function sbMonTrend(rows, isHit) {
+  const hit = isHit || (x => sbMonOutcome(x) === 'stomped');
   const by = {};
   rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
   const dates = Object.keys(by).sort();
   if (dates.length < 2) return null;
-  const rate = d => by[d].filter(x => sbMonOutcome(x) === 'stomped').length / by[d].length;
+  const rate = d => by[d].filter(hit).length / by[d].length;
   const last = rate(dates[dates.length - 1]);
   const prev = dates.slice(0, -1).slice(-3);
   const prevAvg = prev.reduce((a, d) => a + rate(d), 0) / prev.length;
@@ -6707,8 +6708,10 @@ function renderMonTrick() {
   const f = rows.filter(t => sbMonOutcome(t) === 'failed').length;
   const n = rows.length;
   const rate = n ? Math.round(s/n*100) : 0;
+  const landedRate = n ? Math.round((s+l)/n*100) : 0;
   const stKey = sbMonStatusKey(n, s);
   const trend = sbMonTrend(rows);
+  const trendLanded = sbMonTrend(rows, x => sbMonOutcome(x) !== 'failed');
 
   // KPI fulfillment (new data only)
   const kpiRows = rows.filter(t => t.kpis && sbMonOutcome(t) !== 'failed');
@@ -6754,8 +6757,8 @@ function renderMonTrick() {
           <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#34d399;margin-right:6px;"></span>Stomped (5/5 KPI's)</span><b>${s}</b></div>
           <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#4a7dd6;margin-right:6px;"></span>Landed</span><b>${l}</b></div>
           <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#e2001a;margin-right:6px;"></span>Failed</span><b>${f}</b></div>
-          <div style="display:flex;justify-content:space-between;padding:6px 0;"><span>Stomp rate</span><b style="color:${SB_MON_STATUS[stKey].color};">${rate}%</b></div>
-          ${trend ? `<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>Trend</span>${sbMonTrendHtml(trend)}</div>` : ''}
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;"><span>Landed rate <span style="color:var(--muted);font-size:10px;">(Landed+Stomped)</span></span><span style="white-space:nowrap;"><b style="color:#34d399;">${landedRate}%</b>${trendLanded ? ' ' + sbMonTrendHtml(trendLanded) : ''}</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 0;"><span>Stomp rate</span><span style="white-space:nowrap;"><b style="color:${SB_MON_STATUS[stKey].color};">${rate}%</b>${trend ? ' ' + sbMonTrendHtml(trend) : ''}</span></div>
         </div>
       </div>
       <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
@@ -6770,7 +6773,7 @@ function renderMonTrick() {
       <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Progress over sessions</div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:8px;">
         <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Volume (attempts)</span>
-        <span><span style="display:inline-block;width:14px;height:2px;background:#34d399;vertical-align:3px;"></span> Success rate (Landed+Stomped)</span>
+        <span><span style="display:inline-block;width:14px;height:2px;background:#34d399;vertical-align:3px;"></span> Landed rate (Landed+Stomped)</span>
         <span><span style="display:inline-block;width:14px;height:2px;background:#f59e0b;vertical-align:3px;border-bottom:2px dashed #f59e0b;background:none;"></span> Stomp rate</span>
       </div>
       ${sbMonTimeChart(rows)}
