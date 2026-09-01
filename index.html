@@ -400,6 +400,7 @@ body.sport-snowboard input[type="number"], body.sport-freeski input[type="number
 body.sport-snowboard input[type="date"], body.sport-freeski input[type="date"],
 body.sport-snowboard textarea, body.sport-freeski textarea { border-radius: 10px; }
 body.sport-snowboard .btn-secondary, body.sport-freeski .btn-secondary { border-radius: 999px; }
+body.sport-snowboard #sb-transfer-group { display: none !important; }
 body.sport-snowboard .nav-tab, body.sport-freeski .nav-tab { border-radius: 999px; }
 body.sport-snowboard .sb-ov-card, body.sport-freeski .sb-ov-card { border-radius: 14px; }
 body.sport-snowboard .sb-ov-num, body.sport-freeski .sb-ov-num { font-weight: 800; }
@@ -617,6 +618,8 @@ body.sport-snowboard textarea, body.sport-freeski textarea { font-family: 'Poppi
         <div class="form-group rail-field-sb hidden"><label>Slide Variant</label>
           <select id="sb-slidevar"><option value="">–</option>
             <option>Back Slide</option><option>Front Slide</option>
+            <option>Back Slide Left Foot</option><option>Back Slide Right Foot</option>
+            <option>Front Slide Left Foot</option><option>Front Slide Right Foot</option>
           </select></div>
         <div class="form-group rail-field-sb hidden"><label>In-Spin</label>
           <select id="sb-inspin"><option value="">–</option>
@@ -625,13 +628,17 @@ body.sport-snowboard textarea, body.sport-freeski textarea { font-family: 'Poppi
             <option>L 180</option><option>R 180</option><option>L 360</option><option>R 360</option>
           </select></div>
         <div class="form-group rail-field-sb hidden"><label id="sb-swap-label">Swap</label>
-          <select id="sb-swap"><option value="">–</option>
+          <select id="sb-swap" onchange="sbSelectAddNew(this)"><option value="">–</option>
             <option>Front Swap</option><option>Back Swap</option><option>BS 360 Swap</option>
             <option>FS 360 Swap</option><option>BS 540 Swap</option><option>FS 540</option>
             <option>Front Swap - Front Swap</option><option>Front Swap - Back Swap</option>
             <option>Back Swap - Front Swap</option><option>Back Swap - Back Swap</option>
+          </select></div>
+        <div class="form-group rail-field-sb hidden" id="sb-transfer-group"><label>Transfer</label>
+          <select id="sb-transfer" onchange="sbSelectAddNew(this)"><option value="">–</option>
             <option>Transfer to 50-50</option><option>Transfer to Switch 50-50</option><option>Transfer to Slide</option>
             <option>Transfer to Lip On</option><option>Transfer to Switch Tails On</option><option>Transfer to Switch Lip On</option>
+            <option value="__add__">＋ Add new…</option>
           </select></div>
         <div class="form-group rail-field-sb hidden"><label>Out-Spin</label>
           <select id="sb-outspin"><option value="">–</option>
@@ -951,6 +958,7 @@ const SPORT_CONFIGS = {
             <option>to 50-50</option><option>to Nose Press</option><option>to Tail Press</option>
             <option>to Board Slide</option><option>to Nose Slide</option><option>to Lip Slide</option>
             <option>to Tail Slide</option><option>to Blunt Slide</option><option>to Nose Blunt</option>
+            <option value="__add__">＋ Add new…</option>
           `,
       'sb-outspin': `<option value="">–</option>
             <option>FS 270 out</option><option>BS 270 out</option><option>Switch FS 270 out</option><option>Switch BS 270 out</option>
@@ -1343,6 +1351,19 @@ function setGroupFilter(v) {
   location.reload();
 }
 
+// «＋ Add new…»-Option in Selects: fragt nach Text, ergänzt und wählt die neue Option
+function sbSelectAddNew(sel) {
+  if (sel.value !== '__add__') return;
+  const v = (window.prompt('New entry:') || '').replace(/\s+/g, ' ').trim();
+  if (!v) { sel.value = ''; return; }
+  const existing = [...sel.options].find(o => o.value.toLowerCase() === v.toLowerCase());
+  if (existing) { sel.value = existing.value; return; }
+  const o = document.createElement('option'); o.textContent = v;
+  const addOpt = sel.querySelector('option[value="__add__"]');
+  if (addOpt) sel.insertBefore(o, addOpt); else sel.appendChild(o);
+  sel.value = v;
+}
+
 // Session-Typen nach Trainingsgruppe: HP-Gruppen sehen Bag + Halfpipe,
 // Park-Gruppen (SS&BA) Bag + Big Air/Slopestyle; DVLP und «All» sehen alles.
 const HP_SQUAD_KEYS = new Set(SPORT === 'freeski' ? ['HP'] : ['M']);
@@ -1388,6 +1409,7 @@ function readFields(prefix) {
     rotation: val(p+'rotation'), absprung: val(p+'absprung'), grab: val(p+'grab'),
     bringback: val(p+'bringback'), style: val(p+'style'), railart: val(p+'railart'), slideform: val(p+'slideform'),
     slidevar: val(p+'slidevar'), inspin: val(p+'inspin'), swap: val(p+'swap'), outspin: val(p+'outspin'),
+    transfer: val(p+'transfer'),
   };
 }
 
@@ -2309,6 +2331,7 @@ function trickDesc(t, prefix) {
       t ? t.slideform : val(p+'slideform'),
       t ? t.slidevar  : val(p+'slidevar'),
       t ? t.swap      : val(p+'swap'),
+      t ? t.transfer  : val(p+'transfer'),
       t ? t.outspin   : val(p+'outspin'),
       t ? t.railart   : val(p+'railart'),
     ].filter(Boolean);
@@ -5115,12 +5138,18 @@ async function sbSave(status) {
     notiz,
     status,
   };
+  if (fields.transfer) row.transfer = fields.transfer;
   if (_standortHasGrabStatus && Object.keys(sbAssessGrabMatrix).length) row.grab_status = {...sbAssessGrabMatrix};
   let { data, error } = await db.from('standort').insert(row).select();
   if (error && /grab_status/.test(error.message||'')) {
     _standortHasGrabStatus = false;
     delete row.grab_status;
     ({ data, error } = await db.from('standort').insert(row).select());
+  }
+  if (error && row.transfer && /transfer/.test(error.message||'')) {
+    delete row.transfer;
+    ({ data, error } = await db.from('standort').insert(row).select());
+    if (!error) showToast('Transfer not saved — run the transfer SQL first', 'error');
   }
 
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
@@ -5129,7 +5158,7 @@ async function sbSave(status) {
 
   // Reset sb form fields
   ['sb-disziplin','sb-drehrichtung','sb-flips','sb-achse','sb-rotation','sb-absprung',
-   'sb-grab','sb-bringback','sb-style','sb-railart','sb-slideform','sb-slidevar','sb-inspin','sb-swap','sb-outspin','sb-notiz',
+   'sb-grab','sb-bringback','sb-style','sb-railart','sb-slideform','sb-slidevar','sb-inspin','sb-swap','sb-transfer','sb-outspin','sb-notiz',
   ].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   initStandortGrabs();
   toggleDisziplin('sb');
@@ -7650,6 +7679,7 @@ function trickDesc(t, prefix) {
       t ? t.slideform : val(p+'slideform'),
       t ? t.slidevar  : val(p+'slidevar'),
       t ? t.swap      : val(p+'swap'),
+      t ? t.transfer  : val(p+'transfer'),
       t ? t.outspin   : val(p+'outspin'),
       t ? t.railart   : val(p+'railart'),
     ].filter(Boolean);
@@ -9817,12 +9847,18 @@ async function sbSave(status) {
     notiz,
     status,
   };
+  if (fields.transfer) row.transfer = fields.transfer;
   if (_standortHasGrabStatus && Object.keys(sbAssessGrabMatrix).length) row.grab_status = {...sbAssessGrabMatrix};
   let { data, error } = await db.from('standort').insert(row).select();
   if (error && /grab_status/.test(error.message||'')) {
     _standortHasGrabStatus = false;
     delete row.grab_status;
     ({ data, error } = await db.from('standort').insert(row).select());
+  }
+  if (error && row.transfer && /transfer/.test(error.message||'')) {
+    delete row.transfer;
+    ({ data, error } = await db.from('standort').insert(row).select());
+    if (!error) showToast('Transfer not saved — run the transfer SQL first', 'error');
   }
 
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
@@ -9831,7 +9867,7 @@ async function sbSave(status) {
 
   // Reset sb form fields
   ['sb-disziplin','sb-drehrichtung','sb-flips','sb-achse','sb-rotation','sb-absprung',
-   'sb-grab','sb-bringback','sb-style','sb-railart','sb-slideform','sb-slidevar','sb-inspin','sb-swap','sb-outspin','sb-notiz'
+   'sb-grab','sb-bringback','sb-style','sb-railart','sb-slideform','sb-slidevar','sb-inspin','sb-swap','sb-transfer','sb-outspin','sb-notiz'
   ].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   initStandortGrabs();
   toggleDisziplin('sb');
