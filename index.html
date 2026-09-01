@@ -819,7 +819,6 @@ const SPORT_CONFIGS = {
   {name:'Ariane Burri',squad:'PE'},
   {name:'Aron Wagner',squad:'PE'},
   {name:'Elias Lehner',squad:'PE'},
-  {name:'Jonas Hasler',squad:'PE'},
   {name:'Nicolas Schütz',squad:'PE'},
   {name:'Reef Hasler',squad:'PE'},
   {name:'Yuna Scheidegger',squad:'PE'},
@@ -851,7 +850,6 @@ const SPORT_CONFIGS = {
             <option>Ariane Burri</option>
             <option>Aron Wagner</option>
             <option>Elias Lehner</option>
-            <option>Jonas Hasler</option>
             <option>Nicolas Schütz</option>
             <option>Reef Hasler</option>
             <option>Yuna Scheidegger</option>
@@ -3237,6 +3235,30 @@ function sessSetTrick(name, trick) { sessAthleteData[name].currentTrick = trick;
 // ── New capture flow: Failed/Landed + progressive disclosure (KPIs / fail reasons) ──
 const SB_KPIS = [['grab','Grab'],['amplitude','Amplitude'],['control','Control'],['quality_landing','Quality Landing'],['axis','Axis']];
 const SB_FAIL_REASONS = ['Rotation too early','Rotation too late','Take-Off','Center of gravity','Orientation','Grab timing','Air position'];
+// Custom-Fail-Tags: team-weit — werden aus den bereits erfassten fail_grund-Werten geladen
+// und sofort ergänzt, wenn ein Coach via «Other…» einen neuen Grund eintippt.
+let SB_CUSTOM_FAILS = [];
+function sbAllFailReasons() { return SB_FAIL_REASONS.concat(SB_CUSTOM_FAILS); }
+async function sbLoadCustomFails() {
+  try {
+    let all = [], from = 0;
+    while (true) {
+      const {data, error} = await db.from('tricks').select('fail_grund').not('fail_grund', 'is', null).range(from, from + 999);
+      if (error || !data) break;
+      all = all.concat(data);
+      if (data.length < 1000) break;
+      from += 1000;
+    }
+    const seen = new Set(SB_FAIL_REASONS);
+    SB_CUSTOM_FAILS = [...new Set(all.map(r => sbFailLabel(r.fail_grund)).filter(v => v && !seen.has(v)))].sort();
+  } catch (e) { /* offline o.ä. — Basis-Tags reichen */ }
+}
+function sbCustomFailPrompt(name) {
+  const v = (window.prompt('New fail reason:') || '').trim();
+  if (!v) return;
+  if (!sbAllFailReasons().includes(v)) SB_CUSTOM_FAILS.push(v);
+  commitFailedAttempt(name, v);
+}
 // Attempts saved before the rename still carry 'Takeoff' — show/count them under the current label
 const sbFailLabel = v => v === 'Takeoff' ? 'Take-Off' : (v || '');
 let sessPending = null;        // {name, mode:'failed'|'landed'}
@@ -3290,7 +3312,8 @@ function renderSbDisclosure() {
     el.innerHTML = `<div style="margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;">
       <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:10px;">Select reason</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;">
-        ${SB_FAIL_REASONS.map(r => `<button onclick="commitFailedAttempt('${name}','${r.replace(/'/g,"\\'")}')" style="padding:9px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;">${r}</button>`).join('')}
+        ${sbAllFailReasons().map(r => `<button onclick="commitFailedAttempt('${name}','${r.replace(/'/g,"\\'")}')" style="padding:9px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;">${r}</button>`).join('')}
+        <button onclick="sbCustomFailPrompt('${name}')" style="padding:9px 12px;border-radius:8px;border:1.5px dashed #39c3d4;background:none;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;">＋ Other…</button>
         <button onclick="commitFailedAttempt('${name}','')" style="padding:9px 12px;border-radius:8px;border:1.5px dashed var(--border);background:none;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;">No reason</button>
       </div>
     </div>`;
@@ -3501,7 +3524,7 @@ function renderSessionLog() {
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
           <select id="sess-edit-fail" onchange="setSbEditFail(this.value)" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:'Poppins',sans-serif;">
             <option value="">— no reason —</option>
-            ${SB_FAIL_REASONS.map(r => `<option ${sessEditFail===r?'selected':''}>${r}</option>`).join('')}
+            ${[...new Set(sbAllFailReasons().concat(sessEditFail ? [sessEditFail] : []))].map(r => `<option ${sessEditFail===r?'selected':''}>${r}</option>`).join('')}
           </select>
           <button onclick="saveSbLogEdit(${i},'failed')" style="padding:6px 12px;border-radius:8px;border:2px solid #e2001a;background:rgba(226,0,26,0.15);color:#e2001a;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">✗ Save Failed</button>
         </div>
@@ -3952,7 +3975,7 @@ function sbRVShowDetail(ai, ti, i) {
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
         <select onchange="sbRVEditFailSet(this.value)" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:'Poppins',sans-serif;">
           <option value="">— no reason —</option>
-          ${SB_FAIL_REASONS.map(r => `<option ${_sbRVEditFail===r?'selected':''}>${r}</option>`).join('')}
+          ${[...new Set(sbAllFailReasons().concat(_sbRVEditFail ? [_sbRVEditFail] : []))].map(r => `<option ${_sbRVEditFail===r?'selected':''}>${r}</option>`).join('')}
         </select>
         <button onclick="sbRVEditSave('failed')" style="padding:6px 12px;border-radius:8px;border:2px solid #e2001a;background:rgba(226,0,26,0.15);color:#e2001a;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">✗ Save Failed</button>
         <button onclick="sbRVEditCancel()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button>
@@ -7130,8 +7153,9 @@ function init() {
     if (mobMap[key]) mobMap[key].style.display = 'none';
   });
   document.body.classList.add('sport-snowboard');
+  sbLoadCustomFails();   // team-weite Custom-Fail-Tags nachladen
 }
-return { fragments, init, showPage, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, sbSelectGrab, renderLiveSession, sessSetTrick, logAttempt, logAttemptStart, renderSbDisclosure, toggleSbKpi, commitLandedAttempt, commitFailedAttempt, sbAttemptNo, toggleSbEditKpi, setSbEditFail, saveSbLogEdit, deleteLogEntry, editLogEntry, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, openSessionReportView, sbReportInnerHtml, sbRVShowDetail, sbRVPrintPdf, loadReportsTab, renderReportsList, sbOpenReportInline, sbRepSetTyp, sbRepSetRange, sbRepApplyCustom, sbRepDeleteCurrent, sbRVEditStart, sbRVEditKpiToggle, sbRVEditFailSet, sbRVEditCancel, sbRVEditDelete, sbRVEditSave, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonTimeSel, sbMonOpenTrickReport, sbMonToggleHistory, sbMonSaveComment, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack };
+return { fragments, init, showPage, sbCustomFailPrompt, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, sbSelectGrab, renderLiveSession, sessSetTrick, logAttempt, logAttemptStart, renderSbDisclosure, toggleSbKpi, commitLandedAttempt, commitFailedAttempt, sbAttemptNo, toggleSbEditKpi, setSbEditFail, saveSbLogEdit, deleteLogEntry, editLogEntry, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, openSessionReportView, sbReportInnerHtml, sbRVShowDetail, sbRVPrintPdf, loadReportsTab, renderReportsList, sbOpenReportInline, sbRepSetTyp, sbRepSetRange, sbRepApplyCustom, sbRepDeleteCurrent, sbRVEditStart, sbRVEditKpiToggle, sbRVEditFailSet, sbRVEditCancel, sbRVEditDelete, sbRVEditSave, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonTimeSel, sbMonOpenTrickReport, sbMonToggleHistory, sbMonSaveComment, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack };
 })();
 
 // ═══════════════ FREESKI-MODUL ═══════════════
