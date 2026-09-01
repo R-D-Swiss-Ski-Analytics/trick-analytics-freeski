@@ -1363,6 +1363,34 @@ function sbSelectAddNew(sel) {
   sel.value = v;
 }
 
+// Team-weit bereits verwendete Combo-/Transfer-Werte aus der DB als Optionen anbieten
+async function sbLoadCustomSelectValues() {
+  const fill = async (col, selId) => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    try {
+      const vals = new Set();
+      let from = 0;
+      while (true) {
+        const {data, error} = await db.from('standort').select(col).not(col, 'is', null).range(from, from + 999);
+        if (error || !data) break;
+        data.forEach(r => { const v = (r[col] || '').trim(); if (v) vals.add(v); });
+        if (data.length < 1000) break;
+        from += 1000;
+      }
+      const have = new Set([...sel.options].map(o => o.value.toLowerCase()));
+      const addOpt = sel.querySelector('option[value="__add__"]');
+      [...vals].sort((a, b) => a.localeCompare(b)).forEach(v => {
+        if (have.has(v.toLowerCase())) return;
+        const o = document.createElement('option'); o.textContent = v;
+        if (addOpt) sel.insertBefore(o, addOpt); else sel.appendChild(o);
+      });
+    } catch (e) { /* Basis bleibt: nur «＋ Add new…» */ }
+  };
+  fill('swap', 'sb-swap');
+  fill('transfer', 'sb-transfer');
+}
+
 // Session-Typen nach Trainingsgruppe: HP-Gruppen sehen Bag + Halfpipe,
 // Park-Gruppen (SS&BA) Bag + Big Air/Slopestyle; DVLP und «All» sehen alles.
 const HP_SQUAD_KEYS = new Set(SPORT === 'freeski' ? ['HP'] : ['M']);
@@ -13075,6 +13103,7 @@ document.addEventListener('DOMContentLoaded', async function bootSport(){
   for (const [id, html] of Object.entries(CFG.selectFill)) {
     const el = document.getElementById(id); if (el) el.innerHTML = html;
   }
+  sbLoadCustomSelectValues();
   document.getElementById('ev-main').innerHTML = M.fragments.evMain;
   document.getElementById('sb-dir-radar-wrap').innerHTML = M.fragments.dirRadar;
   document.getElementById('db-rankings-placeholder').outerHTML = M.fragments.dbRankings;
