@@ -471,6 +471,8 @@ body.sport-snowboard textarea, body.sport-freeski textarea { font-family: 'Poppi
         <button onclick="selectSessType(this,'Big Air Competition')" class="sess-type-btn">Big Air Competition</button>
         <button onclick="selectSessType(this,'Slopestyle Training')" class="sess-type-btn">Slopestyle Training</button>
         <button onclick="selectSessType(this,'Slopestyle Competition')" class="sess-type-btn">Slopestyle Competition</button>
+        <button onclick="selectSessType(this,'Halfpipe Training')" class="sess-type-btn">Halfpipe Training</button>
+        <button onclick="selectSessType(this,'Halfpipe Competition')" class="sess-type-btn">Halfpipe Competition</button>
       </div>
       <div style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <label for="sess-datum" style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Session Date</label>
@@ -749,6 +751,8 @@ body.sport-snowboard textarea, body.sport-freeski textarea { font-family: 'Poppi
         <option value="Big Air Competition">Big Air Competition</option>
         <option value="Slopestyle Training">Slopestyle Training</option>
         <option value="Slopestyle Competition">Slopestyle Competition</option>
+        <option value="Halfpipe Training">Halfpipe Training</option>
+        <option value="Halfpipe Competition">Halfpipe Competition</option>
       </select>
       <button onclick="generateAthleteReport()" style="padding:8px 18px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">↓ Generate PDF</button>
     </div>
@@ -778,6 +782,8 @@ body.sport-snowboard textarea, body.sport-freeski textarea { font-family: 'Poppi
         <option value="Big Air Competition">Big Air Competition</option>
         <option value="Slopestyle Training">Slopestyle Training</option>
         <option value="Slopestyle Competition">Slopestyle Competition</option>
+        <option value="Halfpipe Training">Halfpipe Training</option>
+        <option value="Halfpipe Competition">Halfpipe Competition</option>
       </select>
       <button onclick="openTeamPdfReport()" style="padding:8px 18px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">↓ Generate Team PDF</button>
     </div>
@@ -1296,6 +1302,21 @@ function setGroupFilter(v) {
   location.reload();
 }
 
+// Session-Typen nach Trainingsgruppe: HP-Gruppen sehen Bag + Halfpipe,
+// Park-Gruppen (SS&BA) Bag + Big Air/Slopestyle; DVLP und «All» sehen alles.
+const HP_SQUAD_KEYS = new Set(SPORT === 'freeski' ? ['HP'] : ['M']);
+const ALLROUND_SQUAD_KEYS = new Set(['DVLP']);
+function updateSessTypeButtons() {
+  const hasHp = CFG.squads.some(sq => HP_SQUAD_KEYS.has(sq.key) || ALLROUND_SQUAD_KEYS.has(sq.key));
+  const hasPark = CFG.squads.some(sq => !HP_SQUAD_KEYS.has(sq.key));
+  document.querySelectorAll('.sess-type-btn').forEach(b => {
+    const t = b.textContent.trim();
+    const isHp = t.startsWith('Halfpipe');
+    const isPark = t.startsWith('Big Air') || t.startsWith('Slopestyle');
+    b.style.display = (isHp && !hasHp) || (isPark && !hasPark) ? 'none' : '';
+  });
+}
+
 function renderAuthControls() {
   const wrap = document.getElementById('auth-controls');
   const sel = document.getElementById('group-filter-sel');
@@ -1416,7 +1437,7 @@ function trSeasonChange() {
   if (dr) dr.style.display = v === 'custom' ? 'flex' : 'none';
 }
 
-const SESS_TYPE_SHORT = {'Landing Bag':'Bag','Jump On-Snow':'BA Train','Big Air Training':'BA Train','Big Air Competition':'BA Comp','Slopestyle Training':'SS Train','Slopestyle Competition':'SS Comp'};
+const SESS_TYPE_SHORT = {'Landing Bag':'Bag','Jump On-Snow':'BA Train','Big Air Training':'BA Train','Big Air Competition':'BA Comp','Slopestyle Training':'SS Train','Slopestyle Competition':'SS Comp','Halfpipe Training':'HP Train','Halfpipe Competition':'HP Comp'};
 
 function populateAthleteReportDropdown() {
   const sel = document.getElementById('ar-athlete-sel');
@@ -3249,7 +3270,7 @@ function renderLiveSession() {
     <input type="text" id="sess-comment-${sid}" placeholder="Comment before rating (optional)" style="width:100%;margin-top:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
   </div>`;
 
-  if (sessType && sessType.startsWith('Slopestyle')) {
+  if (sessType && (sessType.startsWith('Slopestyle') || sessType.startsWith('Halfpipe'))) {
     cols.innerHTML = tabsHtml + sbRunCardHtml(name, d, trickOptions);
     return;
   }
@@ -3305,6 +3326,7 @@ async function sbLoadRailData() {
   } catch (e) { /* Basis-Listen reichen */ }
 }
 
+function sbRunMaxEl() { return sessType && sessType.startsWith('Halfpipe') ? 10 : 8; }
 function sbRunState(name) {
   const d = sessAthleteData[name];
   if (!d.run) d.run = {no: 1, elements: [], ratings: [], addMode: '', railType: sbAllRailTypes()[0] || 'Rail', noteOpen: null};
@@ -3334,7 +3356,7 @@ function sbRunCardHtml(name, d, trickOptions) {
       </div>` : '';
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);">
       <span style="width:20px;height:20px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0;">${i+1}</span>
-      <span style="flex-shrink:0;font-size:9px;font-weight:700;letter-spacing:.5px;color:${el.kind==='rail'?'#a78bfa':'#39c3d4'};border:1px solid ${el.kind==='rail'?'#a78bfa':'#39c3d4'};border-radius:4px;padding:2px 5px;">${el.kind==='rail'?'RAIL':'JUMP'}</span>
+      <span style="flex-shrink:0;font-size:9px;font-weight:700;letter-spacing:.5px;color:${el.kind==='rail'?'#a78bfa':'#39c3d4'};border:1px solid ${el.kind==='rail'?'#a78bfa':'#39c3d4'};border-radius:4px;padding:2px 5px;">${el.kind==='rail'?'RAIL':(sessType && sessType.startsWith('Halfpipe')?'HIT':'JUMP')}</span>
       <span style="flex:1;font-size:12px;font-weight:600;color:var(--text);line-height:1.3;">${el.label}</span>
       ${btn('failed','✗','#e2001a')}${btn('landed','✓','#34d399')}${btn('stomped','★','#39c3d4')}
       <button onclick="sbRunNoteToggle('${name}',${i})" title="Tags / comment" style="background:none;border:1px solid ${hasNote || r.noteOpen === i ?'#f59e0b':'var(--border)'};border-radius:8px;color:${hasNote || r.noteOpen === i ?'#f59e0b':'var(--muted)'};cursor:pointer;font-size:13px;padding:6px 9px;">✎</button>
@@ -3346,7 +3368,7 @@ function sbRunCardHtml(name, d, trickOptions) {
   if (r.addMode === 'jump') {
     addPanel = `<div style="margin-top:10px;">
       <select onchange="sbRunAddJump('${name}', this.value)" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-        <option value="">— select jump trick —</option>
+        <option value="">— select ${sessType && sessType.startsWith('Halfpipe') ? 'hit' : 'jump'} trick —</option>
         ${trickOptions}
       </select>
     </div>`;
@@ -3370,18 +3392,18 @@ function sbRunCardHtml(name, d, trickOptions) {
   return `<div class="card" style="padding:24px;" id="sess-col-${sid}">
     <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:4px;text-align:center;">${shortName(name)}</div>
     <div style="text-align:center;margin-bottom:14px;">
-      <span style="background:rgba(167,139,250,0.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:999px;padding:4px 14px;font-size:11px;font-weight:700;">SLOPESTYLE RUN #${r.no}</span>
+      <span style="background:rgba(167,139,250,0.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:999px;padding:4px 14px;font-size:11px;font-weight:700;">${sessType && sessType.startsWith('Halfpipe') ? 'HALFPIPE' : 'SLOPESTYLE'} RUN #${r.no}</span>
 
     </div>
-    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Run setup — ${r.elements.length}/8 elements</div>
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Run setup — ${r.elements.length}/${sbRunMaxEl()} ${sessType && sessType.startsWith('Halfpipe') ? 'hits' : 'elements'}</div>
     ${elRows || '<div style="color:var(--muted);font-size:12px;padding:10px 0;">No elements yet — build the run below.</div>'}
     <div style="display:flex;gap:8px;margin-top:10px;">
-      <button onclick="sbRunToggleAdd('${name}','jump')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='jump'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='jump'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='jump'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Jump</button>
-      <button onclick="sbRunToggleAdd('${name}','rail')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='rail'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='rail'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='rail'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Rail</button>
+      <button onclick="sbRunToggleAdd('${name}','jump')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='jump'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='jump'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='jump'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">${sessType && sessType.startsWith('Halfpipe') ? '+ Hit' : '+ Jump'}</button>
+      ${sessType && sessType.startsWith('Halfpipe') ? '' : `<button onclick="sbRunToggleAdd('${name}','rail')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='rail'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='rail'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='rail'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Rail</button>`}
     </div>
     ${addPanel}
     <button onclick="sbRunSave('${name}')" ${r.elements.length && rated === r.elements.length ? '' : 'disabled'} style="width:100%;margin-top:14px;padding:14px;border-radius:10px;border:none;background:${r.elements.length && rated === r.elements.length ? '#34d399' : 'var(--surface2)'};color:${r.elements.length && rated === r.elements.length ? '#06281c' : 'var(--muted)'};font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Save Run #${r.no} (${rated}/${r.elements.length} rated)</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;">Each element is saved as one attempt (tagged «Run ${r.no} · position»). New rail tricks are added to the athlete's Assessment automatically as Goal.</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;">Each element is saved as one attempt (tagged «Run ${r.no} · position»).${sessType && sessType.startsWith('Halfpipe') ? '' : ` New rail tricks are added to the athlete's Assessment automatically as Goal.`}</div>
   </div>`;
 }
 
@@ -3417,7 +3439,7 @@ function sbRunSetRailType(name, t) {
 function sbRunAddJump(name, label) {
   if (!label) return;
   const r = sbRunState(name);
-  if (r.elements.length >= 8) { showToast('Max 8 elements per run', 'error'); return; }
+  if (r.elements.length >= sbRunMaxEl()) { showToast('Max ' + sbRunMaxEl() + ' elements per run', 'error'); return; }
   r.elements.push({kind:'jump', label});
   r.ratings.push(null);
   r.addMode = '';
@@ -3428,7 +3450,7 @@ function sbRunAddRailCommit(name) {
   const inp = document.getElementById('run-rail-trick-' + name.replace(/\s/g,'_'));
   const trick = sbCanonRailTrick(inp?.value || '');
   if (!trick) { showToast('Enter the rail trick', 'error'); return; }
-  if (r.elements.length >= 8) { showToast('Max 8 elements per run', 'error'); return; }
+  if (r.elements.length >= sbRunMaxEl()) { showToast('Max ' + sbRunMaxEl() + ' elements per run', 'error'); return; }
   if (!SB_RAIL_TRICKS.includes(trick)) SB_RAIL_TRICKS.push(trick);
   r.elements.push({kind:'rail', label: `Rail ${r.railType} — ${trick}`, railType: r.railType});
   r.ratings.push(null);
@@ -3926,7 +3948,7 @@ function endSession() {
           <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Location</label>
           <input id="sr-location" type="text" placeholder="e.g. Laax" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
         </div>
-        <div style="${sessType && sessType.startsWith('Slopestyle') ? 'display:none;' : ''}">
+        <div style="${sessType && (sessType.startsWith('Slopestyle') || sessType.startsWith('Halfpipe')) ? 'display:none;' : ''}">
           <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Jump Size</label>
           <select id="sr-jumpsize" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
             <option value="">—</option><option>M</option><option>L</option><option>XL</option>
@@ -3951,7 +3973,7 @@ function endSession() {
         </div>`).join('')}
       </div>
       ${sessType && sessType.includes('Competition') ? (() => {
-        const nFinal = sessType.startsWith('Big Air') ? 3 : 2;   // BA: 2 Quali + 3 Final · SS: 2 + 2
+        const nFinal = sessType.startsWith('Slopestyle') ? 2 : 3;   // BA/HP: 2 Quali + 3 Final · SS: 2 + 2
         const inp = (id, ph) => `<input type="number" step="0.01" min="0" id="${id}" placeholder="${ph}" style="width:76px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;text-align:center;">`;
         return `<div>
         <label style="font-size:11px;color:#f59e0b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Contest Results <span style="text-transform:none;font-weight:400;">(Final empty if not reached)</span></label>
@@ -4595,7 +4617,7 @@ let _sbRVEdit = null;      // {ai, ti, i} while editing an attempt
 let _sbRVEditKpis = {};
 let _sbRVEditFail = '';
 
-const SB_TYPE_FILTERS = [['','All'],['Landing Bag','Bag'],['Big Air Training','BA Train'],['Big Air Competition','BA Comp'],['Slopestyle Training','SS Train'],['Slopestyle Competition','SS Comp']];
+const SB_TYPE_FILTERS = [['','All'],['Landing Bag','Bag'],['Big Air Training','BA Train'],['Big Air Competition','BA Comp'],['Slopestyle Training','SS Train'],['Slopestyle Competition','SS Comp'],['Halfpipe Training','HP Train'],['Halfpipe Competition','HP Comp']];
 // Alt-Daten: «Jump On-Snow» zählt zum neuen «Big Air Training»
 function typMatches(typ, filter) { return !filter || typ === filter || (filter === 'Big Air Training' && typ === 'Jump On-Snow'); }
 
@@ -8560,7 +8582,7 @@ function renderLiveSession() {
     if (!sessRatings[name]) sessRatings[name] = {takeoff:null,grab:null,trick:null,land:null};
     const d = sessAthleteData[name];
     const sid = name.replace(/\s/g,'_');
-    if (sessType && sessType.startsWith('Slopestyle')) {
+    if (sessType && (sessType.startsWith('Slopestyle') || sessType.startsWith('Halfpipe'))) {
       const opts = [...new Set((d.tricks||[]).map(t => t.trick_label).filter(Boolean))].sort()
         .map(l => `<option value="${l}">${l}</option>`).join('');
       cols.innerHTML = tabsHtml + sbRunCardHtml(name, d, opts);
@@ -9023,7 +9045,7 @@ function endSession() {
           <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Location</label>
           <input id="sr-location" type="text" placeholder="e.g. Laax" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
         </div>
-        <div style="${sessType && sessType.startsWith('Slopestyle') ? 'display:none;' : ''}">
+        <div style="${sessType && (sessType.startsWith('Slopestyle') || sessType.startsWith('Halfpipe')) ? 'display:none;' : ''}">
           <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Jump Size</label>
           <select id="sr-jumpsize" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
             <option value="">—</option><option>M</option><option>L</option><option>XL</option>
@@ -9048,7 +9070,7 @@ function endSession() {
         </div>`).join('')}
       </div>
       ${sessType && sessType.includes('Competition') ? (() => {
-        const nFinal = sessType.startsWith('Big Air') ? 3 : 2;
+        const nFinal = sessType.startsWith('Slopestyle') ? 2 : 3;
         const inp = (id, ph) => `<input type="number" step="0.01" min="0" id="${id}" placeholder="${ph}" style="width:76px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;text-align:center;">`;
         return `<div>
         <label style="font-size:11px;color:#f59e0b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Contest Results <span style="text-transform:none;font-weight:400;">(Final empty if not reached)</span></label>
@@ -11279,7 +11301,7 @@ function fsMonCatAvg(rows, key) {
   }).filter(v => v !== null);
   return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
 }
-const FS_TYPE_FILTERS = [['','All'],['Landing Bag','Bag'],['Big Air Training','BA Train'],['Big Air Competition','BA Comp'],['Slopestyle Training','SS Train'],['Slopestyle Competition','SS Comp']];
+const FS_TYPE_FILTERS = [['','All'],['Landing Bag','Bag'],['Big Air Training','BA Train'],['Big Air Competition','BA Comp'],['Slopestyle Training','SS Train'],['Slopestyle Competition','SS Comp'],['Halfpipe Training','HP Train'],['Halfpipe Competition','HP Comp']];
 // Alt-Daten: «Jump On-Snow» zählt zum neuen «Big Air Training»
 function typMatches(typ, filter) { return !filter || typ === filter || (filter === 'Big Air Training' && typ === 'Jump On-Snow'); }
 
@@ -12644,6 +12666,7 @@ async function sbLoadRailData() {
   } catch (e) { /* Basis-Listen reichen */ }
 }
 
+function sbRunMaxEl() { return sessType && sessType.startsWith('Halfpipe') ? 10 : 8; }
 function sbRunState(name) {
   const d = sessAthleteData[name];
   if (!d.run) d.run = {no: 1, elements: [], ratings: [], addMode: '', railType: sbAllRailTypes()[0] || 'Rail', noteOpen: null};
@@ -12673,7 +12696,7 @@ function sbRunCardHtml(name, d, trickOptions) {
       </div>` : '';
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);">
       <span style="width:20px;height:20px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0;">${i+1}</span>
-      <span style="flex-shrink:0;font-size:9px;font-weight:700;letter-spacing:.5px;color:${el.kind==='rail'?'#a78bfa':'#39c3d4'};border:1px solid ${el.kind==='rail'?'#a78bfa':'#39c3d4'};border-radius:4px;padding:2px 5px;">${el.kind==='rail'?'RAIL':'JUMP'}</span>
+      <span style="flex-shrink:0;font-size:9px;font-weight:700;letter-spacing:.5px;color:${el.kind==='rail'?'#a78bfa':'#39c3d4'};border:1px solid ${el.kind==='rail'?'#a78bfa':'#39c3d4'};border-radius:4px;padding:2px 5px;">${el.kind==='rail'?'RAIL':(sessType && sessType.startsWith('Halfpipe')?'HIT':'JUMP')}</span>
       <span style="flex:1;font-size:12px;font-weight:600;color:var(--text);line-height:1.3;">${el.label}</span>
       ${btn('failed','✗','#e2001a')}${btn('landed','✓','#34d399')}${btn('stomped','★','#39c3d4')}
       <button onclick="sbRunNoteToggle('${name}',${i})" title="Tags / comment" style="background:none;border:1px solid ${hasNote || r.noteOpen === i ?'#f59e0b':'var(--border)'};border-radius:8px;color:${hasNote || r.noteOpen === i ?'#f59e0b':'var(--muted)'};cursor:pointer;font-size:13px;padding:6px 9px;">✎</button>
@@ -12685,7 +12708,7 @@ function sbRunCardHtml(name, d, trickOptions) {
   if (r.addMode === 'jump') {
     addPanel = `<div style="margin-top:10px;">
       <select onchange="sbRunAddJump('${name}', this.value)" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-        <option value="">— select jump trick —</option>
+        <option value="">— select ${sessType && sessType.startsWith('Halfpipe') ? 'hit' : 'jump'} trick —</option>
         ${trickOptions}
       </select>
     </div>`;
@@ -12709,17 +12732,17 @@ function sbRunCardHtml(name, d, trickOptions) {
   return `<div class="card" style="padding:24px;" id="sess-col-${sid}">
     <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:4px;text-align:center;">${shortName(name)}</div>
     <div style="text-align:center;margin-bottom:14px;">
-      <span style="background:rgba(167,139,250,0.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:999px;padding:4px 14px;font-size:11px;font-weight:700;">SLOPESTYLE RUN #${r.no}</span>
+      <span style="background:rgba(167,139,250,0.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:999px;padding:4px 14px;font-size:11px;font-weight:700;">${sessType && sessType.startsWith('Halfpipe') ? 'HALFPIPE' : 'SLOPESTYLE'} RUN #${r.no}</span>
     </div>
-    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Run setup — ${r.elements.length}/8 elements</div>
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Run setup — ${r.elements.length}/${sbRunMaxEl()} ${sessType && sessType.startsWith('Halfpipe') ? 'hits' : 'elements'}</div>
     ${elRows || '<div style="color:var(--muted);font-size:12px;padding:10px 0;">No elements yet — build the run below.</div>'}
     <div style="display:flex;gap:8px;margin-top:10px;">
-      <button onclick="sbRunToggleAdd('${name}','jump')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='jump'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='jump'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='jump'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Jump</button>
-      <button onclick="sbRunToggleAdd('${name}','rail')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='rail'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='rail'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='rail'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Rail</button>
+      <button onclick="sbRunToggleAdd('${name}','jump')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='jump'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='jump'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='jump'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">${sessType && sessType.startsWith('Halfpipe') ? '+ Hit' : '+ Jump'}</button>
+      ${sessType && sessType.startsWith('Halfpipe') ? '' : `<button onclick="sbRunToggleAdd('${name}','rail')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='rail'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='rail'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='rail'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Rail</button>`}
     </div>
     ${addPanel}
     <button onclick="sbRunSave('${name}')" ${r.elements.length && rated === r.elements.length ? '' : 'disabled'} style="width:100%;margin-top:14px;padding:14px;border-radius:10px;border:none;background:${r.elements.length && rated === r.elements.length ? '#34d399' : 'var(--surface2)'};color:${r.elements.length && rated === r.elements.length ? '#06281c' : 'var(--muted)'};font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Save Run #${r.no} (${rated}/${r.elements.length} rated)</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;">Each element is saved as one attempt (tagged «Run ${r.no} · position»). New rail tricks are added to the athlete's Assessment automatically as Goal.</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;">Each element is saved as one attempt (tagged «Run ${r.no} · position»).${sessType && sessType.startsWith('Halfpipe') ? '' : ` New rail tricks are added to the athlete's Assessment automatically as Goal.`}</div>
   </div>`;
 }
 
@@ -12753,7 +12776,7 @@ function sbRunSetRailType(name, t) {
 function sbRunAddJump(name, label) {
   if (!label) return;
   const r = sbRunState(name);
-  if (r.elements.length >= 8) { showToast('Max 8 elements per run', 'error'); return; }
+  if (r.elements.length >= sbRunMaxEl()) { showToast('Max ' + sbRunMaxEl() + ' elements per run', 'error'); return; }
   r.elements.push({kind:'jump', label});
   r.ratings.push(null);
   r.addMode = '';
@@ -12764,7 +12787,7 @@ function sbRunAddRailCommit(name) {
   const inp = document.getElementById('run-rail-trick-' + name.replace(/\s/g,'_'));
   const trick = sbCanonRailTrick(inp?.value || '');
   if (!trick) { showToast('Enter the rail trick', 'error'); return; }
-  if (r.elements.length >= 8) { showToast('Max 8 elements per run', 'error'); return; }
+  if (r.elements.length >= sbRunMaxEl()) { showToast('Max ' + sbRunMaxEl() + ' elements per run', 'error'); return; }
   if (!SB_RAIL_TRICKS.includes(trick)) SB_RAIL_TRICKS.push(trick);
   r.elements.push({kind:'rail', label: `Rail ${r.railType} — ${trick}`, railType: r.railType});
   r.ratings.push(null);
@@ -12944,6 +12967,7 @@ document.addEventListener('DOMContentLoaded', async function bootSport(){
   const h1 = document.querySelector('header h1'); if (h1) h1.textContent = CFG.title;
   if (!(await initAuth())) return;   // not signed in → login gate, stop booting
   applyGroupFilter();
+  updateSessTypeButtons();
   renderAuthControls();
   const M = SPORT === 'snowboard' ? SnowboardModule : FreeskiModule;
   for (const k of Object.keys(M)) if (typeof M[k] === 'function' && k !== 'init') window[k] = M[k];
