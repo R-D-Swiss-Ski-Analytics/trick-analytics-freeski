@@ -3257,9 +3257,9 @@ function sbRunCardHtml(name, d, trickOptions) {
     const btn = (val, icon, col) => `<button onclick="sbRunRate('${name}',${i},'${val}')" style="padding:8px 12px;border-radius:8px;border:2px solid ${rate===val?col:'var(--border)'};background:${rate===val?col+'22':'var(--surface2)'};color:${rate===val?col:'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;">${icon}</button>`;
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);">
       <span style="width:20px;height:20px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0;">${i+1}</span>
-      <span style="flex-shrink:0;">${el.kind==='rail'?'🛤️':'🪂'}</span>
+      <span style="flex-shrink:0;font-size:9px;font-weight:700;letter-spacing:.5px;color:${el.kind==='rail'?'#a78bfa':'#39c3d4'};border:1px solid ${el.kind==='rail'?'#a78bfa':'#39c3d4'};border-radius:4px;padding:2px 5px;">${el.kind==='rail'?'RAIL':'JUMP'}</span>
       <span style="flex:1;font-size:12px;font-weight:600;color:var(--text);line-height:1.3;">${el.label}</span>
-      ${btn('failed','✗','#e2001a')}${btn('landed','✓','#34d399')}${btn('stomped','⭐','#39c3d4')}
+      ${btn('failed','✗','#e2001a')}${btn('landed','✓','#34d399')}${btn('stomped','★','#39c3d4')}
       <button onclick="sbRunRemoveEl('${name}',${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 4px;">✕</button>
     </div>`;
   }).join('');
@@ -3297,12 +3297,12 @@ function sbRunCardHtml(name, d, trickOptions) {
     <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Run setup — ${r.elements.length}/8 elements</div>
     ${elRows || '<div style="color:var(--muted);font-size:12px;padding:10px 0;">No elements yet — build the run below.</div>'}
     <div style="display:flex;gap:8px;margin-top:10px;">
-      <button onclick="sbRunToggleAdd('${name}','jump')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='jump'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='jump'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='jump'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🪂 + Jump</button>
-      <button onclick="sbRunToggleAdd('${name}','rail')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='rail'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='rail'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='rail'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🛤️ + Rail</button>
+      <button onclick="sbRunToggleAdd('${name}','jump')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='jump'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='jump'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='jump'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Jump</button>
+      <button onclick="sbRunToggleAdd('${name}','rail')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='rail'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='rail'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='rail'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Rail</button>
     </div>
     ${addPanel}
     <button onclick="sbRunSave('${name}')" ${r.elements.length && rated === r.elements.length ? '' : 'disabled'} style="width:100%;margin-top:14px;padding:14px;border-radius:10px;border:none;background:${r.elements.length && rated === r.elements.length ? '#34d399' : 'var(--surface2)'};color:${r.elements.length && rated === r.elements.length ? '#06281c' : 'var(--muted)'};font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Save Run #${r.no} (${rated}/${r.elements.length} rated)</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;">Final version: each element is saved as one attempt (typ = ${sessType}, tagged «Run ${r.no} · position»), new rail tricks are added to the athlete's Assessment automatically as 🎯 Goal.</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;">Final version: each element is saved as one attempt (typ = ${sessType}, tagged «Run ${r.no} · position»), new rail tricks are added to the athlete's Assessment automatically as Goal.</div>
   </div>`;
 }
 
