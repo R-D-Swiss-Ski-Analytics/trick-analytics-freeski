@@ -6635,7 +6635,7 @@ function renderMonAthlete() {
       const rateCol = st==='lowdata' ? 'var(--muted)' : stInfo.color;
       const trend = sbMonTrend(tr.rows);
       return `<div onclick="sbMonOpenTrick(${tr._i})" style="background:var(--surface2);border:1px solid ${st==='critical' ? 'rgba(226,0,26,0.45)' : 'var(--border)'};border-radius:12px;padding:13px 14px;cursor:pointer;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${tr.trick}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.3;">${tr.trick}</div>
         <div style="display:flex;gap:12px;align-items:center;">
           <div style="font-size:24px;font-weight:800;color:${rateCol};flex-shrink:0;">${r}%</div>
           <div style="flex:1;font-size:10px;color:var(--muted);line-height:1.7;">
@@ -6677,7 +6677,8 @@ function sbMonVariantsHtml(rows) {
     m.att++; m[{stomped:'s', landed:'l', failed:'f'}[sbMonOutcome(t)]]++;
   });
   const list = Object.entries(map).sort((a,b) => b[1].att - a[1].att);
-  if (list.length < 2) return '';
+  // Auch bei nur EINER Variante anzeigen, wenn sie einen Grab trägt — sonst wäre er unsichtbar
+  if (list.length < 2 && !list.some(([f]) => f.includes(' — '))) return '';
   const rowsHtml = list.map(([full, m]) => {
     const r = m.att ? Math.round(m.s/m.att*100) : 0;
     const col = m.att < 5 ? 'var(--muted)' : r >= 70 ? '#34d399' : r >= 40 ? '#f59e0b' : '#e2001a';
@@ -11257,7 +11258,7 @@ function renderMonAthlete() {
       const lp = tr.att ? Math.round(tr.landed/tr.att*100) : 0;
       const trend = sbMonTrend(tr.rows);
       return `<div onclick="sbMonOpenTrick(${tr._i})" style="background:var(--surface2);border:1px solid ${st==='critical' ? 'rgba(226,0,26,0.45)' : 'var(--border)'};border-radius:12px;padding:13px 14px;cursor:pointer;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${tr.trick}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.3;">${tr.trick}</div>
         <div style="display:flex;gap:12px;align-items:center;">
           <div style="flex-shrink:0;text-align:center;">
             <div style="font-size:24px;font-weight:800;color:${qoeCol};">${tr.qoe}%</div>
@@ -11288,6 +11289,42 @@ function renderMonAthlete() {
     <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;justify-content:center;">
       <button onclick="sbMonAthletePdf()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Athlete Report (PDF)</button>
     </div>
+  </div>`;
+}
+
+// Varianten & Grabs eines Kern-Tricks (FS): volle Bezeichnung, Versuche, Landed-Quote, Ø QoE
+function fsMonVariantsHtml(rows) {
+  const map = {};
+  rows.forEach(t => {
+    const full = (t.trickaufbau || '—').trim();
+    if (!map[full]) map[full] = {att:0, landed:0, qoe:[]};
+    const m = map[full];
+    m.att++;
+    if (fsMonLanded(t)) m.landed++;
+    const q = qoeOf(t);
+    if (q !== null) m.qoe.push(q);
+  });
+  const list = Object.entries(map).sort((a,b) => b[1].att - a[1].att);
+  // Auch bei nur EINER Variante anzeigen, wenn sie einen Grab trägt — sonst wäre er unsichtbar
+  if (list.length < 2 && !list.some(([f]) => f.includes(' — '))) return '';
+  const rowsHtml = list.map(([full, m]) => {
+    const q = m.qoe.length ? Math.round(m.qoe.reduce((s,v)=>s+v,0)/m.qoe.length) : 0;
+    const col = m.att < 5 ? 'var(--muted)' : q >= 70 ? '#34d399' : q >= 50 ? '#f59e0b' : '#e2001a';
+    const grab = full.includes(' — ') ? full.split(' — ').slice(1).join(' — ') : 'no grab';
+    const lp = m.att ? Math.round(m.landed/m.att*100) : 0;
+    return `<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:12px;">
+      <span style="color:var(--text);line-height:1.3;" title="${full}">${grab}</span>
+      <span style="color:var(--muted);font-size:11px;white-space:nowrap;">${m.att} att.</span>
+      <span style="font-size:11px;white-space:nowrap;color:#34d399;">${lp}% landed</span>
+      <b style="color:${col};min-width:44px;text-align:right;">${q}%</b>
+    </div>`;
+  }).join('');
+  return `<div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Variants &amp; grabs (${list.length})</div>
+      <div style="font-size:9px;color:var(--muted);">attempts · landed · Ø QoE</div>
+    </div>
+    ${rowsHtml}
   </div>`;
 }
 
@@ -11338,6 +11375,7 @@ function renderMonTrick() {
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Category quality (Take-off · Trick · Grab · Landing)</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">${catChips}</div>
       </div>
+      ${fsMonVariantsHtml(rows)}
     </div>
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;">
       <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Progress over sessions</div>
