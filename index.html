@@ -624,12 +624,14 @@ body.sport-snowboard textarea, body.sport-freeski textarea { font-family: 'Poppi
             <option>L 630</option><option>R 630</option><option>L 810</option><option>R 810</option>
             <option>L 180</option><option>R 180</option><option>L 360</option><option>R 360</option>
           </select></div>
-        <div class="form-group rail-field-sb hidden"><label>Swap</label>
+        <div class="form-group rail-field-sb hidden"><label id="sb-swap-label">Swap</label>
           <select id="sb-swap"><option value="">–</option>
             <option>Front Swap</option><option>Back Swap</option><option>BS 360 Swap</option>
             <option>FS 360 Swap</option><option>BS 540 Swap</option><option>FS 540</option>
             <option>Front Swap - Front Swap</option><option>Front Swap - Back Swap</option>
             <option>Back Swap - Front Swap</option><option>Back Swap - Back Swap</option>
+            <option>Transfer to 50-50</option><option>Transfer to Switch 50-50</option><option>Transfer to Slide</option>
+            <option>Transfer to Lip On</option><option>Transfer to Switch Tails On</option><option>Transfer to Switch Lip On</option>
           </select></div>
         <div class="form-group rail-field-sb hidden"><label>Out-Spin</label>
           <select id="sb-outspin"><option value="">–</option>
@@ -916,13 +918,13 @@ const SPORT_CONFIGS = {
           `,
       'sb-achse': `<option value="">–</option>
             <optgroup label="Off-Axis">
-              <option>Cork</option><option>Crippler</option><option>McTwist</option><option>Todeo</option><option>Rodeo</option><option>Infinity Axis</option>
+              <option>Cork</option><option>Crippler</option><option>McTwist</option><option>Todeo</option><option>Rodeo</option><option>Infinity Axis</option><option>Underflip</option>
             </optgroup>
             <optgroup label="Upright Spins (Longitudinal Axis)">
               <option>Upright Spins</option>
             </optgroup>
             <optgroup label="Classic Acrobatic Axis (Transverse Axis and Sagittal Axis)">
-              <option>Backroll</option><option>Frontroll</option><option>Underflip</option><option>Wildcat</option><option>Tamedog</option>
+              <option>Backroll</option><option>Frontroll</option><option>Wildcat</option><option>Tamedog</option>
             </optgroup>
           `,
       'sb-absprung': `<option value="">–</option>
@@ -930,6 +932,45 @@ const SPORT_CONFIGS = {
           `,
       'sb-style': `<option value="">–</option><option>Frontfoot Bone</option><option>Backfoot Bone</option><option>Shifty</option><option>Double Shifty</option><option>Tweak</option>
           `,
+      'sb-slideform': `<option value="">–</option>
+            <option>50-50</option><option>Nose Press</option><option>Tail Press</option>
+            <option>Board Slide</option><option>Nose Slide</option><option>Lip Slide</option>
+            <option>Tail Slide</option><option>Blunt Slide</option><option>Nose Blunt</option>
+          `,
+      'sb-slidevar': `<option value="">–</option>
+            <option>Frontside</option><option>Backside</option><option>Switch Frontside</option><option>Switch Backside</option>
+          `,
+      'sb-inspin': `<option value="">–</option>
+            <option>FS 270</option><option>BS 270</option><option>Switch FS 270</option><option>Switch BS 270</option>
+            <option>FS Hardway 270</option><option>BS Hardway 270</option><option>Switch FS Hardway 270</option><option>Switch BS Hardway 270</option>
+            <option>FS 450</option><option>BS 450</option><option>Switch FS 450</option><option>Switch BS 450</option>
+            <option>FS Hardway 450</option><option>BS Hardway 450</option><option>Switch FS Hardway 450</option><option>Switch BS Hardway 450</option>
+          `,
+      'sb-swap-label': `Combo`,
+      'sb-swap': `<option value="">–</option>
+            <option>to 50-50</option><option>to Nose Press</option><option>to Tail Press</option>
+            <option>to Board Slide</option><option>to Nose Slide</option><option>to Lip Slide</option>
+            <option>to Tail Slide</option><option>to Blunt Slide</option><option>to Nose Blunt</option>
+          `,
+      'sb-outspin': `<option value="">–</option>
+            <option>FS 270 out</option><option>BS 270 out</option><option>Switch FS 270 out</option><option>Switch BS 270 out</option>
+            <option>FS 450 out</option><option>BS 450 out</option><option>Switch FS 450 out</option><option>Switch BS 450 out</option>
+            <option>Pretzel 270 out</option><option>Pretzel 450 out</option><option>to Fakie</option><option>to Forward</option>
+          `,
+      'sbe-slideform': `<option value="">–</option>
+          <option>50-50</option><option>Nose Press</option><option>Tail Press</option><option>Board Slide</option><option>Nose Slide</option><option>Lip Slide</option><option>Tail Slide</option><option>Blunt Slide</option><option>Nose Blunt</option>
+        `,
+      'sbe-inspin': `<option value="">–</option>
+          <option>FS 270</option><option>BS 270</option><option>Switch FS 270</option><option>Switch BS 270</option>
+          <option>FS Hardway 270</option><option>BS Hardway 270</option><option>Switch FS Hardway 270</option><option>Switch BS Hardway 270</option>
+          <option>FS 450</option><option>BS 450</option><option>Switch FS 450</option><option>Switch BS 450</option>
+          <option>FS Hardway 450</option><option>BS Hardway 450</option><option>Switch FS Hardway 450</option><option>Switch BS Hardway 450</option>
+        `,
+      'sbe-outspin': `<option value="">–</option>
+          <option>FS 270 out</option><option>BS 270 out</option><option>Switch FS 270 out</option><option>Switch BS 270 out</option>
+          <option>FS 450 out</option><option>BS 450 out</option><option>Switch FS 450 out</option><option>Switch BS 450 out</option>
+          <option>Pretzel 270 out</option><option>Pretzel 450 out</option><option>to Fakie</option><option>to Forward</option>
+        `,
       'sbe-disziplin': `<option value="">–</option>
           <option>Jump</option><option>Side Hit</option><option>Rail</option><option>Halfpipe</option>
         `,
@@ -3283,7 +3324,7 @@ function renderLiveSession() {
 // Konzept: Ein Run = 1–8 Elemente (Jumps aus dem bestehenden Trick-Picker,
 // Rails frei komponiert: Rail-Art-Vorauswahl + Trick-Text mit Vorschlägen —
 // OHNE Pflicht, den Trick vorher im Assessment zu erfassen).
-const SB_RAIL_SUGGESTIONS = ['50-50','Boardslide','Lipslide','Front Blunt','Back Lip','Nose Press','Tail Press','Front 270 on','Back 270 on','270 off','Pretzel 270 out','Blunt 270 out','Switch 50-50'];
+const SB_RAIL_SUGGESTIONS = ['50-50','Switch 50-50','Nose Press','Tail Press','Front Board','Back Board','Front Nose Slide','Back Nose Slide','Front Lip','Back Lip','Front Tail Slide','Back Tail Slide','Front Blunt','Back Blunt','Front Nose Blunt','Back Nose Blunt','Front 270 on','Back 270 on','Hardway 270 on','270 out','450 out','Pretzel 270 out','270 to fakie'];
 let SB_CUSTOM_RAIL_TYPES = [];   // in dieser Session neu erfasste Rail-Arten
 let SB_RAIL_TRICKS = [];          // team-weit bereits verwendete Rail-Tricks (aus der DB)
 
@@ -12624,7 +12665,8 @@ async function sbMonSaveComment() {
 
 // ═══════ SLOPESTYLE RUN-BUILDER (Freeski) — gleiche Bedienung wie Snowboard ═══════
 // Speicherung im FS-Datenmodell: gesamt 3/7/10 + gelandet; Run-Tag, Tags und Kommentar im kommentar-Feld.
-const SB_RAIL_SUGGESTIONS = ['50-50','Boardslide','Lipslide','Front Blunt','Back Lip','Nose Press','Tail Press','Front 270 on','Back 270 on','270 off','Pretzel 270 out','Blunt 270 out','Switch 50-50'];
+// Vorschläge = dasselbe Vokabular wie das FS-Assessment (Slide Form / Slide Variant / Swap).
+const SB_RAIL_SUGGESTIONS = ['50-50','Switch 50-50','Slide','Front Slide','Back Slide','Lip On','Switch Lip On','Switch Tails On','Front Swap','Back Swap','FS 360 Swap','BS 360 Swap'];
 const SB_RUN_TAGS = ['Rotation too early','Rotation too late','Take-Off','Center of gravity','Orientation','Grab timing','Air position'];
 let SB_CUSTOM_RAIL_TYPES = [];
 let SB_RAIL_TRICKS = [];
