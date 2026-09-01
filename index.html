@@ -6307,13 +6307,19 @@ function sbMonOutcome(t) {
 }
 
 function sbMonKey(label) {
-  const n = normSbTrick(label || '—');
+  // Grab-Anteil komplett strippen — auch Kombis wie « — Tail to Weddle (Mute)»,
+  // damit alle Varianten eines Tricks auf der Athlet:innen-Ebene EINE Karte ergeben
+  const n = normSbTrick((label || '—').split(' — ')[0]);
   // «SH »-Präfix (Side Hit) schützen, sonst strippt baseLabel die Direction als Grab
   const shPre = n.startsWith('SH ') ? 'SH ' : '';
   const m = shPre ? n.slice(3) : n;
   const dirs = ['Switch Backside','Switch Frontside','Frontside','Backside','Cab'];
   for (const d of dirs) if (m.startsWith(d + ' ')) return (shPre + d + ' ' + baseLabel(m.slice(d.length + 1))).trim();
-  return (shPre + (baseLabel(m) || m)).trim() || n;
+  // Richtung mitten im Label (Hardway/Nosebutter/N'Ollie …) schützen: «Frontside» ist
+  // auch ein Grab-Name — wenn baseLabel die Richtung wegfressen würde, Label behalten
+  const stripped = baseLabel(m) || m;
+  const kept = (trickDir(m) && !trickDir(stripped)) ? m : stripped;
+  return (shPre + kept).trim() || n;
 }
 
 async function sbMonFetchAll() {
@@ -6637,6 +6643,37 @@ function renderMonAthlete() {
   </div>`;
 }
 
+// Varianten & Grabs eines Kern-Tricks: volle Bezeichnung, Versuche, Stomp-Rate
+function sbMonVariantsHtml(rows) {
+  const map = {};
+  rows.forEach(t => {
+    const full = (t.trickaufbau || '—').trim();   // Roh-Label: enthält den Grab-Teil
+    if (!map[full]) map[full] = {att:0, s:0, l:0, f:0};
+    const m = map[full];
+    m.att++; m[{stomped:'s', landed:'l', failed:'f'}[sbMonOutcome(t)]]++;
+  });
+  const list = Object.entries(map).sort((a,b) => b[1].att - a[1].att);
+  if (list.length < 2) return '';
+  const rowsHtml = list.map(([full, m]) => {
+    const r = m.att ? Math.round(m.s/m.att*100) : 0;
+    const col = m.att < 5 ? 'var(--muted)' : r >= 70 ? '#34d399' : r >= 40 ? '#f59e0b' : '#e2001a';
+    const grab = full.includes(' — ') ? full.split(' — ').slice(1).join(' — ') : 'no grab';
+    return `<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:12px;">
+      <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${full}">${grab}</span>
+      <span style="color:var(--muted);font-size:11px;white-space:nowrap;">${m.att} att.</span>
+      <span style="font-size:11px;white-space:nowrap;"><b style="color:#39c3d4;">${m.s}</b><span style="color:var(--muted);">/</span><b style="color:#34d399;">${m.l}</b><span style="color:var(--muted);">/</span><b style="color:#e2001a;">${m.f}</b></span>
+      <b style="color:${col};min-width:38px;text-align:right;">${r}%</b>
+    </div>`;
+  }).join('');
+  return `<div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Variants &amp; grabs (${list.length})</div>
+      <div style="font-size:9px;color:var(--muted);">Stomped/Landed/Failed · stomp rate</div>
+    </div>
+    ${rowsHtml}
+  </div>`;
+}
+
 function renderMonTrick() {
   const root = document.getElementById('mon-root');
   const name = sbMonView.athlete, trick = sbMonView.trick;
@@ -6704,6 +6741,7 @@ function renderMonTrick() {
         ${kpiNote}
         ${failHtml}
       </div>
+      ${sbMonVariantsHtml(rows)}
     </div>
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;">
       <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Progress over sessions</div>
