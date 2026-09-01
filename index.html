@@ -616,7 +616,7 @@ body.sport-snowboard textarea, body.sport-freeski textarea { font-family: 'Poppi
             <option>50-50</option><option>Switch 50-50</option><option>Slide</option>
             <option>Lip On</option><option>Switch Tails On</option><option>Switch Lip On</option>
           </select></div>
-        <div class="form-group rail-field-sb hidden"><label>Slide Variant</label>
+        <div class="form-group rail-field-sb hidden"><label id="sb-slidevar-label">Slide Variant</label>
           <select id="sb-slidevar"><option value="">–</option>
             <option>Back Slide</option><option>Front Slide</option>
           </select></div>
@@ -639,8 +639,6 @@ body.sport-snowboard textarea, body.sport-freeski textarea { font-family: 'Poppi
           </select></div>
         <div class="form-group rail-field-sb hidden" id="sb-transfer-group"><label>Transfer</label>
           <select id="sb-transfer" onchange="sbSelectAddNew(this)"><option value="">–</option>
-            <option>Transfer to 50-50</option><option>Transfer to Switch 50-50</option><option>Transfer to Slide</option>
-            <option>Transfer to Lip On</option><option>Transfer to Switch Tails On</option><option>Transfer to Switch Lip On</option>
             <option value="__add__">＋ Add new…</option>
           </select></div>
         <div class="form-group rail-field-sb hidden"><label>Out-Spin</label>
@@ -957,6 +955,7 @@ const SPORT_CONFIGS = {
             <option>FS Hardway 450</option><option>BS Hardway 450</option><option>Switch FS Hardway 450</option><option>Switch BS Hardway 450</option>
           `,
       'sb-swap-label': `Combo`,
+      'sb-slidevar-label': `Direction`,
       'sb-swap': `<option value="">–</option>
             <option>to 50-50</option><option>to Nose Press</option><option>to Tail Press</option>
             <option>to Board Slide</option><option>to Nose Slide</option><option>to Lip Slide</option>
