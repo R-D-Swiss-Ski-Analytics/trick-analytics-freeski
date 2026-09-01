@@ -467,8 +467,10 @@ body.sport-snowboard textarea, body.sport-freeski textarea { font-family: 'Poppi
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;" id="sess-type-btns">
         <button onclick="selectSessType(this,'Landing Bag')"       class="sess-type-btn">Landing Bag</button>
-        <button onclick="selectSessType(this,'Jump On-Snow')"     class="sess-type-btn">Jump On-Snow</button>
+        <button onclick="selectSessType(this,'Big Air Training')"     class="sess-type-btn">Big Air Training</button>
         <button onclick="selectSessType(this,'Big Air Competition')" class="sess-type-btn">Big Air Competition</button>
+        <button onclick="selectSessType(this,'Slopestyle Training')" class="sess-type-btn">Slopestyle Training</button>
+        <button onclick="selectSessType(this,'Slopestyle Competition')" class="sess-type-btn">Slopestyle Competition</button>
       </div>
       <div style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <label for="sess-datum" style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Session Date</label>
@@ -1407,7 +1409,7 @@ function trSeasonChange() {
   if (dr) dr.style.display = v === 'custom' ? 'flex' : 'none';
 }
 
-const SESS_TYPE_SHORT = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'};
+const SESS_TYPE_SHORT = {'Landing Bag':'Bag','Jump On-Snow':'BA Train','Big Air Training':'BA Train','Big Air Competition':'BA Comp','Slopestyle Training':'SS Train','Slopestyle Competition':'SS Comp'};
 
 function populateAthleteReportDropdown() {
   const sel = document.getElementById('ar-athlete-sel');
@@ -3226,8 +3228,133 @@ function renderLiveSession() {
     <input type="text" id="sess-comment-${sid}" placeholder="Comment before rating (optional)" style="width:100%;margin-top:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
   </div>`;
 
+  if (sessType && sessType.startsWith('Slopestyle')) {
+    cols.innerHTML = tabsHtml + sbRunCardHtml(name, d, trickOptions);
+    return;
+  }
   cols.innerHTML = tabsHtml + cardHtml;
   if (sessPending && sessPending.name === name) renderSbDisclosure();
+}
+
+// ═══════ SLOPESTYLE RUN-BUILDER — PROTOTYP (speichert noch nicht) ═══════
+// Konzept: Ein Run = 1–8 Elemente (Jumps aus dem bestehenden Trick-Picker,
+// Rails frei komponiert: Rail-Art-Vorauswahl + Trick-Text mit Vorschlägen —
+// OHNE Pflicht, den Trick vorher im Assessment zu erfassen).
+const SB_RAIL_TYPES = ['Flat','Down','Flat-Down','Kink','Double Kink','Rainbow','Tube','Cannon','Wallride','Box'];
+const SB_RAIL_SUGGESTIONS = ['50-50','Boardslide','Lipslide','Front Blunt','Back Lip','Nose Press','Tail Press','Front 270 on','Back 270 on','270 off','Pretzel 270 out','Blunt 270 out','Switch 50-50'];
+
+function sbRunState(name) {
+  const d = sessAthleteData[name];
+  if (!d.run) d.run = {no: 1, elements: [], ratings: [], addMode: '', railType: SB_RAIL_TYPES[0]};
+  return d.run;
+}
+
+function sbRunCardHtml(name, d, trickOptions) {
+  const r = sbRunState(name);
+  const sid = name.replace(/\s/g,'_');
+  const elRows = r.elements.map((el, i) => {
+    const rate = r.ratings[i] || null;
+    const btn = (val, icon, col) => `<button onclick="sbRunRate('${name}',${i},'${val}')" style="padding:8px 12px;border-radius:8px;border:2px solid ${rate===val?col:'var(--border)'};background:${rate===val?col+'22':'var(--surface2)'};color:${rate===val?col:'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;">${icon}</button>`;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);">
+      <span style="width:20px;height:20px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0;">${i+1}</span>
+      <span style="flex-shrink:0;">${el.kind==='rail'?'🛤️':'🪂'}</span>
+      <span style="flex:1;font-size:12px;font-weight:600;color:var(--text);line-height:1.3;">${el.label}</span>
+      ${btn('failed','✗','#e2001a')}${btn('landed','✓','#34d399')}${btn('stomped','⭐','#39c3d4')}
+      <button onclick="sbRunRemoveEl('${name}',${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 4px;">✕</button>
+    </div>`;
+  }).join('');
+
+  let addPanel = '';
+  if (r.addMode === 'jump') {
+    addPanel = `<div style="margin-top:10px;">
+      <select onchange="sbRunAddJump('${name}', this.value)" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+        <option value="">— select jump trick —</option>
+        ${trickOptions}
+      </select>
+    </div>`;
+  } else if (r.addMode === 'rail') {
+    addPanel = `<div style="margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Rail type</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+        ${SB_RAIL_TYPES.map(t => `<button onclick="sbRunSetRailType('${name}','${t}')" style="padding:6px 12px;border-radius:999px;border:1.5px solid ${r.railType===t?'#39c3d4':'var(--border)'};background:${r.railType===t?'rgba(57,195,212,0.18)':'none'};color:${r.railType===t?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">${t}</button>`).join('')}
+      </div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Trick (free text, with suggestions)</div>
+      <div style="display:flex;gap:8px;">
+        <input id="run-rail-trick-${sid}" list="run-rail-suggest" placeholder="e.g. Front 270 on" style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+        <datalist id="run-rail-suggest">${SB_RAIL_SUGGESTIONS.map(s => `<option value="${s}">`).join('')}</datalist>
+        <button onclick="sbRunAddRailCommit('${name}')" style="padding:9px 16px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Add</button>
+      </div>
+    </div>`;
+  }
+
+  const rated = r.ratings.filter(Boolean).length;
+  return `<div class="card" style="padding:24px;" id="sess-col-${sid}">
+    <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:4px;text-align:center;">${shortName(name)}</div>
+    <div style="text-align:center;margin-bottom:14px;">
+      <span style="background:rgba(167,139,250,0.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:999px;padding:4px 14px;font-size:11px;font-weight:700;">SLOPESTYLE RUN #${r.no}</span>
+      <span style="margin-left:8px;background:rgba(245,158,11,0.12);border:1px solid #f59e0b;color:#f59e0b;border-radius:999px;padding:4px 10px;font-size:10px;font-weight:700;">PROTOTYPE — saving disabled</span>
+    </div>
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Run setup — ${r.elements.length}/8 elements</div>
+    ${elRows || '<div style="color:var(--muted);font-size:12px;padding:10px 0;">No elements yet — build the run below.</div>'}
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button onclick="sbRunToggleAdd('${name}','jump')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='jump'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='jump'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='jump'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🪂 + Jump</button>
+      <button onclick="sbRunToggleAdd('${name}','rail')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='rail'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='rail'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='rail'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🛤️ + Rail</button>
+    </div>
+    ${addPanel}
+    <button onclick="sbRunSave('${name}')" ${r.elements.length && rated === r.elements.length ? '' : 'disabled'} style="width:100%;margin-top:14px;padding:14px;border-radius:10px;border:none;background:${r.elements.length && rated === r.elements.length ? '#34d399' : 'var(--surface2)'};color:${r.elements.length && rated === r.elements.length ? '#06281c' : 'var(--muted)'};font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Save Run #${r.no} (${rated}/${r.elements.length} rated)</button>
+    <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;">Final version: each element is saved as one attempt (typ = ${sessType}, tagged «Run ${r.no} · position»), new rail tricks are added to the athlete's Assessment automatically as 🎯 Goal.</div>
+  </div>`;
+}
+
+function sbRunToggleAdd(name, mode) {
+  const r = sbRunState(name);
+  r.addMode = r.addMode === mode ? '' : mode;
+  renderLiveSession();
+}
+function sbRunSetRailType(name, t) {
+  sbRunState(name).railType = t;
+  renderLiveSession();
+  const inp = document.getElementById('run-rail-trick-' + name.replace(/\s/g,'_'));
+  if (inp) inp.focus();
+}
+function sbRunAddJump(name, label) {
+  if (!label) return;
+  const r = sbRunState(name);
+  if (r.elements.length >= 8) { showToast('Max 8 elements per run', 'error'); return; }
+  r.elements.push({kind:'jump', label});
+  r.ratings.push(null);
+  r.addMode = '';
+  renderLiveSession();
+}
+function sbRunAddRailCommit(name) {
+  const r = sbRunState(name);
+  const inp = document.getElementById('run-rail-trick-' + name.replace(/\s/g,'_'));
+  const trick = (inp?.value || '').trim();
+  if (!trick) { showToast('Enter the rail trick', 'error'); return; }
+  if (r.elements.length >= 8) { showToast('Max 8 elements per run', 'error'); return; }
+  r.elements.push({kind:'rail', label: `Rail ${r.railType} — ${trick}`});
+  r.ratings.push(null);
+  r.addMode = '';
+  renderLiveSession();
+}
+function sbRunRemoveEl(name, i) {
+  const r = sbRunState(name);
+  r.elements.splice(i, 1);
+  r.ratings.splice(i, 1);
+  renderLiveSession();
+}
+function sbRunRate(name, i, val) {
+  const r = sbRunState(name);
+  r.ratings[i] = r.ratings[i] === val ? null : val;
+  renderLiveSession();
+}
+function sbRunSave(name) {
+  const r = sbRunState(name);
+  const lines = r.elements.map((el, i) => `${i+1}/${r.elements.length} · ${el.label} → ${r.ratings[i]}`).join('\n');
+  alert(`PROTOTYPE — would save as ${r.elements.length} attempts:\n\n${lines}\n\n(typ: ${sessType}, tag: Run ${r.no})`);
+  r.no++;
+  r.ratings = r.ratings.map(() => null);   // gleicher Run nochmal, Bewertungen zurückgesetzt
+  renderLiveSession();
 }
 
 function sessSetTrick(name, trick) { sessAthleteData[name].currentTrick = trick; }
@@ -7159,7 +7286,7 @@ function init() {
   document.body.classList.add('sport-snowboard');
   sbLoadCustomFails();   // team-weite Custom-Fail-Tags nachladen
 }
-return { fragments, init, showPage, sbCustomFailPrompt, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, sbSelectGrab, renderLiveSession, sessSetTrick, logAttempt, logAttemptStart, renderSbDisclosure, toggleSbKpi, commitLandedAttempt, commitFailedAttempt, sbAttemptNo, toggleSbEditKpi, setSbEditFail, saveSbLogEdit, deleteLogEntry, editLogEntry, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, openSessionReportView, sbReportInnerHtml, sbRVShowDetail, sbRVPrintPdf, loadReportsTab, renderReportsList, sbOpenReportInline, sbRepSetTyp, sbRepSetRange, sbRepApplyCustom, sbRepDeleteCurrent, sbRVEditStart, sbRVEditKpiToggle, sbRVEditFailSet, sbRVEditCancel, sbRVEditDelete, sbRVEditSave, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonTimeSel, sbMonOpenTrickReport, sbMonToggleHistory, sbMonSaveComment, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack };
+return { fragments, init, showPage, sbCustomFailPrompt, sbRunToggleAdd, sbRunSetRailType, sbRunAddJump, sbRunAddRailCommit, sbRunRemoveEl, sbRunRate, sbRunSave, updateFwdSwBtn, updateSbDisciplines, toggleDisziplin, trickDesc, loadDB, generateAthleteReport, renderSessionReports, rebuildReportFromTimestamps, deleteSessionReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, normSbTrick, tricksForDir, baseLabel, parseGrabsFromLabel, showGrabPicker, toggleDoubleGrab, doubleGrabClick, addTrickWithGrab, renderSessionTrickSelection, toggleSessGrab, renderSessSelected, toggleSessAssessmentTrick, removeSessTrick, toggleSessTrick, selectSessAthlete, sbSetTrick, sbSelectGrab, renderLiveSession, sessSetTrick, logAttempt, logAttemptStart, renderSbDisclosure, toggleSbKpi, commitLandedAttempt, commitFailedAttempt, sbAttemptNo, toggleSbEditKpi, setSbEditFail, saveSbLogEdit, deleteLogEntry, editLogEntry, renderSessionLog, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, openSessionReportView, sbReportInnerHtml, sbRVShowDetail, sbRVPrintPdf, loadReportsTab, renderReportsList, sbOpenReportInline, sbRepSetTyp, sbRepSetRange, sbRepApplyCustom, sbRepDeleteCurrent, sbRVEditStart, sbRVEditKpiToggle, sbRVEditFailSet, sbRVEditCancel, sbRVEditDelete, sbRVEditSave, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonTimeSel, sbMonOpenTrickReport, sbMonToggleHistory, sbMonSaveComment, viewSessionReportByDate, loadStandort, renderSbDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, openSbEdit, saveSbEdit, extractQuality, trickDir, sortFsTricksByDir, initTrickAnalytics, buildSessionList, setStatsMode, setTypeFilter, parseDateInput, setDateRange, clearDateRange, renderTrickAnalytics, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, showPerfTip, hidePerfTip, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, updateSeasonLabels, renderSessionPerformance, realityCheck, applyRealityCheckSelected, drawSessionDirRadar, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack };
 })();
 
 // ═══════════════ FREESKI-MODUL ═══════════════
