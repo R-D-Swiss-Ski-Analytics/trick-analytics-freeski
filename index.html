@@ -3650,7 +3650,7 @@ function sessSetTrick(name, trick) { sessAthleteData[name].currentTrick = trick;
 
 // ── New capture flow: Failed/Landed + progressive disclosure (KPIs / fail reasons) ──
 const SB_KPIS = [['grab','Grab'],['amplitude','Amplitude'],['control','Control'],['quality_landing','Quality Landing'],['axis','Take-Off']];
-const SB_FAIL_REASONS = ['Rotation too early','Rotation too late','Timing rotation','Take-Off','Position Take-off','Spin power','Center of gravity','Orientation','Grab timing','Air position','Spotting'];
+const SB_FAIL_REASONS = ['Timing rotation','Position Take-off','Spin power','Air Position','Timing Grab','Spotting'];
 // Custom-Fail-Tags: team-weit — werden aus den bereits erfassten fail_grund-Werten geladen
 // und sofort ergänzt, wenn ein Coach via «Other…» einen neuen Grund eintippt.
 let SB_CUSTOM_FAILS = [];
@@ -3666,7 +3666,7 @@ async function sbLoadCustomFails() {
       from += 1000;
     }
     const seen = new Set(SB_FAIL_REASONS);
-    SB_CUSTOM_FAILS = [...new Set(all.map(r => sbFailLabel(r.fail_grund)).filter(v => v && !seen.has(v)))].sort();
+    SB_CUSTOM_FAILS = [...new Set(all.map(r => sbFailLabel(r.fail_grund)).filter(v => v && !seen.has(v) && !SB_RETIRED_FAILS.has(v)))].sort();
   } catch (e) { /* offline o.ä. — Basis-Tags reichen */ }
 }
 function sbCustomFailPrompt(name) {
@@ -3676,8 +3676,11 @@ function sbCustomFailPrompt(name) {
   if (!sessPendingFails.includes(v)) sessPendingFails.push(v);
   renderSbDisclosure();
 }
-// Attempts saved before the rename still carry 'Takeoff' — show/count them under the current label
-const sbFailLabel = v => v === 'Takeoff' ? 'Take-Off' : (v || '');
+// Alte fail_grund-Werte: gleichbedeutende auf die neuen Labels mappen (Anzeige + Zählung),
+// ausgemusterte Alt-Tags bleiben in den Daten sichtbar, werden aber nicht mehr als Chips angeboten.
+const SB_FAIL_RENAMES = {'Takeoff':'Take-Off','Air position':'Air Position','Grab timing':'Timing Grab'};
+const SB_RETIRED_FAILS = new Set(['Rotation too early','Rotation too late','Take-Off','Center of gravity','Orientation']);
+const sbFailLabel = v => SB_FAIL_RENAMES[v] || (v || '');
 let sessPending = null;        // {name, mode:'failed'|'landed'}
 let sessPendingKpis = {};      // key -> bool while landed panel open
 let sessEditKpis = {};         // key -> bool while editing a log entry
