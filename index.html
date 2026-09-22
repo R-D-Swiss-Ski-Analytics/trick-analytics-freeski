@@ -7094,7 +7094,7 @@ function renderMonAthlete() {
   _monTricks = agg;
   const groups = dirOrderList.map(dir => {
     const list = agg.map((tr, i) => ({...tr, _i: i})).filter(tr => (trickDir(tr.trick) || 'Other') === dir)
-      .sort((a, b) => b.att - a.att);
+      .sort((a, b) => extractRotFromLabel(b.trick) - extractRotFromLabel(a.trick) || b.att - a.att);
     if (!list.length) return '';
     const cards = list.map(tr => {
       const st = sbMonStatusKey(tr.att, tr.stomped);
@@ -11765,7 +11765,7 @@ function renderMonAthlete() {
   _monTricks = agg;
   const groups = FS_MON_DIRS.map(dir => {
     const list = agg.map((tr, i) => ({...tr, _i: i})).filter(tr => fsMonDir(tr.trick) === dir)
-      .sort((a, b) => b.att - a.att);
+      .sort((a, b) => extractRotFromLabel(b.trick) - extractRotFromLabel(a.trick) || b.att - a.att);
     if (!list.length) return '';
     const cards = list.map(tr => {
       const st = sbMonStatusKey(tr.att, tr.qoe);
