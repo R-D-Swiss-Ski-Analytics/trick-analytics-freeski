@@ -1091,4 +1091,43 @@ function closeSbEdit(){document.getElementById('sb-edit-overlay').style.display=
 
   if(document.getElementById('sb-datum')) document.getElementById('sb-datum').valueAsDate = new Date();
 
+// ═══════════════ AUS BEIDEN MODULEN ZUSAMMENGEFUEHRT ═══════════════
+// Diese Funktionen standen wortgleich in snowboard.js und freeski.js.
+// Aenderungen hier wirken auf beide Sportarten.
 
+function parseDateInput(val) {
+  if (!val) return '';
+  const m = val.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+  if (m) {
+    const d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0');
+    const y=m[3].length===2?'20'+m[3]:m[3];
+    return `${y}-${mo}-${d}`;
+  }
+  return '';
+}
+
+function sbMonRing(pct, color, size, stroke) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg);">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="var(--border)" stroke-width="${stroke}" fill="none"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${color}" stroke-width="${stroke}" fill="none"
+      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c * (1 - Math.min(1, Math.max(0, pct)))).toFixed(1)}" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function sbRunMaxEl() { return sessType && sessType.startsWith('Halfpipe') ? 10 : 8; }
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'datenbank') loadDB();
+  if (id === 'entwicklung') loadEntwicklung();
+  if (id === 'erfassen') initSessionSetup();
+  if (id === 'monitoring') loadMonitoring();
+  if (id === 'sessionreport') loadReportsTab();
+  if (typeof updateMobileNav === 'function') updateMobileNav(id);
+}
+
+function typMatches(typ, filter) { return !filter || typ === filter || (filter === 'Big Air Training' && typ === 'Jump On-Snow'); }

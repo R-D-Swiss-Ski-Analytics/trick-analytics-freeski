@@ -1,18 +1,6 @@
 // Freeski-Modul. Nur Verhalten, das sich von Snowboard unterscheidet.
 // ═══════════════ FREESKI-MODUL ═══════════════
 const FreeskiModule = (() => {
-function showPage(id, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  btn.classList.add('active');
-  if (id === 'datenbank') loadDB();
-  if (id === 'entwicklung') loadEntwicklung();
-  if (id === 'erfassen') initSessionSetup();
-  if (id === 'monitoring') loadMonitoring();
-  if (id === 'sessionreport') loadReportsTab();
-  if (typeof updateMobileNav === 'function') updateMobileNav(id);
-}
 
 function updateSbDisciplines() {
   const athlet = document.getElementById('sb-athlet').value;
@@ -3173,17 +3161,6 @@ function setStatsMode(mode) {
   renderTrickAnalytics();
 }
 
-function parseDateInput(val) {
-  if (!val) return '';
-  // DD.MM.JJ or DD.MM.JJJJ
-  const m = val.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
-  if (m) {
-    const d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0');
-    const y=m[3].length===2?'20'+m[3]:m[3];
-    return `${y}-${mo}-${d}`;
-  }
-  return '';
-}
 
 function setDateRange() {
   const fromEl = document.getElementById('ev-date-from');
@@ -3819,7 +3796,6 @@ function fsMonCatAvg(rows, key) {
 }
 const FS_TYPE_FILTERS = [['','All'],['Landing Bag','Bag'],['Big Air Training','BA Train'],['Big Air Competition','BA Comp'],['Slopestyle Training','SS Train'],['Slopestyle Competition','SS Comp'],['Halfpipe Training','HP Train'],['Halfpipe Competition','HP Comp']];
 // Alt-Daten: «Jump On-Snow» zählt zum neuen «Big Air Training»
-function typMatches(typ, filter) { return !filter || typ === filter || (filter === 'Big Air Training' && typ === 'Jump On-Snow'); }
 
 function fsTypeChipsHtml(current, handler) {
   return `<div style="display:flex;gap:6px;flex-wrap:wrap;">${FS_TYPE_FILTERS.map(([v,l]) =>
@@ -3934,14 +3910,6 @@ function sbMonTrendHtml(tr) {
   return `<span style="color:var(--muted);font-weight:600;">→ stable</span>`;
 }
 
-function sbMonRing(pct, color, size, stroke) {
-  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
-  return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg);">
-    <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="var(--border)" stroke-width="${stroke}" fill="none"/>
-    <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${color}" stroke-width="${stroke}" fill="none"
-      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c * (1 - Math.min(1, Math.max(0, pct)))).toFixed(1)}" stroke-linecap="round"/>
-  </svg>`;
-}
 
 function sbMonDonut(landed, missed, size) {
   const total = landed + missed;
@@ -5183,7 +5151,6 @@ async function sbLoadRailData() {
   } catch (e) { /* Basis-Listen reichen */ }
 }
 
-function sbRunMaxEl() { return sessType && sessType.startsWith('Halfpipe') ? 10 : 8; }
 function sbRunState(name) {
   const d = sessAthleteData[name];
   if (!d.run) d.run = {no: 1, elements: [], ratings: [], addMode: '', railType: sbAllRailTypes()[0] || 'Rail', noteOpen: null};

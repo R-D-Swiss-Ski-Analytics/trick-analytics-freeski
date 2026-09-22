@@ -7,19 +7,27 @@ auf beide Netlify-Sites deployt; welche Sportart aktiv ist, entscheidet die Doma
 - `trick-analyses-freeski.netlify.app` → Freeski (Default)
 - Lokal testen: `index.html?sport=snowboard` bzw. `?sport=freeski`
 
-## Aufbau von index.html
+## Aufbau
 
-1. **HTML-Skelett** — gemeinsames Markup für alle vier Tabs. Sportartspezifische
-   Stellen sind leere Container/Platzhalter, die beim Boot gefüllt werden.
-2. **`SPORT_CONFIGS`** — reine Daten pro Sportart: Supabase-URL/-Key, Titel,
-   Athleten-Roster, Squads, Trick-Nomenklatur (Richtungen, Achsen, Grabs, …)
-   als `selectFill`-Einträge.
-3. **Gemeinsamer Kern** — alle Funktionen, die in beiden Apps identisch waren.
-4. **`SnowboardModule` / `FreeskiModule`** — die sportartspezifischen Funktionen
-   (verbatim aus den ursprünglichen Apps übernommen) plus HTML-Fragmente
-   (Grab-Picker, Development-Charts, DB-Rankings, Coach-Felder).
-5. **Sport-Boot** (`DOMContentLoaded`) — wählt das aktive Modul, hängt dessen
-   Funktionen an `window`, füllt Selects/Fragmente aus der Config.
+Seit dem 22.09.2026 ist die App auf mehrere Dateien verteilt - kein Build-Schritt,
+klassische `<script src>`-Tags in fester Reihenfolge:
+
+| Datei | Inhalt |
+|---|---|
+| `index.html` | nur noch Markup (rund 500 Zeilen) |
+| `stil.css` | das gesamte Aussehen |
+| `js/config.js` | `SPORT`-Erkennung und `SPORT_CONFIGS`: Supabase-Zugang, Titel, Athleten, Squads, Trick-Nomenklatur - **reine Daten** |
+| `js/kern.js` | gemeinsamer Kern: alles, was in beiden Sportarten identisch ist |
+| `js/snowboard.js` | `SnowboardModule` - nur, was sich von Freeski unterscheidet |
+| `js/freeski.js` | `FreeskiModule` - dito |
+| `js/boot.js` | waehlt beim `DOMContentLoaded` das Modul, haengt es ans `window`, fuellt Selects und Fragmente |
+| `js/nav.js` | mobile Navigationsleiste |
+
+Die Reihenfolge ist wichtig: `config.js` vor `kern.js` vor den Modulen vor `boot.js`.
+Wer eine Datei hinzufuegt, traegt sie in `index.html` **und** in den Sanity-Check
+in `.github/workflows/deploy.yml` ein.
+
+`moguls.html` bleibt eine eigenstaendige Einzeldatei.
 
 ## Regeln
 
@@ -34,5 +42,22 @@ auf beide Netlify-Sites deployt; welche Sportart aktiv ist, entscheidet die Doma
 ## Historie
 
 Bis Juli 2026 waren dies zwei getrennte Dateien (`freeski.html` hier,
-`snowboard.html` im Repo trick-analyses-snowboard). Die alten Stände sind
-über die Git-Historie bzw. das alte Repo weiterhin abrufbar.
+`snowboard.html` im Repo trick-analyses-snowboard). Die alten Staende sind
+ueber die Git-Historie bzw. das alte Repo weiterhin abrufbar.
+
+Bis September 2026 lag alles in einer einzigen `index.html` mit 13'255 Zeilen
+und einem `<script>`-Block von 12'332 Zeilen. Die Aufteilung hat keine Zeile
+Code veraendert, nur verteilt.
+
+## Doppelte Funktionen
+
+107 Funktionen tragen in beiden Modulen denselben Namen, 44 davon sind wortgleich.
+`werkzeuge/zusammenfuehren.py` findet sie und zieht die gefahrlosen Faelle in den
+Kern: verschoben wird nur, was zeichengleich ist und keinen modulinternen Namen
+braucht. Probelauf ohne Argumente, Ausfuehrung mit `--schreiben`:
+
+    python3 werkzeuge/zusammenfuehren.py . 
+
+Beim ersten Durchgang wanderten fuenf Funktionen in den Kern. Die restlichen
+rund 39 haengen an modulinternem Zustand - die sind Handarbeit und lohnen sich
+einzeln, nicht als Stapel.
