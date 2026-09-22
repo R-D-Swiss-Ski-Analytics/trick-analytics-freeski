@@ -10,18 +10,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Sanity-Check (kein Deploy bei kaputtem index.html)
+      - name: Sanity-Check (kein Deploy bei kaputten JS-Dateien)
         run: |
+          for f in js/config.js js/kern.js js/snowboard.js js/freeski.js js/boot.js js/nav.js; do
+            node --check "$f" || exit 1
+          done
           node -e "
             const fs = require('fs');
             const html = fs.readFileSync('index.html', 'utf8');
-            const m = html.match(/<script>\n([\s\S]*?)\n<\/script>/);
-            if (!m) throw new Error('Haupt-Script nicht gefunden');
-            new Function(m[1]);
-            for (const marker of ['SPORT_CONFIGS', 'SnowboardModule', 'FreeskiModule', 'bootSport', 'grab-block-placeholder']) {
-              if (!html.includes(marker)) throw new Error('Pflicht-Marker fehlt: ' + marker);
+            for (const marker of ['js/config.js', 'js/kern.js', 'js/snowboard.js', 'js/freeski.js',
+                                  'js/boot.js', 'js/nav.js', 'stil.css', 'grab-block-placeholder']) {
+              if (!html.includes(marker)) throw new Error('Pflicht-Marker fehlt in index.html: ' + marker);
             }
-            console.log('Sanity-Check OK — Script parsebar, alle Marker vorhanden');
+            const paare = {'js/config.js':'SPORT_CONFIGS', 'js/snowboard.js':'SnowboardModule',
+                           'js/freeski.js':'FreeskiModule', 'js/boot.js':'bootSport'};
+            for (const [datei, marker] of Object.entries(paare)) {
+              if (!fs.readFileSync(datei, 'utf8').includes(marker)) throw new Error(marker + ' fehlt in ' + datei);
+            }
+            console.log('Sanity-Check OK — alle Dateien parsebar, alle Marker vorhanden');
           "
       - name: Sanity-Check Moguls (kein Deploy bei kaputtem moguls.html)
         run: |
@@ -37,7 +43,7 @@ jobs:
             console.log('Sanity-Check Moguls OK');
           "
       - name: Stage unified app
-        run: mkdir -p stage && cp index.html manifest-*.webmanifest stage/ && cp -R icons stage/
+        run: mkdir -p stage && cp index.html stil.css manifest-*.webmanifest stage/ && cp -R icons js stage/
       - name: Stage moguls app
         run: mkdir -p stage-moguls && cp moguls.html stage-moguls/index.html
       - name: Deploy Freeski

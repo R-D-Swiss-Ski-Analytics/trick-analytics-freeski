@@ -1,0 +1,5479 @@
+// Freeski-Modul. Nur Verhalten, das sich von Snowboard unterscheidet.
+// ═══════════════ FREESKI-MODUL ═══════════════
+const FreeskiModule = (() => {
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'datenbank') loadDB();
+  if (id === 'entwicklung') loadEntwicklung();
+  if (id === 'erfassen') initSessionSetup();
+  if (id === 'monitoring') loadMonitoring();
+  if (id === 'sessionreport') loadReportsTab();
+  if (typeof updateMobileNav === 'function') updateMobileNav(id);
+}
+
+function updateSbDisciplines() {
+  const athlet = document.getElementById('sb-athlet').value;
+  const sel = document.getElementById('sb-disziplin');
+  const selRow = sel.closest('.form-row') || sel.parentElement;
+  if (!athlet) { sel.style.display=''; return; }
+  const isHP = ['Alan Bornet'].includes(athlet);
+  if (isHP) {
+    sel.innerHTML = '<option value="Halfpipe">Halfpipe</option>';
+    sel.value = 'Halfpipe';
+    sel.style.display = 'none';
+  } else {
+    sel.innerHTML = '<option value="">— select —</option><option>Jump</option><option>Rail</option>';
+    sel.value = '';
+    sel.style.display = '';
+  }
+  toggleDisziplin('sb');
+}
+
+const CLASSIC_ACRO_AXES_FS = new Set(['Frontflip','Backflip','Sideflip Right','Sideflip Left','Sideflip']);
+
+function updateFwdSwBtn(prefix) {
+  const achse = (document.getElementById(prefix+'-achse') || document.getElementById('edit-achse') || document.getElementById('sbe-achse'))?.value || '';
+  const isClassic = CLASSIC_ACRO_AXES_FS.has(achse);
+  const dirSelect = document.getElementById(prefix+'-drehrichtung') || document.getElementById('edit-drehrichtung') || document.getElementById('sbe-drehrichtung');
+  const btnWrap = document.getElementById('fwsw-btns-'+prefix);
+
+  if (!dirSelect) return;
+  if (isClassic) {
+    dirSelect.style.display = 'none';
+    if (btnWrap) btnWrap.remove(); // always recreate so labels stay correct
+    const wrap = document.createElement('div');
+    wrap.id = 'fwsw-btns-' + prefix;
+    wrap.style.cssText = 'display:flex;gap:8px;margin-top:2px;';
+    const isSideflip = achse === 'Sideflip';
+    const btnLabels = isSideflip ? ['Right','Left'] : ['Forward','Switch'];
+    btnLabels.forEach(val => {
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.textContent = val;
+      btn.dataset.val = val;
+      const isActive = dirSelect.value === val;
+      btn.style.cssText = `flex:1;padding:8px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .15s;background:${isActive?'rgba(57,195,212,0.18)':'var(--surface2)'};border-color:${isActive?'#39c3d4':'var(--border)'};color:${isActive?'#39c3d4':'var(--muted)'};`;
+      btn.onclick = () => {
+        dirSelect.value = val;
+        wrap.querySelectorAll('button').forEach(b => {
+          const active = b.dataset.val === val;
+          b.style.background = active?'rgba(57,195,212,0.18)':'var(--surface2)';
+          b.style.borderColor = active?'#39c3d4':'var(--border)';
+          b.style.color = active?'#39c3d4':'var(--muted)';
+        });
+      };
+      wrap.appendChild(btn);
+    });
+    dirSelect.parentElement.appendChild(wrap);
+  } else {
+    dirSelect.style.display = '';
+    if (btnWrap) btnWrap.style.display = 'none';
+  }
+}
+
+const FS_DIR_NORMAL = '<option value="">–</option><option>Left</option><option>Right</option><option>Switch Left</option><option>Switch Right</option>';
+
+const FS_DIR_HP     = '<option value="">–</option><option>Left</option><option>Left Alley Oop</option><option>Right</option><option>Right Alley Oop</option><option>Switch Left</option><option>Switch Left Alley Oop</option><option>Switch Right</option><option>Switch Right Alley Oop</option>';
+
+function toggleDisziplin(prefix) {
+  if (prefix === 'sb') {
+    const v = document.getElementById('sb-disziplin').value;
+    const divider = document.getElementById('sb-disc-divider');
+    if (divider) divider.textContent = v || 'Jump / Halfpipe';
+    // Update direction options for HP
+    const dirSel = document.getElementById('sb-drehrichtung');
+    if (dirSel) dirSel.innerHTML = v === 'Halfpipe' ? FS_DIR_HP : FS_DIR_NORMAL;
+  }
+  const v = document.getElementById(prefix + '-disziplin').value;
+  const isJump = v === 'Jump' || v === 'Halfpipe' || v === 'Landing Bag';
+  document.querySelectorAll('.kicker-field-' + prefix).forEach(el => el.classList.toggle('hidden', !isJump));
+  document.querySelectorAll('.rail-field-' + prefix).forEach(el => el.classList.toggle('hidden', v !== 'Rail'));
+}
+
+function trickDesc(t, prefix) {
+  // Works for both DB trick objects and field-read objects (using prefix)
+  const p = prefix ? prefix + '-' : '';
+  const disziplin = t ? t.disziplin : val(p + 'disziplin');
+  if (!disziplin) return null;
+
+  if (disziplin === 'Rail') {
+    const parts = [
+      t ? t.inspin   : val(p+'inspin'),
+      t ? t.slideform : val(p+'slideform'),
+      t ? t.slidevar  : val(p+'slidevar'),
+      t ? t.foot      : val(p+'foot'),
+      t ? t.swap      : val(p+'swap'),
+      t ? t.transfer  : val(p+'transfer'),
+      t ? t.outspin   : val(p+'outspin'),
+      t ? t.railart   : val(p+'railart'),
+    ].filter(Boolean);
+    return parts.join(' ') || '–';
+  } else {
+    const parts = [
+      t ? t.absprung  : val(p+'absprung'),
+      t ? t.drehrichtung : val(p+'drehrichtung'),
+      (t ? t.flips : val(p+'flips')) && (t ? t.flips : val(p+'flips')) !== 'keine' ? (t ? t.flips : val(p+'flips')) : null,
+      t ? t.rotation     : val(p+'rotation'),
+      t ? t.achse : val(p+'achse'),
+      t ? t.grab  : val(p+'grab'),
+      (t ? t.bringback : val(p+'bringback')) ? 'Bringback ' + (t ? t.bringback : val(p+'bringback')) : null,
+      t ? t.style : val(p+'style'),
+    ].filter(Boolean);
+    return parts.join(' ') || '–';
+  }
+}
+
+
+let _perfTypeFilter = '';
+
+function setPerfFilter(typ) {
+  _perfTypeFilter = typ;
+  const map = {'':'pf-all','Landing Bag':'pf-bag','Jump On-Snow':'pf-jump','Big Air Competition':'pf-comp'};
+  Object.values(map).forEach(id=>{
+    const b=document.getElementById(id); if(!b) return;
+    b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
+  });
+  const act=document.getElementById(map[typ]||'pf-all');
+  if(act){act.style.background='rgba(57,195,212,0.2)';act.style.borderColor='#39c3d4';act.style.color='#39c3d4';}
+  renderSessionPerformance();
+}
+
+let _pfCustomFrom = '', _pfCustomTo = '';
+
+function onPfSeasonChange() {
+  const sel = document.getElementById('pf-season')?.value;
+  const rangeDiv = document.getElementById('pf-custom-range');
+  if (rangeDiv) rangeDiv.style.display = sel === 'custom' ? 'flex' : 'none';
+  if (sel !== 'custom') {
+    _pfCustomFrom = ''; _pfCustomTo = '';
+    renderSessionPerformance(); // re-render immediately for preset ranges
+  }
+  // For custom: wait until dates are entered via setPerfDateRange()
+}
+
+function setPerfDateRange() {
+  const f = document.getElementById('pf-from')?.value || '';
+  const t = document.getElementById('pf-to')?.value   || '';
+  _pfCustomFrom = parsePerfDate(f);
+  _pfCustomTo   = parsePerfDate(t);
+  // Highlight active inputs
+  [['pf-from',_pfCustomFrom],['pf-to',_pfCustomTo]].forEach(([id,parsed])=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.style.borderColor = parsed ? '#39c3d4' : 'var(--border)';
+    el.style.color       = parsed ? '#39c3d4' : 'var(--muted)';
+  });
+  renderSessionPerformance();
+}
+
+function clearPerfDateRange() {
+  _pfCustomFrom = ''; _pfCustomTo = '';
+  ['pf-from','pf-to'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.value=''; el.style.borderColor='var(--border)'; el.style.color='var(--muted)';
+  });
+  renderSessionPerformance();
+}
+
+function getSeasonRange() {
+  const sel = document.getElementById('pf-season')?.value || 'current';
+  // Custom date range takes priority
+  if (sel === 'custom') return { from: _pfCustomFrom, to: _pfCustomTo };
+  const now = new Date();
+  const yr = now.getFullYear();
+  const mo = now.getMonth()+1;
+  const seasonStart = mo >= 5 ? yr : yr-1;
+  if (sel === 'current') return { from: `${seasonStart}-05-01`, to: `${seasonStart+1}-04-30` };
+  if (sel === 'last')    return { from: `${seasonStart-1}-05-01`, to: `${seasonStart}-04-30` };
+  return { from: '', to: '' }; // all time
+}
+
+function extractRotation(name) {
+  if (!name) return 0;
+  const m = name.match(/\b(180|270|360|450|540|630|720|810|900|1080|1260|1440)\b/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+function extractQuality(kommentar) {
+  // Quality of Execution: Schnitt der bewerteten Kategorien (Take-off/Grab/Trick/Landing)
+  if (!kommentar) return null;
+  const score = {perfect:100, okay:50, miss:0};
+  const vals = ['Takeoff','Grab','Trick','Landing'].map(k => {
+    const m = kommentar.match(new RegExp(k+':(\\w+)'));
+    return (m && score[m[1]] !== undefined) ? score[m[1]] : null;
+  }).filter(v => v !== null);
+  return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : null;
+}
+
+function renderSessionPerformance() {
+  const el = document.getElementById('perf-table');
+  if (!el || !dbAllTricks) return;
+
+  const DIRS = ['Left','Right','Switch Left','Switch Right'];
+  const DIR_COL = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
+
+  // Status basiert auf der Quality of Execution (Schnitt der bewerteten Kategorien)
+  function status(qoe) {
+    if (qoe >= 70) return {icon:'🟢', label:'Ready', color:'#34d399'};
+    if (qoe >= 50) return {icon:'🟡', label:'Developing', color:'#f59e0b'};
+    return {icon:'🔴', label:'Not ready', color:'#e2001a'};
+  }
+
+  function extractSubQuality(kommentar, key) {
+    if (!kommentar) return null;
+    const score = {perfect:100, okay:50, miss:0};
+    const m = kommentar.match(new RegExp(key+':(\\w+)'));
+    return (m && score[m[1]] !== undefined) ? score[m[1]] : null;
+  }
+
+  function trickDir(name) {
+    if (!name) return null;
+    if (name.includes('Switch Left'))  return 'Switch Left';
+    if (name.includes('Switch Right')) return 'Switch Right';
+    if (name.includes('Left'))  return 'Left';
+    if (name.includes('Right')) return 'Right';
+    return null;
+  }
+
+  const { from, to } = getSeasonRange();
+  let data = dbAllTricks.filter(t => t.trickaufbau && t.athlet);
+  if (_perfTypeFilter) data = data.filter(t => t.typ === _perfTypeFilter);
+  if (from) data = data.filter(t => t.datum && t.datum >= from);
+  if (to)   data = data.filter(t => t.datum && t.datum <= to);
+
+  if (!data.length) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">No session data for this period / filter.</div>';
+    return;
+  }
+
+  // Build per-athlete, per-trick summary (all tricks, not just best per dir)
+  const athTricks = {};
+  data.forEach(t => {
+    const a = t.athlet;
+    const trick = t.trickaufbau;
+    if (!athTricks[a]) athTricks[a] = {};
+    if (!athTricks[a][trick]) athTricks[a][trick] = {att:0, qoeVals:[], rot:extractRotation(trick), dir:trickDir(trick)};
+    const s = athTricks[a][trick];
+    s.att++;
+    const q = qoeOf(t);
+    if (q !== null) s.qoeVals.push(q);
+  });
+
+  // Sort athletes alphabetically (no ranking)
+  const athList = Object.keys(athTricks).sort();
+
+  const bkg  = {'🟢':'rgba(52,211,153,0.12)','🟡':'rgba(245,158,11,0.1)','🔴':'rgba(226,0,26,0.08)'};
+  const brd  = {'🟢':'rgba(52,211,153,0.4)', '🟡':'rgba(245,158,11,0.4)','🔴':'rgba(226,0,26,0.3)'};
+
+  el.innerHTML = `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
+      <span>All recorded tricks per athlete, grouped by direction</span>
+      <div style="margin-top:4px;font-size:10px;">QoE (Quality of Execution) = average of the rated categories Take-off · Trick · Grab · Landing — Miss 0% · Okay 50% · Perfect 100% · 🟢 ≥70% Ready · 🟡 ≥50% Developing</div>
+    </div>
+    <div>
+      ${athList.map((athlet, i) => {
+        const tricks = athTricks[athlet];
+
+        // Group tricks by direction
+        const byDir = {};
+        DIRS.forEach(d => byDir[d] = []);
+        Object.entries(tricks).forEach(([trick, s]) => {
+          const d = s.dir || 'Other';
+          if (!byDir[d]) byDir[d] = [];
+          byDir[d].push([trick, s]);
+        });
+
+        // Sort within each direction: green first, then by rotation desc
+        const avgOf = arr => arr.length ? Math.round(arr.reduce((x,y)=>x+y,0)/arr.length) : 0;
+        DIRS.forEach(d => {
+          byDir[d].sort(([,a],[,b]) => {
+            const rank = {'🟢':0,'🟡':1,'🔴':2};
+            return (rank[status(avgOf(a.qoeVals)).icon]||0)-(rank[status(avgOf(b.qoeVals)).icon]||0) || b.rot-a.rot;
+          });
+        });
+
+        const dirBlocks = DIRS.map(d => {
+          const entries = byDir[d];
+          return `<div style="flex:1;min-width:200px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${DIR_COL[d]};margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid ${DIR_COL[d]}33;">${d}</div>
+            ${entries.length ? entries.map(([trick, s]) => {
+              const qoe      = avgOf(s.qoeVals);
+              const st       = status(qoe);
+              const colFor   = v => v>=70?'#34d399':v>=50?'#f59e0b':'#e2001a';
+              return `<div style="background:${bkg[st.icon]};border:1px solid ${brd[st.icon]};border-radius:8px;padding:6px 10px;margin-bottom:5px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                  <span style="font-size:12px;color:var(--text);flex:1;">${trick}</span>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:4px;font-size:11px;font-weight:700;flex-wrap:wrap;">
+                  <span style="color:${colFor(qoe)};">${qoe}% QoE</span>
+                  <span style="color:var(--muted);font-weight:400;">${s.att} att.</span>
+                </div>
+              </div>`;
+            }).join('') : `<div style="color:var(--muted);font-size:11px;padding:6px 0;">—</div>`}
+          </div>`;
+        }).join('');
+
+        return `<div style="padding:16px 0;border-bottom:1px solid var(--border);${i===0?'border-top:1px solid var(--border);':''}">
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;">${athlet}</div>
+          <div class="perf-dir-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+            ${dirBlocks}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+async function realityCheck() {
+  if (!dbAllTricks || !dbAllStandort) { showToast('Load data first', 'error'); return; }
+
+  // Season range: last 12 months (May last year – April this year)
+  const { from } = getSeasonRange();
+  const seasonFrom = from || new Date(Date.now()-365*24*3600*1000).toISOString().split('T')[0];
+
+  const mastered = dbAllStandort.filter(t => t.status === 'mastered' && t.athlet);
+  const flagged = [];
+
+  // Entries with a grab-status matrix are handled grab-by-grab below
+  const hasMatrix = s => s.grab_status && typeof s.grab_status === 'object' && Object.keys(s.grab_status).length;
+  const legacyGrabsOf = s => s.grab ? s.grab.split(',').map(x=>x.trim()).filter(Boolean) : [];
+
+  mastered.forEach(s => {
+    // Find session entries for this athlete with this direction+rotation in the past season
+    const dir = s.drehrichtung?.trim();
+    const rot = s.rotation ? String(s.rotation).match(/\d+/)?.[0] : null;
+    if (!dir || !rot) return;
+    if (hasMatrix(s)) return;
+    const legacyGrabs = legacyGrabsOf(s);
+
+    const sessions = dbAllTricks.filter(t =>
+      t.athlet === s.athlet &&
+      t.datum >= seasonFrom &&
+      t.trickaufbau &&
+      t.trickaufbau.includes(rot) &&
+      (!legacyGrabs.length || legacyGrabs.some(g => t.trickaufbau.includes(' — ' + g)))
+    );
+
+    if (!sessions.length) {
+      // Never attempted in current season
+      flagged.push({ ...s, action: 'downgrade', reason: 'Not attempted this season', avgQ: null, sessions: 0 });
+      return;
+    }
+
+    const quals = sessions.map(t => extractQuality(t.kommentar)).filter(v => v !== null);
+    if (!quals.length) return; // no quality data
+    const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
+
+    if (avgQ < 70) {
+      flagged.push({ ...s, action: 'downgrade', reason: `QoE ${avgQ}% (<70%)`, avgQ, sessions: sessions.length });
+    }
+  });
+
+  // Upgrade candidates: goals performing ≥70% in sessions → suggest Mastered
+  dbAllStandort.filter(t => t.status === 'goal' && t.athlet).forEach(s => {
+    const rot = s.rotation ? String(s.rotation).match(/\d+/)?.[0] : null;
+    if (!s.drehrichtung?.trim() || !rot) return;
+    if (hasMatrix(s)) return;
+    const legacyGrabs = legacyGrabsOf(s);
+    const sessions = dbAllTricks.filter(t =>
+      t.athlet === s.athlet && t.datum >= seasonFrom && t.trickaufbau && t.trickaufbau.includes(rot) &&
+      (!legacyGrabs.length || legacyGrabs.some(g => t.trickaufbau.includes(' — ' + g))));
+    if (!sessions.length) return;
+    const quals = sessions.map(t => extractQuality(t.kommentar)).filter(v => v !== null);
+    if (!quals.length) return;
+    const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
+    if (avgQ >= 70) {
+      flagged.push({ ...s, action: 'upgrade', reason: `QoE ${avgQ}% (≥70%) → Learned`, avgQ, sessions: sessions.length });
+    }
+  });
+
+  // Grab-level suggestions from grab-status matrices (per trick+grab)
+  dbAllStandort.filter(t => t.athlet && hasMatrix(t)).forEach(s => {
+    const rot = s.rotation ? String(s.rotation).match(/\d+/)?.[0] : null;
+    if (!rot) return;
+    Object.entries(s.grab_status).forEach(([g, st]) => {
+      if (st !== 'mastered' && st !== 'goal') return;
+      const sessions = dbAllTricks.filter(t =>
+        t.athlet === s.athlet && t.datum >= seasonFrom && t.trickaufbau &&
+        t.trickaufbau.includes(rot) && t.trickaufbau.includes(' — ' + g));
+      if (!sessions.length) {
+        if (st === 'mastered') flagged.push({ ...s, grabName: g, action: 'downgrade-grab', reason: `${g}: not attempted this season`, avgQ: null, sessions: 0 });
+        return;
+      }
+      const quals = sessions.map(t => extractQuality(t.kommentar)).filter(v => v !== null);
+      if (!quals.length) return;
+      const avgQ = Math.round(quals.reduce((a,b)=>a+b,0)/quals.length);
+      if (st === 'mastered' && avgQ < 70)  flagged.push({ ...s, grabName: g, action: 'downgrade-grab', reason: `${g}: QoE ${avgQ}% (<70%)`, avgQ, sessions: sessions.length });
+      if (st === 'goal' && avgQ >= 70)     flagged.push({ ...s, grabName: g, action: 'upgrade-grab', reason: `${g}: QoE ${avgQ}% (≥70%) → Learned`, avgQ, sessions: sessions.length });
+    });
+  });
+
+  if (!flagged.length) {
+    showToast('✅ Assessment matches session data — nothing to change!', 'success');
+    return;
+  }
+
+  // Group flagged by athlete for display + selection
+  const byAthlet = {};
+  flagged.forEach(f => {
+    if (!byAthlet[f.athlet]) byAthlet[f.athlet] = [];
+    byAthlet[f.athlet].push(f);
+  });
+  const athletes = Object.keys(byAthlet).sort();
+
+  // Helper: build full trick description from standort fields
+  function rcTrickDesc(f) {
+    const label = f.trick_label
+      ? f.trick_label
+      : ([f.drehrichtung, f.flips, f.rotation ? f.rotation+'°' : null, f.achse, f.grab].filter(Boolean).join(' ') || '—');
+    return f.grabName ? label + ' — ' + f.grabName : label;
+  }
+
+  window._rcFlagged = flagged;
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `
+    <div style="background:#0d1f33;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:660px;width:100%;max-height:88vh;display:flex;flex-direction:column;">
+      <!-- Header -->
+      <div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">🔍 Reality Check</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
+        Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} suggestion${flagged.length!==1?'s':''} (Learned &lt;70% ↓ · Goals ≥70% ↑) · select athletes to apply
+      </div>
+      <!-- Search + select all -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+        <input id="rc-search" type="text" placeholder="Search athlete…" oninput="rcFilter(this.value)"
+          style="flex:1;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:Poppins,sans-serif;">
+        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=true)"  style="padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);white-space:nowrap;">✓ All</button>
+        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=false)" style="padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);white-space:nowrap;">✗ None</button>
+      </div>
+      <!-- Athlete list -->
+      <div id="rc-list" style="overflow-y:auto;flex:1;margin-bottom:14px;">
+        ${athletes.map(athlet => `
+          <div class="rc-ath-row" data-name="${athlet.toLowerCase()}" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;">
+            <!-- Athlete header -->
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--surface2);">
+              <input type="checkbox" class="rc-chk" data-athlet="${athlet}" checked
+                style="width:15px;height:15px;accent-color:#f59e0b;cursor:pointer;flex-shrink:0;">
+              <span style="font-size:13px;font-weight:700;color:var(--text);flex:1;">${athlet}</span>
+              <span style="font-size:11px;color:var(--muted);">${byAthlet[athlet].length} trick${byAthlet[athlet].length!==1?'s':''} affected</span>
+            </label>
+            <!-- Tricks -->
+            ${byAthlet[athlet].map(f=>`
+              <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;padding:7px 14px 7px 38px;border-top:1px solid var(--border);">
+                <div>
+                  <div style="font-size:12px;color:var(--text);font-weight:500;">${rcTrickDesc(f)}</div>
+                  ${f.disziplin?`<div style="font-size:10px;color:var(--muted);margin-top:1px;">${f.disziplin}</div>`:''}
+                </div>
+                <span style="font-size:11px;color:${f.action.startsWith('upgrade')?'#34d399':'#f59e0b'};white-space:nowrap;font-weight:600;">${f.action.startsWith('upgrade')?'↑':'↓'} ${f.reason}</span>
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>
+      <!-- Footer -->
+      <div style="display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:14px;">
+        <button onclick="this.closest('[style*=inset]').remove()" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Cancel</button>
+        <button onclick="applyRealityCheckSelected(window._rcFlagged,this)" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply selected</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function applyRealityCheckSelected(flagged, btn) {
+  // Get selected athletes from checkboxes
+  const checked = [...document.querySelectorAll('.rc-chk:checked')].map(c => c.dataset.athlet);
+  if (!checked.length) { showToast('No athletes selected', 'error'); return; }
+  const sel = flagged.filter(f => checked.includes(f.athlet));
+  const downIds = sel.filter(f => f.action === 'downgrade').map(f => f.id);
+  const upIds   = sel.filter(f => f.action === 'upgrade').map(f => f.id);
+  const grabSel = sel.filter(f => f.action === 'downgrade-grab' || f.action === 'upgrade-grab');
+  if (!downIds.length && !upIds.length && !grabSel.length) { showToast('No entries to update', 'error'); return; }
+  btn.textContent = 'Applying…'; btn.disabled = true;
+  let error = null;
+  if (downIds.length) ({ error } = await db.from('standort').update({status:'goal'}).in('id', downIds));
+  if (!error && upIds.length) ({ error } = await db.from('standort').update({status:'mastered'}).in('id', upIds));
+  if (!error && grabSel.length) {
+    const byId = {};
+    grabSel.forEach(f => {
+      if (!byId[f.id]) byId[f.id] = {...((dbAllStandort.find(e => e.id === f.id) || {}).grab_status || {})};
+      byId[f.id][f.grabName] = f.action === 'upgrade-grab' ? 'mastered' : 'goal';
+    });
+    for (const [id, gs] of Object.entries(byId)) {
+      ({ error } = await db.from('standort').update({grab_status: gs}).eq('id', id));
+      if (error) break;
+    }
+  }
+  if (error) { showToast('Error: '+error.message, 'error'); btn.textContent='Apply selected'; btn.disabled=false; return; }
+  btn.closest('[style*=inset]').remove();
+  showToast(`✅ ${downIds.length} → Goal · ${upIds.length} → Learned · ${grabSel.length} grab update${grabSel.length!==1?'s':''} (${checked.length} athlete${checked.length!==1?'s':''})`, 'success');
+  loadDB();
+}
+
+function updateSeasonLabels() {
+  const now = new Date();
+  const yr = now.getFullYear();
+  const mo = now.getMonth() + 1; // 1–12
+  // Season: May–April. If month >= 5, current season started this year.
+  const s = mo >= 5 ? yr : yr - 1;
+  const fmt = (a, b) => `${String(a).slice(2)}/${String(b).slice(2)}`;
+  const sel = document.getElementById('pf-season');
+  if (!sel) return;
+  sel.options[0].text = `Current season ${fmt(s, s+1)}`;
+  sel.options[1].text = `Last season ${fmt(s-1, s)}`;
+}
+
+async function loadDB() {
+  updateSeasonLabels();
+  const perfEl = document.getElementById('perf-table');
+  if (perfEl) perfEl.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+
+  const [{ data: tricks, error: e1 }, { data: standort, error: e2 }, { data: reports }] = await Promise.all([
+    db.from('tricks').select('*').order('datum', { ascending: false }),
+    db.from('standort').select('*').order('created_at', { ascending: false }),
+    db.from('session_reports').select('*').eq('app','freeski').order('datum',{ascending:false}).limit(50),
+  ]);
+
+  if (e1 || e2) {
+    showToast('Error loading data', 'error');
+    return;
+  }
+
+  dbAllTricks   = (tricks   || []).map(t => ({ ...t, _quelle: 'session' }));
+  dbAllStandort = (standort || []).map(t => ({ ...t, _quelle: 'standort' }));
+  dbSessionReports = reports || [];
+  if (GROUP_FILTER !== 'all') {
+    const names = new Set(SESS_ALL_ATHLETES.map(a => a.name));
+    dbAllTricks = dbAllTricks.filter(t => names.has(t.athlet));
+    dbAllStandort = dbAllStandort.filter(t => names.has(t.athlet));
+    dbSessionReports = dbSessionReports.filter(r => Array.isArray(r.athletes) && r.athletes.some(n => names.has(n)));
+  }
+
+  renderSessionPerformance();
+  renderSessionReports();
+  autoRebuildAllReports();
+}
+
+async function deleteSessionReport(id, withTricks) {
+  const report = dbSessionReports.find(r => r.id === id) || _sbRepList.find(r => r.id === id);
+  if (!withTricks) {
+    if (!confirm('Delete this session report?')) return;
+    const {error} = await db.from('session_reports').delete().eq('id', id);
+    if (error) { showToast('Error: '+error.message, 'error'); return; }
+    showToast('Session report deleted', 'success');
+  } else {
+    const storedIds = (report && Array.isArray(report.trick_data))
+      ? report.trick_data.flatMap(t => Array.isArray(t.trickIds) ? t.trickIds : [])
+      : [];
+    const usesFallback = storedIds.length === 0;
+    const warning = usesFallback
+      ? '\n\n⚠️ This report predates precise trick tracking — it will delete ALL trick entries for these athletes on this date, including any from OTHER sessions that day.'
+      : '';
+    if (!confirm('Delete this session report AND all trick entries from this session?' + warning)) return;
+    if (usesFallback) {
+      if (report && report.datum && report.athletes) {
+        for (const ath of report.athletes) {
+          await db.from('tricks').delete().eq('athlet', ath).eq('datum', report.datum);
+        }
+      }
+    } else {
+      await db.from('tricks').delete().in('id', storedIds);
+    }
+    const {error} = await db.from('session_reports').delete().eq('id', id);
+    if (error) { showToast('Error: '+error.message, 'error'); return; }
+    showToast('Session + all trick entries deleted', 'success');
+  }
+  if (document.getElementById('page-sessionreport')?.classList.contains('active')) loadReportsTab();
+  else loadDB();
+}
+
+async function rebuildReportFromTimestamps(id, silent=false) {
+  const report = dbSessionReports.find(r => r.id === id) || _sbRepList.find(r => r.id === id);
+  if (!report) return;
+  if (!silent) showToast('Rebuilding…', 'success');
+  const athletes = Array.isArray(report.athletes) ? report.athletes : [];
+  const storedIds = Array.isArray(report.trick_data)
+    ? report.trick_data.flatMap(t => Array.isArray(t.trickIds) ? t.trickIds : [])
+    : [];
+
+  let query = db.from('tricks').select('id,athlet,trickaufbau,gelandet,gesamt,kommentar,created_at');
+  query = storedIds.length
+    ? query.in('id', storedIds)
+    : query.eq('datum', report.datum).in('athlet', athletes);
+  const {data: entries, error} = await query.order('created_at', {ascending: true});
+  if (error || !entries) { showToast('Error: '+(error?.message||'no data'), 'error'); return; }
+
+  const existingNotes = {};
+  const existingScores = {};
+  (report.trick_data||[]).forEach(a => {
+    if (a.note) existingNotes[a.athlet] = a.note;
+    if ((a.quali_scores && a.quali_scores.length) || (a.final_scores && a.final_scores.length) || a.contest_rank) existingScores[a.athlet] = {q: a.quali_scores || null, f: a.final_scores || null, r: a.contest_rank || null};
+  });
+
+  const athleteEntries = {};
+  entries.forEach(e => {
+    const name = e.athlet;
+    if (!athleteEntries[name]) athleteEntries[name] = [];
+    const result = (e.gesamt||0) >= 10 ? 'perfect' : e.gelandet==='Yes' ? 'landed' : 'miss';
+    athleteEntries[name].push({
+      trick: e.trickaufbau || '—', result,
+      takeoff: parseSubRating(e.kommentar,'Takeoff'), grab: parseSubRating(e.kommentar,'Grab'), trick_r: parseSubRating(e.kommentar,'Trick'), land: parseSubRating(e.kommentar,'Landing'),
+      time: e.created_at ? new Date(e.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'Europe/Zurich'}) : null,
+      comment: ((e.kommentar||'').split(' | ')[1] || '').trim() || undefined,
+      dbId: e.id
+    });
+  });
+
+  const trickData = Object.entries(athleteEntries).map(([name, ents]) => {
+    const trickList = buildFsTrickBlocks(ents);
+    const totalAtt = trickList.reduce((a,t)=>a+t.att,0);
+    const totalLand = trickList.reduce((a,t)=>a+t.land,0);
+    const qualityPct = ents.length ? Math.round(ents.reduce((a,e)=>a+qoeOfLogEntry(e),0)/ents.length) : null;
+    const note = existingNotes[shortName(name)] || '';
+    const trickIds = ents.map(e=>e.dbId).filter(Boolean);
+    const attempts = ents.map(e => ({trick: e.trick, result: e.result,
+      takeoff: e.takeoff||null, grab: e.grab||null, trick_r: e.trick_r||null, land: e.land||null,
+      time: e.time||null, dbId: e.dbId||null, comment: e.comment}));
+    const exs = existingScores[shortName(name)] || {};
+    return {athlet: shortName(name), totalAtt, totalLand, qualityPct, tricks: trickList, note, trickIds, attempts,
+      quali_scores: exs.q ?? null, final_scores: exs.f ?? null, contest_rank: exs.r ?? null};
+  });
+
+  const {error: updErr} = await db.from('session_reports').update({trick_data: trickData}).eq('id', id);
+  if (updErr) { if (!silent) showToast('Error saving: '+updErr.message, 'error'); return; }
+  if (!silent) showToast('Report rebuilt from timestamps', 'success');
+  // Update local caches so the report is current without re-fetching
+  const idx = dbSessionReports.findIndex(r => r.id === id);
+  if (idx >= 0) dbSessionReports[idx].trick_data = trickData;
+  const ri = _sbRepList.findIndex(r => r.id === id);
+  if (ri >= 0) _sbRepList[ri].trick_data = trickData;
+}
+
+function renderSessionReports() {
+  const el = document.getElementById('session-reports-list');
+  if (!el) return;
+  if (!dbSessionReports.length) { el.innerHTML = '<div style="color:var(--muted);padding:12px;font-size:13px;">No session reports yet.</div>'; return; }
+  el.innerHTML = dbSessionReports.map((r,idx) => {
+    const dateStr = r.datum ? (() => { const p=r.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+    const condStars = r.conditions ? '★'.repeat(r.conditions)+'☆'.repeat(5-r.conditions) : '';
+    const athStr = Array.isArray(r.athletes) ? r.athletes.map(a=>shortName(a)).join(', ') : '';
+    const durStr = r.duration_min ? (r.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
+    const typeShort = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[r.session_type]||r.session_type||'—';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);">${dateStr} &nbsp;<span style="color:var(--muted);font-weight:400;font-size:12px;">${typeShort} · ${durStr}</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${athStr}${condStars?' · '+condStars:''}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button onclick="openReportPrint(window._srReports[${idx}])" style="padding:6px 12px;border-radius:6px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">View</button>
+        <button onclick="deleteSessionReport(${r.id},false)" title="Delete report only" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a33;color:#e2001a;font-size:13px;cursor:pointer;">🗑</button>
+        <button onclick="deleteSessionReport(${r.id},true)" title="Delete report + all trick data" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a;color:#e2001a;font-size:11px;cursor:pointer;font-weight:700;">🗑+</button>
+      </div>
+    </div>`;
+  }).join('');
+  window._srReports = dbSessionReports;
+  populateAthleteReportDropdown();
+}
+
+function generateAthleteReport() {
+  const athName = document.getElementById('ar-athlete-sel')?.value;
+  const season  = document.getElementById('ar-season-sel')?.value || 'current';
+  if (!athName) { showToast('Please select an athlete', 'error'); return; }
+
+  const { from } = getSeasonRange();
+  let data = dbAllTricks.filter(t => t.athlet === athName && t.trickaufbau);
+  let seasonLabel = 'All time';
+  if (season === 'current' && from) {
+    data = data.filter(t => t.datum >= from);
+    seasonLabel = 'Current season';
+  } else if (season === 'custom') {
+    const dateFrom = document.getElementById('ar-date-from')?.value;
+    const dateTo   = document.getElementById('ar-date-to')?.value;
+    if (!dateFrom && !dateTo) { showToast('Please select a date range', 'error'); return; }
+    if (dateFrom) data = data.filter(t => t.datum >= dateFrom);
+    if (dateTo)   data = data.filter(t => t.datum <= dateTo);
+    const fmt = d => { if (!d) return ''; const p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); };
+    seasonLabel = (dateFrom ? fmt(dateFrom) : '…') + ' – ' + (dateTo ? fmt(dateTo) : '…');
+  }
+  const arTyp = document.getElementById('ar-typ-sel')?.value || '';
+  if (arTyp) {
+    data = data.filter(t => t.typ === arTyp);
+    seasonLabel += ' · ' + (SESS_TYPE_SHORT[arTyp] || arTyp);
+  }
+  data.sort((a,b) => (a.created_at||'').localeCompare(b.created_at||''));
+
+  if (!data.length) { showToast('No session data for this athlete / period', 'error'); return; }
+
+  showToast('Generating PDF…', 'success');
+
+  // Build per-trick summary (Grab/Trick/Landing quality, grouped by trick name across all sessions)
+  const trickMap = {};
+  data.forEach(e => {
+    const trick = e.trickaufbau;
+    if (!trickMap[trick]) trickMap[trick] = {att:0, takeoffVals:[], grabVals:[], trickVals:[], landVals:[]};
+    const s = trickMap[trick];
+    s.att++;
+    const to = parseSubRating(e.kommentar,'Takeoff'); if (to!==null) s.takeoffVals.push(to);
+    const g = parseSubRating(e.kommentar,'Grab');   if (g!==null) s.grabVals.push(g);
+    const t = parseSubRating(e.kommentar,'Trick');  if (t!==null) s.trickVals.push(t);
+    const l = parseSubRating(e.kommentar,'Landing'); if (l!==null) s.landVals.push(l);
+  });
+  const avgOfRatings = arr => {
+    const score = {miss:0, okay:50, perfect:100};
+    const vals = arr.map(v=>score[v]).filter(v=>v!==undefined);
+    return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : null;
+  };
+  const trickRows = Object.entries(trickMap)
+    .sort((a,b) => b[1].att - a[1].att)
+    .map(([trick,s]) => {
+      const pctStr = v => v===null ? '—' : v+'%';
+      return [trick, s.att, pctStr(avgOfRatings(s.takeoffVals)), pctStr(avgOfRatings(s.grabVals)), pctStr(avgOfRatings(s.trickVals)), pctStr(avgOfRatings(s.landVals))];
+    });
+
+  // Build per-session breakdown
+  const sessMap = {};
+  data.forEach(e => {
+    const key = e.datum+'|'+(e.typ||'');
+    if (!sessMap[key]) sessMap[key] = {datum:e.datum, typ:e.typ||'', att:0, qoeVals:[]};
+    sessMap[key].att++;
+    const q = qoeOf(e); if (q!==null) sessMap[key].qoeVals.push(q);
+  });
+  const sessRows = Object.values(sessMap)
+    .sort((a,b) => a.datum.localeCompare(b.datum))
+    .map(s => {
+      const p=s.datum.split('-'); const d=p[2]+'.'+p[1]+'.'+p[0].slice(2);
+      const q = qoeAvg(s.qoeVals);
+      return [d, s.typ||'—', s.att, q!==null ? q+'%' : '—'];
+    });
+
+  const totalAtt  = data.length;
+  const totalQoe  = qoeAvg(data.map(qoeOf));
+  const filename = 'Athlete_Report_'+athName.replace(/\s/g,'_')+'_'+(new Date().toISOString().split('T')[0].replace(/-/g,''))+'.pdf';
+
+  function generate() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+    const W=210, margin=16, cw=W-margin*2;
+    let y = margin;
+
+    // Header bar
+    doc.setFillColor(26,26,26);
+    doc.rect(margin, y, cw, 10, 'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.setTextColor(255,255,255);
+    doc.text('ATHLETE REPORT', margin+4, y+6.8);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(180,180,180);
+    doc.text('Swiss-Ski Trick Analyses — Freeski', W-margin-2, y+6.8, {align:'right'});
+    y += 14;
+
+    // Meta
+    const meta = [['Athlete', athName], ['Period', seasonLabel], ['Sessions', sessRows.length+''],
+                  ['Total Attempts', totalAtt+''], ['Quality of Execution', totalQoe!==null?totalQoe+'%':'—'], ['', '']];
+    const col = cw/3;
+    doc.setFontSize(7.5);
+    meta.forEach(([label, val], i) => {
+      const cx = margin + (i%3)*col;
+      const cy = y + Math.floor(i/3)*11;
+      doc.setFont('helvetica','normal'); doc.setTextColor(130,130,130);
+      doc.text(label.toUpperCase(), cx, cy);
+      doc.setFont('helvetica','bold'); doc.setTextColor(26,26,26);
+      doc.text(String(val), cx, cy+4.5);
+    });
+    y += 26;
+
+    doc.setDrawColor(220,220,220);
+    doc.line(margin, y, W-margin, y);
+    y += 5;
+
+    // Trick summary table
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(130,130,130);
+    doc.text('TRICK SUMMARY', margin, y); y += 4;
+    doc.autoTable({
+      startY: y, margin:{left:margin,right:margin},
+      head:[['Trick','Att.','Take-off','Grab','Trick','Landing']],
+      body: trickRows,
+      theme:'grid',
+      styles:{fontSize:8.5,cellPadding:2.5,textColor:[34,34,34],lineColor:[230,230,230]},
+      headStyles:{fillColor:[240,240,240],textColor:[100,100,100],fontStyle:'bold',fontSize:7.5},
+      columnStyles:{0:{cellWidth:cw*0.34},1:{cellWidth:cw*0.10,halign:'center'},2:{cellWidth:cw*0.14,halign:'center'},3:{cellWidth:cw*0.14,halign:'center'},4:{cellWidth:cw*0.14,halign:'center'},5:{cellWidth:cw*0.14,halign:'center'}},
+      didParseCell(data) {
+        if ([2,3,4,5].includes(data.column.index) && data.section==='body') {
+          const v=parseInt(data.cell.raw);
+          if (!isNaN(v)) {
+            data.cell.styles.textColor=v>=70?[45,138,78]:v>=50?[180,100,0]:[200,30,30];
+            data.cell.styles.fontStyle='bold';
+          }
+        }
+      }
+    });
+    y = doc.lastAutoTable.finalY + 8;
+
+    if (y > 240) { doc.addPage(); y = margin; }
+
+    // Session breakdown table
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(130,130,130);
+    doc.text('SESSION BREAKDOWN', margin, y); y += 4;
+    doc.autoTable({
+      startY: y, margin:{left:margin,right:margin},
+      head:[['Date','Type','Attempts','QoE']],
+      body: sessRows,
+      theme:'grid',
+      styles:{fontSize:8.5,cellPadding:2.5,textColor:[34,34,34],lineColor:[230,230,230]},
+      headStyles:{fillColor:[240,240,240],textColor:[100,100,100],fontStyle:'bold',fontSize:7.5},
+      columnStyles:{0:{cellWidth:cw*0.22},1:{cellWidth:cw*0.34},2:{cellWidth:cw*0.22,halign:'center'},3:{cellWidth:cw*0.22,halign:'center'}},
+      didParseCell(data) {
+        if (data.column.index===3 && data.section==='body') {
+          const v=parseInt(data.cell.raw);
+          data.cell.styles.textColor=v>=70?[45,138,78]:v>=50?[180,100,0]:[200,30,30];
+          data.cell.styles.fontStyle='bold';
+        }
+      }
+    });
+
+    // Footer
+    const pg = doc.internal.getNumberOfPages();
+    for (let i=1;i<=pg;i++) {
+      doc.setPage(i);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(170,170,170);
+      doc.text('Generated '+new Date().toLocaleDateString('de-CH'), margin, 295);
+      doc.text(i+' / '+pg, W-margin, 295, {align:'right'});
+    }
+    doc.save(filename);
+  }
+
+  function loadAndGenerate() {
+    if (window.jspdf && window.jspdf.jsPDF) { generate(); return; }
+    const s1 = document.createElement('script');
+    s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s1.onload = () => {
+      const s2 = document.createElement('script');
+      s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
+      s2.onload = generate;
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+  }
+  loadAndGenerate();
+}
+
+function openTeamPdfReport() {
+  const trSeason = document.getElementById('tr-season-sel')?.value || 'current';
+  const trTyp = document.getElementById('tr-typ-sel')?.value || '';
+  let sessData = (dbAllTricks||[]);
+  let periodLabel = 'All time';
+  if (trSeason === 'current') {
+    const now = new Date();
+    const y = now.getMonth()+1 >= 5 ? now.getFullYear() : now.getFullYear()-1;
+    sessData = sessData.filter(t => t.datum >= y + '-05-01');
+    periodLabel = 'Current season';
+  } else if (trSeason === 'custom') {
+    const f = document.getElementById('tr-date-from')?.value, to = document.getElementById('tr-date-to')?.value;
+    if (!f && !to) { showToast('Please select a date range', 'error'); return; }
+    if (f)  sessData = sessData.filter(t => t.datum >= f);
+    if (to) sessData = sessData.filter(t => t.datum <= to);
+    const fmtP = d => { if (!d) return '…'; const p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); };
+    periodLabel = fmtP(f) + ' – ' + fmtP(to);
+  }
+  if (trTyp) {
+    sessData = sessData.filter(t => t.typ === trTyp);
+    periodLabel += ' · ' + (SESS_TYPE_SHORT[trTyp] || trTyp);
+  }
+  const assData = (dbAllStandort||[]);
+  if (!sessData.length && !assData.length) { showToast('No data to export', 'error'); return; }
+
+  function fmtDate(d) { if(!d) return '—'; const p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); }
+
+  // Collect all athletes from both sources
+  const athletes = [...new Set([...sessData.map(t=>t.athlet), ...assData.map(t=>t.athlet)])].filter(Boolean).sort();
+
+  const athleteSections = athletes.map(athlet => {
+    // ── Session data ──
+    const tricks = sessData.filter(t=>t.athlet===athlet);
+    const totalAtt  = tricks.length;
+    const totalQoe  = qoeAvg(tricks.map(qoeOf));
+
+    const byTrick = {};
+    tricks.forEach(t => {
+      const key = t.trickaufbau||'—';
+      if (!byTrick[key]) byTrick[key] = {att:0,qoeVals:[],dates:new Set(),type:new Set()};
+      byTrick[key].att++;
+      const q=qoeOf(t); if(q!==null) byTrick[key].qoeVals.push(q);
+      if(t.datum) byTrick[key].dates.add(fmtDate(t.datum));
+      if(t.typ) byTrick[key].type.add(t.typ);
+    });
+    const sessRows = Object.entries(byTrick).sort((a,b)=>b[1].att-a[1].att).map(([trick,s]) => {
+      const lp = qoeAvg(s.qoeVals) ?? 0;
+      const typeStr = [...s.type].map(t=>({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[t]||t)).join(', ');
+      return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#34d399':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:11px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
+    }).join('');
+
+    // ── Assessment data ──
+    const mastered = assData.filter(t=>t.athlet===athlet&&t.status==='mastered');
+    const goals    = assData.filter(t=>t.athlet===athlet&&t.status==='goal');
+    const grabRowsFor = st => assData
+      .filter(t => t.athlet===athlet && t.grab_status && typeof t.grab_status==='object')
+      .map(e => Object.entries(e.grab_status)
+        .filter(([,s2]) => s2===st)
+        .map(([g]) => `<tr><td>${e.trick_label||'—'} — ${g}</td><td>${e.disziplin||'—'}</td><td style="color:${st==='mastered'?'#34d399':'#f59e0b'};font-weight:600">${st==='mastered'?'Learned':'Goal'}</td></tr>`)
+        .join(''))
+      .join('');
+    const mastRows = mastered.map(e=>`<tr><td>${e.trick_label||'—'}</td><td>${e.disziplin||'—'}</td><td style="color:#34d399;font-weight:600">Learned</td></tr>`).join('') + grabRowsFor('mastered');
+    const goalRows = goals.map(e=>`<tr><td>${e.trick_label||'—'}</td><td>${e.disziplin||'—'}</td><td style="color:#f59e0b;font-weight:600">Goal</td></tr>`).join('') + grabRowsFor('goal');
+
+    return `<div class="ath-block">
+      <div class="ath-name">${athlet}</div>
+      ${totalAtt>0?`
+      <div class="section-title">Session Performance</div>
+      <div class="ath-sum">${totalAtt} attempts &nbsp;·&nbsp; Quality of Execution ${totalQoe!==null?totalQoe+'%':'—'}</div>
+      <table><thead><tr><th>Trick</th><th>Type</th><th>Att.</th><th>QoE</th><th>Sessions</th></tr></thead><tbody>${sessRows||'<tr><td colspan="5" style="color:#aaa">No session data</td></tr>'}</tbody></table>` : ''}
+      ${(mastRows||goalRows)?`
+      <div class="section-title">Assessment</div>
+      <table><thead><tr><th>Trick</th><th>Discipline</th><th>Status</th></tr></thead><tbody>${mastRows}${goalRows}</tbody></table>` : ''}
+    </div>`;
+  }).join('');
+
+  const today = new Date().toLocaleDateString('en-GB');
+  const title = 'Full Team — ' + periodLabel;
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Team Report — ${title}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;padding:32px 40px;max-width:900px;margin:0 auto;font-size:13px;}
+  .print-btn{margin-bottom:24px;}
+  .print-btn button{padding:9px 22px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;}
+  h1{font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:20px;}
+  .ath-block{margin-bottom:24px;border:1px solid #e0e0e0;border-radius:4px;overflow:hidden;page-break-inside:avoid;}
+  .ath-name{background:#1a1a1a;color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;}
+  .ath-sum{background:#f9f9f9;border-bottom:1px solid #e0e0e0;padding:6px 12px;font-size:12px;color:#555;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:#f0f0f0;padding:6px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#666;}
+  td{padding:6px 10px;border-top:1px solid #eee;font-size:12px;}
+  .section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#777;padding:8px 12px 4px;background:#fafafa;border-top:1px solid #e0e0e0;border-bottom:1px solid #eee;}
+  footer{margin-top:28px;border-top:1px solid #ddd;padding-top:10px;font-size:11px;color:#aaa;display:flex;justify-content:space-between;}
+  @media print{.print-btn{display:none;} body{padding:16px;}}
+</style></head><body>
+  <div class="print-btn"><button onclick="window.print()">Print / Save as PDF</button></div>
+  <h1>Team Report — ${title}</h1>
+  ${athleteSections}
+  <footer><span>Swiss-Ski Trick Analyses Freeski</span><span>Generated ${today}</span></footer>
+</body></html>`);
+  win.document.close();
+}
+
+function saveSessionState() {
+  const state = {
+    athletes: sessSelectedAthletes,
+    log: sessLog,
+    type: sessType,
+    date: sessDate,
+    startTime: sessStartTime,
+    activeAthlete: sessActiveAthlete || '',
+    athleteState: {}
+  };
+  sessSelectedAthletes.forEach(name => {
+    const d = sessAthleteData[name];
+    if (d) state.athleteState[name] = { currentTrick: d.currentTrick, currentGrab: d.currentGrab||'', stats: {...d.stats}, run: d.run || null };
+  });
+  localStorage.setItem('fs_session', JSON.stringify(state));
+}
+
+function clearSessionStorage() {
+  localStorage.removeItem('fs_session');
+}
+
+async function restoreSessionState() {
+  const raw = localStorage.getItem('fs_session');
+  if (!raw) return false;
+  try {
+    const state = JSON.parse(raw);
+    if (!state.athletes || !state.athletes.length) { clearSessionStorage(); return false; }
+    sessSelectedAthletes = state.athletes;
+    sessLog = state.log || [];
+    sessType = state.type || '';
+    sessDate = state.date || '';
+    sessStartTime = state.startTime || Date.now();
+    sessActiveAthlete = state.activeAthlete || state.athletes[0];
+    for (const name of sessSelectedAthletes) {
+      const saved = (state.athleteState || {})[name] || {};
+      sessAthleteData[name] = { tricks: [], currentTrick: saved.currentTrick || '', currentGrab: saved.currentGrab || '', stats: saved.stats || {attempts:0,landed:0,perfect:0}, run: saved.run || null };
+    }
+    document.getElementById('sess-setup').style.display = 'none';
+    document.getElementById('sess-live').style.display = 'block';
+    document.getElementById('sess-live-date').textContent =
+      (sessDate ? sessDisplayDate() : new Date(sessStartTime).toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'}))
+      + (sessType ? '  ·  ' + sessType : '')
+      + (sessDate ? '  ·  ⚠ BACKDATED' : '');
+    renderLiveSession();
+    renderSessionLog();
+    showToast('Session restored', 'success');
+    Promise.all(sessSelectedAthletes.map(async name => {
+      sessAthleteData[name].tricks = await fetchStandortTricks(name);
+    })).then(() => renderLiveSession());
+    return true;
+  } catch(e) { clearSessionStorage(); return false; }
+}
+
+async function toggleSessionAthlete(name) {
+  const cb = document.querySelector(`#sess-athlete-grid input[value="${CSS.escape(name)}"]`);
+  if (sessSelectedAthletes.includes(name)) {
+    sessSelectedAthletes = sessSelectedAthletes.filter(a => a !== name);
+    delete sessAthleteData[name];
+    const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
+    if (card) card.style.borderColor = 'var(--border)';
+  } else {
+    if (sessSelectedAthletes.length >= 8) {
+      showToast('Max. 8 athletes per session', 'error');
+      if (cb) cb.checked = false;
+      return;
+    }
+    sessSelectedAthletes.push(name);
+    sessAthleteData[name] = { tricks: [], currentTrick: '', currentGrab: '', stats: {attempts:0,landed:0,perfect:0} };
+    const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
+    if (card) card.style.borderColor = '#39c3d4';
+    sessAthleteData[name].tricks = await fetchStandortTricks(name);
+  }
+  const startBtn = document.getElementById('sess-start-btn');
+  if (startBtn) startBtn.style.display = sessSelectedAthletes.length ? 'block' : 'none';
+  const trickSel = document.getElementById('sess-trick-selection');
+  if (trickSel) trickSel.style.display = 'none';
+}
+
+const SESS_GRABS = ['Blunt', 'Bow and Arrow', 'Broken Arrow', 'Critical', 'Cuban', 'Double Japan', 'Double Tail', 'Esco', 'Guitar', 'High Mute', 'In and out', 'Indi-Truck', 'Inside Tail', 'Japan', 'Mute', 'Nose', 'Octo', 'Rocket', 'Safety', 'Screamin\' Seamen', 'Seatbelt', 'Seatbelt Japan', 'Stale', 'Stink Bug', 'Tail', 'Truckdriver', 'Venom'];
+
+function baseLabel(label) {
+  let result = ' ' + label + ' ';
+  [...SESS_GRABS].sort((a,b) => b.length - a.length).forEach(t => {
+    const esc = t.trim().replace(/[-.*+?^${}()|[\]\\]/g,'\\$&');
+    result = result.replace(new RegExp('[, ]+' + esc + '(?=[, ]|$)', 'gi'), '');
+  });
+  return result.trim().replace(/\s{2,}/g,' ').replace(/[,\s]+$/, '');
+}
+
+const sessRatings = {};
+
+let sessActiveAthlete = null;
+
+function renderLiveSession() {
+  const cols = document.getElementById('sess-athlete-cols');
+  if (!sessActiveAthlete && sessSelectedAthletes.length > 0) {
+    sessActiveAthlete = sessSelectedAthletes[0];
+  }
+
+  // Athlete tab buttons
+  const tabsHtml = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+    ${sessSelectedAthletes.map(name => {
+      const r = sessRatings[name] || {};
+      const lastResult = sessLog.find(e => e.name === name);
+      const dot = lastResult ? (lastResult.result==='miss'?'🔴':lastResult.result==='perfect'?'🔵':'🟢') : '';
+      const isActive = name === sessActiveAthlete;
+      return `<button onclick="selectSessAthlete('${name}')" style="
+        padding:10px 18px;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;
+        background:${isActive?'rgba(57,195,212,0.2)':'var(--surface2)'};
+        border:2px solid ${isActive?'#39c3d4':'var(--border)'};
+        color:${isActive?'#39c3d4':'var(--muted)'};
+      ">${dot} ${shortName(name)}</button>`;
+    }).join('')}
+  </div>`;
+
+  // Active athlete card
+  const name = sessActiveAthlete;
+  let cardHtml = '';
+  if (name && sessAthleteData[name]) {
+    if (!sessRatings[name]) sessRatings[name] = {takeoff:null,grab:null,trick:null,land:null};
+    const d = sessAthleteData[name];
+    const sid = name.replace(/\s/g,'_');
+    if (sessType && (sessType.startsWith('Slopestyle') || sessType.startsWith('Halfpipe'))) {
+      const opts = [...new Set((d.tricks||[]).map(t => t.trick_label).filter(Boolean))].sort()
+        .map(l => `<option value="${l}">${l}</option>`).join('');
+      cols.innerHTML = tabsHtml + sbRunCardHtml(name, d, opts);
+      return;
+    }
+    cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${sid}">
+      <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:16px;text-align:center;">${shortName(name)}</div>
+
+      <!-- Trick dropdown -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Working on</div>
+        <select onchange="sessSetTrick('${name}',this.value)"
+          style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+          <option value="">— select trick —</option>
+          ${(() => {
+            const fsDirOrder = {'Left':0,'Right':1,'Switch Left':2,'Switch Right':3};
+            const getFsDir = lbl => {
+              for (const dd of ['Switch Left','Switch Right','Left','Right']) {
+                if (lbl.startsWith(dd)) return dd;
+                if (lbl.includes(' '+dd+' ') || lbl.includes(' '+dd)) return dd;
+              }
+              return 'Other';
+            };
+            const seen = new Set();
+            const sorted = [...(d.tricks||[])].map(t => {
+              const lbl = baseLabel((t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim());
+              return {...t, _lbl: lbl, _dir: getFsDir(lbl), _rot: extractRotFromLabel(lbl)};
+            }).filter(t => { if (seen.has(t._lbl)) return false; seen.add(t._lbl); return true; })
+            .sort((a,b) => {
+              const da = fsDirOrder[a._dir]??4, db = fsDirOrder[b._dir]??4;
+              return da!==db ? da-db : a._rot-b._rot;
+            });
+            let html = '', lastDir = '';
+            sorted.forEach(t => {
+              if (t._dir !== lastDir) {
+                if (lastDir) html += '</optgroup>';
+                html += '<optgroup label="'+t._dir+'">';
+                lastDir = t._dir;
+              }
+              html += '<option value="'+t._lbl.replace(/"/g,'&quot;')+'"'+(t._lbl===d.currentTrick?' selected':'')+'>'+t._lbl+(t.status==='goal'?' 🎯':'')+'</option>';
+            });
+            if (lastDir) html += '</optgroup>';
+            return html;
+          })()}
+        </select>
+      </div>
+
+      <!-- Grab selector (only grabs from assessment) -->
+      ${(() => {
+        if (!d.currentTrick) return '';
+        const baseTrick = d.currentTrick;
+        const matchingEntries = (d.tricks||[]).filter(t => baseLabel((t.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim()) === baseTrick);
+        const grabStat = {};
+        matchingEntries.forEach(t => {
+          Object.entries(effGrabStatus(t)).forEach(([g, st]) => {
+            if (grabStat[g] !== 'mastered') grabStat[g] = st;
+          });
+        });
+        const grabs = Object.keys(grabStat).sort();
+        if (!grabs.length) return '';
+        const selParts = (d.currentGrab || '').split(' to ').filter(Boolean);
+        return `<div style="margin-bottom:16px;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Grab <span style="text-transform:none;letter-spacing:0;">(tap a 2nd grab for a double grab)</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;" id="sess-grabs-${sid}">
+            <button onclick="sessSelectGrab('${name}','',this)" data-grab="" class="sess-grab-btn${!d.currentGrab?' active':''}"
+              style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${!d.currentGrab?'#39c3d4':'var(--border)'};background:${!d.currentGrab?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${!d.currentGrab?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">No Grab</button>
+            ${grabs.map(g => {
+              const active = selParts.includes(g);
+              return '<button onclick="sessSelectGrab(\''+name+'\',\''+g.replace(/'/g,"\\'")+'\',this)" data-grab="'+g.replace(/"/g,'&quot;')+'" class="sess-grab-btn"'+
+                ' style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid '+(active?'#39c3d4':'var(--border)')+';background:'+(active?'rgba(57,195,212,0.18)':'var(--surface2)')+';color:'+(active?'#39c3d4':'var(--muted)')+';font-family:\'Poppins\',sans-serif;">'+g+(grabStat[g]==='goal'?' 🎯':'')+'</button>';
+            }).join('')}
+          </div>
+        </div>`;
+      })()}
+
+      <!-- Rating rows -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        ${[['takeoff','Take-off'],['trick','Trick'],['grab','Grab'],['land','Landing']].map(([cat,label]) => `
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">${label}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+              ${[['miss','✗ MISS','#e2001a','rgba(226,0,26,0.1)'],
+                 ['okay','✓ OKAY','#34d399','rgba(52,211,153,0.1)'],
+                 ['perfect','⭐ PERFECT','#39c3d4','rgba(57,195,212,0.1)']].map(([val,lbl,col,bg]) => {
+                   const active = sessRatings[name]?.[cat] === val;
+                   return `<button onclick="setSessRating('${name}','${cat}','${val}',this)"
+                     id="sr-${sid}-${cat}-${val}"
+                     style="padding:18px 8px;border-radius:12px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent;
+                     background:${active?col.replace(')',',0.25)').replace('rgba','rgba').replace('#','rgba(').replace(/rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2}),/i,(m,r,g,b)=>`rgba(${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},`)||bg:bg};
+                     border:${active?'3px':'2px'} solid ${col};color:${col};opacity:${active?1:0.6};"
+                   >${lbl}</button>`;
+                }).join('')}
+            </div>
+          </div>`).join('')}
+      </div>
+      <input type="text" id="sess-comment-${sid}" placeholder="Comment before rating (optional)" style="width:100%;margin-top:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+      <button onclick="logRatedAttempt('${name}')" style="width:100%;margin-top:10px;padding:14px 8px;border-radius:12px;background:rgba(57,195,212,0.12);border:2px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;cursor:pointer;-webkit-tap-highlight-color:transparent;">＋ LOG ATTEMPT</button>
+    </div>`;
+  }
+
+  cols.innerHTML = tabsHtml + cardHtml;
+}
+
+function selectSessAthlete(name) {
+  sessActiveAthlete = name;
+  renderLiveSession();
+  renderSessionLog();
+}
+
+function setSessRating(name, cat, val, btn) {
+  if (!sessRatings[name]) sessRatings[name] = {takeoff:null,grab:null,trick:null,land:null};
+  sessRatings[name][cat] = val;
+  // Update button styles inline
+  const sid = name.replace(/\s/g,'_');
+  const colMap = {miss:'#e2001a', okay:'#34d399', perfect:'#39c3d4'};
+  const bgMap = {miss:'rgba(226,0,26,0.1)', okay:'rgba(52,211,153,0.1)', perfect:'rgba(57,195,212,0.1)'};
+  ['miss','okay','perfect'].forEach(v => {
+    const b = document.getElementById(`sr-${sid}-${cat}-${v}`);
+    if (!b) return;
+    const active = v === val;
+    b.style.background = active ? bgMap[v] : bgMap[v];
+    b.style.opacity = active ? '1' : '0.5';
+    b.style.borderWidth = active ? '3px' : '2px';
+  });
+  const r = sessRatings[name];
+  if (r.takeoff && r.grab && r.trick && r.land) autoLogAttempt(name);
+}
+
+function highlightRatingBtn(name, cat, val) {}
+
+// Manueller Log-Button: loggt mit den bisher gesetzten Bewertungen (auch unvollständig,
+// z. B. nur Take-off, wenn die Landung vom Absprung aus nicht sichtbar ist)
+function logRatedAttempt(name) {
+  const d = sessAthleteData[name];
+  if (!d || !d.currentTrick) { showToast('Please select a trick first', 'error'); return; }
+  const r = sessRatings[name] || {};
+  if (!r.takeoff && !r.grab && !r.trick && !r.land) { showToast('Rate at least one category', 'error'); return; }
+  autoLogAttempt(name);
+}
+
+async function autoLogAttempt(name) {
+  const r = sessRatings[name];
+  const d = sessAthleteData[name];
+  const score = {miss:1,okay:2,perfect:3};
+  const rated = ['takeoff','grab','trick','land'].filter(c => r[c]);
+  if (!rated.length) return;
+  const avg = rated.reduce((a,c)=>a+score[r[c]],0)/rated.length;
+  const result = avg>=2.7?'perfect':avg>=1.7?'landed':'miss';
+  const gesamt = r.land==='miss'?3:avg>=2.7?10:7;
+
+  d.stats.attempts++;
+  if (result==='landed'||result==='perfect') d.stats.landed++;
+  if (result==='perfect') d.stats.perfect++;
+
+  const sid = name.replace(/\s/g,'_');
+  const col = document.getElementById('sess-col-'+sid);
+  if (col) { col.style.background=result==='miss'?'rgba(226,0,26,0.2)':result==='perfect'?'rgba(57,195,212,0.2)':'rgba(52,211,153,0.2)'; setTimeout(()=>{col.style.background='';},300); }
+  sessPlayLogSound(result);
+
+  const commentEl = document.getElementById('sess-comment-'+sid);
+  const comment = commentEl ? commentEl.value.trim() : '';
+  if (commentEl) commentEl.value = '';
+
+  const selectedGrab = d.currentGrab || '';
+  const trickWithGrab = selectedGrab ? d.currentTrick + ' — ' + selectedGrab : d.currentTrick;
+  const logEntry = {name, trick:trickWithGrab, result, takeoff:r.takeoff||null, grab:r.grab||null, trick_r:r.trick||null, land:r.land||null, comment, selectedGrab,
+    time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})};
+  sessLog.unshift(logEntry);
+
+  sessRatings[name]={takeoff:null,grab:null,trick:null,land:null};
+  renderLiveSession();
+  renderSessionLog();
+  saveSessionState();
+
+  const kommentarParts = [[r.takeoff&&`Takeoff:${r.takeoff}`, r.grab&&`Grab:${r.grab}`, r.trick&&`Trick:${r.trick}`, r.land&&`Landing:${r.land}`].filter(Boolean).join(' ')];
+  if (comment) kommentarParts.push(comment);
+  const trickInfo=sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
+  db.from('tricks').insert({
+    athlet:name, datum:sessCurrentDate(),
+    typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
+    trickaufbau:trickWithGrab, gelandet:(r.land ? r.land!=='miss' : result!=='miss')?'Yes':'No',
+    grab: selectedGrab || null,
+    gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
+    kommentar: kommentarParts.join(' | ')
+  }).select('id').then(({data,error})=>{
+    if(error){console.error(error);return;}
+    if(data&&data[0]) { logEntry.dbId = data[0].id; saveSessionState(); }
+  });
+}
+
+function sessSetTrick(name, trick) {
+  sessAthleteData[name].currentTrick = trick;
+  sessAthleteData[name].currentGrab = '';
+  renderLiveSession();
+}
+
+function sessSelectGrab(name, grab, btn) {
+  // Double Grab: zweiter Tap auf einen anderen Grab kombiniert zu «A + B»,
+  // Tap auf einen gewählten Grab entfernt ihn wieder.
+  const d = sessAthleteData[name];
+  const parts = (d.currentGrab || '').split(' to ').filter(Boolean);
+  let next;
+  if (!grab) next = '';
+  else if (parts.includes(grab)) next = parts.filter(g => g !== grab).join(' to ');
+  else if (parts.length === 1) next = parts[0] + ' to ' + grab;
+  else next = grab;
+  d.currentGrab = next;
+  const nextParts = next ? next.split(' to ') : [];
+  const sid = name.replace(/\s/g,'_');
+  const wrap = document.getElementById('sess-grabs-'+sid);
+  if (wrap) wrap.querySelectorAll('.sess-grab-btn').forEach(b => {
+    const g = b.dataset.grab || '';
+    const isActive = g ? nextParts.includes(g) : !next;
+    b.style.borderColor = isActive ? '#39c3d4' : 'var(--border)';
+    b.style.background = isActive ? 'rgba(57,195,212,0.18)' : 'var(--surface2)';
+    b.style.color = isActive ? '#39c3d4' : 'var(--muted)';
+  });
+}
+
+async function logAttempt(name, result) {
+  const d = sessAthleteData[name];
+  if (!d.currentTrick) { showToast('Please select a trick first', 'error'); return; }
+  d.stats.attempts++;
+  if (result==='landed') d.stats.landed++;
+  if (result==='perfect') d.stats.perfect++;
+
+  // Flash feedback
+  const col = document.getElementById('sess-col-'+name.replace(/\s/g,'_'));
+  const flashColor = result==='miss'?'rgba(226,0,26,0.2)':result==='landed'?'rgba(52,211,153,0.2)':'rgba(57,195,212,0.2)';
+  col.style.background = flashColor;
+  setTimeout(()=>{ col.style.background=''; }, 250);
+  sessPlayLogSound(result);
+
+  const logEntry = {name, trick:d.currentTrick, result,
+    time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})};
+  sessLog.unshift(logEntry);
+  renderLiveSession();
+  renderSessionLog();
+  saveSessionState();
+
+  // Save to DB (non-blocking)
+  const gesamt = result==='miss'?3:result==='landed'?7:10;
+  const trickInfo = sessAthleteData[name].tricks.find(t=>t.trick_label===d.currentTrick)||{};
+  db.from('tricks').insert({
+    athlet:name, datum:sessCurrentDate(),
+    typ:sessType||'Training', disziplin:trickInfo.disziplin||null,
+    trickaufbau:d.currentTrick, gelandet:result==='miss'?'No':'Yes',
+    gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
+  }).select().then(({data,error})=>{
+    if(error) console.error('Save error:',error);
+    else if(data&&data[0]) { logEntry.dbId=data[0].id; saveSessionState(); }
+  });
+}
+
+function renderSessionLog() {
+  const el = document.getElementById('sess-log');
+  if (!sessLog.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;">No attempts logged yet.</div>';
+    return;
+  }
+  const filtered = sessActiveAthlete
+    ? sessLog.map((e,i)=>({...e,_i:i})).filter(e=>e.name===sessActiveAthlete)
+    : sessLog.map((e,i)=>({...e,_i:i}));
+  el.innerHTML = filtered.slice(0,30).map(e=>{ const i=e._i;
+    const icon = e.result==='miss'?'✗':e.result==='perfect'?'⭐':'✓';
+    const col = e.result==='miss'?'#e2001a':e.result==='perfect'?'#39c3d4':'#34d399';
+    const ratingStr = [e.takeoff&&`TO:${e.takeoff}`, e.trick_r&&`T:${e.trick_r}`, e.grab&&`G:${e.grab}`, e.land&&`L:${e.land}`].filter(Boolean).join(' ');
+    const ratings = ratingStr ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">[${ratingStr}]</span>` : '';
+    const isEditing = sessEditIdx === i;
+    let editRow = '';
+    if (isEditing) {
+      const r = sessEditRatings;
+      const catBtn = (cat,val,lbl,c) => {
+        const active = r[cat]===val;
+        return `<button onclick="setEditRating('${cat}','${val}')" style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:2px solid ${c};background:${active?c:'transparent'};color:${active?'#060f1a':c};font-family:'Poppins',sans-serif;">${lbl}</button>`;
+      };
+      const tg = splitTrickGrab(e.trick||'');
+      editRow = `<div style="padding:8px 12px 8px 38px;display:flex;flex-direction:column;gap:6px;">
+        <input type="text" id="sess-edit-trick" value="${tg.base.replace(/"/g,'&quot;')}" placeholder="Trick name" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+        ${grabSelectHtml('sess-edit-grab', assessGrabList(), tg.grab)}
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">T-off</span>${catBtn('takeoff','miss','Miss','#e2001a')}${catBtn('takeoff','okay','Okay','#34d399')}${catBtn('takeoff','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Trick</span>${catBtn('trick','miss','Miss','#e2001a')}${catBtn('trick','okay','Okay','#34d399')}${catBtn('trick','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>${catBtn('grab','miss','Miss','#e2001a')}${catBtn('grab','okay','Okay','#34d399')}${catBtn('grab','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Land</span>${catBtn('land','miss','Miss','#e2001a')}${catBtn('land','okay','Okay','#34d399')}${catBtn('land','perfect','Perfect','#39c3d4')}</div>
+        <input type="text" id="sess-edit-comment" value="${(e.comment||'').replace(/"/g,'&quot;')}" placeholder="Comment (optional)" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+        <div style="display:flex;gap:8px;margin-top:2px;"><button onclick="saveFsLogEdit(${i})" style="padding:6px 16px;border-radius:8px;background:#39c3d4;border:none;color:#060f1a;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;">Save</button><button onclick="cancelFsEdit()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button></div>
+      </div>`;
+    }
+    return `<div style="border-radius:8px;${isEditing?'background:rgba(57,195,212,0.08);border:1px solid #39c3d433;':''}">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;${isEditing?'':'background:var(--surface2);border-radius:8px;'}font-size:12px;">
+        <span style="color:${col};font-weight:800;font-size:15px;min-width:16px;">${icon}</span>
+        <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
+        <span style="flex:1;color:var(--text);">${e.trick||'—'}${ratings}${e.comment?` <span style="color:var(--muted);font-size:10px;">— ${e.comment}</span>`:''}</span>
+        <span style="color:var(--muted);font-size:11px;">${e.time}</span>
+        <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">✏️</button>
+        <button onclick="deleteLogEntry(${i})" style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;flex-shrink:0;">🗑</button>
+      </div>
+      ${editRow}
+    </div>`;
+  }).join('');
+}
+
+async function deleteLogEntry(idx) {
+  const e = sessLog[idx];
+  if (!e) return;
+  if (e.dbId) await db.from('tricks').delete().eq('id', e.dbId);
+  if (sessAthleteData[e.name]) {
+    sessAthleteData[e.name].stats.attempts = Math.max(0, sessAthleteData[e.name].stats.attempts - 1);
+    if (e.result==='landed'||e.result==='perfect') sessAthleteData[e.name].stats.landed = Math.max(0, sessAthleteData[e.name].stats.landed - 1);
+    if (e.result==='perfect') sessAthleteData[e.name].stats.perfect = Math.max(0, sessAthleteData[e.name].stats.perfect - 1);
+  }
+  sessLog.splice(idx, 1);
+  sessEditIdx = -1;
+  showToast('Entry removed', 'success');
+  renderSessionLog();
+  renderLiveSession();
+  saveSessionState();
+}
+
+let sessEditRatings = {takeoff:null,grab:null,trick:null,land:null};
+
+function editLogEntry(idx) {
+  if (sessEditIdx === idx) { sessEditIdx = -1; renderSessionLog(); return; }
+  const e = sessLog[idx];
+  if (!e) return;
+  sessEditIdx = idx;
+  sessEditRatings = {takeoff: e.takeoff||null, grab: e.grab||null, trick: e.trick_r||null, land: e.land||null};
+  renderSessionLog();
+}
+
+function setEditRating(cat, val) {
+  sessEditRatings[cat] = val;
+  renderSessionLog();
+}
+
+async function saveFsLogEdit(idx) {
+  const e = sessLog[idx];
+  if (!e) return;
+  const r = sessEditRatings;
+  if (!r.takeoff && !r.grab && !r.trick && !r.land) { showToast('Rate at least one category', 'error'); return; }
+  const oldResult = e.result;
+  const score = {miss:1,okay:2,perfect:3};
+  // Schnitt über die bewerteten Kategorien — Teilbewertungen sind erlaubt
+  const ratedCats = [r.takeoff, r.grab, r.trick, r.land].filter(Boolean);
+  const avg = ratedCats.reduce((a,v)=>a+score[v],0)/ratedCats.length;
+  const newResult = avg>=2.7?'perfect':avg>=1.7?'landed':'miss';
+  const d = sessAthleteData[e.name];
+  if (d) {
+    if (oldResult==='landed'||oldResult==='perfect') d.stats.landed--;
+    if (oldResult==='perfect') d.stats.perfect--;
+    if (newResult==='landed'||newResult==='perfect') d.stats.landed++;
+    if (newResult==='perfect') d.stats.perfect++;
+  }
+  const trickEl = document.getElementById('sess-edit-trick');
+  const commentEl = document.getElementById('sess-edit-comment');
+  const grabEl = document.getElementById('sess-edit-grab');
+  const oldTg = splitTrickGrab(e.trick||'');
+  const newBase = trickEl ? (trickEl.value.trim() || oldTg.base) : oldTg.base;
+  const newGrab = grabEl ? grabEl.value : oldTg.grab;
+  const newTrick = (newBase + (newGrab ? ' — ' + newGrab : '')) || e.trick;
+  const trickChanged = newTrick !== e.trick;
+  const newComment = commentEl ? commentEl.value.trim() : (e.comment||'');
+  e.result = newResult;
+  e.takeoff = r.takeoff||null; e.grab = r.grab||null; e.trick_r = r.trick||null; e.land = r.land||null;
+  if (trickChanged) { e.trick = newTrick; e.selectedGrab = newGrab; }
+  e.comment = newComment;
+  if (e.dbId) {
+    const gesamt = r.land==='miss'?3:avg>=2.7?10:7;
+    const kommentarParts = [[r.takeoff&&`Takeoff:${r.takeoff}`, r.grab&&`Grab:${r.grab}`, r.trick&&`Trick:${r.trick}`, r.land&&`Landing:${r.land}`].filter(Boolean).join(' ')];
+    if (newComment) kommentarParts.push(newComment);
+    const upd = {
+      gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
+      gelandet:(r.land ? r.land!=='miss' : newResult!=='miss')?'Yes':'No',
+      kommentar: kommentarParts.join(' | ')
+    };
+    if (trickChanged) { upd.trickaufbau = newTrick; upd.grab = newGrab || null; }
+    await db.from('tricks').update(upd).eq('id', e.dbId);
+    if (trickChanged) syncTrickNameLocally(e.dbId, newTrick);
+  }
+  sessEditIdx = -1;
+  renderLiveSession();
+  renderSessionLog();
+  saveSessionState();
+  showToast('Rating updated', 'success');
+}
+
+function clearSessionSelection() {
+  sessSelectedAthletes=[]; sessAthleteData={};
+  document.querySelectorAll('#sess-athlete-grid input[type=checkbox]').forEach(c => c.checked=false);
+  document.querySelectorAll('#sess-athlete-grid label').forEach(c => c.style.borderColor='var(--border)');
+  document.getElementById('sess-trick-selection').style.display='none';
+  document.getElementById('sess-start-btn').style.display='none';
+}
+
+function addAthleteToSession() {
+  document.getElementById('sess-setup').style.display = 'block';
+  document.getElementById('sess-live').style.display = 'none';
+  // Rebuild Step 1 + Step 2 pre-filled with the current session state
+  document.querySelectorAll('.sess-type-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim() === sessType);
+  });
+  const grid = document.getElementById('sess-athlete-grid');
+  grid.innerHTML = SESS_SQUADS.map(sq => {
+    const athletes = SESS_ALL_ATHLETES.filter(a => a.squad === sq.key);
+    return `<div style="margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${sq.color};margin-bottom:8px;">${sq.label}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${athletes.map(a => {
+          const checked = sessSelectedAthletes.includes(a.name);
+          return `<label style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface2);border:2px solid ${checked?'#39c3d4':'var(--border)'};border-radius:10px;cursor:pointer;transition:border-color .15s;" id="sess-ath-card-${a.name.replace(/\s/g,'_')}">
+            <input type="checkbox" value="${a.name}" onchange="toggleSessionAthlete('${a.name}')" ${checked?'checked':''} style="width:16px;height:16px;accent-color:${sq.color};cursor:pointer;flex-shrink:0;">
+            <span style="font-weight:600;font-size:13px;color:var(--text);">${shortName(a.name)}</span>
+          </label>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('sess-start-btn').style.display = sessSelectedAthletes.length ? 'block' : 'none';
+}
+
+function resetSession() {
+  sessSelectedAthletes=[]; sessAthleteData={}; sessLog=[]; sessRatings && Object.keys(sessRatings).forEach(k=>delete sessRatings[k]);
+  sessActiveAthlete = null;
+  clearSessionStorage();
+  document.getElementById('sess-setup').style.display='block';
+  document.getElementById('sess-live').style.display='none';
+  initSessionSetup();
+}
+
+async function cancelSession() {
+  const confirmed = confirm(
+    'Are you sure you want to cancel this session?\n\n' +
+    'All recorded attempts will be permanently deleted and cannot be recovered.'
+  );
+  if (!confirmed) return;
+  const ids = sessLog.filter(e => e.dbId).map(e => e.dbId);
+  if (ids.length > 0) await db.from('tricks').delete().in('id', ids);
+  sessLog = [];
+  resetSession();
+  showToast('Session cancelled — all data deleted', 'error');
+}
+
+function endSession() {
+  const rawMin = Math.round((Date.now() - sessStartTime) / 1000 / 60 / 30) * 30;
+  const duration = Math.max(30, rawMin);
+  // Show post-session report modal
+  let existingModal = document.getElementById('sess-report-modal');
+  if (existingModal) existingModal.remove();
+  const modal = document.createElement('div');
+  modal.id = 'sess-report-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:28px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto;">
+    <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;color:#39c3d4;margin-bottom:4px;">Session Complete</div>
+    <div style="font-size:13px;color:#6b8299;margin-bottom:20px;">${sessLog.length} attempts logged ·
+      <input id="sr-duration" type="number" min="5" step="5" value="${duration}" style="width:70px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:3px 6px;font-family:'Poppins',sans-serif;font-size:13px;text-align:center;"> min
+      <span style="font-size:10px;">(editable)</span></div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;">
+        <div>
+          <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Location</label>
+          <input id="sr-location" type="text" placeholder="e.g. Laax" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
+        </div>
+        <div style="${sessType && (sessType.startsWith('Slopestyle') || sessType.startsWith('Halfpipe')) ? 'display:none;' : ''}">
+          <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Jump Size</label>
+          <select id="sr-jumpsize" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
+            <option value="">—</option><option>M</option><option>L</option><option>XL</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Conditions</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="sr-cond-btns">
+          ${[['1','Poor'],['2','Below Avg'],['3','Average'],['4','Good'],['5','Excellent']].map(([v,l])=>`<button onclick="setSrCondition(${v},this)" data-val="${v}" style="padding:7px 12px;border-radius:8px;border:2px solid #1a3450;background:#112236;color:#6b8299;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">${v} — ${l}</button>`).join('')}
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Comments</label>
+        <textarea id="sr-comments" placeholder="Coach notes, observations…" rows="2" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;resize:vertical;"></textarea>
+      </div>
+      <div>
+        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Athlete Notes</label>
+        ${sessSelectedAthletes.map(n => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
+          <input type="text" id="sr-ath-${n.replace(/\s/g,'_')}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;">
+        </div>`).join('')}
+      </div>
+      ${sessType && sessType.includes('Competition') ? (() => {
+        const nFinal = sessType.startsWith('Slopestyle') ? 2 : 3;
+        const inp = (id, ph) => `<input type="number" step="0.01" min="0" id="${id}" placeholder="${ph}" style="width:76px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;text-align:center;">`;
+        return `<div>
+        <label style="font-size:11px;color:#f59e0b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Contest Results <span style="text-transform:none;font-weight:400;">(Final empty if not reached)</span></label>
+        ${sessSelectedAthletes.map(n => { const sid = n.replace(/\s/g,'_'); return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+          <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
+          <span style="font-size:10px;color:#6b8299;font-weight:600;">QUALI</span>
+          ${inp('sr-q1-'+sid,'Run 1')}${inp('sr-q2-'+sid,'Run 2')}
+          <span style="font-size:10px;color:#6b8299;font-weight:600;margin-left:6px;">FINAL</span>
+          ${inp('sr-f1-'+sid,'Run 1')}${inp('sr-f2-'+sid,'Run 2')}${nFinal === 3 ? inp('sr-f3-'+sid,'Run 3') : ''}
+          <span style="font-size:10px;color:#6b8299;font-weight:600;margin-left:6px;">RANK</span>
+          <input type="number" step="1" min="1" id="sr-rank-${sid}" placeholder="#" style="width:56px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;text-align:center;">
+        </div>`; }).join('')}
+      </div>`; })() : ''}
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
+      
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function parseSubRating(kommentar, key) {
+  const m = (kommentar||'').match(new RegExp(key+':(\\w+)'));
+  return m ? m[1] : null;
+}
+
+// ── Quality of Execution (QoE): Schnitt der bewerteten Kategorien (miss=0/okay=50/perfect=100).
+// Leitmetrik statt Landing-Quote — nutzt die Daten, die vorhanden sind (Teilbewertungen).
+const QOE_SCORE = {miss:0, okay:50, perfect:100};
+
+// QoE einer tricks-DB-Zeile; Fallback für Einträge ohne Teilbewertungen: gesamt (10→100, 7→50, sonst 0)
+function qoeOf(t) {
+  const vals = ['Takeoff','Grab','Trick','Landing']
+    .map(k => QOE_SCORE[parseSubRating(t.kommentar, k)])
+    .filter(v => v !== undefined);
+  if (vals.length) return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+  const g = t.gesamt;
+  if (g === undefined || g === null) return null;
+  return g >= 10 ? 100 : g >= 7 ? 50 : 0;
+}
+
+// QoE eines Session-Log-Eintrags (live oder aus Report rekonstruiert)
+function qoeOfLogEntry(e) {
+  const vals = [e.takeoff, e.grab, e.trick_r, e.land].map(v => QOE_SCORE[v]).filter(v => v !== undefined);
+  if (vals.length) return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+  return e.result === 'perfect' ? 100 : e.result === 'miss' ? 0 : 50;
+}
+
+const qoeAvg = arr => { const v = arr.filter(x=>x!==null&&x!==undefined); return v.length ? Math.round(v.reduce((a,b)=>a+b,0)/v.length) : null; };
+
+function buildFsTrickBlocks(entries) {
+  // entries = [{trick, result, grab, trick_r, land}] in chronological order
+  // A new block starts whenever the trick changes and then comes back.
+  // Each block tracks attempts/landed (overall) plus averaged Grab/Trick/Landing quality (miss=0/okay=50/perfect=100).
+  const score = {miss:0, okay:50, perfect:100};
+  const blocks = [];
+  entries.forEach(e => {
+    const trick = e.trick || '—';
+    let target = blocks[blocks.length - 1];
+    if (!target || target.trick !== trick) {
+      target = {trick, att:0, land:0, takeoffSum:0, takeoffN:0, grabSum:0, grabN:0, trickSum:0, trickN:0, landSum:0, landN:0};
+      blocks.push(target);
+    }
+    target.att++;
+    if (e.result !== 'miss') target.land++;
+    target.qoeSum = (target.qoeSum||0) + qoeOfLogEntry(e); target.qoeN = (target.qoeN||0) + 1;
+    if (e.takeoff in score) { target.takeoffSum += score[e.takeoff]; target.takeoffN++; }
+    if (e.grab in score)    { target.grabSum  += score[e.grab];    target.grabN++; }
+    if (e.trick_r in score) { target.trickSum += score[e.trick_r]; target.trickN++; }
+    if (e.land in score)    { target.landSum  += score[e.land];    target.landN++; }
+  });
+  return blocks.map(b => ({
+    trick: b.trick, att: b.att, land: b.land,
+    qualityPct: b.qoeN ? Math.round(b.qoeSum/b.qoeN) : null,
+    takeoffPct: b.takeoffN ? Math.round(b.takeoffSum/b.takeoffN) : null,
+    grabPct:  b.grabN  ? Math.round(b.grabSum/b.grabN)   : null,
+    trickPct: b.trickN ? Math.round(b.trickSum/b.trickN) : null,
+    landPct:  b.landN  ? Math.round(b.landSum/b.landN)   : null
+  }));
+}
+
+async function saveSessionReport(duration, location, conditions, comments, athleteNotes, jumpSize, contestScores) {
+  // Geister-Reports verhindern: ohne einen einzigen geloggten Versuch gibt es nichts zu rapportieren
+  if (!sessLog.length) { showToast('No attempts logged — session ended without saving a report', 'error'); resetSession(); return; }
+  // Build trick_data from sessLog as chronological trick blocks (sessLog is newest-first, reverse for order)
+  const chronological = sessLog.slice().reverse();
+  const athleteEntries = {};
+  chronological.forEach(e => {
+    if (!athleteEntries[e.name]) athleteEntries[e.name] = [];
+    athleteEntries[e.name].push(e);
+  });
+  const trickData = Object.entries(athleteEntries).map(([name, ents]) => {
+    const trickList = buildFsTrickBlocks(ents);
+    const totalAtt = trickList.reduce((a,t)=>a+t.att,0);
+    const totalLand = trickList.reduce((a,t)=>a+t.land,0);
+    const qualityPct = ents.length ? Math.round(ents.reduce((a,e)=>a+qoeOfLogEntry(e),0)/ents.length) : null;
+    const note = (athleteNotes||{})[shortName(name)] || '';
+    const trickIds = ents.map(e=>e.dbId).filter(Boolean);
+    const attempts = ents.map(e => ({trick: e.trick || '—', result: e.result,
+      takeoff: e.takeoff||null, grab: e.grab||null, trick_r: e.trick_r||null, land: e.land||null,
+      time: e.time||null, dbId: e.dbId||null, comment: e.comment || undefined}));
+    const cs = (contestScores || {})[shortName(name)] || {};
+    return {athlet: shortName(name), totalAtt, totalLand, qualityPct, tricks: trickList, note, trickIds, attempts,
+      quali_scores: cs.quali && cs.quali.length ? cs.quali : null,
+      final_scores: cs.finals && cs.finals.length ? cs.finals : null,
+      contest_rank: Number.isFinite(cs.rank) ? cs.rank : null};
+  });
+
+  const row = {
+    datum: sessCurrentDate(),
+    session_type: sessType,
+    app: 'freeski',
+    athletes: sessSelectedAthletes,
+    duration_min: duration,
+    location,
+    jump_size: jumpSize || null,
+    conditions,
+    comments,
+    trick_data: trickData
+  };
+  let {error} = await db.from('session_reports').insert(row);
+  if (error && /jump_size/.test(error.message||'')) {
+    delete row.jump_size;
+    ({error} = await db.from('session_reports').insert(row));
+  }
+
+  if (error) { showToast('Error saving report: ' + error.message, 'error'); }
+  else {
+    showToast('Session report saved', 'success');
+    try { openSessionReportView(row); } catch(e) { console.error(e); }
+    resetSession();
+    setTimeout(async () => {
+      const {data} = await db.from('session_reports').select('*').eq('app','freeski').order('created_at',{ascending:false}).limit(1);
+      if (data && data[0]) { window._lastReport = data[0]; }
+    }, 500);
+  }
+}
+
+async function loadLastSessionReport() {
+  const {data} = await db.from('session_reports').select('*').eq('app','freeski').order('created_at',{ascending:false}).limit(1);
+  if (data && data[0]) openSessionReportView(data[0]);
+}
+
+function openReportPrint(report) {
+  const d = report;
+  const dateStr = d.datum ? (() => { const p=d.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+  const durH = d.duration_min ? (d.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
+  const condLabel = d.conditions ? ['','Poor','Below Average','Average','Good','Excellent'][d.conditions]||d.conditions+'/5' : '—';
+  const condDots = d.conditions ? (d.conditions+'/5') : '—';
+  const typeShort = d.session_type||'—';
+  const athleteStr = Array.isArray(d.athletes) ? d.athletes.map(a=>shortName(a)).join(', ') : (d.athletes||'');
+  const trickData = Array.isArray(d.trick_data) ? d.trick_data : [];
+  const filename = 'Session_Report_' + (d.datum||'').replace(/-/g,'') + '.pdf';
+
+  showToast('Generating PDF…', 'success');
+
+  function generate() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+    const W = 210, margin = 16, cw = W - margin*2;
+    let y = margin;
+
+    // Header bar
+    doc.setFillColor(26,26,26);
+    doc.rect(margin, y, cw, 10, 'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.setTextColor(255,255,255);
+    doc.text('SESSION REPORT', margin+4, y+6.8);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(180,180,180);
+    doc.text('Swiss-Ski Trick Analyses — Freeski', W-margin-2, y+6.8, {align:'right'});
+    y += 14;
+
+    // Meta grid (2 columns)
+    const meta = [
+      ['Date', dateStr], ['Session Type', typeShort], ['Duration', durH],
+      ['Location', (d.location||'—') + (d.jump_size ? ' · Jump ' + d.jump_size : '')], ['Conditions', condDots+' '+condLabel], ['Athletes', athleteStr]
+    ];
+    doc.setFontSize(7.5);
+    const col = cw/3;
+    meta.forEach(([label, val], i) => {
+      const cx = margin + (i%3)*col;
+      const cy = y + Math.floor(i/3)*11;
+      doc.setFont('helvetica','normal');
+      doc.setTextColor(130,130,130);
+      doc.text(label.toUpperCase(), cx, cy);
+      doc.setFont('helvetica','bold');
+      doc.setTextColor(26,26,26);
+      doc.text(String(val), cx, cy+4.5);
+    });
+    y += 26;
+
+    // Divider
+    doc.setDrawColor(220,220,220);
+    doc.line(margin, y, W-margin, y);
+    y += 5;
+
+    // Comments
+    if (d.comments) {
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(130,130,130);
+      doc.text('COACH COMMENTS', margin, y);
+      y += 4;
+      doc.setFillColor(246,246,246);
+      const lines = doc.splitTextToSize(d.comments, cw-8);
+      const bh = lines.length*4.5+5;
+      doc.rect(margin, y, cw, bh, 'F');
+      doc.setFillColor(26,26,26);
+      doc.rect(margin, y, 2, bh, 'F');
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      doc.setTextColor(60,60,60);
+      doc.text(lines, margin+5, y+4.5);
+      y += bh+5;
+    }
+
+    // Per-athlete tables
+    trickData.forEach(a => {
+      const pct = a.totalAtt ? Math.round(a.totalLand/a.totalAtt*100) : 0;
+      if (y > 250) { doc.addPage(); y = margin; }
+
+      // Athlete name bar
+      doc.setFillColor(26,26,26);
+      doc.rect(margin, y, cw, 8, 'F');
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9);
+      doc.setTextColor(255,255,255);
+      doc.text((a.athlet||'').toUpperCase(), margin+3, y+5.5);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      doc.setTextColor(180,180,180);
+      doc.text(a.qualityPct!=null ? `${a.totalAtt} att.  |  Quality of Execution ${a.qualityPct}%` : `${a.totalAtt} att.  |  ${a.totalLand} landed  |  ${pct}%`, W-margin-3, y+5.5, {align:'right'});
+      y += 9;
+
+      // Trick table — chronological blocks, Grab/Trick/Landing quality columns
+      const pctStr = v => v===null||v===undefined ? '—' : v+'%';
+      const rows = (a.tricks||[]).map(t => [t.trick, t.att, pctStr(t.takeoffPct), pctStr(t.grabPct), pctStr(t.trickPct), pctStr(t.landPct)]);
+
+      doc.autoTable({
+        startY: y,
+        margin: {left:margin, right:margin},
+        head: [['Trick','Att.','Take-off','Grab','Trick','Landing']],
+        body: rows,
+        theme: 'grid',
+        styles: {fontSize:8.5, cellPadding:2.5, textColor:[34,34,34], lineColor:[230,230,230]},
+        headStyles: {fillColor:[240,240,240], textColor:[100,100,100], fontStyle:'bold', fontSize:7.5},
+        columnStyles: {0:{cellWidth:cw*0.34}, 1:{cellWidth:cw*0.10,halign:'center'}, 2:{cellWidth:cw*0.14,halign:'center'}, 3:{cellWidth:cw*0.14,halign:'center'}, 4:{cellWidth:cw*0.14,halign:'center'}, 5:{cellWidth:cw*0.14,halign:'center'}},
+        didParseCell(data) {
+          if ([2,3,4,5].includes(data.column.index) && data.section==='body') {
+            const v = parseInt(data.cell.raw);
+            if (!isNaN(v)) {
+              data.cell.styles.textColor = v>=70?[45,138,78]:v>=50?[180,100,0]:[200,30,30];
+              data.cell.styles.fontStyle = 'bold';
+            }
+          }
+        }
+      });
+      y = doc.lastAutoTable.finalY + 2;
+
+      // Note
+      if (a.note) {
+        doc.setFillColor(255,251,235);
+        const noteLines = doc.splitTextToSize('Note: '+a.note, cw-8);
+        const nh = noteLines.length*4+5;
+        doc.rect(margin, y, cw, nh, 'F');
+        doc.setDrawColor(230,215,150);
+        doc.rect(margin, y, cw, nh, 'S');
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(8);
+        doc.setTextColor(100,80,20);
+        doc.text(noteLines, margin+3, y+4);
+        y += nh+2;
+      }
+      y += 4;
+    });
+
+    // Footer
+    const pg = doc.internal.getNumberOfPages();
+    for (let i=1;i<=pg;i++) {
+      doc.setPage(i);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(170,170,170);
+      doc.text('Generated '+new Date().toLocaleDateString('de-CH'), margin, 295);
+      doc.text(`${i} / ${pg}`, W-margin, 295, {align:'right'});
+    }
+
+    doc.save(filename);
+  }
+
+  function loadAndGenerate() {
+    if (window.jspdf && window.jspdf.jsPDF) { generate(); return; }
+    const s1 = document.createElement('script');
+    s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s1.onload = () => {
+      const s2 = document.createElement('script');
+      s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
+      s2.onload = generate;
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+  }
+
+  loadAndGenerate();
+}
+
+async function viewSessionReportByDate(date) {
+  const {data, error} = await db.from('session_reports').select('*').eq('datum', date).eq('app','freeski');
+  if (error || !data || data.length === 0) { showToast('No session report found for this date', 'error'); return; }
+  if (data.length === 1) { openSessionReportView(data[0]); return; }
+  // Multiple reports: show picker
+  let existingModal = document.getElementById('sr-pick-modal');
+  if (existingModal) existingModal.remove();
+  const modal = document.createElement('div');
+  modal.id = 'sr-pick-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:24px;max-width:400px;width:100%;">
+    <div style="font-size:16px;font-weight:700;color:#39c3d4;margin-bottom:16px;">Multiple reports for ${date}</div>
+    ${data.map((r,i)=>`<button onclick="document.getElementById('sr-pick-modal').remove();openReportPrint(window._srPickData[${i}])" style="display:block;width:100%;text-align:left;padding:10px 14px;margin-bottom:8px;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;">
+      ${({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Competition'}[r.session_type]||r.session_type||'—')} · ${(r.athletes||[]).map(a=>a.split(' ')[0]).join(', ')} · ${r.duration_min}min
+    </button>`).join('')}
+    <button onclick="document.getElementById('sr-pick-modal').remove()" style="padding:8px 16px;background:none;border:1px solid #1a3450;border-radius:8px;color:#6b8299;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;margin-top:4px;">Cancel</button>
+  </div>`;
+  window._srPickData = data;
+  document.body.appendChild(modal);
+}
+
+async function loadStandort() {
+  sbAthlet = document.getElementById('sb-athlet').value;
+  const empty = document.getElementById('sb-empty');
+  const main  = document.getElementById('sb-main');
+  const addBtn = document.getElementById('sb-add-btn');
+
+  if (!sbAthlet) {
+    empty.style.display = 'block';
+    main.style.display  = 'none';
+    addBtn.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  main.style.display  = 'block';
+  addBtn.style.display = 'inline-block';
+
+  // Show loading
+  document.getElementById('sb-columns').innerHTML = '<div class="loading" style="grid-column:1/-1"><span class="spinner"></span>Loading...</div>';
+
+  // Load standort entries + tricks from DB in parallel
+  const [sbRes, tricksRes] = await Promise.all([
+    db.from('standort').select('*').eq('athlet', sbAthlet).order('created_at', { ascending: false }),
+    db.from('tricks').select('*').eq('athlet', sbAthlet),
+  ]);
+
+  if (sbRes.error || tricksRes.error) {
+    const errMsg = (sbRes.error || tricksRes.error)?.message || 'Unbekannt';
+    document.getElementById('sb-columns').innerHTML = '<div style="color:var(--danger);padding:20px;grid-column:1/-1">Error: ' + errMsg + '</div>';
+    return;
+  }
+
+  sbData = sbRes.data || [];
+  sbSessTricks = tricksRes.data || [];
+
+  // Auto-check: if a "goal" entry now appears in tricks DB → mark as erreicht
+  const dbTrickLabels = new Set((tricksRes.data || []).map(t => trickDesc(t)));
+
+  const toMarkReached = sbData.filter(e =>
+    e.status === 'goal' && dbTrickLabels.has(e.trick_label)
+  );
+  for (const e of toMarkReached) {
+    await db.from('standort').update({ status: 'erreicht', updated_at: new Date().toISOString() }).eq('id', e.id);
+    e.status = 'erreicht';
+  }
+
+  renderStandort();
+  renderSbDirRadar();
+}
+
+function renderSbDirRadar() {
+  const wrap = document.getElementById('sb-dir-radar-wrap');
+  if (!wrap) return;
+  // Auf Emilies Wunsch (31.8.2026): Direction-Balance-Radar + Session-Balken
+  // im Freeski-Assessment ausgeblendet (Monitoring deckt das ab).
+  wrap.style.display = 'none';
+  wrap.innerHTML = '';
+  return;
+
+  const mastered = sbData.filter(e => e.status === 'mastered');
+  const goals    = sbData.filter(e => e.status === 'goal');
+  if (!mastered.length && !goals.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  const DIRS = ['Left','Right','Switch Left','Switch Right'];
+  const getDir = raw => {
+    raw = (raw||'').trim();
+    if(raw==='Left'||raw==='Forward Left') return 'Left';
+    if(raw==='Right'||raw==='Forward Right') return 'Right';
+    if(raw==='Switch Left') return 'Switch Left';
+    if(raw==='Switch Right') return 'Switch Right';
+    return null;
+  };
+
+  const mastC = {}; DIRS.forEach(d => mastC[d] = 0);
+  mastered.forEach(e => { const d=getDir(e.drehrichtung); if(d) mastC[d]++; });
+
+  const goalC = {}; DIRS.forEach(d => goalC[d] = 0);
+  goals.forEach(e => { const d=getDir(e.drehrichtung); if(d) goalC[d]++; });
+
+  const mastTotal = DIRS.reduce((s,d)=>s+mastC[d],0) || 1;
+  const goalTotal = DIRS.reduce((s,d)=>s+goalC[d],0) || 1;
+  const mastVals  = DIRS.map(d => mastC[d]/mastTotal);
+  const goalVals  = DIRS.map(d => goalC[d]/goalTotal);
+
+  let canvas = document.getElementById('sb-dir-radar');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'sb-dir-radar';
+    canvas.style.cssText = 'width:100%;max-width:420px;display:block;margin:0 auto;';
+    wrap.querySelector('.card').appendChild(canvas);
+  }
+  const dpr = window.devicePixelRatio || 1;
+  const size = Math.min(wrap.querySelector('.card')?.offsetWidth-16 || 420, 420);
+  canvas.style.width = size+'px'; canvas.style.height = size+'px';
+  canvas.width = size*dpr; canvas.height = size*dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const W=size,H=size,cx=W/2,cy=H/2,r=Math.min(W,H)/2-90;
+  ctx.clearRect(0,0,W,H);
+  const angles = DIRS.map((_,i)=>i*2*Math.PI/4 - 3*Math.PI/4);
+
+  // Grid — outer fill first, then rings
+  ctx.beginPath();
+  angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.closePath();ctx.fillStyle='rgba(57,195,212,0.07)';ctx.fill();
+
+  [0.25,0.5,0.75,1].forEach(f=>{
+    ctx.beginPath();
+    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*f,y=cy+Math.sin(a)*r*f;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();
+  });
+  angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();});
+
+  // Goals polygon (orange dashed)
+  if(goals.length){
+    ctx.setLineDash([7,4]);
+    ctx.strokeStyle='#f59e0b'; ctx.lineWidth=1.5;
+    ctx.beginPath();
+    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*goalVals[i],y=cy+Math.sin(a)*r*goalVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath(); ctx.fillStyle='rgba(245,158,11,0.35)'; ctx.fill(); ctx.stroke();
+    ctx.setLineDash([]);
+    // Dots at vertices
+    angles.forEach((a,i)=>{
+      const x=cx+Math.cos(a)*r*goalVals[i], y=cy+Math.sin(a)*r*goalVals[i];
+      ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI);
+      ctx.fillStyle='#f59e0b'; ctx.fill();
+      ctx.strokeStyle='#0b1929'; ctx.lineWidth=1.5; ctx.stroke();
+    });
+  }
+
+  // Mastered polygon (green solid)
+  if(mastered.length){
+    ctx.setLineDash([]);
+    ctx.strokeStyle='#34d399'; ctx.lineWidth=1.5;
+    ctx.beginPath();
+    angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*mastVals[i],y=cy+Math.sin(a)*r*mastVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath(); ctx.fillStyle='rgba(52,211,153,0.45)'; ctx.fill(); ctx.stroke();
+    // Dots at vertices
+    angles.forEach((a,i)=>{
+      const x=cx+Math.cos(a)*r*mastVals[i], y=cy+Math.sin(a)*r*mastVals[i];
+      ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI);
+      ctx.fillStyle='#34d399'; ctx.fill();
+      ctx.strokeStyle='#0b1929'; ctx.lineWidth=1.5; ctx.stroke();
+    });
+  }
+
+  // Labels per axis
+  angles.forEach((a,i)=>{
+    const lx=cx+Math.cos(a)*(r+52), ly=cy+Math.sin(a)*(r+52);
+    const align=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center';
+    ctx.textAlign=align; ctx.textBaseline='middle';
+    ctx.font='bold 12px Poppins,sans-serif'; ctx.fillStyle='#e8edf2';
+    ctx.fillText(DIRS[i], lx, ly-14);
+    ctx.font='bold 13px Poppins,sans-serif'; ctx.fillStyle='#34d399';
+    ctx.fillText('✓ '+mastC[DIRS[i]], lx, ly+2);
+    ctx.font='bold 13px Poppins,sans-serif'; ctx.fillStyle='#f59e0b';
+    ctx.fillText('◎ '+goalC[DIRS[i]], lx, ly+17);
+  });
+
+  // Legend
+  const legY = H-18;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='#34d399'; ctx.font='bold 11px Poppins,sans-serif';
+  ctx.fillText('— Mastered', cx-52, legY);
+  ctx.fillStyle='#f59e0b';
+  ctx.setLineDash([5,3]);
+  ctx.fillText('- - Goals', cx+52, legY);
+  ctx.setLineDash([]);
+
+  renderAthleteDirBalance(wrap, ['Left','Right','Switch Left','Switch Right'],
+    {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'},
+    t => {
+      const tb = t.trickaufbau || t.trick_label || '';
+      const fromTb = ['Switch Right','Switch Left','Right','Left'].find(d => tb.startsWith(d+' ') || tb.startsWith(d+' —')) || null;
+      return fromTb || (t.drehrichtung||'').trim() || null;
+    });
+}
+
+function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const total = dirs.reduce((s,d)=>s+dirCnt[d].att,0) || 1;
+  const dpr = window.devicePixelRatio || 1;
+  const size = 160;
+  canvas.width = size*dpr; canvas.height = size*dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const cx=size/2, cy=size/2, r=size/2-4;
+  ctx.clearRect(0,0,size,size);
+
+  // Pass 1: fill all slices (no stroke)
+  let startAngle = -Math.PI/2;
+  dirs.forEach(d=>{
+    const slice = dirCnt[d].att/total * 2*Math.PI;
+    if(slice===0) return;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,startAngle,startAngle+slice);
+    ctx.closePath();
+    ctx.fillStyle=dirColors[d]; ctx.fill();
+    startAngle += slice;
+  });
+  // Pass 2: thin separator lines only (avoids thick radial corners)
+  startAngle = -Math.PI/2;
+  dirs.forEach(d=>{
+    const slice = dirCnt[d].att/total * 2*Math.PI;
+    if(slice===0) return;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,startAngle,startAngle+slice);
+    ctx.closePath();
+    ctx.strokeStyle='rgba(11,25,41,0.6)'; ctx.lineWidth=1; ctx.stroke();
+    startAngle += slice;
+  });
+}
+
+function renderStandort() {
+  // Stats
+  const mastered = sbData.filter(e => e.status === 'mastered').length;
+  const goale      = sbData.filter(e => e.status === 'goal').length;
+  const erreicht   = sbData.filter(e => e.status === 'erreicht').length;
+
+  document.getElementById('sb-overview').innerHTML = `
+    <div class="sb-ov-card">
+      <div class="sb-ov-num" style="color:var(--success);">${mastered}</div>
+      <div class="sb-ov-label">Learned Tricks</div>
+    </div>
+    <div class="sb-ov-card">
+      <div class="sb-ov-num" style="color:var(--warn);">${goale}</div>
+      <div class="sb-ov-label">Open Goals</div>
+    </div>
+    <div class="sb-ov-card">
+      <div class="sb-ov-num" style="color:var(--accent);">${erreicht}</div>
+      <div class="sb-ov-label">Goals Achieved</div>
+    </div>
+  `;
+
+  // Two columns: Mastered | Ziele
+  const bList = sbData.filter(e => e.status === 'mastered');
+  const zList = sbData.filter(e => e.status === 'goal');
+
+  const DIR_ORDER = ['Left','Right','Switch Left','Switch Right'];
+  const DIR_COLORS = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
+
+  function normDir4(d) {
+    if (!d) return null;
+    const s = d.trim();
+    if (s === 'Left' || s === 'Left') return 'Left';
+    if (s === 'Right' || s === 'Right') return 'Right';
+    if (s === 'Switch Left') return 'Switch Left';
+    if (s === 'Switch Right') return 'Switch Right';
+    return null;
+  }
+
+  function displayTrickLabel(label) {
+    if (!label) return '';
+    return label.replace(/[, ]+x\b/gi, '').replace(/\s{2,}/g, ' ').trim();
+  }
+
+  function renderTrickRow(e) {
+    return `<div class="sb-trick-row">
+      <span class="sb-trick-name">
+        <span style="font-weight:500;">${displayTrickLabel(e.trick_label)}</span>
+        <span style="display:flex;gap:8px;align-items:center;margin-top:2px;">
+          ${e.datum ? `<span style="font-size:10px;color:var(--muted);">📅 ${e.datum}</span>` : ''}
+          ${e.notiz ? `<span style="font-size:10px;color:var(--muted);">${e.notiz}</span>` : ''}
+          ${e.coach_kommentar ? `<div style="font-size:10px;color:#f59e0b;margin-top:3px;">🎓 ${e.coach_rating ? e.coach_rating+'/10 · ' : ''}${e.coach_kommentar}</div>` : ''}
+          ${e.coach_video ? `<div style="font-size:10px;"><a href="${e.coach_video}" target="_blank" style="color:#f59e0b;">▶ Video</a></div>` : ''}
+        </span>
+        ${grabChipsHtml(e)}
+      </span>
+      <button style="background:none;border:1px solid #1a3450;border-radius:5px;color:#6b8299;cursor:pointer;padding:2px 7px;font-size:11px;margin-right:2px;" onclick="openSbEdit(${e.id})" title="Edit">✏️</button>
+      <button class="btn-del" onclick="deleteSbEntry(${e.id})" title="Remove">✕</button>
+    </div>`;
+  }
+
+  function extractRotFS(label) {
+    const m = (label||'').match(/\b(180|270|360|450|540|630|720|810|900|1080|1260|1440)\b/);
+    return m ? parseInt(m[1]) : 0;
+  }
+
+  function renderList(items, emptyMsg) {
+    if (!items.length) return `<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center;">${emptyMsg}</div>`;
+    // Group by direction
+    const groups = {};
+    items.forEach(e => {
+      const dir = normDir4(e.drehrichtung) || 'Other';
+      if (!groups[dir]) groups[dir] = [];
+      groups[dir].push(e);
+    });
+    // Sort each group: highest rotation first
+    Object.keys(groups).forEach(dir => {
+      groups[dir].sort((a,b) => extractRotFS(b.trick_label) - extractRotFS(a.trick_label));
+    });
+    const orderedKeys = [...DIR_ORDER.filter(d => groups[d]), ...(groups['Other'] ? ['Other'] : [])];
+    return orderedKeys.map(dir => {
+      const col = DIR_COLORS[dir] || 'var(--muted)';
+      return `<div style="border-bottom:1px solid var(--border);">
+        <div style="padding:6px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${col};background:var(--surface2);">${dir}</div>
+        ${groups[dir].map(e => renderTrickRow(e)).join('')}
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('sb-columns').innerHTML = `
+    <div>
+      <div class="sb-col-header mastered">✅ LEARNED TRICKS <span style="opacity:.6;font-size:13px;">(${bList.length})</span></div>
+      <div class="sb-col-body mastered">${renderList(bList, 'No entries yet')}</div>
+    </div>
+    <div>
+      <div class="sb-col-header goal">🎯 GOALS / IN PROGRESS <span style="opacity:.6;font-size:13px;">(${zList.length})</span></div>
+      <div class="sb-col-body goal">${renderList(zList, 'No goals yet')}</div>
+    </div>
+  `;
+
+  // Progress / erreichte Ziele
+  const reachedList = sbData.filter(e => e.status === 'erreicht');
+  const timelineCard = document.getElementById('sb-timeline-card');
+  if (reachedList.length) {
+    timelineCard.style.display = 'block';
+    document.getElementById('sb-timeline').innerHTML = reachedList.map(e => `
+      <div class="timeline-item">
+        <div class="timeline-dot dot-erreicht"></div>
+        <div class="timeline-body">
+          <div class="timeline-title">${badge(e.disziplin)} ${e.trick_label}
+            <span class="sb-status-erreicht" style="margin-left:6px;">✓ Achieved</span>
+          </div>
+          ${e.notiz ? `<div class="timeline-meta">${e.notiz}</div>` : ''}
+          ${e.coach_kommentar ? `<div class="timeline-meta" style="color:#f59e0b;">🎓 ${e.coach_rating ? e.coach_rating+'/10 · ' : ''}${e.coach_kommentar}</div>` : ''}
+          <div class="timeline-meta">Logged: ${fmtDate(e.created_at)}</div>
+        </div>
+      </div>`).join('');
+  } else {
+    timelineCard.style.display = 'none';
+  }
+}
+
+async function cycleGrabStatus(entryId, grab) {
+  const e = sbData.find(x => x.id === entryId);
+  if (!e) return;
+  const gs = {...effGrabStatus(e)};
+  const next = nextGrabState(gs[grab]);
+  if (next) gs[grab] = next; else delete gs[grab];
+  if (await updateGrabStatus(entryId, gs, e)) renderStandort();
+}
+
+async function sbSave(status) {
+  const fields = readFields('sb');
+  if (!fields.disziplin) { showToast('Please select a discipline', 'error'); return; }
+
+  const trickLabel = trickDesc(null, 'sb');
+  if (!trickLabel || trickLabel === '–') { showToast('Please fill in at least one trick field', 'error'); return; }
+
+  const notiz = val('sb-notiz');
+
+  const row = {
+    athlet: sbAthlet,
+    datum: document.getElementById('sb-datum').value || new Date().toISOString().split('T')[0],
+    disziplin: fields.disziplin,
+    trick_label: trickLabel,
+    // Store all individual fields too for reference
+    drehrichtung: fields.drehrichtung, flips: fields.flips, achse: fields.achse,
+    rotation: fields.rotation, absprung: fields.absprung,
+    grab: Object.keys(sbAssessGrabMatrix).join(', ') || fields.grab,
+    bringback: fields.bringback, railart: fields.railart, slideform: fields.slideform,
+    slidevar: fields.slidevar, inspin: fields.inspin, swap: fields.swap, outspin: fields.outspin,
+    notiz,
+    status,
+  };
+  if (fields.transfer) row.transfer = fields.transfer;
+  if (fields.foot) row.foot = fields.foot;
+  if (_standortHasGrabStatus && Object.keys(sbAssessGrabMatrix).length) row.grab_status = {...sbAssessGrabMatrix};
+  let { data, error } = await db.from('standort').insert(row).select();
+  if (error && /grab_status/.test(error.message||'')) {
+    _standortHasGrabStatus = false;
+    delete row.grab_status;
+    ({ data, error } = await db.from('standort').insert(row).select());
+  }
+  if (error && row.transfer && /transfer/.test(error.message||'')) {
+    delete row.transfer;
+    ({ data, error } = await db.from('standort').insert(row).select());
+    if (!error) showToast('Transfer not saved — run the transfer SQL first', 'error');
+  }
+  if (error && row.foot && /foot/.test(error.message||'')) {
+    delete row.foot;
+    ({ data, error } = await db.from('standort').insert(row).select());
+    if (!error) showToast('Foot not saved — run the foot SQL first', 'error');
+  }
+
+  if (error) { showToast('Error: ' + error.message, 'error'); return; }
+
+  showToast(status === 'mastered' ? '✓ Saved as mastered!' : '🎯 Saved as goal!', 'success');
+
+  // Reset sb form fields
+  ['sb-disziplin','sb-drehrichtung','sb-flips','sb-achse','sb-rotation','sb-absprung',
+   'sb-grab','sb-bringback','sb-style','sb-railart','sb-slideform','sb-slidevar','sb-foot','sb-inspin','sb-swap','sb-transfer','sb-outspin','sb-notiz'
+  ].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  initStandortGrabs();
+  toggleDisziplin('sb');
+
+  sbData = [data[0], ...sbData];
+  renderStandort();
+  toggleSbForm();
+
+  if (sessSelectedAthletes.includes(sbAthlet) && sessAthleteData[sbAthlet]) {
+    sessAthleteData[sbAthlet].tricks = await fetchStandortTricks(sbAthlet);
+    saveSessionState();
+  }
+}
+
+async function loadEntwicklung() {
+  const athlet = document.getElementById('ev-athlet').value;
+  const empty  = document.getElementById('ev-empty');
+  const main   = document.getElementById('ev-main');
+  if (!athlet) { empty.style.display='block'; main.style.display='none'; return; }
+  empty.style.display = 'none';
+  main.style.display  = 'block';
+  main.innerHTML = '<div class="loading" style="padding:60px;text-align:center;"><span class="spinner"></span>Loading...</div>';
+
+  const [tricksRes, standortRes] = await Promise.all([
+    db.from('tricks').select('*').eq('athlet', athlet).order('datum', { ascending: true }),
+    db.from('standort').select('*').eq('athlet', athlet),
+  ]);
+
+  const tricks   = tricksRes.data  || [];
+  const standort = standortRes.data || [];
+
+  if (!tricks.length && !standort.length) {
+    main.innerHTML = '<div class="empty-state">No entries yet for this athlete</div>';
+    return;
+  }
+
+  // Restore HTML structure
+  main.innerHTML = `
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);">
+        ${tricks.length} session logs
+      </div>
+    </div>
+    <div class="chart-grid single">
+      <div class="chart-card" id="ev-analytics-card">
+        <div style="margin-bottom:16px;">
+          <div class="chart-title" style="margin-bottom:12px;">📊 Trick Statistics</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
+            <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
+          </div>
+          <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+            <option value="">— select trick —</option>
+          </select>
+          <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+            <option value="">— select session —</option>
+          </select>
+        </div>
+        <div id="ev-trick-analytics"></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5;">QoE (Quality of Execution) = average of the rated categories Take-off · Trick · Grab · Landing — ✗ Miss 0% · ✓ Okay 50% · ⭐ Perfect 100%. Unrated categories are simply left out.</div>
+      </div>
+    </div>
+    <div id="ev-raw-wrap" style="margin-top:16px;"></div>`;
+
+  // inject type filter row (not in static HTML, only in dynamic)
+  (() => {
+    const modeDiv = document.querySelector('#ev-mode-trick')?.parentElement;
+    if (!modeDiv || document.getElementById('ev-type-filter')) return;
+    const fRow = document.createElement('div');
+    fRow.id = 'ev-type-filter';
+    fRow.style.cssText = 'display:none;gap:6px;flex-wrap:wrap;margin-bottom:10px;';
+    fRow.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:11px;color:var(--muted);">Filter:</span>
+          <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
+          <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
+          <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
+          <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:var(--muted);white-space:nowrap;">Period:</span>
+          <input type="text" id="ev-date-from" oninput="setDateRange()" placeholder="DD.MM.YY"
+            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
+          <span style="font-size:11px;color:var(--muted);">→</span>
+          <input type="text" id="ev-date-to" oninput="setDateRange()" placeholder="DD.MM.YY"
+            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
+          <button onclick="clearDateRange()" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
+        </div>
+      </div>`;
+    modeDiv.after(fRow);
+  })();
+
+  // ── Normalise standort entries to same shape as tricks
+  // standort has: drehrichtung, rotation, achse, grab, flips, disziplin, status
+  // We tag each entry with its source
+  const tTagged = tricks.map(t  => ({ ...t,  _src: 'training' }));
+  const sTagged = standort.filter(s => s.status === 'mastered' || s.status === 'erreicht').map(s => ({
+    drehrichtung: s.drehrichtung, rotation: s.rotation, achse: s.achse,
+    grab: s.grab, flips: s.flips, disziplin: s.disziplin,
+    gesamt: null, datum: null,
+    _src: 'standort', _status: s.status,
+  }));
+  const all = [...tTagged, ...sTagged];
+
+  // ── Count helpers (supports split by source)
+  function countBySplit(field) {
+    const train={}, stand={};
+    tTagged.forEach(t => { const v=t[field]; if(v) train[v]=(train[v]||0)+1; });
+    sTagged.forEach(s => { const v=s[field]; if(v) stand[v]=(stand[v]||0)+1; });
+    const keys = [...new Set([...Object.keys(train),...Object.keys(stand)])];
+    return { train, stand, keys };
+  }
+
+  function avgByField(groupField, valueField) {
+    const sums={}, counts={};
+    tTagged.forEach(t => {
+      const k=t[groupField], v=parseFloat(t[valueField]);
+      if(k && !isNaN(v)){ sums[k]=(sums[k]||0)+v; counts[k]=(counts[k]||0)+1; }
+    });
+    const res={};
+    Object.keys(sums).forEach(k => res[k]=parseFloat((sums[k]/counts[k]).toFixed(1)));
+    return res;
+  }
+
+  // ── 1. RADAR: Directions — session QoE (blue) + assessment volume (amber)
+  const directions = ['Right','Switch Right','Switch Left','Left'];
+
+  // Parse direction from trickaufbau (new session format: "Left Double 1080 Cork — Japan")
+  function dirFromTrickaufbau(tb) {
+    if (!tb) return null;
+    for (const d of ['Switch Right','Switch Left','Right','Left']) {
+      if (tb.startsWith(d + ' ') || tb.startsWith(d + ' —')) return d;
+    }
+    return null;
+  }
+
+  // Quality of Execution pro Direction aus Session-Daten
+  const dirStats = {};
+  tTagged.forEach(t => {
+    // New session entries (trickaufbau with " — ")
+    const dir = t.trickaufbau && t.trickaufbau.includes(' — ')
+      ? dirFromTrickaufbau(t.trickaufbau)
+      : t.drehrichtung;
+    if (!dir) return;
+    if (!dirStats[dir]) dirStats[dir] = { total: 0, qoeVals: [] };
+    dirStats[dir].total++;
+    const q = qoeOf(t); if (q !== null) dirStats[dir].qoeVals.push(q);
+  });
+
+  const dirRatePct  = directions.map(d => dirStats[d]?.total ? (qoeAvg(dirStats[d].qoeVals) ?? 0) : null);
+  const dirRates    = dirRatePct.map(p => p !== null ? p/100 : 0);
+
+  // Assessment volume for amber polygon
+  const { stand: dirS } = countBySplit('drehrichtung');
+  const maxDirS = Math.max(...directions.map(d => dirS[d]||0), 1);
+
+  drawRadarSplit('cv-radar', directions,
+    dirRates,
+    directions.map(d => (dirS[d]||0)/maxDirS),
+    dirRatePct,
+    directions.map(d => dirS[d]||0));
+
+  // ── 1b. RADAR: Achsen by direction (Cork & Bio/Misty × Richtung)
+  const corkCounts = {}, bioMistyCounts = {}, swCorkCounts = {}, swBioCounts = {};
+  tTagged.concat(sTagged).forEach(t => {
+    const d = t.drehrichtung, a = t.achse;
+    if (!d || !a) return;
+    if (a === 'Cork')      { if (!d.startsWith('Switch')) corkCounts[d]=(corkCounts[d]||0)+1; else swCorkCounts[d]=(swCorkCounts[d]||0)+1; }
+    if (a === 'Bio/Misty') { if (!d.startsWith('Switch')) bioMistyCounts[d]=(bioMistyCounts[d]||0)+1; else swBioCounts[d]=(swBioCounts[d]||0)+1; }
+  });
+  const allDirs = ['Left','Right','Switch Left','Switch Right'];
+  const corkE = allDirs.map(d=>[d,(corkCounts[d]||0)+(swCorkCounts[d]||0),0]).filter(e=>e[1]>0);
+  drawBarsSplit('bars-cork', corkE.length ? corkE : [['– no data –',0,0]]);
+  const bioE = allDirs.map(d=>[d,(bioMistyCounts[d]||0)+(swBioCounts[d]||0),0]).filter(e=>e[1]>0);
+  drawBarsSplit('bars-bio', bioE.length ? bioE : [['– no data –',0,0]]);
+
+  // ── 2. Rotationen
+  const { train: rotT, stand: rotS, keys: rotKeys } = countBySplit('rotation');
+  const rotSorted = rotKeys.sort((a,b)=>parseInt(a)-parseInt(b)).map(k=>[k, rotT[k]||0, rotS[k]||0]);
+  drawBarsSplit('bars-rotation', rotSorted);
+
+  // ── 3. Achsen
+  const { train: achseT, stand: achseS, keys: achseKeys } = countBySplit('achse');
+  const achseSorted = achseKeys.sort((a,b)=>((achseT[b]||0)+(achseS[b]||0))-((achseT[a]||0)+(achseS[a]||0))).map(k=>[k, achseT[k]||0, achseS[k]||0]);
+  drawBarsSplit('bars-achse', achseSorted);
+
+  // ── 4. Grabs
+  // Count grabs separately (one entry can have multiple grabs separated by comma)
+  const grabTrainMap = {}, grabStandMap = {};
+  tTagged.forEach(t => {
+    if (!t.grab) return;
+    t.grab.split(',').map(g => g.trim()).filter(Boolean).forEach(g => {
+      grabTrainMap[g] = (grabTrainMap[g] || 0) + 1;
+    });
+  });
+  sTagged.forEach(s => {
+    if (!s.grab) return;
+    s.grab.split(',').map(g => g.trim()).filter(Boolean).forEach(g => {
+      grabStandMap[g] = (grabStandMap[g] || 0) + 1;
+    });
+  });
+  const grabKeys2 = [...new Set([...Object.keys(grabTrainMap), ...Object.keys(grabStandMap)])];
+  const grabSorted = grabKeys2.sort((a,b) => ((grabTrainMap[b]||0)+(grabStandMap[b]||0)) - ((grabTrainMap[a]||0)+(grabStandMap[a]||0))).map(k => [k, grabTrainMap[k]||0, grabStandMap[k]||0]);
+  drawBarsSplit('bars-grab', grabSorted);
+
+  // ── 5. Qualität über Zeit — nach Trick gefiltert
+  // Build trick label for each session entry
+  function trickLabel(t) {
+    const parts = [t.drehrichtung, t.rotation, t.achse, t.grab].filter(Boolean);
+    return parts.join(' · ');
+  }
+  const tricksWithRating = tTagged.filter(t => t.datum && t.gesamt != null && trickLabel(t));
+  const trickOptions = [...new Set(tricksWithRating.map(trickLabel))].sort();
+
+  // Store for later use by updateQualityChart
+  window._evTricksWithRating = tricksWithRating;
+  window._evTrickLabel = trickLabel;
+
+  const sel = document.getElementById('ev-trick-filter');
+  if (sel) {
+    sel.innerHTML = '<option value="">— select trick —</option>'
+      + trickOptions.map(l => `<option value="${l}">${l}</option>`).join('');
+  }
+  // Clear chart until trick selected
+  const cvLine = document.getElementById('cv-line');
+  const cvEmpty = document.getElementById('cv-line-empty');
+  if (cvLine) cvLine.style.display = 'none';
+  if (cvEmpty) cvEmpty.style.display = 'block';
+
+  // ── 6. Quality per Direction (training only)
+  const qualByDir = avgByField('drehrichtung','gesamt');
+  const qualSorted = Object.entries(qualByDir).sort((a,b)=>b[1]-a[1]);
+  drawBarsRating('bars-qualitaet', qualSorted);
+
+  // ── 7. Landing Rate per Trick
+  const landMap = {};
+  tTagged.forEach(t => {
+    const label = [t.drehrichtung, t.rotation, t.achse, t.grab].filter(Boolean).join(' · ');
+    if (!label) return;
+    if (!landMap[label]) landMap[label] = { ja: 0, total: 0 };
+    landMap[label].total++;
+    if (t.gelandet === 'Ja') landMap[label].ja++;
+  });
+  const landSorted = Object.entries(landMap)
+    .filter(([,v]) => v.total > 0)
+    .map(([label, v]) => [label, Math.round(v.ja / v.total * 100), v.ja, v.total])
+    .sort((a, b) => b[1] - a[1]);
+  const landEl = document.getElementById('bars-landing');
+  if (landEl) {
+    if (!landSorted.length) {
+      landEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No session entries with landing data yet.</div>';
+    } else {
+      landEl.innerHTML = landSorted.map(([label, pct, ja, total]) => {
+        const col = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+        return `<div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+            <span style="color:var(--text);font-weight:600;">${label}</span>
+            <span style="color:${col};font-weight:700;">${pct}% <span style="color:var(--muted);font-weight:400;">(${ja}/${total})</span></span>
+          </div>
+          <div style="background:var(--border);border-radius:4px;height:8px;">
+            <div style="background:${col};width:${pct}%;height:8px;border-radius:4px;transition:width .4s;"></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ── 8. Repertoire Development Over Time ──────────────────────────
+  const verlaufEl = document.getElementById('ev-verlauf');
+  if (verlaufEl) {
+    // Only mastered/erreicht standort entries with datum
+    const sbMitDatum = standort.filter(s =>
+      (s.status === 'mastered' || s.status === 'erreicht') && (s.datum || s.created_at)
+    );
+    if (!sbMitDatum.length) {
+      verlaufEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No mastered tricks in assessment yet.</div>';
+    } else {
+      // Group by date
+      const byDate = {};
+      sbMitDatum.forEach(s => {
+        const d = (s.datum || s.created_at || '').slice(0, 10);
+        if (!byDate[d]) byDate[d] = [];
+        const parts = [s.drehrichtung,
+          s.flips && s.flips !== 'keine' ? s.flips : null,
+          s.rotation, s.achse, s.grab].filter(Boolean);
+        byDate[d].push(parts.join(' ') || s.railart || '–');
+      });
+      const dates = Object.keys(byDate).sort();
+      // Accumulate: what was new on each date
+      let known = new Set();
+      const rows = dates.map(d => {
+        const tricks = byDate[d];
+        const newTricks = tricks.filter(t => !known.has(t));
+        tricks.forEach(t => known.add(t));
+        return { date: d, total: known.size, newTricks };
+      });
+      verlaufEl.innerHTML = rows.map((r, i) => {
+        const dateStr = new Date(r.date).toLocaleDateString('de-CH', { day:'2-digit', month:'2-digit', year:'numeric' });
+        const newBadge = r.newTricks.length > 0
+          ? `<span style="background:rgba(52,211,153,0.15);color:#34d399;border:1px solid #34d399;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:8px;">+${r.newTricks.length} neu</span>`
+          : '';
+        const newList = r.newTricks.length > 0
+          ? `<div style="margin-top:6px;padding-left:12px;border-left:2px solid #34d399;">${r.newTricks.map(t =>
+              `<span style="display:inline-block;background:rgba(52,211,153,0.12);color:#34d399;border-radius:10px;padding:2px 8px;font-size:11px;margin:2px;">${t}</span>`
+            ).join('')}</div>`
+          : '';
+        const borderTop = i > 0 ? 'border-top:1px solid var(--border);' : '';
+        return `<div style="padding:12px 0;${borderTop}">
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+            <span style="font-family:'Poppins',sans-serif;font-size:15px;letter-spacing:1px;color:#ffffff;">${dateStr}</span>
+            <span style="font-size:13px;color:var(--text);font-weight:600;">${r.total} Tricks mastered</span>
+            ${newBadge}
+          </div>
+          ${newList}
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ── 9. Trick Analytics ───────────────────────────────────────────────
+  initTrickAnalytics(tricks);
+  renderRawEntries(tricks, 'all entries');
+
+  // ── 9b. Trick + Grab Session Stats ───────────────────────────────────
+  const statsEl = document.getElementById('ev-trick-stats');
+  if (statsEl) {
+    const sessionTricks = tricks.filter(t => t.trickaufbau && t.trickaufbau.includes(' — '));
+    if (!sessionTricks.length) {
+      statsEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No session data yet.</div>';
+    } else {
+      // Group by trickaufbau + datum
+      const byTrick = {};
+      sessionTricks.forEach(t => {
+        const key = t.trickaufbau;
+        if (!byTrick[key]) byTrick[key] = { total: 0, perfect: 0, qoeVals: [], dates: new Set() };
+        byTrick[key].total++;
+        if (t.gesamt >= 10) byTrick[key].perfect++;
+        const q = qoeOf(t); if (q !== null) byTrick[key].qoeVals.push(q);
+        if (t.datum) byTrick[key].dates.add(t.datum);
+      });
+
+      const rows = Object.entries(byTrick).sort((a,b) => (qoeAvg(b[1].qoeVals)||0) - (qoeAvg(a[1].qoeVals)||0));
+
+      statsEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr>
+          <th style="text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Trick — Grab</th>
+          <th style="text-align:center;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Date(s)</th>
+          <th style="text-align:center;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Attempts</th>
+          <th style="text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">QoE</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(([trick, s]) => {
+            const pct = qoeAvg(s.qoeVals) ?? 0;
+            const barColor = pct >= 70 ? '#34d399' : pct >= 40 ? '#f59e0b' : '#e2001a';
+            const dates = [...s.dates].sort().map(d => new Date(d).toLocaleDateString('de-CH', {day:'2-digit',month:'2-digit'})).join(', ');
+            const parts = trick.split(' — ');
+            return `<tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;">
+                <div style="font-weight:600;color:var(--text);">${parts[0]||trick}</div>
+                ${parts[1] ? `<div style="font-size:11px;color:#39c3d4;margin-top:2px;">Grab: ${parts[1]}</div>` : ''}
+              </td>
+              <td style="padding:10px 12px;text-align:center;color:var(--muted);font-size:12px;">${dates}</td>
+              <td style="padding:10px 12px;text-align:center;">
+                <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:15px;color:var(--text);">${s.total}</div>
+                ${s.perfect > 0 ? `<div style="font-size:10px;color:#39c3d4;margin-top:2px;">⭐ ${s.perfect}× perfect</div>` : ''}
+              </td>
+              <td style="padding:10px 12px;min-width:120px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="flex:1;background:var(--surface2);border-radius:4px;height:8px;overflow:hidden;">
+                    <div style="background:${barColor};width:${pct}%;height:8px;border-radius:4px;transition:width .4s;"></div>
+                  </div>
+                  <span style="font-weight:700;color:${barColor};min-width:36px;font-size:13px;">${pct}%</span>
+                </div>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+    }
+  }
+}
+
+let _taData = [];
+
+let _taTypeFilter = ''; // '', 'Landing Bag', 'Jump On-Snow', 'Big Air Competition'
+
+let _taDateFrom = '';   // YYYY-MM-DD
+
+let _taDateTo   = '';   // YYYY-MM-DD
+
+function sortFsTricksByDir(tricks) {
+  const dirOrder = {'Left':0,'Right':1,'Switch Left':2,'Switch Right':3};
+  const getDir = lbl => {
+    for (const d of ['Switch Left','Switch Right','Left','Right']) {
+      if (lbl.startsWith(d)) return d;
+      if (lbl.includes(' '+d+' ') || lbl.includes(' '+d)) return d;
+    }
+    return 'Other';
+  };
+  const sorted = tricks.map(t => ({name:t, dir:getDir(t), rot:extractRotFromLabel(t)}))
+    .sort((a,b) => { const da=dirOrder[a.dir]??4, db=dirOrder[b.dir]??4; return da!==db ? da-db : a.rot-b.rot; });
+  let html = '', lastDir = '';
+  sorted.forEach(t => {
+    if (t.dir !== lastDir) {
+      if (lastDir) html += '</optgroup>';
+      html += `<optgroup label="${t.dir}">`;
+      lastDir = t.dir;
+    }
+    html += `<option value="${t.name.replace(/"/g,'&quot;')}">${t.name}</option>`;
+  });
+  if (lastDir) html += '</optgroup>';
+  return html;
+}
+
+function initTrickAnalytics(tricks) {
+  _taData = tricks.filter(t => t.trickaufbau);
+  const sel = document.getElementById('ev-trick-sel');
+  const dateSel = document.getElementById('ev-date-sel');
+  if (!sel) return;
+
+  // Populate trick filter sorted by direction + rotation
+  const unique = [...new Set(_taData.map(t => t.trickaufbau))];
+  sel.innerHTML = '<option value="">— Select a trick —</option><option value="__ALL__">── All Tricks ──</option>' +
+    sortFsTricksByDir(unique);
+
+  // Build session list: group by date, detect multiple sessions per day by time gaps
+  if (dateSel) {
+    const sessions = buildSessionList(_taData);
+    dateSel.innerHTML = '<option value="">— All Sessions —</option>' +
+      sessions.map(s => `<option value="${s.key}">${s.label}</option>`).join('');
+  }
+  setStatsMode('trick');
+}
+
+function buildSessionList(data) {
+  const byDate = {};
+  data.forEach(t => {
+    if (!t.datum) return;
+    if (!byDate[t.datum]) byDate[t.datum] = [];
+    byDate[t.datum].push(t);
+  });
+  const sessions = [];
+  function swissDate(d) {
+    const [y,m,day] = d.split('-');
+    return `${day}.${m}.${y.slice(2)}`;
+  }
+  function sessType(dayData) {
+    const types = [...new Set(dayData.map(t=>t.typ||'Training'))];
+    const short = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Competition','Training':'Training'};
+    return types.map(t=>short[t]||t).join(', ');
+  }
+  Object.keys(byDate).sort().forEach(date => {
+    const dayData = byDate[date];
+    const withTime = dayData.filter(t => t.created_at).sort((a,b) => a.created_at.localeCompare(b.created_at));
+    if (withTime.length === 0) {
+      sessions.push({key: date+'|0', label: `${swissDate(date)} — ${sessType(dayData)}`, date, sessionIdx: 0});
+      return;
+    }
+    let sessIdx = 0, lastTime = null;
+    withTime.forEach((t,i) => {
+      if (lastTime) { const gap = (new Date(t.created_at) - new Date(lastTime)) / 3600000; if (gap > 2) sessIdx++; }
+      lastTime = t.created_at;
+    });
+    const sessCount = sessIdx + 1;
+    for (let s = 0; s < sessCount; s++) {
+      const suffix = sessCount > 1 ? ` (${s+1})` : '';
+      sessions.push({key: `${date}|${s}`, label: `${swissDate(date)} — ${sessType(dayData)}${suffix}`, date, sessionIdx: s, sessCount});
+    }
+  });
+  return sessions;
+}
+
+function appendTrendChart(allData, highlightDate) {
+  const el = document.getElementById('ev-trick-analytics');
+  if (!el) return;
+  function pr(k,d){ const m=(d.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  const byDate = {};
+  allData.forEach(t => {
+    if (!t.datum) return;
+    if (!byDate[t.datum]) byDate[t.datum] = {att:0,land:0,stomped:0,qoeVals:[],takeoff:[],grab:[],trick:[],land_r:[]};
+    byDate[t.datum].att++;
+    if (t.gelandet==='Yes') byDate[t.datum].land++;
+    if ((t.gesamt||0)>=10) byDate[t.datum].stomped++;
+    const q=qoeOf(t); if(q!==null) byDate[t.datum].qoeVals.push(q);
+    const to=pr('Takeoff',t), g=pr('Grab',t), tr=pr('Trick',t), la=pr('Landing',t);
+    if(to!==null) byDate[t.datum].takeoff.push(to);
+    if(g!==null) byDate[t.datum].grab.push(g);
+    if(tr!==null) byDate[t.datum].trick.push(tr);
+    if(la!==null) byDate[t.datum].land_r.push(la);
+  });
+  const dates = Object.keys(byDate).sort();
+  if (dates.length < 1) return;
+  const pts = dates.map(d => ({
+    d, att:byDate[d].att,
+    landPct: Math.round(byDate[d].land/byDate[d].att*100),
+    qoe: qoeAvg(byDate[d].qoeVals),
+    land: byDate[d].land, stomped: byDate[d].stomped,
+    takeoff: avg(byDate[d].takeoff), grab: avg(byDate[d].grab), trick: avg(byDate[d].trick), landing: avg(byDate[d].land_r),
+    isHighlight: d === highlightDate
+  }));
+  const hasComp = pts.some(p=>p.grab!==null);
+  const legend = hasComp ? `<div style="display:flex;gap:16px;font-size:11px;margin-bottom:6px;">
+    <span style="color:#34d399;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span><span style="color:#a78bfa;">● Take-off</span>
+  </div>` : '';
+  const cid = 'trend-chart-'+Date.now();
+  const div = document.createElement('div');
+  div.style.cssText = 'margin-top:20px;padding-top:16px;border-top:1px solid var(--border);';
+  div.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">↗ Learning Curve — All Sessions</div>
+    ${legend}<canvas id="${cid}" style="width:100%;"></canvas>`;
+  el.appendChild(div);
+
+  requestAnimationFrame(() => {
+    const canvas = document.getElementById(cid); if(!canvas) return;
+    const dpr=window.devicePixelRatio||1, W=canvas.parentElement.offsetWidth-2, H=180;
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    canvas.width=W*dpr; canvas.height=H*dpr;
+    const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    const pad={l:42,r:16,t:14,b:48};
+    const n=pts.length;
+    const barW=Math.max(5,Math.min(14,(W-pad.l-pad.r)/(n*6)));
+    const totalBarW=4*(barW+2)-2;
+    const margin=totalBarW/2+4;
+    const xs=pts.map((_,i)=>pad.l+margin+(n===1?(W-pad.l-pad.r-margin*2)/2:i/(n-1)*(W-pad.l-pad.r-margin*2)));
+    const toY=v=>pad.t+(1-v/100)*(H-pad.t-pad.b);
+    [0,25,50,75,100].forEach(pct=>{
+      const y=toY(pct);
+      ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+      ctx.fillStyle='#6b8299';ctx.font='10px Poppins,sans-serif';ctx.textAlign='right';ctx.fillText(pct+'%',pad.l-5,y+3);
+    });
+    pts.forEach((p,i)=>{if(p.isHighlight){ctx.fillStyle='rgba(57,195,212,0.08)';ctx.fillRect(xs[i]-20,pad.t,40,H-pad.t-pad.b);}});
+
+    // Draw chart with mini-bars per date + connecting lines
+    const colMap = {'landing':'#34d399','trick':'#39c3d4','grab':'#f59e0b','single':'#39c3d4'};
+
+    function drawConnectLine(values, col) {
+      const pts2 = values.map((v,i)=>v!==null?{x:xs[i],y:toY(v)}:null).filter(Boolean);
+      if(pts2.length<2) return;
+      ctx.beginPath(); ctx.strokeStyle=col+'66'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+      pts2.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function drawBars(pt, x, isHi) {
+      if(_hc && pt.grab!==null) {
+        // Mini-Balken pro Kategorie: Take-off, Grab, Trick, Landing
+        const comps = [['takeoff','#a78bfa'],['grab','#f59e0b'],['trick','#39c3d4'],['landing','#34d399']];
+        const bw = barW; const gap = 2;
+        const totalW = comps.length*(bw+gap)-gap;
+        comps.forEach(([key,col],ci) => {
+          const val = pt[key]; if(val===null) return;
+          const bx = x - totalW/2 + ci*(bw+gap);
+          const by = toY(val);
+          const bh = H-pad.b - by;
+          // Actual bar
+          ctx.fillStyle = isHi ? col : col+'cc';
+          ctx.fillRect(bx, by, bw, bh);
+          // Value label on top
+          ctx.fillStyle = col; ctx.font = (isHi?'bold ':'')+'9px Poppins,sans-serif'; ctx.textAlign='center';
+          ctx.fillText(val+'%', bx+bw/2, by-3);
+        });
+      } else if(!_hc && pt.qoe!==null) {
+        const val = pt.qoe;
+        const bx = x - barW/2;
+        const by = toY(val);
+        const bh = H-pad.b - by;
+        ctx.fillStyle = isHi ? '#39c3d4' : '#39c3d4cc';
+        ctx.fillRect(bx, by, barW, bh);
+        ctx.fillStyle='#39c3d4'; ctx.font=(isHi?'bold ':'')+'9px Poppins,sans-serif'; ctx.textAlign='center';
+        ctx.fillText(val+'%', bx+barW/2, by-3);
+      }
+    }
+
+    const _hc = typeof hasComp !== 'undefined' ? hasComp : pts.some(p=>p.grab!==null);
+    // Draw connecting lines first (behind bars)
+    if(_hc) {
+      drawConnectLine(pts.map(p=>p.takeoff), '#a78bfa');
+      drawConnectLine(pts.map(p=>p.grab), '#f59e0b');
+      drawConnectLine(pts.map(p=>p.trick), '#39c3d4');
+      drawConnectLine(pts.map(p=>p.landing), '#34d399');
+    } else {
+      drawConnectLine(pts.map(p=>p.qoe), '#39c3d4');
+    }
+
+    // Draw bars for each date
+    pts.forEach((p,i) => drawBars(p, xs[i], p.isHighlight));
+
+    // X-axis labels
+    ctx.textAlign='center';
+    pts.forEach((p,i) => {
+      const isHi = p.isHighlight;
+      ctx.fillStyle = isHi?'#39c3d4':'#6b8299';
+      ctx.font = (isHi?'bold ':'')+'10px Poppins,sans-serif';
+      ctx.fillText(p.d.split('-')[2]+'.'+p.d.split('-')[1]+'.', xs[i], H-pad.b+14);
+      ctx.fillStyle='#6b8299'; ctx.font='10px Poppins,sans-serif';
+      ctx.fillText(p.att+'×', xs[i], H-pad.b+28);
+    });
+
+    // ── Hover tooltip: exakte Zahlen pro Trainingstag ──
+    let tt = document.getElementById('ta-chart-tooltip');
+    if (!tt) {
+      tt = document.createElement('div');
+      tt.id = 'ta-chart-tooltip';
+      tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:10px;padding:10px 14px;font-size:12px;font-family:Poppins,sans-serif;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+      document.body.appendChild(tt);
+    }
+    const fmtD = d => { const [y,m,dd]=d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
+    canvas.onmousemove = e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      let ni=-1, nd=Infinity;
+      xs.forEach((x,i)=>{ const dist=Math.abs(mx-x); if(dist<nd&&dist<Math.max(40,(xs[1]-xs[0]||80)/2)){nd=dist;ni=i;} });
+      if(ni<0){tt.style.display='none';return;}
+      const p=pts[ni], lo=p.land-p.stomped, ms=p.att-p.land;
+      tt.innerHTML =
+        `<div style="font-weight:700;color:#e8edf2;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">${fmtD(p.d)} &nbsp;·&nbsp; ${p.att} attempts</div>`
+        +`<div style="color:#39c3d4;">⭐ Stomped: <b>${p.stomped}×</b></div>`
+        +`<div style="color:#34d399;">✓ Landed&nbsp;: <b>${lo}×</b></div>`
+        +`<div style="color:#e2001a;">✗ Missed&nbsp;: <b>${ms}×</b></div>`
+        +`<div style="color:#6b8299;margin-top:4px;">QoE: <b style="color:#39c3d4;">${p.qoe!==null?p.qoe+'%':'—'}</b></div>`;
+      tt.style.display='block';
+      const tx = e.clientX+14, ty = e.clientY-10;
+      tt.style.left=(tx+tt.offsetWidth>window.innerWidth-10?e.clientX-tt.offsetWidth-14:tx)+'px';
+      tt.style.top=ty+'px';
+    };
+    canvas.onmouseleave = () => { tt.style.display='none'; };
+  });
+}
+
+function renderSessionSummary(data, sessionLabel) {
+  const el = document.getElementById('ev-trick-analytics');
+  if (!el) return;
+  if (!data.length) { el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;">No data for this session.</div>'; return; }
+
+  function pr(k,d){ const m=(d.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
+  const colQ = v => v>=70?'#34d399':v>=40?'#f59e0b':'#e2001a';
+
+  // Group by trick
+  const tmap = {};
+  data.forEach(t => {
+    const key = t.trickaufbau || '—';
+    if (!tmap[key]) tmap[key] = {att:0, land:0, perf:0, qoeVals:[], takeoff:[], grab:[], trick:[], land_r:[]};
+    tmap[key].att++;
+    if (t.gelandet==='Yes') tmap[key].land++;
+    if (t.gesamt>=10) tmap[key].perf++;
+    const q=qoeOf(t); if(q!==null) tmap[key].qoeVals.push(q);
+    const to=pr('Takeoff',t), g=pr('Grab',t), tr=pr('Trick',t), la=pr('Landing',t);
+    if(to!==null) tmap[key].takeoff.push(to);
+    if(g!==null) tmap[key].grab.push(g);
+    if(tr!==null) tmap[key].trick.push(tr);
+    if(la!==null) tmap[key].land_r.push(la);
+  });
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  const total = data.length;
+  const totalQoe = qoeAvg(data.map(qoeOf));
+
+  // Session header
+  const headerHtml = `<div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;">
+    <div style="background:var(--surface2);border-radius:10px;padding:12px 18px;text-align:center;flex:1;min-width:80px;">
+      <div style="font-size:22px;font-weight:800;color:var(--text);">${total}</div>
+      <div style="font-size:11px;color:var(--muted);">Attempts</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px 18px;text-align:center;flex:1;min-width:80px;">
+      <div style="font-size:22px;font-weight:800;color:${totalQoe!==null?colQ(totalQoe):'var(--muted)'};">${totalQoe!==null?totalQoe+'%':'—'}</div>
+      <div style="font-size:11px;color:var(--muted);">Quality of Execution</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px 18px;text-align:center;flex:1;min-width:80px;">
+      <div style="font-size:22px;font-weight:800;color:#f59e0b;">${Object.keys(tmap).length}</div>
+      <div style="font-size:11px;color:var(--muted);">Tricks</div>
+    </div>
+  </div>`;
+
+  // Per-trick cards
+  const cardsHtml = Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
+    const hasComp = s.grab.length > 0;
+    const toAvg=avg(s.takeoff), gAvg=avg(s.grab), tAvg=avg(s.trick), lAvg=avg(s.land_r);
+    const trickQoe = qoeAvg(s.qoeVals);
+
+    const compBars = hasComp ? `
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+        ${[['Take-off',toAvg,'#a78bfa'],['Grab',gAvg,'#f59e0b'],['Trick',tAvg,'#39c3d4'],['Landing',lAvg,'#34d399']].map(([lbl,val,col])=>
+          val!==null?`<div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;color:var(--muted);min-width:52px;">${lbl}</span>
+            <div style="flex:1;background:var(--border);border-radius:3px;height:8px;">
+              <div style="background:${col};width:${val}%;height:8px;border-radius:3px;"></div>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:${col};min-width:32px;text-align:right;">${val}%</span>
+          </div>`:'').join('')}
+      </div>` : '';
+
+    return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}${s.perf>0?` <span style="font-size:11px;color:#39c3d4;font-weight:400;">⭐ ${s.perf}×</span>`:''}</div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:18px;font-weight:800;color:${trickQoe!==null?colQ(trickQoe):'var(--muted)'};">${trickQoe!==null?trickQoe+'%':'—'}</div>
+          <div style="font-size:10px;color:var(--muted);">QoE · ${s.att} att.</div>
+        </div>
+      </div>
+      ${compBars}
+    </div>`;
+  }).join('');
+
+  el.innerHTML = headerHtml + cardsHtml;
+}
+
+function renderRawEntries(entries, subtitle) {
+  const wrap = document.getElementById('ev-raw-wrap');
+  if (!wrap) return;
+  const wasOpen = document.getElementById('ev-raw-list')?.style.display !== 'none';
+  const sorted = [...entries].sort((a,b)=>(b.datum||'').localeCompare(a.datum||'') || (b.id||0)-(a.id||0));
+
+  const fmtDate = d => { if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
+  const fmtKom  = k => { if(!k) return ''; return k.replace(/Takeoff:/,'TO:').replace(/Grab:/,' G:').replace(/Trick:/,' T:').replace(/Landing:/,' L:'); };
+  const typShort = t => t==='Landing Bag'?'Bag':t==='Jump On-Snow'?'On-Snow':t==='Big Air Competition'?'Comp':t||'—';
+  const open = wasOpen;
+
+  wrap.innerHTML = `
+    <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <button onclick="(function(b,c){c.style.display=c.style.display==='none'?'block':'none';b.querySelector('.raw-arrow').textContent=c.style.display==='none'?'▶':'▼';})(this,document.getElementById('ev-raw-list'))"
+        style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border:none;cursor:pointer;font-family:Poppins,sans-serif;color:var(--muted);font-size:12px;font-weight:600;">
+        <span style="display:flex;align-items:center;gap:8px;"><span class="raw-arrow">${open?'▼':'▶'}</span> Raw Entries (${sorted.length})${subtitle?` <span style="font-weight:400;opacity:.7;">— ${subtitle}</span>`:''}</span>
+        <span style="font-size:11px;opacity:.6;">Inspect, edit or delete entries</span>
+      </button>
+      <div id="ev-raw-list" style="display:${open?'block':'none'};max-height:420px;overflow-y:auto;">
+        ${sorted.length ? sorted.map(e=>{
+          const ts = e.created_at ? new Date(e.created_at).toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Zurich'}) : '';
+          const isEditing = _fsRawEditId === e.id;
+          const curResult = (e.gesamt||0)>=10?'perfect':e.gelandet==='Yes'?'landed':'miss';
+          const editForm = isEditing ? `
+            <div style="grid-column:1/-1;padding:8px 0 4px;display:flex;flex-direction:column;gap:6px;">
+              <input id="raw-edit-trick-${e.id}" type="text" value="${(e.trickaufbau||'').replace(/"/g,'&quot;')}"
+                style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                <select id="raw-edit-result-${e.id}" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+                  <option value="miss" ${curResult==='miss'?'selected':''}>✗ Miss</option>
+                  <option value="landed" ${curResult==='landed'?'selected':''}>✓ Landed</option>
+                  <option value="perfect" ${curResult==='perfect'?'selected':''}>⭐ Perfect</option>
+                </select>
+                <button onclick="saveRawEdit(${e.id})" style="padding:5px 12px;border-radius:6px;background:#39c3d4;border:none;color:#060f1a;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;">Save</button>
+                <button onclick="cancelRawEdit()" style="padding:5px 12px;border-radius:6px;background:none;border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button>
+              </div>
+            </div>` : '';
+          return `
+          <div id="ev-raw-row-${e.id}" style="display:grid;grid-template-columns:60px 36px 48px 1fr 52px 1fr 28px 28px;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--border);font-size:11px;${isEditing?'background:rgba(57,195,212,0.06);':''}flex-wrap:wrap;">
+            <span style="color:var(--muted);">${fmtDate(e.datum)}</span>
+            <span style="color:var(--muted);font-size:10px;">${ts}</span>
+            <span style="color:var(--muted);font-size:10px;">${typShort(e.typ)}</span>
+            <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${e.trickaufbau||''}">${e.trickaufbau||'—'}</span>
+            ${(() => { const q = qoeOf(e); return q!==null
+              ? `<span style="color:${q>=70?'#34d399':q>=40?'#f59e0b':'#e2001a'};font-weight:700;">${q}%</span>`
+              : `<span style="color:var(--muted);">—</span>`; })()}
+            <span style="color:var(--muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${fmtKom(e.kommentar)}</span>
+            <button onclick="editRawEntry(${e.id})" title="Edit entry"
+              style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;font-size:11px;padding:2px 5px;line-height:1;">✏</button>
+            <button onclick="deleteRawEntry(${e.id})" title="Delete entry"
+              style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;line-height:1;">🗑</button>
+            ${editForm}
+          </div>`;
+        }).join('')
+        : '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">No entries for this selection.</div>'}
+      </div>
+    </div>`;
+}
+
+function syncTrickNameLocally(dbId, newTrick) {
+  const i = dbAllTricks.findIndex(t => t.id === dbId);
+  if (i >= 0) dbAllTricks[i].trickaufbau = newTrick;
+  const j = _taData.findIndex(t => t.id === dbId);
+  if (j >= 0) _taData[j].trickaufbau = newTrick;
+  sessLog.forEach(e => { if (e.dbId === dbId) e.trick = newTrick; });
+}
+
+let _fsRawEditId = null;
+
+// Raw-Entry-Aktionen laufen jetzt auch auf der Reports-Seite (ohne Development-Analytics):
+// dort existiert #ev-trick-analytics nicht — dann die Liste direkt neu zeichnen.
+function fsRawRerender() {
+  if (document.getElementById('ev-trick-analytics')) { renderTrickAnalytics(); return; }
+  renderRawEntries(_taData, document.getElementById('dbraw-athlete')?.value || 'all entries');
+}
+
+// Reports-Seite: Raw Entries pro Athlet:in laden (gleiches Query wie Development)
+async function dbRawLoad() {
+  const athlet = document.getElementById('dbraw-athlete')?.value;
+  const wrap = document.getElementById('ev-raw-wrap');
+  if (!wrap) return;
+  if (!athlet) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+  const {data, error} = await db.from('tricks').select('*').eq('athlet', athlet).order('datum', {ascending:true});
+  if (error) { showToast('Error: ' + error.message, 'error'); wrap.innerHTML = ''; return; }
+  _taData = (data || []).filter(t => t.trickaufbau);
+  _fsRawEditId = null;
+  renderRawEntries(_taData, athlet);
+  const list = document.getElementById('ev-raw-list');
+  if (list) { list.style.display = 'block'; const arr = wrap.querySelector('.raw-arrow'); if (arr) arr.textContent = '▼'; }
+}
+
+function editRawEntry(id) {
+  _fsRawEditId = _fsRawEditId === id ? null : id;
+  fsRawRerender();
+}
+
+function cancelRawEdit() {
+  _fsRawEditId = null;
+  fsRawRerender();
+}
+
+async function saveRawEdit(id) {
+  const trickInput = document.getElementById('raw-edit-trick-'+id);
+  const newTrick = trickInput ? trickInput.value.trim() : '';
+  const resultSel = document.getElementById('raw-edit-result-'+id);
+  const newResult = resultSel ? resultSel.value : '';
+  if (!newTrick) { showToast('Trick name cannot be empty', 'error'); return; }
+
+  const gesamt = newResult==='miss'?3:newResult==='landed'?7:10;
+  const {error} = await db.from('tricks').update({
+    trickaufbau: newTrick,
+    gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
+    gelandet: newResult==='miss'?'No':'Yes'
+  }).eq('id', id);
+  if (error) { showToast('Error: '+error.message, 'error'); return; }
+
+  syncTrickNameLocally(id, newTrick);
+  _fsRawEditId = null;
+  fsRawRerender();
+  renderSessionLog();
+  saveSessionState();
+  showToast('Entry updated', 'success');
+}
+
+async function deleteRawEntry(id) {
+  if (!confirm('Delete this entry? This cannot be undone.')) return;
+  const row = document.getElementById('ev-raw-row-'+id);
+  if (row) row.style.opacity = '0.4';
+  const { error } = await db.from('tricks').delete().eq('id', id);
+  if (error) { alert('Error: '+error.message); if(row) row.style.opacity='1'; return; }
+  // Remove from _taData and update counters
+  _taData = _taData.filter(t => t.id !== id);
+  if (row) row.remove();
+  // Update entry count in header
+  const wrap = document.getElementById('ev-raw-wrap');
+  if (wrap) {
+    const btn = wrap.querySelector('button');
+    const remaining = wrap.querySelectorAll('[id^="ev-raw-row-"]').length;
+    if (btn) btn.querySelector('span').childNodes[1].textContent = ` Raw Entries (${remaining})`;
+  }
+  // Refresh charts
+  fsRawRerender();
+}
+
+function setStatsMode(mode) {
+  const trickSel = document.getElementById('ev-trick-sel');
+  const dateSel  = document.getElementById('ev-date-sel');
+  const btnT = document.getElementById('ev-mode-trick');
+  const btnS = document.getElementById('ev-mode-session');
+  // Reset all buttons
+  [btnT,btnS].forEach(b=>{if(b){b.style.background='var(--surface2)';b.style.borderColor='var(--border)';b.style.color='var(--muted)';}});
+  const active = mode==='trick'?btnT:btnS;
+  if(active){active.style.background='rgba(57,195,212,0.2)';active.style.borderColor='#39c3d4';active.style.color='#39c3d4';}
+  // Show/hide dropdowns
+  if(trickSel) trickSel.style.display = mode==='trick' ? '' : 'none';
+  if(dateSel)  dateSel.style.display  = mode==='session' ? '' : 'none';
+  // Show/hide type filter (not for session mode)
+  const fRow = document.getElementById('ev-type-filter');
+  if(fRow) fRow.style.display = mode==='session' ? 'none' : 'flex';
+  // Reset values when switching mode
+  if(mode!=='trick'  && trickSel) trickSel.value='';
+  if(mode!=='session' && dateSel)  dateSel.value='';
+  renderTrickAnalytics();
+}
+
+function parseDateInput(val) {
+  if (!val) return '';
+  // DD.MM.JJ or DD.MM.JJJJ
+  const m = val.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+  if (m) {
+    const d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0');
+    const y=m[3].length===2?'20'+m[3]:m[3];
+    return `${y}-${mo}-${d}`;
+  }
+  return '';
+}
+
+function setDateRange() {
+  const fromEl = document.getElementById('ev-date-from');
+  const toEl   = document.getElementById('ev-date-to');
+  _taDateFrom = parseDateInput(fromEl?.value);
+  _taDateTo   = parseDateInput(toEl?.value);
+  // Highlight inputs when a valid date was parsed
+  [[fromEl,_taDateFrom],[toEl,_taDateTo]].forEach(([el,parsed])=>{
+    if(!el) return;
+    el.style.borderColor = parsed ? '#39c3d4' : 'var(--border)';
+    el.style.color       = parsed ? '#39c3d4' : 'var(--muted)';
+  });
+  renderTrickAnalytics();
+}
+
+function clearDateRange() {
+  _taDateFrom = ''; _taDateTo = '';
+  const f=document.getElementById('ev-date-from'), t=document.getElementById('ev-date-to');
+  if(f){f.value='';f.style.borderColor='var(--border)';f.style.color='var(--muted)';}
+  if(t){t.value='';t.style.borderColor='var(--border)';t.style.color='var(--muted)';}
+  renderTrickAnalytics();
+}
+
+function setTypeFilter(typ) {
+  _taTypeFilter = typ;
+  // Update button styles
+  const map = {'':'ev-tf-all','Landing Bag':'ev-tf-bag','Jump On-Snow':'ev-tf-jump','Big Air Competition':'ev-tf-comp'};
+  Object.values(map).forEach(id=>{
+    const b=document.getElementById(id); if(!b) return;
+    b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
+  });
+  const active = document.getElementById(map[typ]||'ev-tf-all');
+  if(active){active.style.background='rgba(57,195,212,0.2)';active.style.borderColor='#39c3d4';active.style.color='#39c3d4';}
+  // Repopulate trick dropdown with only tricks available in this filter
+  const sel = document.getElementById('ev-trick-sel');
+  if (sel) {
+    const filtered = typ ? _taData.filter(t=>t.typ===typ) : _taData;
+    const unique = [...new Set(filtered.map(t=>t.trickaufbau))];
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">— Select a trick —</option><option value="__ALL__">── All Tricks ──</option>' +
+      sortFsTricksByDir(unique);
+    // Keep selection if still available, otherwise reset
+    if (unique.includes(prev)) sel.value = prev;
+    else sel.value = '';
+  }
+  renderTrickAnalytics();
+}
+
+function renderTrickAnalytics() {
+  const el = document.getElementById('ev-trick-analytics');
+  if (!el || !_taData.length) {
+    if(el) el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;">No session data yet.</div>';
+    return;
+  }
+  const colQ = v=>v>=70?'#34d399':v>=40?'#f59e0b':'#e2001a';
+  const sel = document.getElementById('ev-trick-sel');
+  const dateSel = document.getElementById('ev-date-sel');
+  const chosen = sel ? sel.value : '';
+  // Apply session-type + date range filters (only for trick/overall views, not session view)
+  const isSessionMode = dateSel?.style.display !== 'none';
+  const baseData = isSessionMode ? _taData : _taData.filter(t => {
+    if (_taTypeFilter && t.typ !== _taTypeFilter) return false;
+    if (_taDateFrom && t.datum && t.datum < _taDateFrom) return false;
+    if (_taDateTo   && t.datum && t.datum > _taDateTo)   return false;
+    return true;
+  });
+  const dateKey = dateSel ? dateSel.value : '';
+
+  // Show nothing until selection is made (for trick and session modes)
+  const trickVisible = sel && sel.style.display !== 'none';
+  const sessionVisible = dateSel && dateSel.style.display !== 'none';
+  if (trickVisible && !chosen && chosen !== '__ALL__') {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px;">Select a trick to view its progression.</div>';
+    renderRawEntries(_taData, 'all entries');
+    return;
+  }
+  if (sessionVisible && !dateKey) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px;">Select a session to view its tricks.</div>';
+    renderRawEntries(_taData, 'all entries');
+    return;
+  }
+
+  function pr(k,d){ const m=(d.kommentar||'').match(new RegExp(k+':(\\w+)')); const v=m?m[1]:null; return v==='perfect'?100:v==='okay'?50:v==='miss'?0:null; }
+  const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+
+  // ── ALL TRICKS — one chart per trick, scrollable ──────────────────
+  if (chosen === '__ALL__') {
+    const fsDirOrder = {'Left':0,'Right':1,'Switch Left':2,'Switch Right':3};
+    const getFsDir = lbl => {
+      for (const d of ['Switch Left','Switch Right','Left','Right']) {
+        if (lbl.startsWith(d)) return d;
+        if (lbl.includes(' '+d+' ') || lbl.includes(' '+d)) return d;
+      }
+      return 'Other';
+    };
+    const allTricks = [...new Set(baseData.map(t=>t.trickaufbau))]
+      .map(t => ({name:t, dir:getFsDir(t), rot:extractRotFromLabel(t)}))
+      .sort((a,b) => { const da=fsDirOrder[a.dir]??4, db=fsDirOrder[b.dir]??4; return da!==db ? da-db : a.rot-b.rot; });
+    if (!allTricks.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No data.</div>'; return; }
+    let html = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${allTricks.length} tricks</div>`;
+    let lastDir = '';
+    const chartIds = [];
+    allTricks.forEach((tObj,ti) => {
+      if (tObj.dir !== lastDir) {
+        html += `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#39c3d4;margin:${lastDir?'20':'4'}px 0 8px;">${tObj.dir}</div>`;
+        lastDir = tObj.dir;
+      }
+      const td = baseData.filter(t=>t.trickaufbau===tObj.name);
+      const byDate = {};
+      td.forEach(t => { if(!t.datum) return; if(!byDate[t.datum]) byDate[t.datum]={att:0,qoeVals:[]}; byDate[t.datum].att++; const q=qoeOf(t); if(q!==null) byDate[t.datum].qoeVals.push(q); });
+      const dates = Object.keys(byDate).sort();
+      const totAtt = td.length;
+      const trickQoe = qoeAvg(td.map(qoeOf)) ?? 0;
+      const cid = 'ta-all-'+ti+'-'+Date.now();
+      chartIds.push({cid, dates, byDate});
+      html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:13px;font-weight:600;color:var(--text);">${tObj.name}</span>
+          <span style="font-size:16px;font-weight:800;color:${colQ(trickQoe)};">${trickQoe}% <span style="font-size:11px;font-weight:400;">QoE · ${totAtt} att.</span></span>
+        </div>
+        <canvas id="${cid}" style="width:100%;height:100px;"></canvas>
+      </div>`;
+    });
+    el.innerHTML = html;
+    requestAnimationFrame(() => {
+      chartIds.forEach(({cid, dates, byDate}) => {
+        const canvas = document.getElementById(cid); if(!canvas) return;
+        const dpr = window.devicePixelRatio||1;
+        const W = canvas.parentElement.offsetWidth-28, H = 100;
+        canvas.style.width=W+'px'; canvas.style.height=H+'px';
+        canvas.width=W*dpr; canvas.height=H*dpr;
+        const ctx = canvas.getContext('2d'); ctx.scale(dpr,dpr);
+        const pad = {l:32,r:8,t:8,b:22};
+        const n = dates.length;
+        if (!n) return;
+        const pts = dates.map(d=>({d,pct:qoeAvg(byDate[d].qoeVals)??0,att:byDate[d].att}));
+        const xs = pts.map((_,i) => pad.l+(n===1?(W-pad.l-pad.r)/2:i/(n-1)*(W-pad.l-pad.r)));
+        const toY = v => pad.t+(1-v/100)*(H-pad.t-pad.b);
+        [0,50,100].forEach(pct => {
+          const y=toY(pct); ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;
+          ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+        });
+        const barW = Math.max(4,Math.min(12,(W-pad.l-pad.r)/(n*4)));
+        pts.forEach((p,i) => {
+          const by=toY(p.pct), bh=H-pad.b-by;
+          ctx.fillStyle='#39c3d4cc';ctx.fillRect(xs[i]-barW/2,by,barW,bh);
+        });
+        if (pts.length >= 2) {
+          ctx.beginPath();ctx.strokeStyle='#39c3d455';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+          pts.forEach((p,i)=>{const y=toY(p.pct);i===0?ctx.moveTo(xs[i],y):ctx.lineTo(xs[i],y);});
+          ctx.stroke();ctx.setLineDash([]);
+        }
+        ctx.textAlign='center';ctx.fillStyle='#6b8299';ctx.font='9px Poppins,sans-serif';
+        pts.forEach((p,i)=>ctx.fillText(p.d.split('-')[2]+'.'+p.d.split('-')[1]+'.',xs[i],H-pad.b+12));
+      });
+    });
+    renderRawEntries(baseData, 'all entries');
+    return;
+  }
+
+  // ── VIEW 3: Session selected → show tricks in that session ─────────────
+  if (dateKey) {
+    const label = dateSel.options[dateSel.selectedIndex]?.text || dateKey;
+    const filterDate = dateKey.split('|')[0];
+    const sessIdx = parseInt(dateKey.split('|')[1]||'0');
+    const dayData = _taData.filter(t=>t.datum===filterDate).sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
+    const sessions=[[]]; let si=0,lt=null;
+    dayData.forEach(t=>{if(lt&&t.created_at&&(new Date(t.created_at)-new Date(lt))/3600000>2){si++;sessions.push([]);}sessions[si].push(t);lt=t.created_at;});
+    const sd = sessions[sessIdx]||dayData;
+
+    if (!sd.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No data for this session.</div>'; return; }
+
+    // Group by trick
+    const tmap = {};
+    sd.forEach(t => {
+      const key = t.trickaufbau||'—';
+      if (!tmap[key]) tmap[key]={att:0,land:0,perf:0,qoeVals:[],takeoff:[],grab:[],trick:[],land_r:[]};
+      tmap[key].att++;
+      if(t.gelandet==='Yes') tmap[key].land++;
+      if(t.gesamt>=10) tmap[key].perf++;
+      const q=qoeOf(t); if(q!==null) tmap[key].qoeVals.push(q);
+      const to=pr('Takeoff',t),g=pr('Grab',t),tr=pr('Trick',t),la=pr('Landing',t);
+      if(to!==null)tmap[key].takeoff.push(to);
+      if(g!==null)tmap[key].grab.push(g);
+      if(tr!==null)tmap[key].trick.push(tr);
+      if(la!==null)tmap[key].land_r.push(la);
+    });
+
+    // Direction distribution for radar
+    const SESS_DIRS = ['Left','Right','Switch Left','Switch Right'];
+    const SESS_DIR_COL = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
+    const dirCnt = {}; SESS_DIRS.forEach(d=>dirCnt[d]={tricks:0,att:0});
+    Object.entries(tmap).forEach(([trick,s])=>{
+      let dir=null;
+      if(trick.includes('Switch Left')) dir='Switch Left';
+      else if(trick.includes('Switch Right')) dir='Switch Right';
+      else if(trick.includes('Left')) dir='Left';
+      else if(trick.includes('Right')) dir='Right';
+      if(dir){dirCnt[dir].tricks++;dirCnt[dir].att+=s.att;}
+    });
+    const radarTotal = SESS_DIRS.reduce((s,d)=>s+dirCnt[d].att,0);
+
+    const cardsHtml = Object.entries(tmap).sort((a,b)=>b[1].att-a[1].att).map(([trick,s])=>{
+        const hasComp = s.grab.length>0;
+        const toA=avg(s.takeoff),gA=avg(s.grab),tA=avg(s.trick),lA=avg(s.land_r);
+        const trickQoe=qoeAvg(s.qoeVals);
+        const bars = hasComp ? [['Take-off',toA,'#a78bfa'],['Grab',gA,'#f59e0b'],['Trick',tA,'#39c3d4'],['Landing',lA,'#34d399']].map(([lbl,val,col])=>
+          val!==null?`<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+            <span style="font-size:10px;color:var(--muted);min-width:48px;">${lbl}</span>
+            <div style="flex:1;background:var(--border);border-radius:3px;height:7px;">
+              <div style="background:${col};width:${val}%;height:7px;border-radius:3px;"></div>
+            </div>
+            <span style="font-size:10px;font-weight:700;color:${col};min-width:32px;text-align:right;">${val}%</span>
+          </div>`:''
+        ).join('') : '';
+        return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}${s.perf>0?` <span style="font-size:11px;color:#39c3d4;font-weight:400;">⭐ ${s.perf}×</span>`:''}</span>
+            <div style="text-align:right;flex-shrink:0;">
+              <span style="font-size:18px;font-weight:800;color:${trickQoe!==null?colQ(trickQoe):'var(--muted)'};">${trickQoe!==null?trickQoe+'%':'—'}</span>
+              <span style="font-size:10px;color:var(--muted);display:block;">QoE · ${s.att} att.</span>
+            </div>
+          </div>
+          ${bars}
+        </div>`;
+    }).join('');
+
+    el.innerHTML =
+      `<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">📅 ${label} — ${sd.length} attempts, ${Object.keys(tmap).length} tricks</div>` +
+      cardsHtml +
+      (radarTotal > 0 ? `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:8px;">
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:32px;">
+            <div>${sessionDirLegendHtml(dirCnt,SESS_DIRS,SESS_DIR_COL,radarTotal)}</div>
+            <div style="width:160px;height:160px;flex-shrink:0;min-width:160px;">
+              <canvas id="sess-dir-radar" style="display:block;width:160px;height:160px;"></canvas>
+            </div>
+          </div>
+        </div>` : '');
+
+    if (radarTotal > 0) requestAnimationFrame(() => drawSessionDirRadar('sess-dir-radar', dirCnt, SESS_DIRS, SESS_DIR_COL));
+
+    // Load athlete notes from session report
+    const sessionDate = filterDate;
+    db.from('session_reports').select('trick_data,comments').eq('app','freeski').eq('datum',sessionDate).limit(1).then(({data:reps})=>{
+      if (!reps||!reps[0]) return;
+      const rep = reps[0];
+      const notes = (rep.trick_data||[]).filter(a=>a.note).map(a=>
+        `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:4px;"><span style="font-weight:600;color:#39c3d4;min-width:70px;">${a.athlet}</span><span style="color:var(--text);font-size:12px;">${a.note}</span></div>`
+      ).join('');
+      if (notes || rep.comments) {
+        const notesDiv = document.createElement('div');
+        notesDiv.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:10px;';
+        notesDiv.innerHTML = `<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Coach Notes</div>`
+          + (rep.comments ? `<div style="color:var(--text);font-size:12px;margin-bottom:8px;padding:6px 10px;background:rgba(57,195,212,0.06);border-radius:6px;">${rep.comments}</div>` : '')
+          + notes;
+        el.appendChild(notesDiv);
+      }
+    });
+
+    const reportBtnDiv = document.createElement('div');
+    reportBtnDiv.style.cssText = 'margin-top:12px;text-align:center;';
+    reportBtnDiv.innerHTML = `<button onclick="viewSessionReportByDate('${sessionDate}')" style="padding:10px 22px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">📄 View Session Report</button>`;
+    el.appendChild(reportBtnDiv);
+
+    renderRawEntries(sd, label);
+    return;
+  }
+
+  // ── VIEW 1 & 2: Trend chart (all tricks or specific trick) ─────────────
+  const chartData = chosen ? baseData.filter(t=>t.trickaufbau===chosen) : baseData;
+  if (!chartData.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No session data yet.</div>'; return; }
+
+  // Build per-date stats
+  const byDate={};
+  chartData.forEach(t=>{
+    if(!t.datum)return;
+    if(!byDate[t.datum])byDate[t.datum]={att:0,land:0,stomped:0,qoeVals:[],takeoff:[],grab:[],trick:[],land_r:[]};
+    byDate[t.datum].att++;
+    if(t.gelandet==='Yes')byDate[t.datum].land++;
+    if((t.gesamt||0)>=10)byDate[t.datum].stomped++;
+    const q=qoeOf(t); if(q!==null)byDate[t.datum].qoeVals.push(q);
+    const to=pr('Takeoff',t),g=pr('Grab',t),tr=pr('Trick',t),la=pr('Landing',t);
+    if(to!==null)byDate[t.datum].takeoff.push(to);
+    if(g!==null)byDate[t.datum].grab.push(g);
+    if(tr!==null)byDate[t.datum].trick.push(tr);
+    if(la!==null)byDate[t.datum].land_r.push(la);
+  });
+  const dates=Object.keys(byDate).sort();
+  const pts=dates.map(d=>({d,att:byDate[d].att,
+    landPct:Math.round(byDate[d].land/byDate[d].att*100),
+    qoe:qoeAvg(byDate[d].qoeVals),
+    land:byDate[d].land,stomped:byDate[d].stomped,
+    takeoff:avg(byDate[d].takeoff),grab:avg(byDate[d].grab),trick:avg(byDate[d].trick),landing:avg(byDate[d].land_r)}));
+  const hasComp=pts.some(p=>p.grab!==null);
+
+  // Overall stats
+  const totAtt=chartData.length, totLand=chartData.filter(t=>t.gelandet==='Yes').length;
+  const overallQoe=qoeAvg(chartData.map(qoeOf));
+  const allTakeoff=chartData.map(t=>pr('Takeoff',t)).filter(v=>v!==null);
+  const allGrab=chartData.map(t=>pr('Grab',t)).filter(v=>v!==null);
+  const allTrick=chartData.map(t=>pr('Trick',t)).filter(v=>v!==null);
+  const allLand=chartData.map(t=>pr('Landing',t)).filter(v=>v!==null);
+  const toAvg=avg(allTakeoff),gAvg=avg(allGrab),tAvg=avg(allTrick),lAvg=avg(allLand);
+
+  const statsHtml = hasComp
+    ? `<div style="display:grid;grid-template-columns:repeat(${toAvg!==null?5:4},1fr);gap:10px;margin-bottom:16px;text-align:center;">
+        <div><div style="font-size:26px;font-weight:800;color:var(--text);">${totAtt}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
+        ${toAvg!==null?`<div><div style="font-size:26px;font-weight:800;color:${colQ(toAvg)};">${toAvg}%</div><div style="font-size:11px;color:var(--muted);">Take-off</div></div>`:''}
+        <div><div style="font-size:26px;font-weight:800;color:${colQ(gAvg||0)};">${gAvg!==null?gAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Grab</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:${colQ(tAvg||0)};">${tAvg!==null?tAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Trick</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:${colQ(lAvg||0)};">${lAvg!==null?lAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Landing</div></div>
+      </div>`
+    : `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;text-align:center;">
+        <div><div style="font-size:26px;font-weight:800;color:var(--text);">${totAtt}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:${overallQoe!==null?colQ(overallQoe):'var(--muted)'};">${overallQoe!==null?overallQoe+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Quality of Execution</div></div>
+      </div>`;
+
+  const legend = hasComp ? `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;font-size:11px;">
+    <span style="color:#34d399;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span><span style="color:#a78bfa;">● Take-off</span>
+  </div>` : '';
+
+  // Direction distribution for overall/trick view
+  const OV_DIRS = ['Left','Right','Switch Left','Switch Right'];
+  const OV_DIR_COL = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b'};
+  const ovDirCnt = {}; OV_DIRS.forEach(d=>ovDirCnt[d]={tricks:new Set(),att:0});
+  chartData.forEach(t=>{
+    const name = t.trickaufbau||'';
+    let dir=null;
+    if(name.includes('Switch Left')) dir='Switch Left';
+    else if(name.includes('Switch Right')) dir='Switch Right';
+    else if(name.includes('Left')) dir='Left';
+    else if(name.includes('Right')) dir='Right';
+    if(dir){ovDirCnt[dir].tricks.add(name);ovDirCnt[dir].att++;}
+  });
+  const ovDirTotal = OV_DIRS.reduce((s,d)=>s+ovDirCnt[d].att,0);
+  // Convert Set to count for reuse in drawSessionDirRadar
+  const ovDirCntFinal = {}; OV_DIRS.forEach(d=>ovDirCntFinal[d]={tricks:ovDirCnt[d].tricks.size, att:ovDirCnt[d].att});
+
+  const pieId = 'ta-pie-'+Date.now();
+  const cid = 'ta-chart-'+Date.now();
+  el.innerHTML = statsHtml + legend + `<canvas id="${cid}" style="width:100%;"></canvas>` +
+    (!chosen && ovDirTotal>0 ? `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px;">
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:32px;">
+          <div>${sessionDirLegendHtml(ovDirCntFinal,OV_DIRS,OV_DIR_COL,ovDirTotal)}</div>
+          <div style="width:160px;height:160px;flex-shrink:0;min-width:160px;">
+            <canvas id="${pieId}" style="display:block;width:160px;height:160px;"></canvas>
+          </div>
+        </div>
+      </div>` : '');
+
+  requestAnimationFrame(()=>{
+    const canvas=document.getElementById(cid); if(!canvas)return;
+    const dpr=window.devicePixelRatio||1, W=(el.offsetWidth||600)-16, H=220;
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    canvas.width=W*dpr; canvas.height=H*dpr;
+    const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    const pad={l:42,r:16,t:14,b:52};
+    const n=pts.length;
+    const barW=Math.max(5,Math.min(16,(W-pad.l-pad.r)/(n*6)));
+    const totalBarW=4*(barW+2)-2;
+    const margin=totalBarW/2+6;
+    const xs=pts.map((_,i)=>pad.l+margin+(n===1?(W-pad.l-pad.r-margin*2)/2:i/(n-1)*(W-pad.l-pad.r-margin*2)));
+    const toY=v=>pad.t+(1-v/100)*(H-pad.t-pad.b);
+
+    [0,25,50,75,100].forEach(pct=>{
+      const y=toY(pct);
+      ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+      ctx.fillStyle='#6b8299';ctx.font='10px Poppins,sans-serif';ctx.textAlign='right';
+      ctx.fillText(pct+'%',pad.l-5,y+3);
+    });
+
+    function drawConn(values,col){
+      const pts2=values.map((v,i)=>v!==null?{x:xs[i],y:toY(v)}:null).filter(Boolean);
+      if(pts2.length<2)return;
+      ctx.beginPath();ctx.strokeStyle=col+'55';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+      pts2.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.stroke();ctx.setLineDash([]);
+    }
+    function drawBars(pt,x){
+      if(hasComp&&pt.grab!==null){
+        const comps=[['takeoff','#a78bfa'],['grab','#f59e0b'],['trick','#39c3d4'],['landing','#34d399']];
+        const bw=barW,gap=2,totalW=comps.length*(bw+gap)-gap;
+        comps.forEach(([key,col],ci)=>{
+          const val=pt[key]; if(val===null)return;
+          const bx=x-totalW/2+ci*(bw+gap), by=toY(val), bh=H-pad.b-by;
+          ctx.fillStyle=col+'cc';ctx.fillRect(bx,by,bw,bh);
+          ctx.fillStyle=col;ctx.font='9px Poppins,sans-serif';ctx.textAlign='center';
+          ctx.fillText(val+'%',bx+bw/2,by-3);
+        });
+      } else if(!hasComp&&pt.qoe!==null){
+        const val=pt.qoe, bx=x-barW/2, by=toY(val), bh=H-pad.b-by;
+        ctx.fillStyle='#39c3d4cc';ctx.fillRect(bx,by,barW,bh);
+        ctx.fillStyle='#39c3d4';ctx.font='9px Poppins,sans-serif';ctx.textAlign='center';
+        ctx.fillText(val+'%',bx+barW/2,by-3);
+      }
+    }
+
+    if(hasComp){drawConn(pts.map(p=>p.takeoff),'#a78bfa');drawConn(pts.map(p=>p.grab),'#f59e0b');drawConn(pts.map(p=>p.trick),'#39c3d4');drawConn(pts.map(p=>p.landing),'#34d399');}
+    else drawConn(pts.map(p=>p.qoe),'#39c3d4');
+    pts.forEach((p,i)=>drawBars(p,xs[i]));
+
+    ctx.textAlign='center';
+    pts.forEach((p,i)=>{
+      ctx.fillStyle='#6b8299';ctx.font='10px Poppins,sans-serif';
+      ctx.fillText(p.d.split('-')[2]+'.'+p.d.split('-')[1]+'.',xs[i],H-pad.b+14);
+      ctx.fillText(p.att+'×',xs[i],H-pad.b+28);
+    });
+
+    // ── Hover tooltip ────────────────────────────────────────────────
+    let tt = document.getElementById('ta-chart-tooltip');
+    if (!tt) {
+      tt = document.createElement('div');
+      tt.id = 'ta-chart-tooltip';
+      tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:10px;padding:10px 14px;font-size:12px;font-family:Poppins,sans-serif;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+      document.body.appendChild(tt);
+    }
+    const fmtD = d => { const [y,m,dd]=d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
+    const dSign = (curr,prev) => {
+      if(curr===null||prev===null||curr===undefined||prev===undefined) return '';
+      const d=curr-prev;
+      return d>0?`<span style="color:#34d399;font-weight:700;"> +${d}%</span>`
+            :d<0?`<span style="color:#e2001a;font-weight:700;"> ${d}%</span>`
+            :`<span style="color:#6b8299;"> ±0%</span>`;
+    };
+
+    canvas.onmousemove = e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      let ni=-1, nd=Infinity;
+      xs.forEach((x,i)=>{ const dist=Math.abs(mx-x); if(dist<nd&&dist<Math.max(40,(xs[1]-xs[0]||80)/2)){nd=dist;ni=i;} });
+      if(ni<0){tt.style.display='none';return;}
+      const p=pts[ni], pv=ni>0?pts[ni-1]:null;
+      const isFirst = ni===0;
+      let html=`<div style="font-weight:700;color:#e8edf2;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">${fmtD(p.d)} &nbsp;·&nbsp; ${p.att} attempts</div>`;
+      if(hasComp){
+        if(p.takeoff!==null) html+=`<div style="color:#a78bfa;">Take-off: <b>${p.takeoff}%</b>${isFirst?'':dSign(p.takeoff,pv?.takeoff)}</div>`;
+        html+=`<div style="color:#f59e0b;">Grab &nbsp;&nbsp;: <b>${p.grab??'—'}%</b>${isFirst?'':dSign(p.grab,pv?.grab)}</div>`;
+        html+=`<div style="color:#39c3d4;">Trick &nbsp;: <b>${p.trick??'—'}%</b>${isFirst?'':dSign(p.trick,pv?.trick)}</div>`;
+        html+=`<div style="color:#34d399;">Landing: <b>${p.landing??'—'}%</b>${isFirst?'':dSign(p.landing,pv?.landing)}</div>`;
+      } else {
+        html+=`<div style="color:#39c3d4;">QoE: <b>${p.qoe!==null?p.qoe+'%':'—'}</b>${isFirst?'':dSign(p.qoe,pv?.qoe)}</div>`;
+      }
+      if(isFirst) html+=`<div style="font-size:10px;color:#6b8299;margin-top:4px;">First session</div>`;
+      tt.innerHTML=html;
+      tt.style.display='block';
+      const tx = e.clientX+14, ty = e.clientY-10;
+      tt.style.left=(tx+tt.offsetWidth>window.innerWidth-10?e.clientX-tt.offsetWidth-14:tx)+'px';
+      tt.style.top=ty+'px';
+    };
+    canvas.onmouseleave = () => { tt.style.display='none'; };
+  });
+
+  if(!chosen && ovDirTotal>0) requestAnimationFrame(()=>drawSessionDirRadar(pieId, ovDirCntFinal, OV_DIRS, OV_DIR_COL));
+
+  // Raw entries: filter by chosen trick or show all
+  const filterLabel = _taTypeFilter ? _taTypeFilter : 'all types';
+  if (chosen) {
+    renderRawEntries(chartData, (chosen.length > 40 ? chosen.slice(0,40)+'…' : chosen) + (filterLabel!=='all types' ? ' · '+filterLabel : ''));
+  } else {
+    renderRawEntries(baseData, filterLabel);
+  }
+}
+
+let sbeGrabMatrix={};
+let sbeLabelResidual='';
+
+function openSbEdit(id){
+  const e=sbData.find(r=>r.id===id); if(!e)return;
+  document.getElementById('sbe-id').value=id;
+  document.getElementById('sbe-datum').value=e.datum||'';
+  const sv=(fid,val)=>{const el=document.getElementById(fid);if(el)el.value=val||'';};
+  sv('sbe-disziplin',e.disziplin);sbeToggle();
+  sv('sbe-drehrichtung',e.drehrichtung);sv('sbe-rotation',e.rotation);
+  sv('sbe-flips',e.flips);sv('sbe-achse',e.achse);
+  sv('sbe-style',e.style);sv('sbe-absprung',e.absprung);
+  sv('sbe-bringback',e.bringback);sv('sbe-railart',e.railart);
+  sv('sbe-slideform',e.slideform);sv('sbe-inspin',e.inspin);
+  sv('sbe-outspin',e.outspin);sv('sbe-notiz',e.notiz);
+  sv('sbe-status',e.status);sv('sbe-coach-rating',e.coach_rating);sv('sbe-coach-kommentar',e.coach_kommentar);
+  // Grab-Ampel wie im Erfassungs-Formular: 1×=✓ Mastered, 2×=🎯 Goal, 3×=aus, L=Lead
+  const wrap=document.getElementById('sbe-grab-wrap');
+  sbeGrabMatrix={...effGrabStatus(e)};
+  // Label-Rest merken (Angaben ohne eigene Spalte, z. B. Bones/Todeo) — wird beim Speichern wieder angehängt
+  const oldIsK=['Jump','Halfpipe','Landing Bag'].includes(e.disziplin);
+  const oldBb=e.bringback?'Bringback '+e.bringback:null;
+  const oldParts=oldIsK?[e.absprung,e.drehrichtung,e.flips&&!['keine','None','none','—'].includes(e.flips)?e.flips:null,e.rotation,e.achse,oldBb]:[e.inspin,e.slideform,e.railart,e.outspin];
+  sbeLabelResidual=labelResidual(e.trick_label,[...oldParts,...Object.keys(sbeGrabMatrix),...(e.grab||'').split(',').map(s=>s.trim())]);
+  Array.from(wrap.querySelectorAll('button,div')).forEach(b=>b.remove());
+  FS_ASSESS_GRABS.forEach(g=>{
+    const pair=document.createElement('div');
+    pair.style.cssText="display:inline-flex;border-radius:20px;overflow:hidden;border:1px solid #1a3450;";
+    const btn=document.createElement('button');
+    btn.type='button';btn.dataset.key=g;
+    btn.style.cssText="padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;border:none;border-right:1px solid #1a3450;";
+    styleFsGrabSeg(btn,g,sbeGrabMatrix[g]);
+    btn.onclick=()=>{
+      const next=nextGrabState(sbeGrabMatrix[g]);
+      if(next)sbeGrabMatrix[g]=next;else delete sbeGrabMatrix[g];
+      styleFsGrabSeg(btn,g,next);
+    };
+    const lBtn=document.createElement('button');
+    lBtn.type='button';lBtn.dataset.key='Lead '+g;
+    lBtn.style.cssText="padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;border:none;";
+    styleFsGrabSeg(lBtn,'L',sbeGrabMatrix['Lead '+g]);
+    lBtn.onclick=()=>{
+      const k='Lead '+g;
+      const next=nextGrabState(sbeGrabMatrix[k]);
+      if(next)sbeGrabMatrix[k]=next;else delete sbeGrabMatrix[k];
+      styleFsGrabSeg(lBtn,'L',next);
+    };
+    pair.appendChild(btn);pair.appendChild(lBtn);
+    wrap.appendChild(pair);
+  });
+  const ov=document.getElementById('sb-edit-overlay');
+  ov.style.display='flex';
+}
+
+async function saveSbEdit(){
+  const id=parseInt(document.getElementById('sbe-id').value);
+  const gv=id=>{const el=document.getElementById(id);return el?el.value:'';};
+  const updates={
+    datum:gv('sbe-datum'),disziplin:gv('sbe-disziplin'),
+    drehrichtung:gv('sbe-drehrichtung'),rotation:gv('sbe-rotation'),
+    flips:gv('sbe-flips'),achse:gv('sbe-achse'),
+    absprung:gv('sbe-absprung'),bringback:gv('sbe-bringback'),
+    railart:gv('sbe-railart'),slideform:gv('sbe-slideform'),
+    inspin:gv('sbe-inspin'),outspin:gv('sbe-outspin'),notiz:gv('sbe-notiz'),
+    status:gv('sbe-status'),coach_rating:gv('sbe-coach-rating')||null,coach_kommentar:gv('sbe-coach-kommentar')||null,
+    grab:Object.keys(sbeGrabMatrix).join(', ')||null,
+  };
+  const isK=['Jump','Halfpipe','Landing Bag'].includes(updates.disziplin);
+  const bb = updates.bringback ? 'Bringback ' + updates.bringback : null;
+  // Label aus Feldern OHNE Grab (lebt in grab_status/Chips) + gemerktem Label-Rest
+  const parts=isK?[updates.absprung,updates.drehrichtung,updates.flips&&!['keine','None','none','—'].includes(updates.flips)?updates.flips:null,updates.rotation,updates.achse,bb]:[updates.inspin,updates.slideform,updates.railart,updates.outspin];
+  updates.trick_label=(parts.filter(Boolean).join(' ')+(sbeLabelResidual?' '+sbeLabelResidual:'')).trim()||'–';
+  if(_standortHasGrabStatus)updates.grab_status={...sbeGrabMatrix};
+  let {error}=await db.from('standort').update(updates).eq('id',id);
+  if(error&&/grab_status/.test(error.message||'')){
+    _standortHasGrabStatus=false;delete updates.grab_status;
+    ({error}=await db.from('standort').update(updates).eq('id',id));
+  }
+  if(error){showToast('Error: '+error.message,'error');return;}
+  showToast('✓ Trick updated!');closeSbEdit();loadStandort();
+}
+
+const FS_ASSESS_GRABS = ['Blunt', 'Bow and Arrow', 'Broken Arrow', 'Critical', 'Cuban', 'Double Japan', 'Double Tail', 'Esco', 'Guitar', 'High Mute', 'In and out', 'Indi-Truck', 'Inside Tail', 'Japan', 'Mute', 'Nose', 'Octo', 'Rocket', 'Safety', 'Screamin\' Seamen', 'Seatbelt', 'Seatbelt Japan', 'Stale', 'Stink Bug', 'Tail', 'Truckdriver', 'Venom'];
+
+function assessGrabList() {
+  return [...FS_ASSESS_GRABS, ...FS_ASSESS_GRABS.map(g => 'Lead ' + g)];
+}
+
+let sbAssessGrabMatrix = {};
+
+function styleFsGrabSeg(btn, label, st) {
+  btn.textContent = st === 'mastered' ? '✓ ' + label : st === 'goal' ? '🎯 ' + label : label;
+  btn.style.background = st === 'mastered' ? 'rgba(52,211,153,0.3)' : st === 'goal' ? 'rgba(245,158,11,0.25)' : '#112236';
+  btn.style.color = st === 'mastered' ? '#4ade80' : st === 'goal' ? '#f59e0b' : '#6b8299';
+}
+
+function initStandortGrabs() {
+  const wrap = document.getElementById('sb-grab-wrap');
+  const hid  = document.getElementById('sb-grab');
+  if (!wrap || !hid) return;
+  Array.from(wrap.querySelectorAll('div')).forEach(d => d.remove());
+  hid.value = '';
+  sbAssessGrabMatrix = {};
+  FS_ASSESS_GRABS.forEach(g => {
+    const pair = document.createElement('div');
+    pair.style.cssText = "display:inline-flex;border-radius:20px;overflow:hidden;border:1px solid #1a3450;";
+    // Normal button
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.dataset.key = g;
+    btn.style.cssText = "padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;border:none;border-right:1px solid #1a3450;";
+    styleFsGrabSeg(btn, g, undefined);
+    btn.onclick = () => {
+      const next = nextGrabState(sbAssessGrabMatrix[g]);
+      if (next) sbAssessGrabMatrix[g] = next; else delete sbAssessGrabMatrix[g];
+      styleFsGrabSeg(btn, g, next);
+    };
+    // Lead button
+    const lBtn = document.createElement('button');
+    lBtn.type = 'button'; lBtn.dataset.key = 'Lead ' + g;
+    lBtn.style.cssText = "padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;border:none;";
+    styleFsGrabSeg(lBtn, 'L', undefined);
+    lBtn.onclick = () => {
+      const k = 'Lead ' + g;
+      const next = nextGrabState(sbAssessGrabMatrix[k]);
+      if (next) sbAssessGrabMatrix[k] = next; else delete sbAssessGrabMatrix[k];
+      styleFsGrabSeg(lBtn, 'L', next);
+    };
+    pair.appendChild(btn); pair.appendChild(lBtn);
+    wrap.appendChild(pair);
+  });
+}
+
+// ═══════ MONITORING (Team → Athlete → Trick) — Freeski-Fassung des Snowboard-Monitorings ═══════
+// Gleiche Optik/Struktur wie SB, aber Freeski rechnet in PROZENTEN statt Klassen (Emilie, 31.8.2026):
+// Hauptmetrik = Ø QoE (Kategorie-Bewertungen: miss 0% · okay 50% · perfect 100%, via qoeOf),
+// Status-Schwellen wie die Session-Performance-Tabelle (≥70 Ready · ≥50 Building · sonst Critical),
+// Landed-Quote (gelandet/gesamt≥10) als Konstanz-Zweitwert. Kein Perfect/Landed/Miss-Tripel.
+let sbMonRows = null;          // cached attempt rows (tricks table, all pages)
+let sbMonRange = 'season';     // 'season' | 'last' | 'all' | 'custom'
+let sbMonFrom = '';            // custom range bounds (YYYY-MM-DD)
+let sbMonTo = '';
+let sbMonTyp = '';             // '' | session type
+let sbMonView = {level:'team', athlete:null, trick:null};
+let _monAthletes = [];
+let _monTricks = [];
+
+const FS_MON_STATUS = {
+  ready:    {label:'Ready',    color:'#34d399'},
+  building: {label:'Building', color:'#f59e0b'},
+  critical: {label:'Critical', color:'#e2001a'},
+  lowdata:  {label:'Low data', color:'#6b8299'},
+};
+const FS_MON_DIR_COLORS = {'Left':'#39c3d4','Right':'#3b82f6','Switch Left':'#a78bfa','Switch Right':'#f59e0b','Other':'#6b8299'};
+const FS_MON_DIRS = ['Left','Right','Switch Left','Switch Right','Other'];
+const FS_MON_CATS = [['Takeoff','Take-off'],['Trick','Trick'],['Grab','Grab'],['Landing','Landing']];
+const FS_MON_CAT_COLORS = {'Takeoff':'#39c3d4','Trick':'#4a7dd6','Grab':'#a78bfa','Landing':'#34d399'};
+
+// Ø einer Kategorie (0–100) über Zeilen; null, wenn nie bewertet
+function fsMonCatAvg(rows, key) {
+  const catScore = {perfect:100, okay:50, miss:0};
+  const vals = rows.map(t => {
+    const m = (t.kommentar || '').match(new RegExp(key + ':(\\w+)'));
+    return m && catScore[m[1]] !== undefined ? catScore[m[1]] : null;
+  }).filter(v => v !== null);
+  return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
+}
+const FS_TYPE_FILTERS = [['','All'],['Landing Bag','Bag'],['Big Air Training','BA Train'],['Big Air Competition','BA Comp'],['Slopestyle Training','SS Train'],['Slopestyle Competition','SS Comp'],['Halfpipe Training','HP Train'],['Halfpipe Competition','HP Comp']];
+// Alt-Daten: «Jump On-Snow» zählt zum neuen «Big Air Training»
+function typMatches(typ, filter) { return !filter || typ === filter || (filter === 'Big Air Training' && typ === 'Jump On-Snow'); }
+
+function fsTypeChipsHtml(current, handler) {
+  return `<div style="display:flex;gap:6px;flex-wrap:wrap;">${FS_TYPE_FILTERS.map(([v,l]) =>
+    `<button onclick="${handler}('${v}')" style="padding:6px 14px;border-radius:999px;border:1.5px solid ${current===v?'#39c3d4':'var(--border)'};background:${current===v?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${current===v?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">${l}</button>`).join('')}</div>`;
+}
+
+function fsMonLanded(t) {
+  return (t.gesamt||0) >= 10 || t.gelandet === 'Yes';
+}
+
+function fsMonAvgQoe(rows) {
+  const qs = rows.map(qoeOf).filter(v => v !== null);
+  return qs.length ? Math.round(qs.reduce((a,b)=>a+b,0)/qs.length) : null;
+}
+
+// Aggregations-Key: Grab-Suffix (« — Grab») strippen, damit ein Trick über alle Grabs zusammenläuft
+function fsMonKey(label) {
+  return ((label || '—').split(' — ')[0] || '').trim() || '—';
+}
+
+function fsMonDir(name) {
+  if (!name) return 'Other';
+  if (name.includes('Switch Left'))  return 'Switch Left';
+  if (name.includes('Switch Right')) return 'Switch Right';
+  if (name.includes('Left'))  return 'Left';
+  if (name.includes('Right')) return 'Right';
+  return 'Other';
+}
+
+async function sbMonFetchAll() {
+  let all = [], from = 0;
+  while (true) {
+    const {data, error} = await db.from('tricks').select('*').order('id', {ascending:true}).range(from, from + 999);
+    if (error) { showToast('Error loading data: ' + error.message, 'error'); return sbMonRows || []; }
+    all = all.concat(data || []);
+    if (!data || data.length < 1000) break;
+    from += 1000;
+  }
+  sbMonRows = all;
+  return all;
+}
+
+function sbMonRangeBounds() {
+  const now = new Date();
+  const y = now.getMonth() + 1 >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+  if (sbMonRange === 'season') return {from: y + '-05-01', to: ''};
+  if (sbMonRange === 'last')   return {from: (y-1) + '-05-01', to: y + '-04-30'};
+  if (sbMonRange === 'custom') return {from: sbMonFrom || '', to: sbMonTo || ''};
+  return {from: '', to: ''};
+}
+
+function sbMonPeriodLabel() {
+  const fmt = d => { if (!d) return '…'; const p = d.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); };
+  const typ = sbMonTyp ? ' · ' + (SESS_TYPE_SHORT[sbMonTyp]||sbMonTyp) : '';
+  if (sbMonRange === 'season') return 'current season' + typ;
+  if (sbMonRange === 'last')   return 'last season' + typ;
+  if (sbMonRange === 'custom') return fmt(sbMonFrom) + ' – ' + fmt(sbMonTo) + typ;
+  return 'all time' + typ;
+}
+
+function sbMonFiltered() {
+  let rows = sbMonRows || [];
+  const {from, to} = sbMonRangeBounds();
+  if (from) rows = rows.filter(t => (t.datum || '') >= from);
+  if (to)   rows = rows.filter(t => (t.datum || '') <= to);
+  if (sbMonTyp) rows = rows.filter(t => typMatches(t.typ, sbMonTyp));
+  return rows;
+}
+
+function sbMonStatusKey(att, qoe) {
+  if (att < 5) return 'lowdata';
+  return qoe >= 70 ? 'ready' : qoe >= 50 ? 'building' : 'critical';
+}
+
+function sbMonTrickAgg(rows) {
+  const map = {};
+  rows.forEach(t => {
+    const key = fsMonKey(t.trickaufbau);
+    if (!map[key]) map[key] = {trick:key, att:0, landed:0, qoeVals:[], rows:[]};
+    const m = map[key];
+    m.att++;
+    if (fsMonLanded(t)) m.landed++;
+    const q = qoeOf(t);
+    if (q !== null) m.qoeVals.push(q);
+    m.rows.push(t);
+  });
+  const list = Object.values(map);
+  list.forEach(m => m.qoe = m.qoeVals.length ? Math.round(m.qoeVals.reduce((a,b)=>a+b,0)/m.qoeVals.length) : 0);
+  return list;
+}
+
+// Trend über die Ø-QoE der letzten Session vs. Schnitt der 3 davor (±5 Prozentpunkte)
+function sbMonTrend(rows) {
+  const by = {};
+  rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
+  const dates = Object.keys(by).sort();
+  if (dates.length < 2) return null;
+  const rate = d => (fsMonAvgQoe(by[d]) ?? 0) / 100;
+  const last = rate(dates[dates.length - 1]);
+  const prev = dates.slice(0, -1).slice(-3);
+  const prevAvg = prev.reduce((a, d) => a + rate(d), 0) / prev.length;
+  const diff = last - prevAvg;
+  if (diff >= 0.05) return {dir:'up', diff};
+  if (diff <= -0.05) return {dir:'down', diff};
+  return {dir:'flat', diff};
+}
+
+function sbMonTrendHtml(tr) {
+  if (!tr) return '';
+  if (tr.dir === 'up') return `<span style="color:#34d399;font-weight:600;">↗ rising${tr.diff ? ', +' + Math.round(tr.diff*100) + '%' : ''}</span>`;
+  if (tr.dir === 'down') return `<span style="color:#e2001a;font-weight:600;">↘ falling${tr.diff ? ', ' + Math.round(tr.diff*100) + '%' : ''}</span>`;
+  return `<span style="color:var(--muted);font-weight:600;">→ stable</span>`;
+}
+
+function sbMonRing(pct, color, size, stroke) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg);">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="var(--border)" stroke-width="${stroke}" fill="none"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${color}" stroke-width="${stroke}" fill="none"
+      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c * (1 - Math.min(1, Math.max(0, pct)))).toFixed(1)}" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function sbMonDonut(landed, missed, size) {
+  const total = landed + missed;
+  const stroke = 14, r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  if (!total) return sbMonRing(0, 'var(--border)', size, stroke);
+  const segs = [[landed, '#34d399'], [missed, '#e2001a']];
+  let off = 0, out = '';
+  segs.forEach(([n, col]) => {
+    if (!n) return;
+    const frac = n / total;
+    out += `<circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${col}" stroke-width="${stroke}" fill="none"
+      stroke-dasharray="${(frac * c).toFixed(1)} ${(c - frac * c).toFixed(1)}" stroke-dashoffset="${(-off * c).toFixed(1)}"/>`;
+    off += frac;
+  });
+  return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg);">${out}</svg>`;
+}
+
+async function loadMonitoring() {
+  const root = document.getElementById('mon-root');
+  if (!root) return;
+  if (!sbMonRows) root.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+  await sbMonFetchAll();
+  renderMonitoring();
+}
+
+function renderMonitoring() {
+  const v = sbMonView;
+  if (v.level === 'trick' && v.athlete && v.trick) renderMonTrick();
+  else if (v.level === 'athlete' && v.athlete) renderMonAthlete();
+  else renderMonTeam();
+}
+
+function sbMonSetRange(val) { sbMonRange = val; renderMonitoring(); }
+function sbMonSetTyp(val) { sbMonTyp = val; renderMonitoring(); }
+function sbMonApplyCustom() {
+  sbMonFrom = document.getElementById('mon-date-from')?.value || '';
+  sbMonTo = document.getElementById('mon-date-to')?.value || '';
+  renderMonitoring();
+}
+
+// Sync the Database-page period selects with Monitoring's choice, then reuse the existing exports
+function sbMonSyncSelects(prefix) {
+  const {from, to} = sbMonRangeBounds();
+  const seasonSel = document.getElementById(prefix + '-season-sel');
+  const typSel = document.getElementById(prefix + '-typ-sel');
+  const fromEl = document.getElementById(prefix + '-date-from');
+  const toEl = document.getElementById(prefix + '-date-to');
+  if (seasonSel) seasonSel.value = sbMonRange === 'season' ? 'current' : sbMonRange === 'all' ? 'all' : 'custom';
+  if (fromEl) fromEl.value = from;
+  if (toEl) toEl.value = to;
+  if (typSel) typSel.value = sbMonTyp;
+}
+
+async function sbMonEnsureDbData() {
+  if (!dbAllTricks || !dbAllTricks.length || !dbAllStandort || !dbAllStandort.length) await loadDB();
+}
+
+async function sbMonRealityCheck() {
+  await sbMonEnsureDbData();
+  realityCheck();
+}
+
+async function sbMonTeamPdf() {
+  await sbMonEnsureDbData();
+  sbMonSyncSelects('tr');
+  openTeamPdfReport();
+}
+
+async function sbMonAthletePdf() {
+  await sbMonEnsureDbData();
+  populateAthleteReportDropdown();
+  const sel = document.getElementById('ar-athlete-sel');
+  if (sel) sel.value = sbMonView.athlete || '';
+  sbMonSyncSelects('ar');
+  generateAthleteReport();
+}
+function sbMonOpenAthlete(i) { sbMonView = {level:'athlete', athlete:_monAthletes[i], trick:null}; renderMonitoring(); window.scrollTo(0,0); }
+function sbMonOpenTrick(i) { sbMonView = {level:'trick', athlete:sbMonView.athlete, trick:_monTricks[i] ? _monTricks[i].trick : null}; renderMonitoring(); window.scrollTo(0,0); }
+function sbMonBack() {
+  sbMonView = sbMonView.level === 'trick'
+    ? {level:'athlete', athlete:sbMonView.athlete, trick:null}
+    : {level:'team', athlete:null, trick:null};
+  renderMonitoring();
+}
+
+function monHeaderHtml(title, sub, backable) {
+  const dateInput = id => `<input type="date" id="${id}" value="${id==='mon-date-from'?sbMonFrom:sbMonTo}" onchange="sbMonApplyCustom()" style="padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:'Poppins',sans-serif;">`;
+  return `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+    ${backable ? `<button onclick="sbMonBack()" style="padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">← Back</button>` : ''}
+    <div style="flex:1;min-width:160px;">
+      <div style="font-size:20px;font-weight:800;color:var(--text);">${title}</div>
+      ${sub ? `<div style="font-size:12px;color:var(--muted);">${sub}</div>` : ''}
+    </div>
+    <select onchange="sbMonSetRange(this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+      <option value="season" ${sbMonRange==='season'?'selected':''}>Current season</option>
+      <option value="last" ${sbMonRange==='last'?'selected':''}>Last season</option>
+      <option value="all" ${sbMonRange==='all'?'selected':''}>All time</option>
+      <option value="custom" ${sbMonRange==='custom'?'selected':''}>Custom period…</option>
+    </select>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+    ${fsTypeChipsHtml(sbMonTyp, 'sbMonSetTyp')}
+    ${sbMonRange==='custom' ? `<div style="display:flex;align-items:center;gap:6px;">${dateInput('mon-date-from')}<span style="color:var(--muted);">–</span>${dateInput('mon-date-to')}</div>` : ''}
+  </div>`;
+}
+
+function renderMonTeam() {
+  const root = document.getElementById('mon-root');
+  const rows = sbMonFiltered();
+  const byAth = {};
+  rows.forEach(t => { (byAth[t.athlet] = byAth[t.athlet] || []).push(t); });
+  _monAthletes = SESS_ALL_ATHLETES.map(a => a.name);
+  const sections = SESS_SQUADS.map(sq => {
+    const aths = SESS_ALL_ATHLETES.filter(a => a.squad === sq.key);
+    if (!aths.length) return '';
+    const tiles = aths.map(a => {
+      const i = _monAthletes.indexOf(a.name);
+      const ar = byAth[a.name] || [];
+      const att = ar.length;
+      const qoe = fsMonAvgQoe(ar);
+      const cnt = {ready:0, building:0, critical:0, lowdata:0};
+      sbMonTrickAgg(ar).forEach(tr => cnt[sbMonStatusKey(tr.att, tr.qoe)]++);
+      const initials = a.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+      const ringColor = att < 5 || qoe === null ? '#6b8299' : qoe >= 70 ? '#34d399' : qoe >= 50 ? '#f59e0b' : '#e2001a';
+      return `<div onclick="sbMonOpenAthlete(${i})" style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:34px;height:34px;border-radius:50%;background:rgba(57,195,212,0.15);color:#39c3d4;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">${initials}</div>
+          <div style="min-width:0;">
+            <div style="font-weight:700;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.name}</div>
+            <div style="font-size:10px;color:${sq.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sq.label}</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;position:relative;margin-bottom:12px;">
+          ${sbMonRing((qoe||0)/100, ringColor, 92, 9)}
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="font-size:17px;font-weight:800;color:var(--text);">${att && qoe !== null ? qoe+'%' : '—'}</div>
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Ø QoE</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;text-align:center;border-top:1px solid var(--border);padding-top:10px;">
+          <div><div style="font-size:15px;font-weight:800;color:#34d399;">${cnt.ready}</div><div style="font-size:9px;color:var(--muted);">Ready</div></div>
+          <div><div style="font-size:15px;font-weight:800;color:#f59e0b;">${cnt.building}</div><div style="font-size:9px;color:var(--muted);">Building</div></div>
+          <div><div style="font-size:15px;font-weight:800;color:#e2001a;">${cnt.critical}</div><div style="font-size:9px;color:var(--muted);">Critical</div></div>
+        </div>
+        <div style="text-align:center;font-size:11px;color:#39c3d4;margin-top:10px;">View details →</div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:22px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${sq.color};margin-bottom:10px;">${sq.label}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">${tiles}</div>
+    </div>`;
+  }).join('');
+  root.innerHTML = `<div class="card" style="padding:20px;">
+    ${monHeaderHtml('Team Monitoring', rows.length + ' attempts · ' + sbMonPeriodLabel(), false)}
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Ø QoE = average execution quality (Miss 0% · Okay 50% · Perfect 100% per rated category) · Trick status: ≥70% = <b style="color:#34d399;">Ready</b> · 50–69% = <b style="color:#f59e0b;">Building</b> · &lt;50% = <b style="color:#e2001a;">Critical</b> · fewer than 5 attempts = Low data</div>
+    ${sections || '<div style="color:var(--muted);padding:12px;">No athletes configured.</div>'}
+    <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+      <button onclick="sbMonRealityCheck()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
+      <button onclick="sbMonTeamPdf()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Team PDF</button>
+    </div>
+  </div>`;
+}
+
+function renderMonAthlete() {
+  const root = document.getElementById('mon-root');
+  const name = sbMonView.athlete;
+  const rows = sbMonFiltered().filter(t => t.athlet === name);
+  const att = rows.length;
+  const qoe = fsMonAvgQoe(rows);
+  const landedPct = att ? Math.round(rows.filter(fsMonLanded).length/att*100) : 0;
+
+  // Direction balance (session attempts only)
+  const dirCnt = {};
+  rows.forEach(t => {
+    const d = fsMonDir(fsMonKey(t.trickaufbau));
+    dirCnt[d] = (dirCnt[d]||0) + 1;
+  });
+  const balanceBar = att ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px;">
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:10px;">Direction balance — session data only</div>
+    <div style="display:flex;height:12px;border-radius:999px;overflow:hidden;margin-bottom:10px;">
+      ${FS_MON_DIRS.filter(d => dirCnt[d]).map(d => `<div style="width:${(dirCnt[d]/att*100).toFixed(1)}%;background:${FS_MON_DIR_COLORS[d]};"></div>`).join('')}
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
+      ${FS_MON_DIRS.filter(d => dirCnt[d]).map(d => `<span style="font-size:11px;color:var(--text);"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${FS_MON_DIR_COLORS[d]};margin-right:5px;vertical-align:0;"></span>${d} <b style="color:${FS_MON_DIR_COLORS[d]};">${Math.round(dirCnt[d]/att*100)}%</b></span>`).join('')}
+    </div>
+  </div>` : '';
+
+  const agg = sbMonTrickAgg(rows);
+  _monTricks = agg;
+  const groups = FS_MON_DIRS.map(dir => {
+    const list = agg.map((tr, i) => ({...tr, _i: i})).filter(tr => fsMonDir(tr.trick) === dir)
+      .sort((a, b) => extractRotFromLabel(b.trick) - extractRotFromLabel(a.trick) || b.att - a.att);
+    if (!list.length) return '';
+    const cards = list.map(tr => {
+      const st = sbMonStatusKey(tr.att, tr.qoe);
+      const stInfo = FS_MON_STATUS[st];
+      const qoeCol = st==='lowdata' ? 'var(--muted)' : stInfo.color;
+      const lp = tr.att ? Math.round(tr.landed/tr.att*100) : 0;
+      const trend = sbMonTrend(tr.rows);
+      return `<div onclick="sbMonOpenTrick(${tr._i})" style="background:var(--surface2);border:1px solid ${st==='critical' ? 'rgba(226,0,26,0.45)' : 'var(--border)'};border-radius:12px;padding:13px 14px;cursor:pointer;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.3;">${tr.trick}</div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div style="flex-shrink:0;text-align:center;">
+            <div style="font-size:24px;font-weight:800;color:${qoeCol};">${tr.qoe}%</div>
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Ø QoE</div>
+          </div>
+          <div style="flex:1;font-size:10px;color:var(--muted);line-height:1.7;">
+            <div style="display:flex;justify-content:space-between;"><span>Attempts</span><b style="color:var(--text);">${tr.att}</b></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:#34d399;">Landed</span><b style="color:#34d399;">${lp}%</b></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:#e2001a;">Missed</span><b style="color:#e2001a;">${tr.att - tr.landed}</b></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:10px;">
+          ${trend ? sbMonTrendHtml(trend) : '<span></span>'}
+          <span style="color:${stInfo.color};font-weight:700;">${stInfo.label}</span>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:18px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${FS_MON_DIR_COLORS[dir]};margin-bottom:10px;">${dir}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">${cards}</div>
+    </div>`;
+  }).join('');
+
+  root.innerHTML = `<div class="card" style="padding:20px;">
+    ${monHeaderHtml(name, att + ' attempts · Ø QoE <b>' + (qoe !== null ? qoe + '%' : '—') + '</b> · ' + landedPct + '% landed · ' + sbMonPeriodLabel(), true)}
+    ${balanceBar}
+    ${groups || '<div style="color:var(--muted);padding:12px;">No session attempts in this period.</div>'}
+    <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;justify-content:center;">
+      <button onclick="sbMonAthletePdf()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Athlete Report (PDF)</button>
+    </div>
+  </div>`;
+}
+
+// Varianten & Grabs eines Kern-Tricks (FS): volle Bezeichnung, Versuche, Landed-Quote, Ø QoE
+function fsMonVariantsHtml(rows) {
+  const map = {};
+  rows.forEach(t => {
+    const full = (t.trickaufbau || '—').trim();
+    if (!map[full]) map[full] = {att:0, landed:0, qoe:[]};
+    const m = map[full];
+    m.att++;
+    if (fsMonLanded(t)) m.landed++;
+    const q = qoeOf(t);
+    if (q !== null) m.qoe.push(q);
+  });
+  const list = Object.entries(map).sort((a,b) => b[1].att - a[1].att);
+  // Auch bei nur EINER Variante anzeigen, wenn sie einen Grab trägt — sonst wäre er unsichtbar
+  if (list.length < 2 && !list.some(([f]) => f.includes(' — '))) return '';
+  const rowsHtml = list.map(([full, m]) => {
+    const q = m.qoe.length ? Math.round(m.qoe.reduce((s,v)=>s+v,0)/m.qoe.length) : 0;
+    const col = m.att < 5 ? 'var(--muted)' : q >= 70 ? '#34d399' : q >= 50 ? '#f59e0b' : '#e2001a';
+    const grab = full.includes(' — ') ? full.split(' — ').slice(1).join(' — ') : 'no grab';
+    const lp = m.att ? Math.round(m.landed/m.att*100) : 0;
+    return `<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:12px;">
+      <span style="color:var(--text);line-height:1.3;" title="${full}">${grab}</span>
+      <span style="color:var(--muted);font-size:11px;white-space:nowrap;">${m.att} att.</span>
+      <span style="font-size:11px;white-space:nowrap;color:#34d399;">${lp}% landed</span>
+      <b style="color:${col};min-width:44px;text-align:right;">${q}%</b>
+    </div>`;
+  }).join('');
+  return `<div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Variants &amp; grabs (${list.length})</div>
+      <div style="font-size:9px;color:var(--muted);">attempts · landed · Ø QoE</div>
+    </div>
+    ${rowsHtml}
+  </div>`;
+}
+
+function renderMonTrick() {
+  const root = document.getElementById('mon-root');
+  const name = sbMonView.athlete, trick = sbMonView.trick;
+  const rows = sbMonFiltered().filter(t => t.athlet === name && fsMonKey(t.trickaufbau) === trick)
+    .sort((a, b) => (a.datum||'').localeCompare(b.datum||'') || (a.created_at||'').localeCompare(b.created_at||''));
+  const n = rows.length;
+  const landed = rows.filter(fsMonLanded).length;
+  const missed = n - landed;
+  const landedPct = n ? Math.round(landed/n*100) : 0;
+  const qoe = fsMonAvgQoe(rows);
+  const stKey = sbMonStatusKey(n, qoe ?? 0);
+  const trend = sbMonTrend(rows);
+  const qoeCol = q => q >= 70 ? '#34d399' : q >= 50 ? '#f59e0b' : '#e2001a';
+
+  // Kategorie-Qualität aus den Teilbewertungen im kommentar (Miss 0% · Okay 50% · Perfect 100%)
+  const catChips = FS_MON_CATS.map(([key, label]) => {
+    const pct = fsMonCatAvg(rows, key);
+    if (pct === null) return '';
+    return `<span style="border:1px solid ${qoeCol(pct)};color:${qoeCol(pct)};border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;">${label} ${pct}%</span>`;
+  }).filter(Boolean).join(' ')
+    || `<span style="font-size:11px;color:var(--muted);">No category ratings yet — fills up with new session logs</span>`;
+
+  root.innerHTML = `<div class="card" style="padding:20px;">
+    ${monHeaderHtml(trick, name, true)}
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
+        ${stKey === 'ready' ? '<span style="border:1px solid #34d399;color:#34d399;border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;background:rgba(52,211,153,0.08);">Comp Ready</span>' : `<span style="border:1px solid ${FS_MON_STATUS[stKey].color};color:${FS_MON_STATUS[stKey].color};border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;">${FS_MON_STATUS[stKey].label}</span>`}
+      </div>
+      <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+        <div style="position:relative;flex-shrink:0;">
+          ${sbMonRing((qoe||0)/100, qoe === null ? 'var(--border)' : qoeCol(qoe), 130, 14)}
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="font-size:26px;font-weight:800;color:var(--text);">${qoe !== null ? qoe+'%' : '—'}</div>
+            <div style="font-size:9px;color:var(--muted);">Ø QoE</div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:170px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Attempts</span><b>${n}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#34d399;margin-right:6px;"></span>Landed</span><b style="color:#34d399;">${landed} (${landedPct}%)</b></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#e2001a;margin-right:6px;"></span>Missed</span><b style="color:#e2001a;">${missed}</b></div>
+          ${trend ? `<div style="display:flex;justify-content:space-between;padding:6px 0;"><span>QoE trend</span>${sbMonTrendHtml(trend)}</div>` : ''}
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Category quality (Take-off · Trick · Grab · Landing)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">${catChips}</div>
+      </div>
+      ${fsMonVariantsHtml(rows)}
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Progress over sessions</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:8px;">
+        <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Volume (attempts)</span>
+        <span><span style="display:inline-block;width:14px;height:2px;background:#34d399;vertical-align:3px;"></span> Ø QoE</span>
+        <span><span style="display:inline-block;width:14px;height:2px;background:#f59e0b;vertical-align:3px;border-bottom:2px dashed #f59e0b;background:none;"></span> Landed rate</span>
+      </div>
+      ${sbMonTimeChart(rows)}
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;">⚠ Sessions with fewer than 5 attempts — rates are statistically weak.</div>
+      <div id="mon-time-detail" style="font-size:11px;color:var(--muted);min-height:16px;margin-top:8px;">Tap a bar for session details</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Category quality over sessions</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:8px;">
+        ${FS_MON_CATS.map(([key, label]) => `<span><span style="display:inline-block;width:14px;height:2px;background:${FS_MON_CAT_COLORS[key]};vertical-align:3px;"></span> ${label}</span>`).join('')}
+      </div>
+      ${fsMonCatChart(rows)}
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;">Ø per session and category (Miss 0% · Okay 50% · Perfect 100%). Gaps = category not rated in that session.</div>
+    </div>
+    ${fsMonCoachingHtml(rows)}
+  </div>`;
+  sbMonLoadComments();
+}
+
+function sbMonTimeChart(rows) {
+  const by = {};
+  rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
+  _monTimeBy = by;
+  const dates = Object.keys(by).sort().slice(-12);
+  if (!dates.length) return '<div style="color:var(--muted);font-size:12px;">No data.</div>';
+  const H = 110, slot = 46, barW = 26, PAD = 34;
+  const maxN = Math.max(...dates.map(d => by[d].length));
+  const chartW = dates.length * slot;
+  const yOf = p => H - p/100 * (H - 12);
+  let grid = '';
+  [0, 25, 50, 75, 100].forEach(p => {
+    grid += `<line x1="${PAD}" y1="${yOf(p).toFixed(1)}" x2="${PAD + chartW}" y2="${yOf(p).toFixed(1)}" stroke="var(--border)" stroke-width="1" ${p ? 'stroke-dasharray="2 4"' : ''}/>`;
+    grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
+  });
+  const qPts = [], lPts = [];
+  let bars = '', labels = '';
+  dates.forEach((d, i) => {
+    const rs = by[d], nn = rs.length;
+    const q = (fsMonAvgQoe(rs) ?? 0) / 100;
+    const lr = rs.filter(fsMonLanded).length / nn;
+    const h = Math.max(6, nn / maxN * (H - 12));
+    const x = PAD + i * slot + (slot - barW) / 2;
+    const cx = PAD + i * slot + slot/2;
+    qPts.push([cx, (H - q * (H - 12)).toFixed(1)]);
+    lPts.push([cx, (H - lr * (H - 12)).toFixed(1)]);
+    bars += `<rect x="${x}" y="${(H - h).toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" rx="3" fill="#4a7dd6" opacity="${(0.35 + 0.65 * nn / maxN).toFixed(2)}" style="cursor:pointer;" onclick="sbMonTimeSel('${d}')"/>`;
+    bars += `<text x="${cx}" y="${(H - h - 3).toFixed(1)}" text-anchor="middle" font-size="8" fill="#4a7dd6" font-family="Poppins,sans-serif">${nn}</text>`;
+    const lbl = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' : d;
+    labels += `<text x="${cx}" y="${H + 15}" text-anchor="middle" font-size="9" fill="${nn < 5 ? '#f59e0b' : '#6b8299'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
+  });
+  const line = pts => pts.map(p => p.join(',')).join(' ');
+  const axisTitle = `<text x="${PAD + chartW/2}" y="${H + 30}" text-anchor="middle" font-size="9" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Sessions</text>`;
+  return `<div style="overflow-x:auto;"><svg width="${PAD + chartW}" height="${H + 36}" style="display:block;">
+    ${grid}
+    ${bars}
+    ${dates.length > 1 ? `<polyline points="${line(qPts)}" fill="none" stroke="#34d399" stroke-width="2"/>
+    <polyline points="${line(lPts)}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 3"/>` : ''}
+    ${labels}
+    ${axisTitle}
+  </svg></div>`;
+}
+
+// Vier Kategorie-Linien (Ø pro Session), gleiche Zeitachse wie sbMonTimeChart
+function fsMonCatChart(rows) {
+  const by = {};
+  rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
+  const dates = Object.keys(by).sort().slice(-12);
+  if (!dates.length) return '<div style="color:var(--muted);font-size:12px;">No data.</div>';
+  const H = 110, slot = 46, PAD = 34;
+  const chartW = dates.length * slot;
+  const yOf = p => H - p/100 * (H - 12);
+  let lines = '', dots = '', labels = '', grid = '';
+  [0, 25, 50, 75, 100].forEach(p => {
+    grid += `<line x1="${PAD}" y1="${yOf(p).toFixed(1)}" x2="${PAD + chartW}" y2="${yOf(p).toFixed(1)}" stroke="var(--border)" stroke-width="1" ${p ? 'stroke-dasharray="2 4"' : ''}/>`;
+    grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
+  });
+  FS_MON_CATS.forEach(([key]) => {
+    const pts = [];
+    dates.forEach((d, i) => {
+      const v = fsMonCatAvg(by[d], key);
+      if (v !== null) pts.push([PAD + i * slot + slot/2, yOf(v).toFixed(1)]);
+    });
+    if (!pts.length) return;
+    const col = FS_MON_CAT_COLORS[key];
+    if (pts.length > 1) lines += `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="2" opacity="0.9"/>`;
+    pts.forEach(p => { dots += `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="${col}"/>`; });
+  });
+  dates.forEach((d, i) => {
+    const nn = by[d].length;
+    const lbl = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' : d;
+    labels += `<text x="${PAD + i * slot + slot/2}" y="${H + 15}" text-anchor="middle" font-size="9" fill="${nn < 5 ? '#f59e0b' : '#6b8299'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
+  });
+  const axisTitle = `<text x="${PAD + chartW/2}" y="${H + 30}" text-anchor="middle" font-size="9" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Sessions</text>`;
+  return `<div style="overflow-x:auto;"><svg width="${PAD + chartW}" height="${H + 36}" style="display:block;">${grid}${lines}${dots}${labels}${axisTitle}</svg></div>`;
+}
+
+// ═══════ REPORTS-TAB — interaktiver Session-Report-Viewer (SB-Struktur, FS-Logik: QoE statt KPIs) ═══════
+let _sbRepList = [];
+let _sbRepTyp = '';
+let _sbRepRange = 'all';
+let _sbRepFrom = '';
+let _sbRepTo = '';
+let _sbRepSelIdx = -1;
+let _sbRV = null;          // {report, groups} des offenen Reports
+let _sbRVEditable = false; // Edit nur im Reports-Tab, nicht im Modal nach Session-Ende
+let _sbRVEdit = null;      // {ai, ti, i} während ein Versuch editiert wird
+let _sbRVEditCats = {};    // {takeoff, grab, trick, land} → miss|okay|perfect|null
+
+function sbRepSetTyp(v) { _sbRepTyp = v; renderReportsList(); }
+function sbRepSetRange(v) { _sbRepRange = v; renderReportsList(); }
+function sbRepApplyCustom() {
+  _sbRepFrom = document.getElementById('rep-date-from')?.value || '';
+  _sbRepTo = document.getElementById('rep-date-to')?.value || '';
+  renderReportsList();
+}
+function sbRepRangeBounds() {
+  const now = new Date();
+  const y = now.getMonth() + 1 >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+  if (_sbRepRange === 'season') return {from: y + '-05-01', to: ''};
+  if (_sbRepRange === 'last')   return {from: (y-1) + '-05-01', to: y + '-04-30'};
+  if (_sbRepRange === 'custom') return {from: _sbRepFrom || '', to: _sbRepTo || ''};
+  return {from: '', to: ''};
+}
+
+async function loadReportsTab() {
+  const root = document.getElementById('sbrep-root');
+  if (!root) return;
+  root.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+  const {data, error} = await db.from('session_reports').select('*').eq('app','freeski')
+    .order('datum', {ascending:false}).order('created_at', {ascending:false}).limit(200);
+  if (error) { root.innerHTML = '<div style="color:var(--muted);padding:16px;">Error loading reports: '+error.message+'</div>'; return; }
+  _sbRepList = data || [];
+  renderReportsList();
+}
+
+function renderReportsList() {
+  const root = document.getElementById('sbrep-root');
+  if (!root) return;
+  if (!_sbRepList.length) {
+    root.innerHTML = '<div class="card" style="padding:20px;color:var(--muted);">No session reports yet.</div>';
+    return;
+  }
+  const {from: repFrom, to: repTo} = sbRepRangeBounds();
+  const filtered = _sbRepList.map((r, i) => ({r, i}))
+    .filter(x => typMatches(x.r.session_type, _sbRepTyp))
+    .filter(x => !repFrom || (x.r.datum || '') >= repFrom)
+    .filter(x => !repTo || (x.r.datum || '') <= repTo)
+    .filter(x => GROUP_FILTER === 'all' || (Array.isArray(x.r.athletes) && x.r.athletes.some(n => SESS_ALL_ATHLETES.some(a => a.name === n))));
+  const rows = filtered.map(({r, i}) => {
+    const dateStr = r.datum ? (() => { const p=r.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '—';
+    const typeShort = SESS_TYPE_SHORT[r.session_type]||r.session_type||'—';
+    const athStr = Array.isArray(r.athletes) ? r.athletes.map(a=>shortName(a)).join(', ') : '';
+    const att = Array.isArray(r.trick_data) ? r.trick_data.reduce((s,a)=>s+(a.totalAtt||0),0) : 0;
+    const durStr = r.duration_min ? (r.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
+    return `<div onclick="sbOpenReportInline(${i})" style="display:flex;align-items:center;gap:12px;padding:13px 6px;border-bottom:1px solid var(--border);cursor:pointer;">
+      <div style="min-width:64px;font-size:14px;font-weight:700;color:#39c3d4;">${dateStr}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;color:var(--text);font-weight:600;">${typeShort} · ${durStr}${r.location ? ' · '+r.location : ''}</div>
+        <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${athStr}</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);flex-shrink:0;">${att ? att+' att.' : ''}</div>
+      <div style="color:#39c3d4;font-size:14px;flex-shrink:0;">→</div>
+    </div>`;
+  }).join('');
+  const dateInput = id => `<input type="date" id="${id}" value="${id==='rep-date-from'?_sbRepFrom:_sbRepTo}" onchange="sbRepApplyCustom()" style="padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:'Poppins',sans-serif;">`;
+  root.innerHTML = `<div class="card" style="padding:20px;">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px;">
+      <div style="flex:1;min-width:160px;">
+        <div style="font-size:20px;font-weight:800;color:var(--text);">Session Reports</div>
+        <div style="font-size:12px;color:var(--muted);">Tap a session to open the report</div>
+      </div>
+      <select onchange="sbRepSetRange(this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+        <option value="all" ${_sbRepRange==='all'?'selected':''}>All time</option>
+        <option value="season" ${_sbRepRange==='season'?'selected':''}>Current season</option>
+        <option value="last" ${_sbRepRange==='last'?'selected':''}>Last season</option>
+        <option value="custom" ${_sbRepRange==='custom'?'selected':''}>Custom period…</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 12px;">
+      ${fsTypeChipsHtml(_sbRepTyp, 'sbRepSetTyp')}
+      ${_sbRepRange==='custom' ? `<div style="display:flex;align-items:center;gap:6px;">${dateInput('rep-date-from')}<span style="color:var(--muted);">–</span>${dateInput('rep-date-to')}</div>` : ''}
+    </div>
+    ${rows || '<div style="color:var(--muted);padding:12px;">No reports match the current filters.</div>'}
+  </div>`;
+}
+
+async function sbOpenReportInline(i) {
+  let report = _sbRepList[i];
+  if (!report) return;
+  _sbRepSelIdx = i;
+  _sbRVEdit = null;
+  // Ältere FS-Reports haben keine attempts (oder ohne dbIds) — einmalig aus der tricks-Tabelle rekonstruieren
+  const hasAttempts = Array.isArray(report.trick_data) && report.trick_data.some(a => Array.isArray(a.attempts) && a.attempts.length);
+  const missingIds = hasAttempts && report.trick_data.some(a => Array.isArray(a.attempts) && a.attempts.some(x => !x.dbId));
+  if (report.id && (!hasAttempts || missingIds)) {
+    await rebuildReportFromTimestamps(report.id, true);
+    report = _sbRepList[i];
+  }
+  const root = document.getElementById('sbrep-root');
+  _sbRVEditable = true;
+  const inner = fsReportInnerHtml(report);
+  if (inner === null) { openReportPrint(report); return; }
+  const dateStr = report.datum ? (() => { const p=report.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+  root.innerHTML = `<div class="card" style="padding:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button onclick="renderReportsList()" style="padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">← Back</button>
+        <div style="font-size:16px;font-weight:800;color:var(--text);">Session Report · ${dateStr}</div>
+      </div>
+      <button onclick="sbRVPrintPdf()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">PDF</button>
+    </div>
+    ${inner}
+    <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px;display:flex;justify-content:center;">
+      <button onclick="sbRepDeleteCurrent()" style="padding:10px 20px;border-radius:8px;background:none;border:1px solid #e2001a;color:#e2001a;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">🗑 Delete session (report + all attempts)</button>
+    </div>
+  </div>`;
+  window.scrollTo(0,0);
+}
+
+function sbRepDeleteCurrent() {
+  const report = _sbRV && _sbRV.report;
+  if (!report || !report.id) return;
+  deleteSessionReport(report.id, true);
+}
+
+function fsGroupAttempts(attempts) {
+  const groups = [], byTrick = {};
+  (attempts||[]).forEach(a => {
+    const key = a.trick || '—';
+    if (!byTrick[key]) { byTrick[key] = {trick:key, attempts:[]}; groups.push(byTrick[key]); }
+    byTrick[key].attempts.push(a);
+  });
+  return groups;
+}
+
+// Pro Versuch vier Kategorie-Balken (Take-off/Trick/Grab/Landing, Höhe = Bewertung 0/50/100%),
+// Miss-Versuche mit rotem Band + roter Nummer; graue Linie = laufender Ø-QoE.
+// Farben wie das Kategorie-Verlaufs-Chart im Monitoring. Mit X/Y-Achsenbeschriftung.
+const FS_RV_CHART_CATS = [['takeoff','#39c3d4'],['trick_r','#4a7dd6'],['grab','#a78bfa'],['land','#34d399']];
+function fsTrickChartSvg(g, ai, ti) {
+  const n = g.attempts.length;
+  const H = 90, PAD = 30, catW = 6, catGap = 1;
+  const groupW = 4*catW + 3*catGap, gap = 10, slot = groupW + gap;
+  const yOf = p => H - p/100 * (H - 8);
+  const SCORE = {perfect:100, okay:50, miss:0};
+  let grid = '';
+  [0, 50, 100].forEach(p => {
+    grid += `<line x1="${PAD}" y1="${yOf(p).toFixed(1)}" x2="${PAD + n*slot}" y2="${yOf(p).toFixed(1)}" stroke="var(--border)" stroke-width="1" ${p ? 'stroke-dasharray="2 4"' : ''}/>`;
+    grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
+  });
+  let qoeSum = 0;
+  const pts = [];
+  let marks = '', bars = '', labels = '', hits = '';
+  g.attempts.forEach((a, i) => {
+    const q = qoeOfLogEntry(a);
+    qoeSum += q;
+    const gx = PAD + i*slot;
+    pts.push([gx + groupW/2, yOf(qoeSum/(i+1)).toFixed(1)]);
+    const isMiss = a.result === 'miss';
+    if (isMiss) marks += `<rect x="${gx-3}" y="2" width="${groupW+6}" height="${H-2}" fill="rgba(226,0,26,0.05)" rx="3"/>
+      <text x="${gx + groupW/2}" y="11" text-anchor="middle" font-size="9" font-weight="700" fill="#e2001a" font-family="Poppins,sans-serif">✗</text>`;
+    FS_RV_CHART_CATS.forEach(([c, col], k) => {
+      const v = SCORE[a[c]];
+      if (v === undefined) return;
+      const h = Math.max(4, v/100 * (H - 8));
+      bars += `<rect x="${gx + k*(catW+catGap)}" y="${(H-h).toFixed(1)}" width="${catW}" height="${h.toFixed(1)}" rx="1.5" fill="${col}"/>`;
+    });
+    labels += `<text x="${gx + groupW/2}" y="${H + 12}" text-anchor="middle" font-size="8" font-weight="${isMiss?'700':'400'}" fill="${isMiss?'#e2001a':'#6b8299'}" font-family="Poppins,sans-serif">${i+1}</text>`;
+    hits += `<rect x="${gx-3}" y="0" width="${slot}" height="${H+14}" fill="transparent" style="cursor:pointer;" onclick="sbRVShowDetail(${ai},${ti},${i})"/>`;
+  });
+  const w = PAD + Math.max(n*slot, 40);
+  const axisTitle = `<text x="${PAD + (w-PAD)/2}" y="${H + 24}" text-anchor="middle" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
+  const lineDots = pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#e8edf2" stroke="#0c1a2b" stroke-width="1"/>`).join('');
+  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+28}" style="display:block;">${grid}${marks}${bars}
+    ${n>1?`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#e8edf2" stroke-width="2"/>`:''}
+    ${lineDots}
+    <rect id="sbrv-sel-${ai}-${ti}" x="0" y="1" width="${groupW+6}" height="${H+18}" fill="none" stroke="#39c3d4" stroke-width="1.5" rx="4" style="display:none;"/>
+    ${labels}${axisTitle}${hits}
+  </svg></div>`;
+}
+
+const FS_RV_CATS = [['takeoff','Take-off'],['trick_r','Trick'],['grab','Grab'],['land','Landing']];
+const FS_RV_ICON = {perfect:'⭐', okay:'✓', miss:'✗'};
+
+function sbRVShowDetail(ai, ti, i) {
+  if (!_sbRV) return;
+  const g = _sbRV.groups[ai][ti];
+  const a = g.attempts[i];
+  const el = document.getElementById(`sbrv-det-${ai}-${ti}`);
+  if (!el || !a) return;
+  // Ausgewählten Versuch im Chart markieren (Konstanten identisch zu fsTrickChartSvg)
+  const selRect = document.getElementById(`sbrv-sel-${ai}-${ti}`);
+  if (selRect) {
+    const PAD = 30, groupW = 4*6 + 3*1, slot = groupW + 10;
+    selRect.setAttribute('x', PAD + i*slot - 3);
+    selRect.style.display = '';
+  }
+  if (_sbRVEdit && _sbRVEdit.ai === ai && _sbRVEdit.ti === ti && _sbRVEdit.i === i) {
+    const seg = (cat, label) => {
+      const cur = _sbRVEditCats[cat];
+      return `<div style="display:flex;align-items:center;gap:4px;">
+        <span style="font-size:10px;color:var(--muted);min-width:52px;">${label}</span>
+        ${['miss','okay','perfect'].map(v => {
+          const on = cur === v;
+          const col = v==='miss'?'#e2001a':v==='okay'?'#34d399':'#39c3d4';
+          return `<button onclick="sbRVEditCatSet('${cat}','${v}')" style="padding:4px 8px;border-radius:6px;border:1.5px solid ${on?col:'var(--border)'};background:${on?col+'22':'var(--surface2)'};color:${on?col:'var(--muted)'};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer;">${FS_RV_ICON[v]}</button>`;
+        }).join('')}
+      </div>`;
+    };
+    el.innerHTML = `<div style="background:var(--surface);border:1px solid #39c3d433;border-radius:10px;padding:10px;margin-top:4px;">
+      <div style="font-size:11px;font-weight:700;color:#39c3d4;margin-bottom:8px;">Edit attempt ${i+1} — ${g.trick} <span style="font-weight:400;color:var(--muted);">(tap again to unset a category)</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">${FS_RV_CATS.map(([c,l]) => seg(c,l)).join('')}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button onclick="sbRVEditSave()" style="padding:6px 14px;border-radius:8px;border:2px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Save</button>
+        <button onclick="sbRVEditCancel()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button>
+        <button onclick="sbRVEditDelete()" style="margin-left:auto;padding:6px 12px;border-radius:8px;background:none;border:1px solid #e2001a55;color:#e2001a;font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">🗑 Delete attempt</button>
+      </div>
+    </div>`;
+    return;
+  }
+  const q = qoeOfLogEntry(a);
+  const resCol = a.result==='miss' ? '#e2001a' : a.result==='perfect' ? '#39c3d4' : '#34d399';
+  const resLbl = a.result==='miss' ? 'Miss' : a.result==='perfect' ? 'Perfect' : 'Landed';
+  const catCol = {perfect:'#39c3d4', okay:'#34d399', miss:'#e2001a'};
+  const catStr = FS_RV_CATS.map(([c,l]) => a[c] ? `${l} <b style="color:${catCol[a[c]]};">${FS_RV_ICON[a[c]]}</b>` : null).filter(Boolean).join(' · ');
+  let txt = `<span style="color:${resCol};font-weight:600;">Attempt ${i+1} — ${resLbl} · QoE ${q}%</span>`
+    + (catStr ? ` <span style="color:var(--muted);">${catStr}</span>` : ' <span style="color:var(--muted);">(no category data)</span>');
+  if (a.comment) txt += ` <span style="color:var(--muted);">— ${a.comment}</span>`;
+  if (a.time) txt += ` <span style="color:var(--muted);font-size:10px;">${a.time}</span>`;
+  if (_sbRVEditable && _sbRV.report && _sbRV.report.id && a.dbId) {
+    txt += ` <button onclick="sbRVEditStart(${ai},${ti},${i})" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:1px 7px;font-size:10px;">✏️ Edit</button>`;
+  }
+  el.innerHTML = txt;
+}
+
+function sbRVEditStart(ai, ti, i) {
+  const a = _sbRV.groups[ai][ti].attempts[i];
+  _sbRVEdit = {ai, ti, i};
+  _sbRVEditCats = {takeoff: a.takeoff||null, grab: a.grab||null, trick_r: a.trick_r||null, land: a.land||null};
+  sbRVShowDetail(ai, ti, i);
+}
+
+function sbRVEditCatSet(cat, val) {
+  _sbRVEditCats[cat] = _sbRVEditCats[cat] === val ? null : val;
+  const {ai, ti, i} = _sbRVEdit;
+  sbRVShowDetail(ai, ti, i);
+}
+
+function sbRVEditCancel() {
+  const e = _sbRVEdit;
+  _sbRVEdit = null;
+  if (e) sbRVShowDetail(e.ai, e.ti, e.i);
+}
+
+function fsRVRecomputeTd(td) {
+  const ents = td.attempts.map(x => ({trick: x.trick, result: x.result, takeoff: x.takeoff, grab: x.grab, trick_r: x.trick_r, land: x.land}));
+  td.tricks = buildFsTrickBlocks(ents);
+  td.totalAtt = td.tricks.reduce((s,t)=>s+t.att,0);
+  td.totalLand = td.tricks.reduce((s,t)=>s+t.land,0);
+  td.qualityPct = ents.length ? Math.round(ents.reduce((a,e)=>a+qoeOfLogEntry(e),0)/ents.length) : null;
+}
+
+async function sbRVEditDelete() {
+  if (!_sbRVEdit || !_sbRV) return;
+  if (!confirm('Delete this attempt? It will be removed from the report and the database.')) return;
+  const {ai, ti, i} = _sbRVEdit;
+  const report = _sbRV.report;
+  const a = _sbRV.groups[ai][ti].attempts[i];
+  if (a.dbId) {
+    const {error} = await db.from('tricks').delete().eq('id', a.dbId);
+    if (error) { showToast('Error deleting: ' + error.message, 'error'); return; }
+  }
+  const td = report.trick_data[ai];
+  const idx = td.attempts.indexOf(a);
+  if (idx >= 0) td.attempts.splice(idx, 1);
+  if (a.dbId && Array.isArray(td.trickIds)) {
+    const tIdx = td.trickIds.indexOf(a.dbId);
+    if (tIdx >= 0) td.trickIds.splice(tIdx, 1);
+  }
+  fsRVRecomputeTd(td);
+  if (report.id) {
+    const {error: rErr} = await db.from('session_reports').update({trick_data: report.trick_data}).eq('id', report.id);
+    if (rErr) { showToast('Error saving report: ' + rErr.message, 'error'); return; }
+  }
+  sbMonRows = null;
+  _sbRVEdit = null;
+  if (_sbRepSelIdx >= 0) {
+    const sy = window.scrollY;
+    await sbOpenReportInline(_sbRepSelIdx);
+    window.scrollTo(0, sy);
+  }
+  showToast('Attempt deleted', 'success');
+}
+
+async function sbRVEditSave() {
+  if (!_sbRVEdit || !_sbRV) return;
+  const {ai, ti, i} = _sbRVEdit;
+  const report = _sbRV.report;
+  const a = _sbRV.groups[ai][ti].attempts[i]; // gleiche Objekt-Referenz wie in report.trick_data
+  const r = _sbRVEditCats;
+  const score = {miss:1,okay:2,perfect:3};
+  const rated = ['takeoff','grab','trick_r','land'].filter(c => r[c]);
+  if (!rated.length) { showToast('Rate at least one category', 'error'); return; }
+  // Gleiche Ableitung wie die Live-Erfassung (autoLogAttempt)
+  const avg = rated.reduce((s,c)=>s+score[r[c]],0)/rated.length;
+  const gesamt = r.land==='miss' ? 3 : avg>=2.7 ? 10 : 7;
+  const result = gesamt===10 ? 'perfect' : gesamt===7 ? 'landed' : 'miss';
+  // 1. tricks-Zeile aktualisieren (kommentar: Kategorien neu, freien Kommentar erhalten)
+  if (a.dbId) {
+    const kommentarParts = [[r.takeoff&&`Takeoff:${r.takeoff}`, r.grab&&`Grab:${r.grab}`, r.trick_r&&`Trick:${r.trick_r}`, r.land&&`Landing:${r.land}`].filter(Boolean).join(' ')];
+    if (a.comment) kommentarParts.push(a.comment);
+    const {error} = await db.from('tricks').update({
+      gesamt, ausfuehrung:gesamt, landung:gesamt, setup:gesamt,
+      gelandet: result==='miss'?'No':'Yes',
+      kommentar: kommentarParts.join(' | ')
+    }).eq('id', a.dbId);
+    if (error) { showToast('Error saving: ' + error.message, 'error'); return; }
+  }
+  // 2. Report-JSON aktualisieren (Versuch + Blöcke/Totale neu rechnen)
+  a.result = result; a.takeoff = r.takeoff||null; a.grab = r.grab||null; a.trick_r = r.trick_r||null; a.land = r.land||null;
+  fsRVRecomputeTd(report.trick_data[ai]);
+  if (report.id) {
+    const {error: rErr} = await db.from('session_reports').update({trick_data: report.trick_data}).eq('id', report.id);
+    if (rErr) { showToast('Error saving report: ' + rErr.message, 'error'); return; }
+  }
+  sbMonRows = null; // Monitoring-Cache ist jetzt veraltet
+  _sbRVEdit = null;
+  if (_sbRepSelIdx >= 0) {
+    const sy = window.scrollY;
+    await sbOpenReportInline(_sbRepSelIdx);
+    window.scrollTo(0, sy);
+  }
+  showToast('Attempt updated', 'success');
+}
+
+function fsReportInnerHtml(report) {
+  const trickData = Array.isArray(report.trick_data) ? report.trick_data : [];
+  const hasAttempts = trickData.some(a => Array.isArray(a.attempts) && a.attempts.length);
+  if (!hasAttempts) return null;
+  _sbRV = {report, groups: trickData.map(a => fsGroupAttempts(a.attempts))};
+  const typeShort = SESS_TYPE_SHORT[report.session_type]||report.session_type||'—';
+
+  const sections = trickData.map((a, ai) => {
+    const attempts = a.attempts || [];
+    if (!attempts.length) return '';
+    const groups = _sbRV.groups[ai];
+    const qoes = attempts.map(qoeOfLogEntry);
+    const athQoe = qoes.length ? Math.round(qoes.reduce((s,v)=>s+v,0)/qoes.length) : 0;
+    const athLanded = attempts.filter(x=>x.result!=='miss').length;
+    const athLandedPct = attempts.length ? Math.round(athLanded/attempts.length*100) : 0;
+    const cards = groups.map((g, ti) => {
+      const n = g.attempts.length;
+      const landed = g.attempts.filter(x=>x.result!=='miss').length;
+      const missed = n - landed;
+      const gQoes = g.attempts.map(qoeOfLogEntry);
+      const gQoe = gQoes.length ? Math.round(gQoes.reduce((s,v)=>s+v,0)/gQoes.length) : 0;
+      const qoeCol = gQoe >= 70 ? '#34d399' : gQoe >= 50 ? '#f59e0b' : '#e2001a';
+      let fatigue = '';
+      if (n >= 6) {
+        const half = Math.floor(n/2);
+        const q1 = g.attempts.slice(0,half).map(qoeOfLogEntry);
+        const q2 = g.attempts.slice(half).map(qoeOfLogEntry);
+        const a1 = q1.reduce((s,v)=>s+v,0)/q1.length, a2 = q2.reduce((s,v)=>s+v,0)/q2.length;
+        if (a2 < a1 - 15) fatigue = `<span style="color:#f59e0b;">↘ QoE drops in 2nd half</span>`;
+      }
+      const cmtRows = g.attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💬 <b style="color:var(--text);">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
+      const cmtCol = cmtRows ? `<div style="flex:0 1 220px;min-width:170px;border-left:1px solid var(--border);padding-left:14px;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Comments</div>${cmtRows}</div>` : '';
+      return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;">
+          <div style="font-size:14px;font-weight:700;color:var(--text);">${g.trick}</div>
+          <div style="font-size:11px;color:var(--muted);">${n} attempt${n!==1?'s':''}</div>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
+          <div style="flex:1 1 300px;min-width:0;">
+            ${fsTrickChartSvg(g, ai, ti)}
+            <div id="sbrv-det-${ai}-${ti}" style="font-size:11px;color:var(--muted);min-height:16px;margin:2px 0 8px;">Tap a bar for details</div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
+              <span><b style="color:#34d399;">${landed}</b> landed</span>
+              <span><b style="color:#e2001a;">${missed}</b> missed</span>
+              <span>Ø QoE <b style="color:${qoeCol};">${gQoe}%</b></span>
+              ${fatigue}
+            </div>
+          </div>
+          ${cmtCol}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <div style="font-size:17px;font-weight:800;color:#39c3d4;">${a.athlet}</div>
+        <div style="font-size:11px;color:var(--muted);">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · ${athLandedPct}% landed · Ø QoE <b style="color:var(--text);">${athQoe}%</b>${a.quali_scores && a.quali_scores.length ? ' · Quali <b style="color:#f59e0b;">' + a.quali_scores.join(' / ') + '</b>' : ''}${a.final_scores && a.final_scores.length ? ' · Final <b style="color:#f59e0b;">' + a.final_scores.join(' / ') + '</b>' : ''}${a.contest_rank ? ' · Rank <b style="color:#f59e0b;">' + a.contest_rank + '</b>' : ''}</div>
+      </div>
+      ${a.note ? `<div style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border-left:3px solid #f59e0b;border-radius:8px;padding:8px 10px;margin-bottom:10px;">📝 <b>Coach note:</b> ${a.note}</div>` : ''}
+      ${cards}
+    </div>`;
+  }).join('');
+
+  return `<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">${typeShort}${report.location ? ' · '+report.location : ''}${report.duration_min ? ' · '+report.duration_min+' min' : ''}</div>
+${report.comments ? `<div style="background:var(--surface2);border-left:3px solid #39c3d4;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:14px;"><b style="color:#39c3d4;">Coach comments:</b> ${report.comments}</div>` : ''}
+    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:14px;">
+      <span>Bars per attempt (height = rating 0/50/100%):</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#39c3d4;border-radius:2px;vertical-align:-1px;"></span> Take-off</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Trick</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#a78bfa;border-radius:2px;vertical-align:-1px;"></span> Grab</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#34d399;border-radius:2px;vertical-align:-1px;"></span> Landing</span>
+      <span><span style="display:inline-block;width:14px;height:2px;background:#e8edf2;vertical-align:3px;"></span> running Ø QoE</span>
+      <span><b style="color:#e2001a;">✗ / red number</b> = Miss</span>
+    </div>
+    ${sections}`;
+}
+
+function openSessionReportView(report) {
+  _sbRVEditable = false;
+  _sbRVEdit = null;
+  const inner = fsReportInnerHtml(report);
+  if (inner === null) { openReportPrint(report); return; }
+  const dateStr = report.datum ? (() => { const p=report.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+  document.getElementById('sbrv-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'sbrv-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2100;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;';
+  modal.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;max-width:640px;width:100%;margin:auto 0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+      <div style="font-size:16px;font-weight:800;color:var(--text);">Session Report · ${dateStr}</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="sbRVPrintPdf()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">PDF</button>
+        <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
+      </div>
+    </div>
+    ${inner}
+  </div>`;
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+// PDF nutzt dasselbe Markup wie die Web-Ansicht (fsReportInnerHtml)
+function sbRVPrintPdf() {
+  const report = _sbRV && _sbRV.report;
+  if (!report) { showToast('No report open', 'error'); return; }
+  const inner = fsReportInnerHtml(report);
+  if (inner === null) { openReportPrint(report); return; }
+
+  const dateStr = report.datum ? (() => { const p=report.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
+  const athleteStr = Array.isArray(report.athletes) ? report.athletes.map(a=>shortName(a)).join(', ') : (report.athletes||'');
+  const condLabel = report.conditions ? (report.conditions+'/5 '+(['','Poor','Below Average','Average','Good','Excellent'][report.conditions]||'')) : '—';
+  const printable = inner
+    .replace(/<div id="sbrv-det-\d+-\d+"[^>]*>Tap a bar for details<\/div>/g, '')
+    .replace(/ onclick="sbRVShowDetail\([^"]*\)"/g, '')
+    .replace(/cursor:pointer;/g, '');
+  const today = new Date().toLocaleDateString('de-CH');
+
+  const win = window.open('', '_blank');
+  if (!win) { showToast('Please allow pop-ups to export the PDF', 'error'); return; }
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Session Report ${dateStr} — Freeski</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#060f1a; --surface:#0c1a2b; --surface2:#112236; --border:#1a3450;
+          --accent2:#39c3d4; --text:#e8edf2; --muted:#6b8299; --success:#34d399; --danger:#e2001a; }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{font-family:'Poppins',-apple-system,'Helvetica Neue',Arial,sans-serif;background:var(--bg);
+       color:var(--text);padding:28px 32px;max-width:820px;margin:0 auto;}
+  .print-btn{margin-bottom:20px;}
+  .print-btn button{padding:9px 22px;background:var(--accent2);color:#060f1a;border:none;border-radius:8px;
+       font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+  h1{font-size:20px;font-weight:800;margin-bottom:10px;}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 26px;border-top:1px solid var(--border);
+        border-bottom:1px solid var(--border);padding:10px 0;margin-bottom:16px;}
+  .meta div{font-size:11px;color:var(--muted);}
+  .meta b{display:block;color:var(--text);font-size:12px;font-weight:600;margin-top:2px;}
+  .comments{background:var(--surface2);border-left:3px solid var(--accent2);border-radius:8px;
+            padding:10px 12px;font-size:12px;margin-bottom:18px;}
+  svg{max-width:100%;height:auto;}
+  footer{margin-top:24px;border-top:1px solid var(--border);padding-top:10px;font-size:10px;
+         color:var(--muted);display:flex;justify-content:space-between;}
+  @media print{
+    .print-btn{display:none;}
+    body{padding:12mm;max-width:none;}
+    @page{size:A4;margin:0;}
+    div[style*="border-radius:12px"]{break-inside:avoid;page-break-inside:avoid;}
+  }
+</style></head><body>
+  <div class="print-btn"><button onclick="window.print()">Print / Save as PDF</button></div>
+  <h1>Session Report · ${dateStr}</h1>
+  <div class="meta">
+    <div>ATHLETES<b>${athleteStr||'—'}</b></div>
+    <div>LOCATION<b>${(report.location||'—')}${report.jump_size ? ' · Jump '+report.jump_size : ''}</b></div>
+    <div>CONDITIONS<b>${condLabel}</b></div>
+  </div>
+  ${printable}
+  <footer><span>Swiss-Ski Trick Analyses — Freeski</span><span>Generated ${today}</span></footer>
+</body></html>`);
+  win.document.close();
+}
+
+// ═══════ COACHING ANALYSIS (FS) — regelbasiert auf Ø-QoE-Basis, letzte 3 Sessions ═══════
+// Rein analytisch: nutzt die bestehende Ampel-Bewertung, ändert an der Erfassung nichts.
+// «Current status» = neuester Kommentar; KI-Synthese via Edge Function trick-status (FS-Projekt).
+let _monTimeBy = {};
+let _monCmts = [];
+let _monStatus = null;
+let _monCmtHistOpen = false;
+const MON_PLATEAU_TOL = 5; // Prozentpunkte über 3 Sessions — an echten Daten testen
+
+function sbMonSessions(rows) {
+  const by = {};
+  rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
+  return Object.keys(by).sort().map(d => ({date: d, rows: by[d]}));
+}
+
+function fsMonCoachingHtml(rows) {
+  const GREY = '#6b8299', AMBER = '#f59e0b', RED = '#e2001a';
+  const sessions = sbMonSessions(rows);
+  const nS = sessions.length;
+  const qoeOfS = s => fsMonAvgQoe(s.rows) ?? 0;   // Ø QoE pro Session (0–100)
+  const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0;
+  const items = [];
+
+  // 1 · Comp-readiness: alle 4 Kategorien ≥80% über das 3-Session-Fenster
+  const catWindowOk = sess => {
+    const atts = sess.flatMap(s => s.rows);
+    if (!atts.length) return false;
+    return FS_MON_CATS.every(([key]) => {
+      const v = fsMonCatAvg(atts, key);
+      return v !== null && v >= 80;
+    });
+  };
+  if (nS >= 3) {
+    const nowOk = catWindowOk(sessions.slice(-3));
+    const prevOk = nS >= 4 && catWindowOk(sessions.slice(Math.max(0, nS-6), nS-3));
+    if (nowOk) items.push(['Comp-readiness', 'Reached', GREY]);
+    else if (prevOk) items.push(['Comp-readiness', 'Lost — was reached before', RED]);
+    else items.push(['Comp-readiness', 'Not reached', AMBER]);
+  } else items.push(['Comp-readiness', `Not enough data (${nS}/3 sessions)`, GREY]);
+
+  // 2 · Efficiency trend: Ø QoE letzte 3 vs. vorangehende (bis 3) Sessions
+  if (nS >= 4) {
+    const last = avg(sessions.slice(-3).map(qoeOfS));
+    const prev = avg(sessions.slice(Math.max(0, nS-6), nS-3).map(qoeOfS));
+    const diff = Math.round(last - prev);
+    if (diff <= -5) items.push(['Efficiency trend', `Falling, ${diff}% (3 sessions)`, RED]);
+    else if (diff >= 5) items.push(['Efficiency trend', `Rising, +${diff}% (3 sessions)`, GREY]);
+    else items.push(['Efficiency trend', 'Stable (3 sessions)', GREY]);
+  } else items.push(['Efficiency trend', `Not enough data (${nS}/4 sessions)`, GREY]);
+
+  // 3 · Volume effect: Session-Volumen >150% des Trick-Schnitts UND Ø QoE unter Trick-Schnitt
+  if (nS >= 3) {
+    const avgVol = avg(sessions.map(s => s.rows.length));
+    const avgQ = avg(sessions.map(qoeOfS));
+    const flagged = sessions.filter(s => s.rows.length > 1.5 * avgVol && qoeOfS(s) < avgQ);
+    if (flagged.length) items.push(['Volume effect', `Drops at high volume, cause unclear (${flagged.length}×)`, AMBER]);
+    else items.push(['Volume effect', 'No volume effect', GREY]);
+  } else items.push(['Volume effect', `Not enough data (${nS}/3 sessions)`, GREY]);
+
+  // 4 · Plateau: Ø-QoE-Spanne der letzten 3 Sessions unter Toleranzband
+  if (nS >= 3) {
+    const last3 = sessions.slice(-3).map(qoeOfS);
+    const range = Math.max(...last3) - Math.min(...last3);
+    if (range < MON_PLATEAU_TOL) items.push(['Plateau', `Flat over last 3 sessions (±${Math.round(range)}%)`, AMBER]);
+    else items.push(['Plateau', 'None, still moving', GREY]);
+  } else items.push(['Plateau', `Not enough data (${nS}/3 sessions)`, GREY]);
+
+  // 5 · Consistency: Streuung der Session-Ø-QoE über die letzten (bis 6) Sessions
+  if (nS >= 3) {
+    const vals = sessions.slice(-6).map(qoeOfS);
+    const m = avg(vals);
+    const sd = Math.sqrt(avg(vals.map(v => (v - m) ** 2)));
+    if (sd > 15) items.push(['Consistency', 'Irregular, session to session', AMBER]);
+    else items.push(['Consistency', 'Consistent', GREY]);
+  } else items.push(['Consistency', `Not enough data (${nS}/3 sessions)`, GREY]);
+
+  // 6 · Weakest category: am häufigsten mit Miss bewertete Kategorie der letzten 3 Sessions, mit Trend
+  const last3Rows = sessions.slice(-3).flatMap(s => s.rows);
+  const missCnt = {};
+  FS_MON_CATS.forEach(([key, label]) => {
+    const n = last3Rows.filter(t => new RegExp(key + ':miss').test(t.kommentar || '')).length;
+    if (n) missCnt[label] = {n, key};
+  });
+  const top = Object.entries(missCnt).sort((a,b)=>b[1].n-a[1].n)[0];
+  if (top) {
+    const prevRows = sessions.slice(Math.max(0, nS-6), nS-3).flatMap(s => s.rows);
+    const shareNow = last3Rows.length ? top[1].n / last3Rows.length : 0;
+    const prevN = prevRows.filter(t => new RegExp(top[1].key + ':miss').test(t.kommentar || '')).length;
+    const sharePrev = prevRows.length ? prevN / prevRows.length : 0;
+    const tend = prevRows.length < 3 ? '' : shareNow > sharePrev + 0.05 ? ', increasing' : shareNow < sharePrev - 0.05 ? ', decreasing' : ', stable';
+    items.push(['Weakest category', `${top[0]} miss (${top[1].n}×)${tend}`, tend === ', increasing' ? RED : AMBER]);
+  } else items.push(['Weakest category', 'No miss pattern', GREY]);
+
+  const grid = items.map(([label, txt, col]) => `
+    <div style="border-left:3px solid ${col};padding-left:10px;">
+      <div style="font-size:9px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600;">${label}</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text);">${txt}</div>
+    </div>`).join('');
+
+  return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px;">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">Coaching Analysis</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 24px;">${grid}</div>
+    <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:600;">Coach comment · Current status</span>
+        <span id="mon-cmt-ai-tag" style="font-size:10px;color:#4a7dd6;font-weight:600;display:none;">AI summary</span>
+        <a href="#" id="mon-cmt-hist-link" onclick="sbMonToggleHistory();return false;" style="font-size:11px;color:#39c3d4;display:none;margin-left:auto;">History</a>
+      </div>
+      <div id="mon-cmt-status" style="font-size:13px;color:var(--text);min-height:18px;">Loading…</div>
+      <div id="mon-cmt-history" style="display:none;margin-top:8px;"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:flex-start;">
+        <textarea id="mon-cmt-input" rows="2" placeholder="Add new comment" style="flex:1;resize:vertical;"></textarea>
+        <button onclick="sbMonSaveComment()" style="padding:9px 16px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Save</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function sbMonTimeSel(d) {
+  const el = document.getElementById('mon-time-detail');
+  const rs = _monTimeBy[d];
+  if (!el || !rs) return;
+  const n = rs.length;
+  const landed = rs.filter(fsMonLanded).length;
+  const q = fsMonAvgQoe(rs);
+  const fmt = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' + d.slice(2,4) : d;
+  el.innerHTML = `<b style="color:var(--text);">${fmt}</b> — ${n} attempts ·
+    <span style="color:#34d399;">${landed} landed</span> ·
+    <span style="color:#e2001a;">${n - landed} missed</span> ·
+    Ø QoE <b>${q !== null ? q + '%' : '—'}</b>
+    <button onclick="sbMonOpenTrickReport('${d}')" style="margin-left:8px;padding:3px 10px;border-radius:6px;border:1px solid #39c3d4;background:rgba(57,195,212,0.12);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">Open session view →</button>`;
+}
+
+// Fokussierte Session-Ansicht: NUR dieser Trick dieser Athlet:in aus dieser Session (read-only)
+function sbMonOpenTrickReport(d) {
+  const rows = (_monTimeBy[d] || []).slice().sort((a,b) => (a.created_at||'').localeCompare(b.created_at||''));
+  if (!rows.length) return;
+  const attempts = rows.map(t => ({trick: t.trickaufbau || '—',
+    result: (t.gesamt||0) >= 10 ? 'perfect' : t.gelandet === 'Yes' ? 'landed' : 'miss',
+    takeoff: parseSubRating(t.kommentar, 'Takeoff'), grab: parseSubRating(t.kommentar, 'Grab'),
+    trick_r: parseSubRating(t.kommentar, 'Trick'), land: parseSubRating(t.kommentar, 'Landing'),
+    time: t.created_at ? new Date(t.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Zurich'}) : null,
+    comment: ((t.kommentar||'').split(' | ')[1] || '').trim() || undefined, dbId: t.id}));
+  _sbRVEditable = false;
+  _sbRVEdit = null;
+  const g = {trick: sbMonView.trick, attempts};
+  _sbRV = {report: {datum: d}, groups: [[g]]};
+  const n = attempts.length;
+  const landed = attempts.filter(x => x.result !== 'miss').length;
+  const qoes = attempts.map(qoeOfLogEntry);
+  const gQoe = qoes.length ? Math.round(qoes.reduce((s,v)=>s+v,0)/qoes.length) : 0;
+  const qoeCol = gQoe >= 70 ? '#34d399' : gQoe >= 50 ? '#f59e0b' : '#e2001a';
+  const cmtRows = attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💬 <b style="color:var(--text);">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
+  const cmtCol = cmtRows ? `<div style="flex:0 1 220px;min-width:170px;border-left:1px solid var(--border);padding-left:14px;">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Comments</div>${cmtRows}</div>` : '';
+  const fmt = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' + d.slice(2,4) : d;
+  document.getElementById('sbrv-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'sbrv-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2100;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;';
+  modal.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;max-width:640px;width:100%;margin:auto 0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+      <div style="min-width:0;">
+        <div style="font-size:16px;font-weight:800;color:var(--text);">${g.trick}</div>
+        <div style="font-size:12px;color:var(--muted);">${sbMonView.athlete} · Session ${fmt}</div>
+      </div>
+      <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:10px;">
+      <span>Bars per attempt (height = rating 0/50/100%):</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#39c3d4;border-radius:2px;vertical-align:-1px;"></span> Take-off</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Trick</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#a78bfa;border-radius:2px;vertical-align:-1px;"></span> Grab</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#34d399;border-radius:2px;vertical-align:-1px;"></span> Landing</span>
+      <span><span style="display:inline-block;width:14px;height:2px;background:#e8edf2;vertical-align:3px;"></span> running Ø QoE</span>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
+        <div style="flex:1 1 300px;min-width:0;">
+          ${fsTrickChartSvg(g, 0, 0)}
+          <div id="sbrv-det-0-0" style="font-size:11px;color:var(--muted);min-height:16px;margin:2px 0 8px;">Tap a bar for details</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
+            <span><b style="color:#34d399;">${landed}</b> landed</span>
+            <span><b style="color:#e2001a;">${n - landed}</b> missed</span>
+            <span>Ø QoE <b style="color:${qoeCol};">${gQoe}%</b></span>
+          </div>
+        </div>
+        ${cmtCol}
+      </div>
+    </div>
+  </div>`;
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+// ── Trick-Kommentare + KI-Status (Tabellen trick_comments/trick_status im FS-Projekt) ──
+async function sbMonLoadComments() {
+  const st = document.getElementById('mon-cmt-status');
+  if (!st || !sbMonView.athlete || !sbMonView.trick) return;
+  _monCmts = []; _monCmtHistOpen = false;
+  const {data, error} = await db.from('trick_comments').select('*')
+    .eq('athlet', sbMonView.athlete).eq('trick', sbMonView.trick)
+    .order('datum', {ascending: false}).order('id', {ascending: false});
+  if (error) {
+    st.innerHTML = '<span style="color:var(--muted);font-size:11px;">Comments unavailable — run the trick_comments SQL in Supabase first.</span>';
+    return;
+  }
+  _monCmts = data || [];
+  _monStatus = null;
+  try {
+    const {data: stat} = await db.from('trick_status').select('status_text,updated_at')
+      .eq('athlet', sbMonView.athlete).eq('trick', sbMonView.trick).maybeSingle();
+    if (stat && stat.status_text) _monStatus = stat;
+  } catch (e) { /* Tabelle/Function noch nicht eingerichtet */ }
+  sbMonRenderComments();
+}
+
+function sbMonRenderComments() {
+  const st = document.getElementById('mon-cmt-status');
+  const link = document.getElementById('mon-cmt-hist-link');
+  const hist = document.getElementById('mon-cmt-history');
+  if (!st) return;
+  const fmt = d => { if (!d) return ''; const p = String(d).split('-'); return p.length===3 ? p[2]+'.'+p[1]+'.'+p[0].slice(2) : d; };
+  const cur = _monCmts[0];
+  const aiTag = document.getElementById('mon-cmt-ai-tag');
+  if (_monStatus) {
+    st.innerHTML = `${_monStatus.status_text} <span style="color:var(--muted);font-size:11px;">(${fmt(String(_monStatus.updated_at).slice(0,10))})</span>`;
+    if (aiTag) aiTag.style.display = '';
+  } else {
+    st.innerHTML = cur
+      ? `${cur.kommentar} <span style="color:var(--muted);font-size:11px;">(${fmt(cur.datum)})</span>`
+      : '<span style="color:var(--muted);">No comments yet.</span>';
+    if (aiTag) aiTag.style.display = 'none';
+  }
+  if (link) {
+    link.style.display = _monCmts.length ? '' : 'none';
+    link.textContent = (_monCmtHistOpen ? 'Hide history' : 'History') + ` (${_monCmts.length})`;
+  }
+  if (hist) {
+    hist.style.display = _monCmtHistOpen ? '' : 'none';
+    hist.innerHTML = _monCmts.map(c => `<div style="font-size:12px;color:var(--text);padding:6px 0;border-top:1px solid var(--border);">
+      <span style="color:var(--muted);font-size:10px;">${fmt(c.datum)}</span><br>${c.kommentar}</div>`).join('');
+  }
+}
+
+function sbMonToggleHistory() {
+  _monCmtHistOpen = !_monCmtHistOpen;
+  sbMonRenderComments();
+}
+
+async function sbMonSaveComment() {
+  const inp = document.getElementById('mon-cmt-input');
+  const txt = (inp?.value || '').trim();
+  if (!txt) { showToast('Write a comment first', 'error'); return; }
+  const {error} = await db.from('trick_comments').insert({
+    athlet: sbMonView.athlete, trick: sbMonView.trick,
+    datum: new Date().toISOString().slice(0,10), kommentar: txt
+  });
+  if (error) { showToast('Error saving: ' + error.message, 'error'); return; }
+  inp.value = '';
+  showToast('Comment saved', 'success');
+  sbMonLoadComments();
+  try {
+    db.functions.invoke('trick-status', {body: {athlet: sbMonView.athlete, trick: sbMonView.trick}})
+      .then(res => { if (res && !res.error) sbMonLoadComments(); })
+      .catch(() => {});
+  } catch (e) { /* functions-API nicht verfügbar */ }
+}
+
+// ═══════ SLOPESTYLE RUN-BUILDER (Freeski) — gleiche Bedienung wie Snowboard ═══════
+// Speicherung im FS-Datenmodell: gesamt 3/7/10 + gelandet; Run-Tag, Tags und Kommentar im kommentar-Feld.
+// Vorschläge = dasselbe Vokabular wie das FS-Assessment (Slide Form / Slide Variant / Swap).
+const SB_RAIL_SUGGESTIONS = ['50-50','Switch 50-50','Slide','Front Slide','Back Slide','Lip On','Switch Lip On','Switch Tails On','Front Swap','Back Swap','FS 360 Swap','BS 360 Swap'];
+const SB_RUN_TAGS = ['Rotation too early','Rotation too late','Take-Off','Center of gravity','Orientation','Grab timing','Air position'];
+let SB_CUSTOM_RAIL_TYPES = [];
+let SB_RAIL_TRICKS = [];
+let SB_CUSTOM_RUN_TAGS = [];
+
+function sbAllFailReasons() { return SB_RUN_TAGS.concat(SB_CUSTOM_RUN_TAGS); }
+
+function sbAllRailTypes() {
+  const fromSelect = [...(document.getElementById('sb-railart')?.options || [])]
+    .map(o => o.value).filter(Boolean);
+  return [...new Set(fromSelect.concat(SB_CUSTOM_RAIL_TYPES))];
+}
+
+function sbAllRailTricks() {
+  return [...new Set(SB_RAIL_SUGGESTIONS.concat(SB_RAIL_TRICKS))];
+}
+
+function sbCanonRailTrick(txt) {
+  const norm = s => s.toLowerCase().replace(/\s+/g, ' ').trim();
+  const hit = sbAllRailTricks().find(t => norm(t) === norm(txt));
+  return hit || txt.replace(/\s+/g, ' ').trim();
+}
+
+async function sbLoadRailData() {
+  try {
+    let all = [], from = 0;
+    while (true) {
+      const {data, error} = await db.from('tricks').select('trickaufbau,kommentar').like('trickaufbau', 'Rail %').range(from, from + 999);
+      if (error || !data) break;
+      all = all.concat(data);
+      if (data.length < 1000) break;
+      from += 1000;
+    }
+    const types = new Set(), tricks = new Set(), tags = new Set();
+    all.forEach(r => {
+      const m = (r.trickaufbau || '').match(/^Rail (.+?) — (.+)$/);
+      if (m) { types.add(m[1]); tricks.add(m[2]); }
+      const tm = (r.kommentar || '').match(/Tags: ([^|]+)/);
+      if (tm) tm[1].split(',').map(s => s.trim()).filter(Boolean).forEach(t => tags.add(t));
+    });
+    const known = new Set(sbAllRailTypes());
+    SB_CUSTOM_RAIL_TYPES = SB_CUSTOM_RAIL_TYPES.concat([...types].filter(t => !known.has(t)));
+    SB_RAIL_TRICKS = [...tricks].sort();
+    const knownTags = new Set(sbAllFailReasons());
+    SB_CUSTOM_RUN_TAGS = SB_CUSTOM_RUN_TAGS.concat([...tags].filter(t => !knownTags.has(t)));
+  } catch (e) { /* Basis-Listen reichen */ }
+}
+
+function sbRunMaxEl() { return sessType && sessType.startsWith('Halfpipe') ? 10 : 8; }
+function sbRunState(name) {
+  const d = sessAthleteData[name];
+  if (!d.run) d.run = {no: 1, elements: [], ratings: [], addMode: '', railType: sbAllRailTypes()[0] || 'Rail', noteOpen: null};
+  return d.run;
+}
+
+function sbRunCardHtml(name, d, trickOptions) {
+  const r = sbRunState(name);
+  const sid = name.replace(/\s/g,'_');
+  const elRows = r.elements.map((el, i) => {
+    const rate = r.ratings[i] || null;
+    const btn = (val, icon, col) => `<button onclick="sbRunRate('${name}',${i},'${val}')" style="padding:8px 12px;border-radius:8px;border:2px solid ${rate===val?col:'var(--border)'};background:${rate===val?col+'22':'var(--surface2)'};color:${rate===val?col:'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;">${icon}</button>`;
+    const hasNote = (el.tags && el.tags.length) || el.note;
+    const noteLine = hasNote ? `<div style="margin:-2px 0 6px 62px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        ${(el.tags||[]).map(t => `<span style="font-size:10px;color:#f59e0b;border:1px solid #f59e0b55;border-radius:999px;padding:2px 8px;">${t}</span>`).join('')}
+        ${el.note ? `<span style="font-size:11px;color:var(--muted);">${el.note}</span>` : ''}
+      </div>` : '';
+    const notePanel = r.noteOpen === i ? `<div style="margin:0 0 8px 30px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;">
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Tags</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
+          ${sbAllFailReasons().map(t => { const on = (el.tags||[]).includes(t); return `<button onclick="sbRunTagToggle('${name}',${i},'${t.replace(/'/g,"\\'")}')" style="padding:5px 10px;border-radius:999px;border:1.5px solid ${on?'#f59e0b':'var(--border)'};background:${on?'rgba(245,158,11,0.15)':'none'};color:${on?'#f59e0b':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">${t}</button>`; }).join('')}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <input value="${(el.note||'').replace(/"/g,'&quot;')}" oninput="sbRunNoteInput('${name}',${i},this.value)" placeholder="Comment (optional)" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+          <button onclick="sbRunNoteToggle('${name}',null)" style="padding:8px 14px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Done</button>
+        </div>
+      </div>` : '';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);">
+      <span style="width:20px;height:20px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0;">${i+1}</span>
+      <span style="flex-shrink:0;font-size:9px;font-weight:700;letter-spacing:.5px;color:${el.kind==='rail'?'#a78bfa':'#39c3d4'};border:1px solid ${el.kind==='rail'?'#a78bfa':'#39c3d4'};border-radius:4px;padding:2px 5px;">${el.kind==='rail'?'RAIL':(sessType && sessType.startsWith('Halfpipe')?'HIT':'JUMP')}</span>
+      <span style="flex:1;font-size:12px;font-weight:600;color:var(--text);line-height:1.3;">${el.label}</span>
+      ${btn('failed','✗','#e2001a')}${btn('landed','✓','#34d399')}${btn('stomped','★','#39c3d4')}
+      <button onclick="sbRunNoteToggle('${name}',${i})" title="Tags / comment" style="background:none;border:1px solid ${hasNote || r.noteOpen === i ?'#f59e0b':'var(--border)'};border-radius:8px;color:${hasNote || r.noteOpen === i ?'#f59e0b':'var(--muted)'};cursor:pointer;font-size:13px;padding:6px 9px;">✎</button>
+      <button onclick="sbRunRemoveEl('${name}',${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 4px;">✕</button>
+    </div>${noteLine}${notePanel}`;
+  }).join('');
+
+  let addPanel = '';
+  if (r.addMode === 'jump') {
+    addPanel = `<div style="margin-top:10px;">
+      <select onchange="sbRunAddJump('${name}', this.value)" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+        <option value="">— select ${sessType && sessType.startsWith('Halfpipe') ? 'hit' : 'jump'} trick —</option>
+        ${trickOptions}
+      </select>
+    </div>`;
+  } else if (r.addMode === 'rail') {
+    addPanel = `<div style="margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Rail type</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+        ${sbAllRailTypes().map(t => `<button onclick="sbRunSetRailType('${name}','${t.replace(/'/g,"\\'")}')" style="padding:6px 12px;border-radius:999px;border:1.5px solid ${r.railType===t?'#39c3d4':'var(--border)'};background:${r.railType===t?'rgba(57,195,212,0.18)':'none'};color:${r.railType===t?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">${t}</button>`).join('')}
+        <button onclick="sbRunNewRailType('${name}')" style="padding:6px 12px;border-radius:999px;border:1.5px dashed #39c3d4;background:none;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">+ New</button>
+      </div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Trick (free text, with suggestions)</div>
+      <div style="display:flex;gap:8px;">
+        <input id="run-rail-trick-${sid}" list="run-rail-suggest" placeholder="e.g. Front 270 on" style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+        <datalist id="run-rail-suggest">${sbAllRailTricks().map(s => `<option value="${s}">`).join('')}</datalist>
+        <button onclick="sbRunAddRailCommit('${name}')" style="padding:9px 16px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Add</button>
+      </div>
+    </div>`;
+  }
+
+  const rated = r.ratings.filter(Boolean).length;
+  return `<div class="card" style="padding:24px;" id="sess-col-${sid}">
+    <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:4px;text-align:center;">${shortName(name)}</div>
+    <div style="text-align:center;margin-bottom:14px;">
+      <span style="background:rgba(167,139,250,0.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:999px;padding:4px 14px;font-size:11px;font-weight:700;">${sessType && sessType.startsWith('Halfpipe') ? 'HALFPIPE' : 'SLOPESTYLE'} RUN #${r.no}</span>
+    </div>
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Run setup — ${r.elements.length}/${sbRunMaxEl()} ${sessType && sessType.startsWith('Halfpipe') ? 'hits' : 'elements'}</div>
+    ${elRows || '<div style="color:var(--muted);font-size:12px;padding:10px 0;">No elements yet — build the run below.</div>'}
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button onclick="sbRunToggleAdd('${name}','jump')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='jump'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='jump'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='jump'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">${sessType && sessType.startsWith('Halfpipe') ? '+ Hit' : '+ Jump'}</button>
+      ${sessType && sessType.startsWith('Halfpipe') ? '' : `<button onclick="sbRunToggleAdd('${name}','rail')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='rail'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='rail'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='rail'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Rail</button>`}
+    </div>
+    ${addPanel}
+    <button onclick="sbRunSave('${name}')" ${r.elements.length && rated === r.elements.length ? '' : 'disabled'} style="width:100%;margin-top:14px;padding:14px;border-radius:10px;border:none;background:${r.elements.length && rated === r.elements.length ? '#34d399' : 'var(--surface2)'};color:${r.elements.length && rated === r.elements.length ? '#06281c' : 'var(--muted)'};font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Save Run #${r.no} (${rated}/${r.elements.length} rated)</button>
+    <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;">Each element is saved as one attempt (tagged «Run ${r.no} · position»).${sessType && sessType.startsWith('Halfpipe') ? '' : ` New rail tricks are added to the athlete's Assessment automatically as Goal.`}</div>
+  </div>`;
+}
+
+function sbRunToggleAdd(name, mode) {
+  const r = sbRunState(name);
+  r.addMode = r.addMode === mode ? '' : mode;
+  renderLiveSession();
+}
+function sbRunNewRailType(name) {
+  const v = (window.prompt('New rail type:') || '').replace(/\s+/g, ' ').trim();
+  if (!v) return;
+  const norm = s => s.toLowerCase();
+  const existing = sbAllRailTypes().find(t => norm(t) === norm(v));
+  const type = existing || v;
+  if (!existing) {
+    SB_CUSTOM_RAIL_TYPES.push(type);
+    const sel = document.getElementById('sb-railart');
+    if (sel) { const o = document.createElement('option'); o.textContent = type; sel.appendChild(o); }
+    const sel2 = document.getElementById('sbe-railart');
+    if (sel2) { const o = document.createElement('option'); o.textContent = type; sel2.appendChild(o); }
+  }
+  sbRunState(name).railType = type;
+  renderLiveSession();
+}
+function sbRunSetRailType(name, t) {
+  sbRunState(name).railType = t;
+  renderLiveSession();
+  const inp = document.getElementById('run-rail-trick-' + name.replace(/\s/g,'_'));
+  if (inp) inp.focus();
+}
+function sbRunAddJump(name, label) {
+  if (!label) return;
+  const r = sbRunState(name);
+  if (r.elements.length >= sbRunMaxEl()) { showToast('Max ' + sbRunMaxEl() + ' elements per run', 'error'); return; }
+  r.elements.push({kind:'jump', label});
+  r.ratings.push(null);
+  r.addMode = '';
+  renderLiveSession();
+}
+function sbRunAddRailCommit(name) {
+  const r = sbRunState(name);
+  const inp = document.getElementById('run-rail-trick-' + name.replace(/\s/g,'_'));
+  const trick = sbCanonRailTrick(inp?.value || '');
+  if (!trick) { showToast('Enter the rail trick', 'error'); return; }
+  if (r.elements.length >= sbRunMaxEl()) { showToast('Max ' + sbRunMaxEl() + ' elements per run', 'error'); return; }
+  if (!SB_RAIL_TRICKS.includes(trick)) SB_RAIL_TRICKS.push(trick);
+  r.elements.push({kind:'rail', label: `Rail ${r.railType} — ${trick}`, railType: r.railType});
+  r.ratings.push(null);
+  r.addMode = '';
+  renderLiveSession();
+}
+function sbRunRemoveEl(name, i) {
+  const r = sbRunState(name);
+  r.elements.splice(i, 1);
+  r.ratings.splice(i, 1);
+  renderLiveSession();
+}
+function sbRunRate(name, i, val) {
+  const r = sbRunState(name);
+  r.ratings[i] = r.ratings[i] === val ? null : val;
+  renderLiveSession();
+}
+function sbRunNoteToggle(name, i) {
+  const r = sbRunState(name);
+  r.noteOpen = (i === null || r.noteOpen === i) ? null : i;
+  renderLiveSession();
+}
+function sbRunTagToggle(name, i, tag) {
+  const el = sbRunState(name).elements[i];
+  el.tags = el.tags || [];
+  const idx = el.tags.indexOf(tag);
+  if (idx >= 0) el.tags.splice(idx, 1); else el.tags.push(tag);
+  if (!sbAllFailReasons().includes(tag)) SB_CUSTOM_RUN_TAGS.push(tag);
+  renderLiveSession();
+}
+function sbRunNoteInput(name, i, val) {
+  sbRunState(name).elements[i].note = val;
+}
+function sbRunSave(name) {
+  const r = sbRunState(name);
+  if (!r.elements.length || r.ratings.some(x => !x)) { showToast('Rate every element first', 'error'); return; }
+  const runNo = r.no, N = r.elements.length;
+  const d = sessAthleteData[name];
+  r.elements.forEach((el, i) => {
+    const rate = r.ratings[i];
+    const gesamt = rate === 'failed' ? 3 : rate === 'landed' ? 7 : 10;
+    const tags = el.tags || [];
+    const extra = [];
+    if (tags.length) extra.push('Tags: ' + tags.join(', '));
+    if (el.note) extra.push(el.note);
+    const logEntry = {name, trick: el.label, result: rate === 'failed' ? 'miss' : rate === 'stomped' ? 'perfect' : 'landed',
+      takeoff: null, grab: null, trick_r: null, land: null, selectedGrab: '',
+      comment: extra.join(' | '),
+      time: new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'}),
+      run: runNo, runPos: i + 1, runLen: N};
+    sessLog.unshift(logEntry);
+    d.stats.attempts++;
+    if (rate !== 'failed') d.stats.landed++;
+    if (rate === 'stomped') d.stats.perfect++;
+    db.from('tricks').insert({athlet: name, datum: sessCurrentDate(), typ: sessType || 'Training',
+      disziplin: el.kind === 'rail' ? 'Rail' : 'Jump', trickaufbau: el.label, grab: null,
+      gelandet: rate === 'failed' ? 'No' : 'Yes', gesamt, ausfuehrung: gesamt, landung: gesamt, setup: gesamt,
+      kommentar: [`Run ${runNo} · ${i+1}/${N}`].concat(extra).join(' | ')
+    }).select('id').then(({data, error}) => {
+      if (error) { console.error(error); showToast('Error saving element: ' + error.message, 'error'); return; }
+      if (data && data[0]) { logEntry.dbId = data[0].id; saveSessionState(); }
+    });
+  });
+  sbRunEnsureAssessment(name, r.elements.filter(e => e.kind === 'rail'));
+  sessPlayLogSound('landed');
+  sbMonRows = null;
+  r.no++;
+  r.ratings = r.ratings.map(() => null);
+  r.elements.forEach(el => { el.tags = []; el.note = ''; });
+  r.noteOpen = null;
+  renderLiveSession();
+  renderSessionLog();
+  saveSessionState();
+  showToast(`Run ${runNo} saved (${N} elements)`, 'success');
+}
+async function sbRunEnsureAssessment(name, railEls) {
+  if (!railEls.length) return;
+  try {
+    const {data} = await db.from('standort').select('trick_label').eq('athlet', name);
+    const have = new Set((data || []).map(x => (x.trick_label || '').toLowerCase()));
+    const missing = [...new Map(railEls.map(e => [e.label.toLowerCase(), e])).values()]
+      .filter(e => !have.has(e.label.toLowerCase()));
+    for (const e of missing) {
+      await db.from('standort').insert({athlet: name, trick_label: e.label, disziplin: 'Rail',
+        railart: e.railType || null, status: 'goal', datum: new Date().toISOString().slice(0, 10)});
+    }
+    if (missing.length) showToast(`${missing.length} new rail trick(s) added to Assessment as Goal`, 'success');
+  } catch (e) { console.error(e); }
+}
+
+const fragments = {
+  evMain: `    <div class="chart-grid single">
+      <div class="chart-card" id="ev-analytics-card">
+        <div style="margin-bottom:16px;">
+          <div class="chart-title" style="margin-bottom:12px;">📊 Trick Statistics</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
+            <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
+          </div>
+          <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+            <option value="">— select trick —</option>
+          </select>
+          <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+            <option value="">— select session —</option>
+          </select>
+        </div>
+        <div id="ev-trick-analytics"></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5;">QoE (Quality of Execution) = average of the rated categories Take-off · Trick · Grab · Landing — ✗ Miss 0% · ✓ Okay 50% · ⭐ Perfect 100%. Unrated categories are simply left out.</div>
+      </div>
+    </div>`,
+  dirRadar: `      <div class="card" style="padding:16px;">
+        <div style="font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Direction Balance</div>
+        
+      </div>`,
+  dbRankings: `  <div class="card" style="margin-bottom:20px;display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div style="font-size:12px;color:var(--muted);">Compare assessment with actual session data</div>
+    <button onclick="realityCheck()" style="padding:8px 16px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
+  </div>`,
+  grabBlock: `        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(1× click = ✓ Learned · 2× = 🎯 Goal · 3× = off · L = Lead)</span></label>
+          <div id="sb-grab-wrap" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0;">
+            <input type="hidden" id="sb-grab" value="">
+          </div>
+        </div>`,
+  coachFields: `      <div class="form-group"><label>Coach Rating (1–10)</label>
+        <input type="number" id="sbe-coach-rating" min="1" max="10" placeholder="1–10"></div>
+      <div class="form-group full"><label>Coach Comment</label>
+        <textarea id="sbe-coach-kommentar" rows="2" placeholder="Coach comment..."></textarea></div>`,
+};
+function init() {
+  initStandortGrabs();
+  // Gleiche Tab-Struktur wie Snowboard: Assessment · Session · Reports · Monitoring.
+  // Reports = die geteilte page-sessionreport (inkl. SB-Reports-Icon); Development und
+  // Database sind versteckt (DOM bleibt — Reality Check/PDF nutzen deren Elemente).
+  ['nav-tab-monitoring','mobile-nav-monitoring','nav-tab-sessionreport','mobile-nav-sessionreport'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+  const orders = [['standort',0],['erfassen',1],['sessionreport',2],['monitoring',3]];
+  const deskTabs = document.querySelectorAll('.nav-tabs .nav-tab');
+  const deskMap = {standort:deskTabs[0], erfassen:deskTabs[1], entwicklung:deskTabs[2], datenbank:deskTabs[3],
+    monitoring:document.getElementById('nav-tab-monitoring'), sessionreport:document.getElementById('nav-tab-sessionreport')};
+  const mobBtns = document.querySelectorAll('.mobile-nav-btn');
+  const mobMap = {standort:mobBtns[0], erfassen:mobBtns[1], entwicklung:mobBtns[2], datenbank:mobBtns[3],
+    monitoring:document.getElementById('mobile-nav-monitoring'), sessionreport:document.getElementById('mobile-nav-sessionreport')};
+  orders.forEach(([key, o]) => {
+    if (deskMap[key]) deskMap[key].style.order = o;
+    if (mobMap[key]) mobMap[key].style.order = o;
+  });
+  ['entwicklung','datenbank'].forEach(key => {
+    if (deskMap[key]) deskMap[key].style.display = 'none';
+    if (mobMap[key]) mobMap[key].style.display = 'none';
+  });
+  // Raw-Entries-Karte unten auf der Reports-Seite (einziger Ort für Einzel-Korrekturen)
+  const repPage = document.getElementById('page-sessionreport');
+  if (repPage && !document.getElementById('dbraw-athlete')) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.cssText = 'margin-top:20px;padding:20px;';
+    card.innerHTML = `
+      <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:2px;">Raw Entries</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Inspect, edit or delete individual attempts.</div>
+      <select id="dbraw-athlete" onchange="dbRawLoad()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;min-width:200px;">
+        <option value="">— Select athlete —</option>${CFG.athleteOptgroups}
+      </select>
+      <div id="ev-raw-wrap" style="margin-top:16px;"></div>`;
+    repPage.appendChild(card);
+  }
+  document.body.classList.add('sport-freeski');
+  sbLoadRailData();   // team-weite Rail-Arten, -Tricks und Run-Tags nachladen
+}
+return { fragments, init, showPage, dbRawLoad, sbRunToggleAdd, sbRunSetRailType, sbRunNewRailType, sbRunAddJump, sbRunAddRailCommit, sbRunRemoveEl, sbRunRate, sbRunNoteToggle, sbRunTagToggle, sbRunNoteInput, sbRunSave, sbMonTimeSel, sbMonOpenTrickReport, sbMonToggleHistory, sbMonSaveComment, loadReportsTab, renderReportsList, sbOpenReportInline, sbRepSetTyp, sbRepSetRange, sbRepApplyCustom, sbRepDeleteCurrent, sbRVPrintPdf, sbRVShowDetail, sbRVEditStart, sbRVEditCatSet, sbRVEditCancel, sbRVEditDelete, sbRVEditSave, openSessionReportView, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, logRatedAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
+})();
