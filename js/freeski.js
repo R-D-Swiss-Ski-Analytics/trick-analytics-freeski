@@ -255,7 +255,7 @@ function renderSessionPerformance() {
   const brd  = {'🟢':'rgba(52,211,153,0.4)', '🟡':'rgba(245,158,11,0.4)','🔴':'rgba(226,0,26,0.3)'};
 
   el.innerHTML = `
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
+    <div class="hinweis-block">
       <span>All recorded tricks per athlete, grouped by direction</span>
       <div style="margin-top:4px;font-size:10px;">QoE (Quality of Execution) = average of the rated categories Take-off · Trick · Grab · Landing — Miss 0% · Okay 50% · Perfect 100% · 🟢 ≥70% Ready · 🟡 ≥50% Developing</div>
     </div>
@@ -425,7 +425,7 @@ async function realityCheck() {
     <div style="background:#0d1f33;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:660px;width:100%;max-height:88vh;display:flex;flex-direction:column;">
       <!-- Header -->
       <div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">🔍 Reality Check</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
+      <div class="hinweis-block">
         Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} suggestion${flagged.length!==1?'s':''} (Learned &lt;70% ↓ · Goals ≥70% ↑) · select athletes to apply
       </div>
       <!-- Search + select all -->
@@ -444,7 +444,7 @@ async function realityCheck() {
               <input type="checkbox" class="rc-chk" data-athlet="${athlet}" checked
                 style="width:15px;height:15px;accent-color:#f59e0b;cursor:pointer;flex-shrink:0;">
               <span style="font-size:13px;font-weight:700;color:var(--text);flex:1;">${athlet}</span>
-              <span style="font-size:11px;color:var(--muted);">${byAthlet[athlet].length} trick${byAthlet[athlet].length!==1?'s':''} affected</span>
+              <span class="hinweis">${byAthlet[athlet].length} trick${byAthlet[athlet].length!==1?'s':''} affected</span>
             </label>
             <!-- Tricks -->
             ${byAthlet[athlet].map(f=>`
@@ -647,7 +647,7 @@ function renderSessionReports() {
     const typeShort = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[r.session_type]||r.session_type||'—';
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:600;color:var(--text);">${dateStr} &nbsp;<span style="color:var(--muted);font-weight:400;font-size:12px;">${typeShort} · ${durStr}</span></div>
+        <div class="wert-mittel">${dateStr} &nbsp;<span style="color:var(--muted);font-weight:400;font-size:12px;">${typeShort} · ${durStr}</span></div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${athStr}${condStars?' · '+condStars:''}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
@@ -1081,7 +1081,7 @@ function renderLiveSession() {
       <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:16px;text-align:center;">${shortName(name)}</div>
 
       <!-- Trick dropdown -->
-      <div style="margin-bottom:20px;">
+      <div class="abstand-20">
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Working on</div>
         <select onchange="sessSetTrick('${name}',this.value)"
           style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
@@ -1133,10 +1133,10 @@ function renderLiveSession() {
         const grabs = Object.keys(grabStat).sort();
         if (!grabs.length) return '';
         const selParts = (d.currentGrab || '').split(' to ').filter(Boolean);
-        return `<div style="margin-bottom:16px;">
+        return `<div>
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Grab <span style="text-transform:none;letter-spacing:0;">(tap a 2nd grab for a double grab)</span></div>
           <div style="display:flex;flex-wrap:wrap;gap:5px;" id="sess-grabs-${sid}">
-            <button onclick="sessSelectGrab('${name}','',this)" data-grab="" class="sess-grab-btn${!d.currentGrab?' active':''}"
+            <button onclick="sessSelectGrab('${name}','',this)" data-grab="" class="sess-grab-btn${!d.currentGrab?' active':''} abstand-16"
               style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${!d.currentGrab?'#39c3d4':'var(--border)'};background:${!d.currentGrab?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${!d.currentGrab?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">No Grab</button>
             ${grabs.map(g => {
               const active = selParts.includes(g);
@@ -1364,8 +1364,8 @@ function renderSessionLog() {
       <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;${isEditing?'':'background:var(--surface2);border-radius:8px;'}font-size:12px;">
         <span style="color:${col};font-weight:800;font-size:15px;min-width:16px;">${icon}</span>
         <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
-        <span style="flex:1;color:var(--text);">${e.trick||'—'}${ratings}${e.comment?` <span style="color:var(--muted);font-size:10px;">— ${e.comment}</span>`:''}</span>
-        <span style="color:var(--muted);font-size:11px;">${e.time}</span>
+        <span style="flex:1;color:var(--text);">${e.trick||'—'}${ratings}${e.comment?` <span class="gedaempft-10">— ${e.comment}</span>`:''}</span>
+        <span class="gedaempft-11">${e.time}</span>
         <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">✏️</button>
         <button onclick="deleteLogEntry(${i})" style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;flex-shrink:0;">🗑</button>
       </div>
@@ -2156,10 +2156,10 @@ function renderStandort() {
       <span class="sb-trick-name">
         <span style="font-weight:500;">${displayTrickLabel(e.trick_label)}</span>
         <span style="display:flex;gap:8px;align-items:center;margin-top:2px;">
-          ${e.datum ? `<span style="font-size:10px;color:var(--muted);">📅 ${e.datum}</span>` : ''}
-          ${e.notiz ? `<span style="font-size:10px;color:var(--muted);">${e.notiz}</span>` : ''}
+          ${e.datum ? `<span class="hinweis-klein">📅 ${e.datum}</span>` : ''}
+          ${e.notiz ? `<span class="hinweis-klein">${e.notiz}</span>` : ''}
           ${e.coach_kommentar ? `<div style="font-size:10px;color:#f59e0b;margin-top:3px;">🎓 ${e.coach_rating ? e.coach_rating+'/10 · ' : ''}${e.coach_kommentar}</div>` : ''}
-          ${e.coach_video ? `<div style="font-size:10px;"><a href="${e.coach_video}" target="_blank" style="color:#f59e0b;">▶ Video</a></div>` : ''}
+          ${e.coach_video ? `<div style="font-size:10px;"><a class="warnung" href="${e.coach_video}" target="_blank">▶ Video</a></div>` : ''}
         </span>
         ${grabChipsHtml(e)}
       </span>
@@ -2220,7 +2220,7 @@ function renderStandort() {
             <span class="sb-status-erreicht" style="margin-left:6px;">✓ Achieved</span>
           </div>
           ${e.notiz ? `<div class="timeline-meta">${e.notiz}</div>` : ''}
-          ${e.coach_kommentar ? `<div class="timeline-meta" style="color:#f59e0b;">🎓 ${e.coach_rating ? e.coach_rating+'/10 · ' : ''}${e.coach_kommentar}</div>` : ''}
+          ${e.coach_kommentar ? `<div class="timeline-meta warnung">🎓 ${e.coach_rating ? e.coach_rating+'/10 · ' : ''}${e.coach_kommentar}</div>` : ''}
           <div class="timeline-meta">Logged: ${fmtDate(e.created_at)}</div>
         </div>
       </div>`).join('');
@@ -2333,8 +2333,8 @@ async function loadEntwicklung() {
     </div>
     <div class="chart-grid single">
       <div class="chart-card" id="ev-analytics-card">
-        <div style="margin-bottom:16px;">
-          <div class="chart-title" style="margin-bottom:12px;">📊 Trick Statistics</div>
+        <div class="abstand-16">
+          <div class="chart-title abstand-12">📊 Trick Statistics</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
             <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
             <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
@@ -2362,17 +2362,17 @@ async function loadEntwicklung() {
     fRow.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-          <span style="font-size:11px;color:var(--muted);">Filter:</span>
+          <span class="hinweis">Filter:</span>
           <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
           <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
           <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
           <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;">
+        <div class="reihe">
           <span style="font-size:11px;color:var(--muted);white-space:nowrap;">Period:</span>
           <input type="text" id="ev-date-from" oninput="setDateRange()" placeholder="DD.MM.YY"
             style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
-          <span style="font-size:11px;color:var(--muted);">→</span>
+          <span class="hinweis">→</span>
           <input type="text" id="ev-date-to" oninput="setDateRange()" placeholder="DD.MM.YY"
             style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
           <button onclick="clearDateRange()" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
@@ -3034,13 +3034,13 @@ function renderRawEntries(entries, subtitle) {
             </div>` : '';
           return `
           <div id="ev-raw-row-${e.id}" style="display:grid;grid-template-columns:60px 36px 48px 1fr 52px 1fr 28px 28px;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--border);font-size:11px;${isEditing?'background:rgba(57,195,212,0.06);':''}flex-wrap:wrap;">
-            <span style="color:var(--muted);">${fmtDate(e.datum)}</span>
-            <span style="color:var(--muted);font-size:10px;">${ts}</span>
-            <span style="color:var(--muted);font-size:10px;">${typShort(e.typ)}</span>
+            <span class="gedaempft">${fmtDate(e.datum)}</span>
+            <span class="gedaempft-10">${ts}</span>
+            <span class="gedaempft-10">${typShort(e.typ)}</span>
             <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${e.trickaufbau||''}">${e.trickaufbau||'—'}</span>
             ${(() => { const q = qoeOf(e); return q!==null
               ? `<span style="color:${q>=70?'#34d399':q>=40?'#f59e0b':'#e2001a'};font-weight:700;">${q}%</span>`
-              : `<span style="color:var(--muted);">—</span>`; })()}
+              : `<span class="gedaempft">—</span>`; })()}
             <span style="color:var(--muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${fmtKom(e.kommentar)}</span>
             <button onclick="editRawEntry(${e.id})" title="Edit entry"
               style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;font-size:11px;padding:2px 5px;line-height:1;">✏</button>
@@ -3212,7 +3212,7 @@ function setTypeFilter(typ) {
 function renderTrickAnalytics() {
   const el = document.getElementById('ev-trick-analytics');
   if (!el || !_taData.length) {
-    if(el) el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;">No session data yet.</div>';
+    if(el) el.innerHTML = '<div class="leer">No session data yet.</div>';
     return;
   }
   const colQ = v=>v>=70?'#34d399':v>=40?'#f59e0b':'#e2001a';
@@ -3259,7 +3259,7 @@ function renderTrickAnalytics() {
     const allTricks = [...new Set(baseData.map(t=>t.trickaufbau))]
       .map(t => ({name:t, dir:getFsDir(t), rot:extractRotFromLabel(t)}))
       .sort((a,b) => { const da=fsDirOrder[a.dir]??4, db=fsDirOrder[b.dir]??4; return da!==db ? da-db : a.rot-b.rot; });
-    if (!allTricks.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No data.</div>'; return; }
+    if (!allTricks.length) { el.innerHTML='<div class="leer">No data.</div>'; return; }
     let html = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${allTricks.length} tricks</div>`;
     let lastDir = '';
     const chartIds = [];
@@ -3278,7 +3278,7 @@ function renderTrickAnalytics() {
       chartIds.push({cid, dates, byDate});
       html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-          <span style="font-size:13px;font-weight:600;color:var(--text);">${tObj.name}</span>
+          <span class="wert-mittel">${tObj.name}</span>
           <span style="font-size:16px;font-weight:800;color:${colQ(trickQoe)};">${trickQoe}% <span style="font-size:11px;font-weight:400;">QoE · ${totAtt} att.</span></span>
         </div>
         <canvas id="${cid}" style="width:100%;height:100px;"></canvas>
@@ -3331,7 +3331,7 @@ function renderTrickAnalytics() {
     dayData.forEach(t=>{if(lt&&t.created_at&&(new Date(t.created_at)-new Date(lt))/3600000>2){si++;sessions.push([]);}sessions[si].push(t);lt=t.created_at;});
     const sd = sessions[sessIdx]||dayData;
 
-    if (!sd.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No data for this session.</div>'; return; }
+    if (!sd.length) { el.innerHTML='<div class="leer">No data for this session.</div>'; return; }
 
     // Group by trick
     const tmap = {};
@@ -3433,7 +3433,7 @@ function renderTrickAnalytics() {
 
   // ── VIEW 1 & 2: Trend chart (all tricks or specific trick) ─────────────
   const chartData = chosen ? baseData.filter(t=>t.trickaufbau===chosen) : baseData;
-  if (!chartData.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No session data yet.</div>'; return; }
+  if (!chartData.length) { el.innerHTML='<div class="leer">No session data yet.</div>'; return; }
 
   // Build per-date stats
   const byDate={};
@@ -3469,19 +3469,19 @@ function renderTrickAnalytics() {
 
   const statsHtml = hasComp
     ? `<div style="display:grid;grid-template-columns:repeat(${toAvg!==null?5:4},1fr);gap:10px;margin-bottom:16px;text-align:center;">
-        <div><div style="font-size:26px;font-weight:800;color:var(--text);">${totAtt}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
-        ${toAvg!==null?`<div><div style="font-size:26px;font-weight:800;color:${colQ(toAvg)};">${toAvg}%</div><div style="font-size:11px;color:var(--muted);">Take-off</div></div>`:''}
-        <div><div style="font-size:26px;font-weight:800;color:${colQ(gAvg||0)};">${gAvg!==null?gAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Grab</div></div>
-        <div><div style="font-size:26px;font-weight:800;color:${colQ(tAvg||0)};">${tAvg!==null?tAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Trick</div></div>
-        <div><div style="font-size:26px;font-weight:800;color:${colQ(lAvg||0)};">${lAvg!==null?lAvg+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Landing</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:var(--text);">${totAtt}</div><div class="hinweis">Attempts</div></div>
+        ${toAvg!==null?`<div><div style="font-size:26px;font-weight:800;color:${colQ(toAvg)};">${toAvg}%</div><div class="hinweis">Take-off</div></div>`:''}
+        <div><div style="font-size:26px;font-weight:800;color:${colQ(gAvg||0)};">${gAvg!==null?gAvg+'%':'—'}</div><div class="hinweis">Grab</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:${colQ(tAvg||0)};">${tAvg!==null?tAvg+'%':'—'}</div><div class="hinweis">Trick</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:${colQ(lAvg||0)};">${lAvg!==null?lAvg+'%':'—'}</div><div class="hinweis">Landing</div></div>
       </div>`
     : `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;text-align:center;">
-        <div><div style="font-size:26px;font-weight:800;color:var(--text);">${totAtt}</div><div style="font-size:11px;color:var(--muted);">Attempts</div></div>
-        <div><div style="font-size:26px;font-weight:800;color:${overallQoe!==null?colQ(overallQoe):'var(--muted)'};">${overallQoe!==null?overallQoe+'%':'—'}</div><div style="font-size:11px;color:var(--muted);">Quality of Execution</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:var(--text);">${totAtt}</div><div class="hinweis">Attempts</div></div>
+        <div><div style="font-size:26px;font-weight:800;color:${overallQoe!==null?colQ(overallQoe):'var(--muted)'};">${overallQoe!==null?overallQoe+'%':'—'}</div><div class="hinweis">Quality of Execution</div></div>
       </div>`;
 
   const legend = hasComp ? `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;font-size:11px;">
-    <span style="color:#34d399;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span><span style="color:#a78bfa;">● Take-off</span>
+    <span class="gut">● Landing</span><span class="akzent">● Trick</span><span class="warnung">● Grab</span><span style="color:#a78bfa;">● Take-off</span>
   </div>` : '';
 
   // Direction distribution for overall/trick view
@@ -3601,11 +3601,11 @@ function renderTrickAnalytics() {
       let html=`<div style="font-weight:700;color:#e8edf2;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">${fmtD(p.d)} &nbsp;·&nbsp; ${p.att} attempts</div>`;
       if(hasComp){
         if(p.takeoff!==null) html+=`<div style="color:#a78bfa;">Take-off: <b>${p.takeoff}%</b>${isFirst?'':dSign(p.takeoff,pv?.takeoff)}</div>`;
-        html+=`<div style="color:#f59e0b;">Grab &nbsp;&nbsp;: <b>${p.grab??'—'}%</b>${isFirst?'':dSign(p.grab,pv?.grab)}</div>`;
-        html+=`<div style="color:#39c3d4;">Trick &nbsp;: <b>${p.trick??'—'}%</b>${isFirst?'':dSign(p.trick,pv?.trick)}</div>`;
-        html+=`<div style="color:#34d399;">Landing: <b>${p.landing??'—'}%</b>${isFirst?'':dSign(p.landing,pv?.landing)}</div>`;
+        html+=`<div class="warnung">Grab &nbsp;&nbsp;: <b>${p.grab??'—'}%</b>${isFirst?'':dSign(p.grab,pv?.grab)}</div>`;
+        html+=`<div class="akzent">Trick &nbsp;: <b>${p.trick??'—'}%</b>${isFirst?'':dSign(p.trick,pv?.trick)}</div>`;
+        html+=`<div class="gut">Landing: <b>${p.landing??'—'}%</b>${isFirst?'':dSign(p.landing,pv?.landing)}</div>`;
       } else {
-        html+=`<div style="color:#39c3d4;">QoE: <b>${p.qoe!==null?p.qoe+'%':'—'}</b>${isFirst?'':dSign(p.qoe,pv?.qoe)}</div>`;
+        html+=`<div class="akzent">QoE: <b>${p.qoe!==null?p.qoe+'%':'—'}</b>${isFirst?'':dSign(p.qoe,pv?.qoe)}</div>`;
       }
       if(isFirst) html+=`<div style="font-size:10px;color:#6b8299;margin-top:4px;">First session</div>`;
       tt.innerHTML=html;
@@ -4001,7 +4001,7 @@ function monHeaderHtml(title, sub, backable) {
     ${backable ? `<button onclick="sbMonBack()" style="padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">← Back</button>` : ''}
     <div style="flex:1;min-width:160px;">
       <div style="font-size:20px;font-weight:800;color:var(--text);">${title}</div>
-      ${sub ? `<div style="font-size:12px;color:var(--muted);">${sub}</div>` : ''}
+      ${sub ? `<div class="hinweis-gross">${sub}</div>` : ''}
     </div>
     <select onchange="sbMonSetRange(this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
       <option value="season" ${sbMonRange==='season'?'selected':''}>Current season</option>
@@ -4012,7 +4012,7 @@ function monHeaderHtml(title, sub, backable) {
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
     ${fsTypeChipsHtml(sbMonTyp, 'sbMonSetTyp')}
-    ${sbMonRange==='custom' ? `<div style="display:flex;align-items:center;gap:6px;">${dateInput('mon-date-from')}<span style="color:var(--muted);">–</span>${dateInput('mon-date-to')}</div>` : ''}
+    ${sbMonRange==='custom' ? `<div class="reihe">${dateInput('mon-date-from')}<span class="gedaempft">–</span>${dateInput('mon-date-to')}</div>` : ''}
   </div>`;
 }
 
@@ -4050,9 +4050,9 @@ function renderMonTeam() {
           </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;text-align:center;border-top:1px solid var(--border);padding-top:10px;">
-          <div><div style="font-size:15px;font-weight:800;color:#34d399;">${cnt.ready}</div><div style="font-size:9px;color:var(--muted);">Ready</div></div>
-          <div><div style="font-size:15px;font-weight:800;color:#f59e0b;">${cnt.building}</div><div style="font-size:9px;color:var(--muted);">Building</div></div>
-          <div><div style="font-size:15px;font-weight:800;color:#e2001a;">${cnt.critical}</div><div style="font-size:9px;color:var(--muted);">Critical</div></div>
+          <div><div style="font-size:15px;font-weight:800;color:#34d399;">${cnt.ready}</div><div class="hinweis-winzig">Ready</div></div>
+          <div><div style="font-size:15px;font-weight:800;color:#f59e0b;">${cnt.building}</div><div class="hinweis-winzig">Building</div></div>
+          <div><div style="font-size:15px;font-weight:800;color:#e2001a;">${cnt.critical}</div><div class="hinweis-winzig">Critical</div></div>
         </div>
         <div style="text-align:center;font-size:11px;color:#39c3d4;margin-top:10px;">View details →</div>
       </div>`;
@@ -4062,10 +4062,10 @@ function renderMonTeam() {
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">${tiles}</div>
     </div>`;
   }).join('');
-  root.innerHTML = `<div class="card" style="padding:20px;">
+  root.innerHTML = `<div class="card polster-20">
     ${monHeaderHtml('Team Monitoring', rows.length + ' attempts · ' + sbMonPeriodLabel(), false)}
-    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Ø QoE = average execution quality (Miss 0% · Okay 50% · Perfect 100% per rated category) · Trick status: ≥70% = <b style="color:#34d399;">Ready</b> · 50–69% = <b style="color:#f59e0b;">Building</b> · &lt;50% = <b style="color:#e2001a;">Critical</b> · fewer than 5 attempts = Low data</div>
-    ${sections || '<div style="color:var(--muted);padding:12px;">No athletes configured.</div>'}
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Ø QoE = average execution quality (Miss 0% · Okay 50% · Perfect 100% per rated category) · Trick status: ≥70% = <b class="gut">Ready</b> · 50–69% = <b class="warnung">Building</b> · &lt;50% = <b class="schlecht">Critical</b> · fewer than 5 attempts = Low data</div>
+    ${sections || '<div class="leer-schmal">No athletes configured.</div>'}
     <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
       <button onclick="sbMonRealityCheck()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
       <button onclick="sbMonTeamPdf()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Team PDF</button>
@@ -4117,9 +4117,9 @@ function renderMonAthlete() {
             <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Ø QoE</div>
           </div>
           <div style="flex:1;font-size:10px;color:var(--muted);line-height:1.7;">
-            <div style="display:flex;justify-content:space-between;"><span>Attempts</span><b style="color:var(--text);">${tr.att}</b></div>
-            <div style="display:flex;justify-content:space-between;"><span style="color:#34d399;">Landed</span><b style="color:#34d399;">${lp}%</b></div>
-            <div style="display:flex;justify-content:space-between;"><span style="color:#e2001a;">Missed</span><b style="color:#e2001a;">${tr.att - tr.landed}</b></div>
+            <div class="reihe-verteilt"><span>Attempts</span><b class="haupttext">${tr.att}</b></div>
+            <div class="reihe-verteilt"><span class="gut">Landed</span><b class="gut">${lp}%</b></div>
+            <div class="reihe-verteilt"><span class="schlecht">Missed</span><b class="schlecht">${tr.att - tr.landed}</b></div>
           </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:10px;">
@@ -4134,10 +4134,10 @@ function renderMonAthlete() {
     </div>`;
   }).join('');
 
-  root.innerHTML = `<div class="card" style="padding:20px;">
+  root.innerHTML = `<div class="card polster-20">
     ${monHeaderHtml(name, att + ' attempts · Ø QoE <b>' + (qoe !== null ? qoe + '%' : '—') + '</b> · ' + landedPct + '% landed · ' + sbMonPeriodLabel(), true)}
     ${balanceBar}
-    ${groups || '<div style="color:var(--muted);padding:12px;">No session attempts in this period.</div>'}
+    ${groups || '<div class="leer-schmal">No session attempts in this period.</div>'}
     <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;justify-content:center;">
       <button onclick="sbMonAthletePdf()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Athlete Report (PDF)</button>
     </div>
@@ -4174,7 +4174,7 @@ function fsMonVariantsHtml(rows) {
   return `<div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Variants &amp; grabs (${list.length})</div>
-      <div style="font-size:9px;color:var(--muted);">attempts · landed · Ø QoE</div>
+      <div class="hinweis-winzig">attempts · landed · Ø QoE</div>
     </div>
     ${rowsHtml}
   </div>`;
@@ -4200,9 +4200,9 @@ function renderMonTrick() {
     if (pct === null) return '';
     return `<span style="border:1px solid ${qoeCol(pct)};color:${qoeCol(pct)};border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;">${label} ${pct}%</span>`;
   }).filter(Boolean).join(' ')
-    || `<span style="font-size:11px;color:var(--muted);">No category ratings yet — fills up with new session logs</span>`;
+    || `<span class="hinweis">No category ratings yet — fills up with new session logs</span>`;
 
-  root.innerHTML = `<div class="card" style="padding:20px;">
+  root.innerHTML = `<div class="card polster-20">
     ${monHeaderHtml(trick, name, true)}
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;">
       <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
@@ -4213,13 +4213,13 @@ function renderMonTrick() {
           ${sbMonRing((qoe||0)/100, qoe === null ? 'var(--border)' : qoeCol(qoe), 130, 14)}
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
             <div style="font-size:26px;font-weight:800;color:var(--text);">${qoe !== null ? qoe+'%' : '—'}</div>
-            <div style="font-size:9px;color:var(--muted);">Ø QoE</div>
+            <div class="hinweis-winzig">Ø QoE</div>
           </div>
         </div>
         <div style="flex:1;min-width:170px;font-size:12px;">
           <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Attempts</span><b>${n}</b></div>
-          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#34d399;margin-right:6px;"></span>Landed</span><b style="color:#34d399;">${landed} (${landedPct}%)</b></div>
-          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#e2001a;margin-right:6px;"></span>Missed</span><b style="color:#e2001a;">${missed}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#34d399;margin-right:6px;"></span>Landed</span><b class="gut">${landed} (${landedPct}%)</b></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#e2001a;margin-right:6px;"></span>Missed</span><b class="schlecht">${missed}</b></div>
           ${trend ? `<div style="display:flex;justify-content:space-between;padding:6px 0;"><span>QoE trend</span>${sbMonTrendHtml(trend)}</div>` : ''}
         </div>
       </div>
@@ -4258,7 +4258,7 @@ function sbMonTimeChart(rows) {
   rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
   _monTimeBy = by;
   const dates = Object.keys(by).sort().slice(-12);
-  if (!dates.length) return '<div style="color:var(--muted);font-size:12px;">No data.</div>';
+  if (!dates.length) return '<div class="gedaempft-12">No data.</div>';
   const H = 110, slot = 46, barW = 26, PAD = 34;
   const maxN = Math.max(...dates.map(d => by[d].length));
   const chartW = dates.length * slot;
@@ -4301,7 +4301,7 @@ function fsMonCatChart(rows) {
   const by = {};
   rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
   const dates = Object.keys(by).sort().slice(-12);
-  if (!dates.length) return '<div style="color:var(--muted);font-size:12px;">No data.</div>';
+  if (!dates.length) return '<div class="gedaempft-12">No data.</div>';
   const H = 110, slot = 46, PAD = 34;
   const chartW = dates.length * slot;
   const yOf = p => H - p/100 * (H - 12);
@@ -4399,11 +4399,11 @@ function renderReportsList() {
     </div>`;
   }).join('');
   const dateInput = id => `<input type="date" id="${id}" value="${id==='rep-date-from'?_sbRepFrom:_sbRepTo}" onchange="sbRepApplyCustom()" style="padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:'Poppins',sans-serif;">`;
-  root.innerHTML = `<div class="card" style="padding:20px;">
+  root.innerHTML = `<div class="card polster-20">
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px;">
       <div style="flex:1;min-width:160px;">
         <div style="font-size:20px;font-weight:800;color:var(--text);">Session Reports</div>
-        <div style="font-size:12px;color:var(--muted);">Tap a session to open the report</div>
+        <div class="hinweis-gross">Tap a session to open the report</div>
       </div>
       <select onchange="sbRepSetRange(this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
         <option value="all" ${_sbRepRange==='all'?'selected':''}>All time</option>
@@ -4414,9 +4414,9 @@ function renderReportsList() {
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 12px;">
       ${fsTypeChipsHtml(_sbRepTyp, 'sbRepSetTyp')}
-      ${_sbRepRange==='custom' ? `<div style="display:flex;align-items:center;gap:6px;">${dateInput('rep-date-from')}<span style="color:var(--muted);">–</span>${dateInput('rep-date-to')}</div>` : ''}
+      ${_sbRepRange==='custom' ? `<div class="reihe">${dateInput('rep-date-from')}<span class="gedaempft">–</span>${dateInput('rep-date-to')}</div>` : ''}
     </div>
-    ${rows || '<div style="color:var(--muted);padding:12px;">No reports match the current filters.</div>'}
+    ${rows || '<div class="leer-schmal">No reports match the current filters.</div>'}
   </div>`;
 }
 
@@ -4437,11 +4437,11 @@ async function sbOpenReportInline(i) {
   const inner = fsReportInnerHtml(report);
   if (inner === null) { openReportPrint(report); return; }
   const dateStr = report.datum ? (() => { const p=report.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
-  root.innerHTML = `<div class="card" style="padding:20px;">
+  root.innerHTML = `<div class="card polster-20">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
       <div style="display:flex;align-items:center;gap:12px;">
         <button onclick="renderReportsList()" style="padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">← Back</button>
-        <div style="font-size:16px;font-weight:800;color:var(--text);">Session Report · ${dateStr}</div>
+        <div class="wert-gross">Session Report · ${dateStr}</div>
       </div>
       <button onclick="sbRVPrintPdf()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">PDF</button>
     </div>
@@ -4510,7 +4510,7 @@ function fsTrickChartSvg(g, ai, ti) {
   return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+28}" style="display:block;">${grid}${marks}${bars}
     ${n>1?`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#e8edf2" stroke-width="2"/>`:''}
     ${lineDots}
-    <rect id="sbrv-sel-${ai}-${ti}" x="0" y="1" width="${groupW+6}" height="${H+18}" fill="none" stroke="#39c3d4" stroke-width="1.5" rx="4" style="display:none;"/>
+    <rect class="versteckt" id="sbrv-sel-${ai}-${ti}" x="0" y="1" width="${groupW+6}" height="${H+18}" fill="none" stroke="#39c3d4" stroke-width="1.5" rx="4"/>
     ${labels}${axisTitle}${hits}
   </svg></div>`;
 }
@@ -4560,9 +4560,9 @@ function sbRVShowDetail(ai, ti, i) {
   const catCol = {perfect:'#39c3d4', okay:'#34d399', miss:'#e2001a'};
   const catStr = FS_RV_CATS.map(([c,l]) => a[c] ? `${l} <b style="color:${catCol[a[c]]};">${FS_RV_ICON[a[c]]}</b>` : null).filter(Boolean).join(' · ');
   let txt = `<span style="color:${resCol};font-weight:600;">Attempt ${i+1} — ${resLbl} · QoE ${q}%</span>`
-    + (catStr ? ` <span style="color:var(--muted);">${catStr}</span>` : ' <span style="color:var(--muted);">(no category data)</span>');
-  if (a.comment) txt += ` <span style="color:var(--muted);">— ${a.comment}</span>`;
-  if (a.time) txt += ` <span style="color:var(--muted);font-size:10px;">${a.time}</span>`;
+    + (catStr ? ` <span class="gedaempft">${catStr}</span>` : ' <span class="gedaempft">(no category data)</span>');
+  if (a.comment) txt += ` <span class="gedaempft">— ${a.comment}</span>`;
+  if (a.time) txt += ` <span class="gedaempft-10">${a.time}</span>`;
   if (_sbRVEditable && _sbRV.report && _sbRV.report.id && a.dbId) {
     txt += ` <button onclick="sbRVEditStart(${ai},${ti},${i})" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:1px 7px;font-size:10px;">✏️ Edit</button>`;
   }
@@ -4697,23 +4697,23 @@ function fsReportInnerHtml(report) {
         const q1 = g.attempts.slice(0,half).map(qoeOfLogEntry);
         const q2 = g.attempts.slice(half).map(qoeOfLogEntry);
         const a1 = q1.reduce((s,v)=>s+v,0)/q1.length, a2 = q2.reduce((s,v)=>s+v,0)/q2.length;
-        if (a2 < a1 - 15) fatigue = `<span style="color:#f59e0b;">↘ QoE drops in 2nd half</span>`;
+        if (a2 < a1 - 15) fatigue = `<span class="warnung">↘ QoE drops in 2nd half</span>`;
       }
-      const cmtRows = g.attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💬 <b style="color:var(--text);">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
+      const cmtRows = g.attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💬 <b class="haupttext">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
       const cmtCol = cmtRows ? `<div style="flex:0 1 220px;min-width:170px;border-left:1px solid var(--border);padding-left:14px;">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Comments</div>${cmtRows}</div>` : '';
       return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;">
           <div style="font-size:14px;font-weight:700;color:var(--text);">${g.trick}</div>
-          <div style="font-size:11px;color:var(--muted);">${n} attempt${n!==1?'s':''}</div>
+          <div class="hinweis">${n} attempt${n!==1?'s':''}</div>
         </div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
           <div style="flex:1 1 300px;min-width:0;">
             ${fsTrickChartSvg(g, ai, ti)}
             <div id="sbrv-det-${ai}-${ti}" style="font-size:11px;color:var(--muted);min-height:16px;margin:2px 0 8px;">Tap a bar for details</div>
             <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
-              <span><b style="color:#34d399;">${landed}</b> landed</span>
-              <span><b style="color:#e2001a;">${missed}</b> missed</span>
+              <span><b class="gut">${landed}</b> landed</span>
+              <span><b class="schlecht">${missed}</b> missed</span>
               <span>Ø QoE <b style="color:${qoeCol};">${gQoe}%</b></span>
               ${fatigue}
             </div>
@@ -4722,18 +4722,18 @@ function fsReportInnerHtml(report) {
         </div>
       </div>`;
     }).join('');
-    return `<div style="margin-bottom:20px;">
+    return `<div class="abstand-20">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
         <div style="font-size:17px;font-weight:800;color:#39c3d4;">${a.athlet}</div>
-        <div style="font-size:11px;color:var(--muted);">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · ${athLandedPct}% landed · Ø QoE <b style="color:var(--text);">${athQoe}%</b>${a.quali_scores && a.quali_scores.length ? ' · Quali <b style="color:#f59e0b;">' + a.quali_scores.join(' / ') + '</b>' : ''}${a.final_scores && a.final_scores.length ? ' · Final <b style="color:#f59e0b;">' + a.final_scores.join(' / ') + '</b>' : ''}${a.contest_rank ? ' · Rank <b style="color:#f59e0b;">' + a.contest_rank + '</b>' : ''}</div>
+        <div class="hinweis">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · ${athLandedPct}% landed · Ø QoE <b class="haupttext">${athQoe}%</b>${a.quali_scores && a.quali_scores.length ? ' · Quali <b class="warnung">' + a.quali_scores.join(' / ') + '</b>' : ''}${a.final_scores && a.final_scores.length ? ' · Final <b class="warnung">' + a.final_scores.join(' / ') + '</b>' : ''}${a.contest_rank ? ' · Rank <b class="warnung">' + a.contest_rank + '</b>' : ''}</div>
       </div>
       ${a.note ? `<div style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border-left:3px solid #f59e0b;border-radius:8px;padding:8px 10px;margin-bottom:10px;">📝 <b>Coach note:</b> ${a.note}</div>` : ''}
       ${cards}
     </div>`;
   }).join('');
 
-  return `<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">${typeShort}${report.location ? ' · '+report.location : ''}${report.duration_min ? ' · '+report.duration_min+' min' : ''}</div>
-${report.comments ? `<div style="background:var(--surface2);border-left:3px solid #39c3d4;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:14px;"><b style="color:#39c3d4;">Coach comments:</b> ${report.comments}</div>` : ''}
+  return `<div class="hinweis-block">${typeShort}${report.location ? ' · '+report.location : ''}${report.duration_min ? ' · '+report.duration_min+' min' : ''}</div>
+${report.comments ? `<div style="background:var(--surface2);border-left:3px solid #39c3d4;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:14px;"><b class="akzent">Coach comments:</b> ${report.comments}</div>` : ''}
     <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:14px;">
       <span>Bars per attempt (height = rating 0/50/100%):</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#39c3d4;border-radius:2px;vertical-align:-1px;"></span> Take-off</span>
@@ -4741,7 +4741,7 @@ ${report.comments ? `<div style="background:var(--surface2);border-left:3px soli
       <span><span style="display:inline-block;width:10px;height:10px;background:#a78bfa;border-radius:2px;vertical-align:-1px;"></span> Grab</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#34d399;border-radius:2px;vertical-align:-1px;"></span> Landing</span>
       <span><span style="display:inline-block;width:14px;height:2px;background:#e8edf2;vertical-align:3px;"></span> running Ø QoE</span>
-      <span><b style="color:#e2001a;">✗ / red number</b> = Miss</span>
+      <span><b class="schlecht">✗ / red number</b> = Miss</span>
     </div>
     ${sections}`;
 }
@@ -4758,8 +4758,8 @@ function openSessionReportView(report) {
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2100;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;';
   modal.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;max-width:640px;width:100%;margin:auto 0;">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
-      <div style="font-size:16px;font-weight:800;color:var(--text);">Session Report · ${dateStr}</div>
-      <div style="display:flex;gap:8px;">
+      <div class="wert-gross">Session Report · ${dateStr}</div>
+      <div class="reihe-8">
         <button onclick="sbRVPrintPdf()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">PDF</button>
         <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
       </div>
@@ -4926,7 +4926,7 @@ function fsMonCoachingHtml(rows) {
   const grid = items.map(([label, txt, col]) => `
     <div style="border-left:3px solid ${col};padding-left:10px;">
       <div style="font-size:9px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600;">${label}</div>
-      <div style="font-size:13px;font-weight:600;color:var(--text);">${txt}</div>
+      <div class="wert-mittel">${txt}</div>
     </div>`).join('');
 
   return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px;">
@@ -4956,9 +4956,9 @@ function sbMonTimeSel(d) {
   const landed = rs.filter(fsMonLanded).length;
   const q = fsMonAvgQoe(rs);
   const fmt = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' + d.slice(2,4) : d;
-  el.innerHTML = `<b style="color:var(--text);">${fmt}</b> — ${n} attempts ·
-    <span style="color:#34d399;">${landed} landed</span> ·
-    <span style="color:#e2001a;">${n - landed} missed</span> ·
+  el.innerHTML = `<b class="haupttext">${fmt}</b> — ${n} attempts ·
+    <span class="gut">${landed} landed</span> ·
+    <span class="schlecht">${n - landed} missed</span> ·
     Ø QoE <b>${q !== null ? q + '%' : '—'}</b>
     <button onclick="sbMonOpenTrickReport('${d}')" style="margin-left:8px;padding:3px 10px;border-radius:6px;border:1px solid #39c3d4;background:rgba(57,195,212,0.12);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">Open session view →</button>`;
 }
@@ -4982,7 +4982,7 @@ function sbMonOpenTrickReport(d) {
   const qoes = attempts.map(qoeOfLogEntry);
   const gQoe = qoes.length ? Math.round(qoes.reduce((s,v)=>s+v,0)/qoes.length) : 0;
   const qoeCol = gQoe >= 70 ? '#34d399' : gQoe >= 50 ? '#f59e0b' : '#e2001a';
-  const cmtRows = attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💬 <b style="color:var(--text);">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
+  const cmtRows = attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💬 <b class="haupttext">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
   const cmtCol = cmtRows ? `<div style="flex:0 1 220px;min-width:170px;border-left:1px solid var(--border);padding-left:14px;">
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Comments</div>${cmtRows}</div>` : '';
   const fmt = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' + d.slice(2,4) : d;
@@ -4993,8 +4993,8 @@ function sbMonOpenTrickReport(d) {
   modal.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;max-width:640px;width:100%;margin:auto 0;">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
       <div style="min-width:0;">
-        <div style="font-size:16px;font-weight:800;color:var(--text);">${g.trick}</div>
-        <div style="font-size:12px;color:var(--muted);">${sbMonView.athlete} · Session ${fmt}</div>
+        <div class="wert-gross">${g.trick}</div>
+        <div class="hinweis-gross">${sbMonView.athlete} · Session ${fmt}</div>
       </div>
       <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
     </div>
@@ -5012,8 +5012,8 @@ function sbMonOpenTrickReport(d) {
           ${fsTrickChartSvg(g, 0, 0)}
           <div id="sbrv-det-0-0" style="font-size:11px;color:var(--muted);min-height:16px;margin:2px 0 8px;">Tap a bar for details</div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
-            <span><b style="color:#34d399;">${landed}</b> landed</span>
-            <span><b style="color:#e2001a;">${n - landed}</b> missed</span>
+            <span><b class="gut">${landed}</b> landed</span>
+            <span><b class="schlecht">${n - landed}</b> missed</span>
             <span>Ø QoE <b style="color:${qoeCol};">${gQoe}%</b></span>
           </div>
         </div>
@@ -5034,7 +5034,7 @@ async function sbMonLoadComments() {
     .eq('athlet', sbMonView.athlete).eq('trick', sbMonView.trick)
     .order('datum', {ascending: false}).order('id', {ascending: false});
   if (error) {
-    st.innerHTML = '<span style="color:var(--muted);font-size:11px;">Comments unavailable — run the trick_comments SQL in Supabase first.</span>';
+    st.innerHTML = '<span class="gedaempft-11">Comments unavailable — run the trick_comments SQL in Supabase first.</span>';
     return;
   }
   _monCmts = data || [];
@@ -5056,12 +5056,12 @@ function sbMonRenderComments() {
   const cur = _monCmts[0];
   const aiTag = document.getElementById('mon-cmt-ai-tag');
   if (_monStatus) {
-    st.innerHTML = `${_monStatus.status_text} <span style="color:var(--muted);font-size:11px;">(${fmt(String(_monStatus.updated_at).slice(0,10))})</span>`;
+    st.innerHTML = `${_monStatus.status_text} <span class="gedaempft-11">(${fmt(String(_monStatus.updated_at).slice(0,10))})</span>`;
     if (aiTag) aiTag.style.display = '';
   } else {
     st.innerHTML = cur
-      ? `${cur.kommentar} <span style="color:var(--muted);font-size:11px;">(${fmt(cur.datum)})</span>`
-      : '<span style="color:var(--muted);">No comments yet.</span>';
+      ? `${cur.kommentar} <span class="gedaempft-11">(${fmt(cur.datum)})</span>`
+      : '<span class="gedaempft">No comments yet.</span>';
     if (aiTag) aiTag.style.display = 'none';
   }
   if (link) {
@@ -5071,7 +5071,7 @@ function sbMonRenderComments() {
   if (hist) {
     hist.style.display = _monCmtHistOpen ? '' : 'none';
     hist.innerHTML = _monCmts.map(c => `<div style="font-size:12px;color:var(--text);padding:6px 0;border-top:1px solid var(--border);">
-      <span style="color:var(--muted);font-size:10px;">${fmt(c.datum)}</span><br>${c.kommentar}</div>`).join('');
+      <span class="gedaempft-10">${fmt(c.datum)}</span><br>${c.kommentar}</div>`).join('');
   }
 }
 
@@ -5166,14 +5166,14 @@ function sbRunCardHtml(name, d, trickOptions) {
     const hasNote = (el.tags && el.tags.length) || el.note;
     const noteLine = hasNote ? `<div style="margin:-2px 0 6px 62px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
         ${(el.tags||[]).map(t => `<span style="font-size:10px;color:#f59e0b;border:1px solid #f59e0b55;border-radius:999px;padding:2px 8px;">${t}</span>`).join('')}
-        ${el.note ? `<span style="font-size:11px;color:var(--muted);">${el.note}</span>` : ''}
+        ${el.note ? `<span class="hinweis">${el.note}</span>` : ''}
       </div>` : '';
     const notePanel = r.noteOpen === i ? `<div style="margin:0 0 8px 30px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;">
         <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Tags</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
           ${sbAllFailReasons().map(t => { const on = (el.tags||[]).includes(t); return `<button onclick="sbRunTagToggle('${name}',${i},'${t.replace(/'/g,"\\'")}')" style="padding:5px 10px;border-radius:999px;border:1.5px solid ${on?'#f59e0b':'var(--border)'};background:${on?'rgba(245,158,11,0.15)':'none'};color:${on?'#f59e0b':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">${t}</button>`; }).join('')}
         </div>
-        <div style="display:flex;gap:8px;">
+        <div class="reihe-8">
           <input value="${(el.note||'').replace(/"/g,'&quot;')}" oninput="sbRunNoteInput('${name}',${i},this.value)" placeholder="Comment (optional)" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
           <button onclick="sbRunNoteToggle('${name}',null)" style="padding:8px 14px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Done</button>
         </div>
@@ -5204,7 +5204,7 @@ function sbRunCardHtml(name, d, trickOptions) {
         <button onclick="sbRunNewRailType('${name}')" style="padding:6px 12px;border-radius:999px;border:1.5px dashed #39c3d4;background:none;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">+ New</button>
       </div>
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Trick (free text, with suggestions)</div>
-      <div style="display:flex;gap:8px;">
+      <div class="reihe-8">
         <input id="run-rail-trick-${sid}" list="run-rail-suggest" placeholder="e.g. Front 270 on" style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
         <datalist id="run-rail-suggest">${sbAllRailTricks().map(s => `<option value="${s}">`).join('')}</datalist>
         <button onclick="sbRunAddRailCommit('${name}')" style="padding:9px 16px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Add</button>
@@ -5365,8 +5365,8 @@ async function sbRunEnsureAssessment(name, railEls) {
 const fragments = {
   evMain: `    <div class="chart-grid single">
       <div class="chart-card" id="ev-analytics-card">
-        <div style="margin-bottom:16px;">
-          <div class="chart-title" style="margin-bottom:12px;">📊 Trick Statistics</div>
+        <div class="abstand-16">
+          <div class="chart-title abstand-12">📊 Trick Statistics</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
             <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
             <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
@@ -5387,7 +5387,7 @@ const fragments = {
         
       </div>`,
   dbRankings: `  <div class="card" style="margin-bottom:20px;display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;">
-    <div style="font-size:12px;color:var(--muted);">Compare assessment with actual session data</div>
+    <div class="hinweis-gross">Compare assessment with actual session data</div>
     <button onclick="realityCheck()" style="padding:8px 16px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
   </div>`,
   grabBlock: `        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(1× click = ✓ Learned · 2× = 🎯 Goal · 3× = off · L = Lead)</span></label>

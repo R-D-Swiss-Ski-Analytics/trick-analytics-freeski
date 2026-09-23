@@ -23,8 +23,8 @@
     <button class="nav-tab" onclick="showPage('erfassen', this)">Session</button>
     <button class="nav-tab" onclick="showPage('entwicklung', this)">Development</button>
     <button class="nav-tab" onclick="showPage('datenbank', this)">Database</button>
-    <button class="nav-tab" id="nav-tab-monitoring" style="display:none;" onclick="showPage('monitoring', this)">Monitoring</button>
-    <button class="nav-tab" id="nav-tab-sessionreport" style="display:none;" onclick="showPage('sessionreport', this)">Reports</button>
+    <button class="nav-tab versteckt" id="nav-tab-monitoring" onclick="showPage('monitoring', this)">Monitoring</button>
+    <button class="nav-tab versteckt" id="nav-tab-sessionreport" onclick="showPage('sessionreport', this)">Reports</button>
   </nav>
   <div id="auth-controls" style="display:none;align-items:center;gap:8px;margin-left:12px;flex-shrink:0;">
     <select id="group-filter-sel" onchange="setGroupFilter(this.value)" style="max-width:180px;padding:6px 10px;font-size:12px;"></select>
@@ -56,7 +56,7 @@
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:16px;">
+    <div class="card abstand-16">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <div class="card-title" style="margin:0;">Step 1 — Session Type</div>
       </div>
@@ -76,7 +76,7 @@
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:16px;">
+    <div class="card abstand-16">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <div class="card-title" style="margin:0;">Step 2 — Select Athletes (max. 8)</div>
         <button onclick="clearSessionSelection()" style="padding:6px 14px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">Clear all</button>
@@ -92,11 +92,11 @@
   </div>
 
   <!-- ── LIVE VIEW ────────────────────────────────────── -->
-  <div id="sess-live" style="display:none;">
+  <div class="versteckt" id="sess-live">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
       <div>
         <div style="font-family:'Poppins',sans-serif;font-size:22px;font-weight:800;color:var(--text);">Live Session</div>
-        <div style="color:var(--muted);font-size:12px;" id="sess-live-date"></div>
+        <div class="gedaempft-12" id="sess-live-date"></div>
       </div>
       <div style="display:flex;gap:10px;">
         <button onclick="addAthleteToSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">+ Add Athlete</button>
@@ -108,7 +108,7 @@
     <div id="sess-athlete-cols" style="display:grid;gap:16px;margin-bottom:20px;"></div>
 
     <div class="card">
-      <div class="card-title" style="margin-bottom:12px;">Session Log</div>
+      <div class="card-title abstand-12">Session Log</div>
       <div id="sess-log" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
         <div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;">No attempts logged yet.</div>
       </div>
@@ -126,7 +126,7 @@
     <label style="font-size:16px;color:#ffffff;font-family:'Poppins',sans-serif;letter-spacing:0.5px;">ATHLETE</label>
     <select id="sb-athlet" style="max-width:200px;border:2px solid #39c3d4;border-radius:8px;" onchange="loadStandort();updateSbDisciplines()">
           <option value="">— select —</option></select>
-    <button class="btn-secondary" id="sb-add-btn" style="display:none;" onclick="toggleSbForm()">+ Add Entry</button>
+    <button class="btn-secondary versteckt" id="sb-add-btn" onclick="toggleSbForm()">+ Add Entry</button>
   </div>
 
   <!-- Empty hint -->
@@ -136,7 +136,7 @@
   </div>
 
   <!-- Main content (hidden until athlete selected) -->
-  <div id="sb-main" style="display:none;">
+  <div class="versteckt" id="sb-main">
 
     <!-- Stats row -->
     <div class="sb-overview" id="sb-overview"></div>
@@ -146,7 +146,7 @@
     </div>
 
     <!-- Add-entry form (collapsible, same fields as Erfassen) -->
-    <div class="card" id="sb-form-card" style="display:none;">
+    <div class="card versteckt" id="sb-form-card">
       <div class="card-title">Add Trick</div>
       <div class="form-grid">
 
@@ -257,7 +257,7 @@
     <div class="sb-columns" id="sb-columns"></div>
 
     <!-- Progress / Timeline -->
-    <div class="card" id="sb-timeline-card" style="display:none;">
+    <div class="card versteckt" id="sb-timeline-card">
       <div class="card-title">Progress — Goals Achieved</div>
       <div class="timeline" id="sb-timeline"></div>
     </div>
@@ -279,7 +279,7 @@
     <div style="font-size:13px;">Select an athlete to view the analysis.</div>
   </div>
 
-  <div id="ev-main" style="display:none;">
+  <div class="versteckt" id="ev-main">
   </div>
 </div>
 
@@ -289,7 +289,7 @@
 <div class="page" id="page-datenbank">
 
   <!-- ── SECTION 1: SESSION PERFORMANCE ─────────────────────────── -->
-  <div class="card" style="margin-bottom:20px;">
+  <div class="card abstand-20">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
       <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent);">Team Overview — Session Performance</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -308,7 +308,7 @@
         <div id="pf-custom-range" style="display:none;align-items:center;gap:4px;">
           <input type="text" id="pf-from" placeholder="DD.MM.YY" oninput="setPerfDateRange()"
             style="width:82px;padding:3px 7px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;">
-          <span style="font-size:11px;color:var(--muted);">→</span>
+          <span class="hinweis">→</span>
           <input type="text" id="pf-to" placeholder="DD.MM.YY" oninput="setPerfDateRange()"
             style="width:82px;padding:3px 7px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;">
           <button onclick="clearPerfDateRange()" style="padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
@@ -320,7 +320,7 @@
   </div>
 
   <!-- ── SECTION 1b: SESSION REPORTS ───────────────────────────── -->
-  <div class="card" style="margin-bottom:20px;">
+  <div class="card abstand-20">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
       <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">Session Reports</div>
     </div>
@@ -328,7 +328,7 @@
   </div>
 
   <!-- ── SECTION 1c: ATHLETE REPORT ─────────────────────────────── -->
-  <div class="card" style="margin-bottom:20px;">
+  <div class="card abstand-20">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
       <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">Athlete Report</div>
     </div>
@@ -362,7 +362,7 @@
   </div>
 
   <!-- ── SECTION 1d: TEAM REPORT ─────────────────────────────────── -->
-  <div class="card" style="margin-bottom:20px;">
+  <div class="card abstand-20">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
       <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:var(--accent2);">Team Report</div>
     </div>
@@ -488,11 +488,11 @@
     <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
     Database
   </button>
-  <button class="mobile-nav-btn" id="mobile-nav-monitoring" style="display:none;" onclick="showPage('monitoring', this); updateMobileNav('monitoring')">
+  <button class="mobile-nav-btn versteckt" id="mobile-nav-monitoring" onclick="showPage('monitoring', this); updateMobileNav('monitoring')">
     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     Monitoring
   </button>
-  <button class="mobile-nav-btn" id="mobile-nav-sessionreport" style="display:none;" onclick="showPage('sessionreport', this); updateMobileNav('sessionreport')">
+  <button class="mobile-nav-btn versteckt" id="mobile-nav-sessionreport" onclick="showPage('sessionreport', this); updateMobileNav('sessionreport')">
     <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="8"/><rect x="12" y="6" width="3" height="12"/><rect x="17" y="13" width="3" height="5"/></svg>
     Reports
   </button>

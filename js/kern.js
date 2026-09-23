@@ -30,12 +30,12 @@ function showAuthGate(msg) {
     <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:2px;">${CFG.title}</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Coach login</div>
     <label style="display:block;margin-bottom:4px;">E-Mail</label>
-    <input type="email" id="auth-email" autocomplete="username" required style="margin-bottom:12px;">
+    <input class="abstand-12" type="email" id="auth-email" autocomplete="username" required>
     <label style="display:block;margin-bottom:4px;">Password</label>
     <input type="password" id="auth-pass" autocomplete="current-password" required style="margin-bottom:6px;">
     <div id="auth-err" style="min-height:16px;font-size:11px;color:#e2001a;margin-bottom:10px;">${msg||''}</div>
     <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Sign in</button>
-    <div style="text-align:center;margin-top:12px;"><a href="#" onclick="authForgotPassword();return false;" style="font-size:11px;color:var(--muted);">Forgot password?</a> <span style="font-size:11px;color:var(--muted);">·</span> <a href="#" onclick="authHaveCode();return false;" style="font-size:11px;color:var(--muted);">Have a code?</a></div>
+    <div style="text-align:center;margin-top:12px;"><a class="hinweis" href="#" onclick="authForgotPassword();return false;">Forgot password?</a> <span class="hinweis">·</span> <a class="hinweis" href="#" onclick="authHaveCode();return false;">Have a code?</a></div>
   </form>`;
   document.body.appendChild(gate);
   document.getElementById('auth-form').addEventListener('submit', async e => {
@@ -64,7 +64,7 @@ function showSetPasswordGate() {
     <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:2px;">${CFG.title}</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Welcome! Choose your password.</div>
     <label style="display:block;margin-bottom:4px;">New password</label>
-    <input type="password" id="setpw-1" autocomplete="new-password" required minlength="8" style="margin-bottom:12px;">
+    <input class="abstand-12" type="password" id="setpw-1" autocomplete="new-password" required minlength="8">
     <label style="display:block;margin-bottom:4px;">Repeat password</label>
     <input type="password" id="setpw-2" autocomplete="new-password" required minlength="8" style="margin-bottom:6px;">
     <div id="setpw-err" style="min-height:16px;font-size:11px;color:#e2001a;margin-bottom:10px;"></div>
@@ -126,7 +126,7 @@ function showOtpGate(email) {
     <input type="text" id="otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required style="margin-bottom:6px;text-align:center;font-size:20px;letter-spacing:4px;">
     <div id="otp-err" style="min-height:16px;font-size:11px;color:#e2001a;margin-bottom:10px;"></div>
     <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Verify code</button>
-    <div style="text-align:center;margin-top:12px;"><a href="#" onclick="showAuthGate();return false;" style="font-size:11px;color:var(--muted);">Back to login</a></div>
+    <div style="text-align:center;margin-top:12px;"><a class="hinweis" href="#" onclick="showAuthGate();return false;">Back to login</a></div>
   </form>`;
   document.body.appendChild(gate);
   document.getElementById('otp-code').focus();
@@ -504,7 +504,7 @@ function splitTrickGrab(label) {
 function grabSelectHtml(id, grabs, current) {
   const opts = [...grabs];
   if (current && !opts.includes(current)) opts.unshift(current);
-  return `<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>
+  return `<div class="reihe"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>
     <select id="${id}" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
       <option value="">— No Grab —</option>
       ${opts.map(g => `<option value="${g.replace(/"/g,'&quot;')}"${g === current ? ' selected' : ''}>${g}</option>`).join('')}
