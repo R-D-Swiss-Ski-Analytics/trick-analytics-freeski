@@ -40,7 +40,7 @@ function showAuthGate(msg) {
     <input type="password" id="auth-pass" autocomplete="current-password" required style="margin-bottom:6px;">
     <div id="auth-err" style="min-height:16px;font-size:11px;color:#e2001a;margin-bottom:10px;">${msg||''}</div>
     <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Sign in</button>
-    <div style="text-align:center;margin-top:12px;"><a href="#" onclick="authForgotPassword();return false;" style="font-size:11px;color:var(--muted);">Forgot password?</a> <span style="font-size:11px;color:var(--muted);">·</span> <a href="#" onclick="authHaveCode();return false;" style="font-size:11px;color:var(--muted);">Have a code?</a></div>
+    <div style="text-align:center;margin-top:12px;"><a class="hinweis" href="#" onclick="authForgotPassword();return false;">Forgot password?</a> <span class="hinweis">·</span> <a class="hinweis" href="#" onclick="authHaveCode();return false;">Have a code?</a></div>
   </form>`;
   document.body.appendChild(gate);
   document.getElementById('auth-form').addEventListener('submit', async e => {
@@ -131,7 +131,7 @@ function showOtpGate(email) {
     <input type="text" id="otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required style="margin-bottom:6px;text-align:center;font-size:20px;letter-spacing:4px;">
     <div id="otp-err" style="min-height:16px;font-size:11px;color:#e2001a;margin-bottom:10px;"></div>
     <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Verify code</button>
-    <div style="text-align:center;margin-top:12px;"><a href="#" onclick="showAuthGate();return false;" style="font-size:11px;color:var(--muted);">Back to login</a></div>
+    <div style="text-align:center;margin-top:12px;"><a class="hinweis" href="#" onclick="showAuthGate();return false;">Back to login</a></div>
   </form>`;
   document.body.appendChild(gate);
   document.getElementById('otp-code').focus();
@@ -1451,12 +1451,12 @@ function sbMonRenderComments() {
   const cur = _monCmts[0];
   const aiTag = document.getElementById('mon-cmt-ai-tag');
   if (_monStatus) {
-    st.innerHTML = `${_monStatus.status_text} <span style="color:var(--muted);font-size:11px;">(${fmt(String(_monStatus.updated_at).slice(0,10))})</span>`;
+    st.innerHTML = `${_monStatus.status_text} <span class="gedaempft-11">(${fmt(String(_monStatus.updated_at).slice(0,10))})</span>`;
     if (aiTag) aiTag.style.display = '';
   } else {
     st.innerHTML = cur
-      ? `${cur.kommentar} <span style="color:var(--muted);font-size:11px;">(${fmt(cur.datum)})</span>`
-      : '<span style="color:var(--muted);">No comments yet.</span>';
+      ? `${cur.kommentar} <span class="gedaempft-11">(${fmt(cur.datum)})</span>`
+      : '<span class="gedaempft">No comments yet.</span>';
     if (aiTag) aiTag.style.display = 'none';
   }
   if (link) {
@@ -1466,7 +1466,7 @@ function sbMonRenderComments() {
   if (hist) {
     hist.style.display = _monCmtHistOpen ? '' : 'none';
     hist.innerHTML = _monCmts.map(c => `<div style="font-size:12px;color:var(--text);padding:6px 0;border-top:1px solid var(--border);">
-      <span style="color:var(--muted);font-size:10px;">${fmt(c.datum)}</span><br>${c.kommentar}</div>`).join('');
+      <span class="gedaempft-10">${fmt(c.datum)}</span><br>${c.kommentar}</div>`).join('');
   }
 }
 
@@ -1536,7 +1536,7 @@ function sbRunCardHtml(name, d, trickOptions) {
     const hasNote = (el.tags && el.tags.length) || el.note;
     const noteLine = hasNote ? `<div style="margin:-2px 0 6px 62px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
         ${(el.tags||[]).map(t => `<span style="font-size:10px;color:#f59e0b;border:1px solid #f59e0b55;border-radius:999px;padding:2px 8px;">${t}</span>`).join('')}
-        ${el.note ? `<span style="font-size:11px;color:var(--muted);">${el.note}</span>` : ''}
+        ${el.note ? `<span class="hinweis">${el.note}</span>` : ''}
       </div>` : '';
     const notePanel = r.noteOpen === i ? `<div style="margin:0 0 8px 30px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;">
         <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Tags</div>

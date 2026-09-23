@@ -1,8 +1,15 @@
 """Ersetzt haeufige Inline-Styles durch benannte CSS-Klassen.
 
-Nur exakt gleiche, statische Style-Werte werden ersetzt - alles mit ${...}
-bleibt unberuehrt. Das Ergebnis ist optisch identisch, weil die Klasse
-genau dieselben Deklarationen enthaelt.
+Nur exakt gleiche, statische Style-Werte werden ersetzt. Aussen vor bleiben:
+  - alles mit ${...}
+  - alles mit display (das schaltet der Code per el.style.display = '' um;
+    eine Klasse laesst sich so nicht aufheben - genau daran ist der erste
+    Versuch am 23.09.2026 gescheitert)
+  - Elemente mit id (die holt sich der Code und veraendert ihren Stil)
+
+Das Ergebnis ist optisch identisch, weil die Klasse dieselben Deklarationen
+enthaelt. Zu pruefen ist es ueber das ganze Dokument, nicht nur die sichtbare
+Seite - versteckte Bereiche und die Navigation gehoeren dazu.
 
 Probelauf:   python3 stilklassen.py <ordner>
 Ausfuehren:  python3 stilklassen.py <ordner> --schreiben
@@ -41,8 +48,7 @@ KLASSEN = [
                        'letter-spacing:.5px;font-weight:600;'),
     ('wert-mittel',    'font-size:13px;font-weight:600;color:var(--text);'),
     ('wert-gross',     'font-size:16px;font-weight:800;color:var(--text);'),
-    # Layout
-    ('versteckt',      'display:none;'),
+    # Layout  (display bleibt bewusst aussen vor: das schaltet der Code selbst um)
     ('reihe',          'display:flex;align-items:center;gap:6px;'),
     ('reihe-8',        'display:flex;gap:8px;'),
     ('reihe-verteilt', 'display:flex;justify-content:space-between;'),
@@ -70,6 +76,10 @@ def tags_umschreiben(text, zaehler):
         wert = sm.group(1).strip()
         if '${' in wert or wert not in NACH_WERT:
             return tag
+        if 'display' in wert:
+            return tag          # display schaltet der Code per el.style.display um
+        if re.search(r'\sid="', tag):
+            return tag          # Elemente mit id holt sich der Code und veraendert sie
         name = NACH_WERT[wert]
         zaehler[name] = zaehler.get(name, 0) + 1
         tag = tag[:sm.start()] + tag[sm.end():]          # style entfernen
