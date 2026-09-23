@@ -331,6 +331,9 @@ const JUMPS_NO_GRAB = ['Strait','360','bt','Ft','bL','bp','L','360op','7op','bf'
 // Jeder Grab-Trick als Paar: kleines g direkt gefolgt vom grossen G
 const JUMPS_GRAB    = ['360g','360G','bg','bG','fg','fG','Lg','LG','7og','7oG','10og','10oG','14og','14oG'];
 
+// Sprünge, die nur zu einem bestimmten Sessiontyp gehören (siehe extraJumps)
+const JUMPS_WATER_ONLY = ['Fun'];
+
 // Entry types: which jump selects they need + which criteria get rated.
 // criteria: [column, label, abbreviation]
 const NOGRAB_CRITERIA = [['r_asse','Asse','Asse'],['r_air','Air','Air'],['r_landing','Atterraggio','Land']];
@@ -340,7 +343,7 @@ const TYPES = {
   'TTB':          { jumps:2, jumpList:'all', criteria:[['r_jump1','Jump 1','J1'],['r_jump2','Jump 2','J2'],['r_sci','Sci','Sci']] },
   'Solo Sci':     { jumps:0, jumpList:null,  criteria:[['r_ub','Upper Body','UB'],['r_abs','Absorption','ABS'],['r_carving','Carving','Carv']] },
   // Sprung-Sessions: Umgebung als Typ; Grab/No-Grab ergibt sich aus dem gewählten Sprung
-  'Water Jump':   { jumps:1, jumpList:'all', jumpSession:true },
+  'Water Jump':   { jumps:1, jumpList:'all', jumpSession:true, extraJumps:JUMPS_WATER_ONLY },
   'Jump on Snow': { jumps:1, jumpList:'all', jumpSession:true },
   // Legacy-Typen der ersten App-Version — nur noch für die Anzeige alter Einträge, nicht wählbar
   'Jump No Grab': { jumps:1, jumpList:'nograb', criteria:NOGRAB_CRITERIA, legacy:true },
@@ -383,12 +386,16 @@ function sid(n) { return n.replace(/\s/g,'_'); }
 function today() { return new Date().toISOString().split('T')[0]; }
 function escAttr(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
-function jumpOptions(listKey, selected) {
+function jumpOptions(listKey, selected, extra) {
   const opt = j => '<option value="' + escAttr(j) + '"' + (j === selected ? ' selected' : '') + '>' + j + '</option>';
-  if (listKey === 'nograb') return JUMPS_NO_GRAB.map(opt).join('');
-  if (listKey === 'grab')   return JUMPS_GRAB.map(opt).join('');
+  // Typ-eigene Sprünge (z.B. 'Fun' beim Water Jump) stehen in einer eigenen Gruppe am Ende
+  const extraHtml = (extra && extra.length)
+    ? '<optgroup label="Extra">' + extra.map(opt).join('') + '</optgroup>' : '';
+  if (listKey === 'nograb') return JUMPS_NO_GRAB.map(opt).join('') + extraHtml;
+  if (listKey === 'grab')   return JUMPS_GRAB.map(opt).join('') + extraHtml;
   return '<optgroup label="No Grab">' + JUMPS_NO_GRAB.map(opt).join('') + '</optgroup>'
-       + '<optgroup label="Grab">'    + JUMPS_GRAB.map(opt).join('')    + '</optgroup>';
+       + '<optgroup label="Grab">'    + JUMPS_GRAB.map(opt).join('')    + '</optgroup>'
+       + extraHtml;
 }
 
 // Häufigkeit der Jumps in bisherigen Einträgen einer Athlet:in → Sortierung der Session-Dropdowns
@@ -404,7 +411,7 @@ function countJumps(rows) {
 // Sprungliste einer Athlet:in in der Live Session: nur Assessment-Jumps (Goals mit 🎯);
 // Fallback auf die volle Liste, solange kein Assessment existiert.
 // Innerhalb der Gruppen nach Häufigkeit sortiert (meistgenutzte zuoberst, Rest in Grundreihenfolge).
-function jumpOptionsFor(name, listKey, selected) {
+function jumpOptionsFor(name, listKey, selected, extra) {
   const d = sessAthleteData[name] || {};
   const counts = d.jumpCounts || {};
   const byFreq = list => [...list].sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
@@ -416,13 +423,18 @@ function jumpOptionsFor(name, listKey, selected) {
   const opt = j => '<option value="' + escAttr(j) + '"' + (j === selected ? ' selected' : '') + '>' + j + (status[j] === 'goal' ? ' 🎯' : '') + '</option>';
   const ng = aj.length ? NG.filter(j => status[j] !== undefined) : [];
   const g  = aj.length ? G.filter(j => status[j] !== undefined) : [];
-  if (listKey === 'nograb') return (ng.length ? ng : NG).map(opt).join('');
-  if (listKey === 'grab')   return (g.length ? g : G).map(opt).join('');
+  // Typ-eigene Sprünge immer anbieten - sie stehen in keinem Assessment
+  const extraHtml = (extra && extra.length)
+    ? '<optgroup label="Extra">' + extra.map(opt).join('') + '</optgroup>' : '';
+  if (listKey === 'nograb') return (ng.length ? ng : NG).map(opt).join('') + extraHtml;
+  if (listKey === 'grab')   return (g.length ? g : G).map(opt).join('') + extraHtml;
   if (!ng.length && !g.length)
     return '<optgroup label="No Grab">' + NG.map(opt).join('') + '</optgroup>'
-         + '<optgroup label="Grab">'    + G.map(opt).join('')  + '</optgroup>';
+         + '<optgroup label="Grab">'    + G.map(opt).join('')  + '</optgroup>'
+         + extraHtml;
   return (ng.length ? '<optgroup label="No Grab">' + ng.map(opt).join('') + '</optgroup>' : '')
-       + (g.length  ? '<optgroup label="Grab">'    + g.map(opt).join('')  + '</optgroup>' : '');
+       + (g.length  ? '<optgroup label="Grab">'    + g.map(opt).join('')  + '</optgroup>' : '')
+       + extraHtml;
 }
 
 // ═══════════════ NAVIGATION ═══════════════
@@ -840,11 +852,11 @@ function renderLiveSession() {
       const label1 = t.jumps === 2 ? 'Jump 1' : 'Jump';
       selects.push(`<div class="form-group"><label>${label1}</label>
         <select onchange="setSessJump('${name}','jump1',this.value)">
-          <option value="">— select —</option>${jumpOptionsFor(name, t.jumpList, sel.jump1)}
+          <option value="">— select —</option>${jumpOptionsFor(name, t.jumpList, sel.jump1, t.extraJumps)}
         </select></div>`);
       if (t.jumps === 2) selects.push(`<div class="form-group"><label>Jump 2</label>
         <select onchange="setSessJump('${name}','jump2',this.value)">
-          <option value="">— select —</option>${jumpOptionsFor(name, t.jumpList, sel.jump2)}
+          <option value="">— select —</option>${jumpOptionsFor(name, t.jumpList, sel.jump2, t.extraJumps)}
         </select></div>`);
     }
     const jumpsHtml = selects.length
@@ -1048,9 +1060,9 @@ function openEdit(entry, meta) {
   if (t.jumps >= 1) {
     jumpsHtml = `<div style="display:grid;grid-template-columns:${t.jumps===2?'1fr 1fr':'1fr'};gap:10px;margin-bottom:14px;">
       <div class="form-group"><label>${t.jumps===2?'Jump 1':'Jump'}</label>
-        <select id="ed-jump1"><option value="">— select —</option>${jumpOptions(jumpList, entry.jump1)}</select></div>
+        <select id="ed-jump1"><option value="">— select —</option>${jumpOptions(jumpList, entry.jump1, t.extraJumps)}</select></div>
       ${t.jumps===2 ? `<div class="form-group"><label>Jump 2</label>
-        <select id="ed-jump2"><option value="">— select —</option>${jumpOptions(jumpList, entry.jump2)}</select></div>` : ''}
+        <select id="ed-jump2"><option value="">— select —</option>${jumpOptions(jumpList, entry.jump2, t.extraJumps)}</select></div>` : ''}
     </div>`;
   }
 
