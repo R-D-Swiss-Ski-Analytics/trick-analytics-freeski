@@ -3140,26 +3140,6 @@ async function deleteRawEntry(id) {
   fsRawRerender();
 }
 
-function setStatsMode(mode) {
-  const trickSel = document.getElementById('ev-trick-sel');
-  const dateSel  = document.getElementById('ev-date-sel');
-  const btnT = document.getElementById('ev-mode-trick');
-  const btnS = document.getElementById('ev-mode-session');
-  // Reset all buttons
-  [btnT,btnS].forEach(b=>{if(b){b.style.background='var(--surface2)';b.style.borderColor='var(--border)';b.style.color='var(--muted)';}});
-  const active = mode==='trick'?btnT:btnS;
-  if(active){active.style.background='rgba(57,195,212,0.2)';active.style.borderColor='#39c3d4';active.style.color='#39c3d4';}
-  // Show/hide dropdowns
-  if(trickSel) trickSel.style.display = mode==='trick' ? '' : 'none';
-  if(dateSel)  dateSel.style.display  = mode==='session' ? '' : 'none';
-  // Show/hide type filter (not for session mode)
-  const fRow = document.getElementById('ev-type-filter');
-  if(fRow) fRow.style.display = mode==='session' ? 'none' : 'flex';
-  // Reset values when switching mode
-  if(mode!=='trick'  && trickSel) trickSel.value='';
-  if(mode!=='session' && dateSel)  dateSel.value='';
-  renderTrickAnalytics();
-}
 
 
 function setDateRange() {
@@ -3765,14 +3745,6 @@ function initStandortGrabs() {
 // Hauptmetrik = Ø QoE (Kategorie-Bewertungen: miss 0% · okay 50% · perfect 100%, via qoeOf),
 // Status-Schwellen wie die Session-Performance-Tabelle (≥70 Ready · ≥50 Building · sonst Critical),
 // Landed-Quote (gelandet/gesamt≥10) als Konstanz-Zweitwert. Kein Perfect/Landed/Miss-Tripel.
-let sbMonRows = null;          // cached attempt rows (tricks table, all pages)
-let sbMonRange = 'season';     // 'season' | 'last' | 'all' | 'custom'
-let sbMonFrom = '';            // custom range bounds (YYYY-MM-DD)
-let sbMonTo = '';
-let sbMonTyp = '';             // '' | session type
-let sbMonView = {level:'team', athlete:null, trick:null};
-let _monAthletes = [];
-let _monTricks = [];
 
 const FS_MON_STATUS = {
   ready:    {label:'Ready',    color:'#34d399'},
@@ -3838,14 +3810,6 @@ async function sbMonFetchAll() {
   return all;
 }
 
-function sbMonRangeBounds() {
-  const now = new Date();
-  const y = now.getMonth() + 1 >= 5 ? now.getFullYear() : now.getFullYear() - 1;
-  if (sbMonRange === 'season') return {from: y + '-05-01', to: ''};
-  if (sbMonRange === 'last')   return {from: (y-1) + '-05-01', to: y + '-04-30'};
-  if (sbMonRange === 'custom') return {from: sbMonFrom || '', to: sbMonTo || ''};
-  return {from: '', to: ''};
-}
 
 function sbMonPeriodLabel() {
   const fmt = d => { if (!d) return '…'; const p = d.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); };
@@ -3856,14 +3820,6 @@ function sbMonPeriodLabel() {
   return 'all time' + typ;
 }
 
-function sbMonFiltered() {
-  let rows = sbMonRows || [];
-  const {from, to} = sbMonRangeBounds();
-  if (from) rows = rows.filter(t => (t.datum || '') >= from);
-  if (to)   rows = rows.filter(t => (t.datum || '') <= to);
-  if (sbMonTyp) rows = rows.filter(t => typMatches(t.typ, sbMonTyp));
-  return rows;
-}
 
 function sbMonStatusKey(att, qoe) {
   if (att < 5) return 'lowdata';
@@ -3935,33 +3891,9 @@ async function loadMonitoring() {
   renderMonitoring();
 }
 
-function renderMonitoring() {
-  const v = sbMonView;
-  if (v.level === 'trick' && v.athlete && v.trick) renderMonTrick();
-  else if (v.level === 'athlete' && v.athlete) renderMonAthlete();
-  else renderMonTeam();
-}
 
-function sbMonSetRange(val) { sbMonRange = val; renderMonitoring(); }
-function sbMonSetTyp(val) { sbMonTyp = val; renderMonitoring(); }
-function sbMonApplyCustom() {
-  sbMonFrom = document.getElementById('mon-date-from')?.value || '';
-  sbMonTo = document.getElementById('mon-date-to')?.value || '';
-  renderMonitoring();
-}
 
 // Sync the Database-page period selects with Monitoring's choice, then reuse the existing exports
-function sbMonSyncSelects(prefix) {
-  const {from, to} = sbMonRangeBounds();
-  const seasonSel = document.getElementById(prefix + '-season-sel');
-  const typSel = document.getElementById(prefix + '-typ-sel');
-  const fromEl = document.getElementById(prefix + '-date-from');
-  const toEl = document.getElementById(prefix + '-date-to');
-  if (seasonSel) seasonSel.value = sbMonRange === 'season' ? 'current' : sbMonRange === 'all' ? 'all' : 'custom';
-  if (fromEl) fromEl.value = from;
-  if (toEl) toEl.value = to;
-  if (typSel) typSel.value = sbMonTyp;
-}
 
 async function sbMonEnsureDbData() {
   if (!dbAllTricks || !dbAllTricks.length || !dbAllStandort || !dbAllStandort.length) await loadDB();
@@ -3985,14 +3917,6 @@ async function sbMonAthletePdf() {
   if (sel) sel.value = sbMonView.athlete || '';
   sbMonSyncSelects('ar');
   generateAthleteReport();
-}
-function sbMonOpenAthlete(i) { sbMonView = {level:'athlete', athlete:_monAthletes[i], trick:null}; renderMonitoring(); window.scrollTo(0,0); }
-function sbMonOpenTrick(i) { sbMonView = {level:'trick', athlete:sbMonView.athlete, trick:_monTricks[i] ? _monTricks[i].trick : null}; renderMonitoring(); window.scrollTo(0,0); }
-function sbMonBack() {
-  sbMonView = sbMonView.level === 'trick'
-    ? {level:'athlete', athlete:sbMonView.athlete, trick:null}
-    : {level:'team', athlete:null, trick:null};
-  renderMonitoring();
 }
 
 function monHeaderHtml(title, sub, backable) {
@@ -5102,29 +5026,13 @@ async function sbMonSaveComment() {
 // ═══════ SLOPESTYLE RUN-BUILDER (Freeski) — gleiche Bedienung wie Snowboard ═══════
 // Speicherung im FS-Datenmodell: gesamt 3/7/10 + gelandet; Run-Tag, Tags und Kommentar im kommentar-Feld.
 // Vorschläge = dasselbe Vokabular wie das FS-Assessment (Slide Form / Slide Variant / Swap).
-const SB_RAIL_SUGGESTIONS = ['50-50','Switch 50-50','Slide','Front Slide','Back Slide','Lip On','Switch Lip On','Switch Tails On','Front Swap','Back Swap','FS 360 Swap','BS 360 Swap'];
 const SB_RUN_TAGS = ['Rotation too early','Rotation too late','Take-Off','Center of gravity','Orientation','Grab timing','Air position'];
-let SB_CUSTOM_RAIL_TYPES = [];
-let SB_RAIL_TRICKS = [];
 let SB_CUSTOM_RUN_TAGS = [];
 
 function sbAllFailReasons() { return SB_RUN_TAGS.concat(SB_CUSTOM_RUN_TAGS); }
 
-function sbAllRailTypes() {
-  const fromSelect = [...(document.getElementById('sb-railart')?.options || [])]
-    .map(o => o.value).filter(Boolean);
-  return [...new Set(fromSelect.concat(SB_CUSTOM_RAIL_TYPES))];
-}
 
-function sbAllRailTricks() {
-  return [...new Set(SB_RAIL_SUGGESTIONS.concat(SB_RAIL_TRICKS))];
-}
 
-function sbCanonRailTrick(txt) {
-  const norm = s => s.toLowerCase().replace(/\s+/g, ' ').trim();
-  const hit = sbAllRailTricks().find(t => norm(t) === norm(txt));
-  return hit || txt.replace(/\s+/g, ' ').trim();
-}
 
 async function sbLoadRailData() {
   try {
@@ -5151,11 +5059,6 @@ async function sbLoadRailData() {
   } catch (e) { /* Basis-Listen reichen */ }
 }
 
-function sbRunState(name) {
-  const d = sessAthleteData[name];
-  if (!d.run) d.run = {no: 1, elements: [], ratings: [], addMode: '', railType: sbAllRailTypes()[0] || 'Rail', noteOpen: null};
-  return d.run;
-}
 
 function sbRunCardHtml(name, d, trickOptions) {
   const r = sbRunState(name);
@@ -5230,42 +5133,6 @@ function sbRunCardHtml(name, d, trickOptions) {
   </div>`;
 }
 
-function sbRunToggleAdd(name, mode) {
-  const r = sbRunState(name);
-  r.addMode = r.addMode === mode ? '' : mode;
-  renderLiveSession();
-}
-function sbRunNewRailType(name) {
-  const v = (window.prompt('New rail type:') || '').replace(/\s+/g, ' ').trim();
-  if (!v) return;
-  const norm = s => s.toLowerCase();
-  const existing = sbAllRailTypes().find(t => norm(t) === norm(v));
-  const type = existing || v;
-  if (!existing) {
-    SB_CUSTOM_RAIL_TYPES.push(type);
-    const sel = document.getElementById('sb-railart');
-    if (sel) { const o = document.createElement('option'); o.textContent = type; sel.appendChild(o); }
-    const sel2 = document.getElementById('sbe-railart');
-    if (sel2) { const o = document.createElement('option'); o.textContent = type; sel2.appendChild(o); }
-  }
-  sbRunState(name).railType = type;
-  renderLiveSession();
-}
-function sbRunSetRailType(name, t) {
-  sbRunState(name).railType = t;
-  renderLiveSession();
-  const inp = document.getElementById('run-rail-trick-' + name.replace(/\s/g,'_'));
-  if (inp) inp.focus();
-}
-function sbRunAddJump(name, label) {
-  if (!label) return;
-  const r = sbRunState(name);
-  if (r.elements.length >= sbRunMaxEl()) { showToast('Max ' + sbRunMaxEl() + ' elements per run', 'error'); return; }
-  r.elements.push({kind:'jump', label});
-  r.ratings.push(null);
-  r.addMode = '';
-  renderLiveSession();
-}
 function sbRunAddRailCommit(name) {
   const r = sbRunState(name);
   const inp = document.getElementById('run-rail-trick-' + name.replace(/\s/g,'_'));
@@ -5276,22 +5143,6 @@ function sbRunAddRailCommit(name) {
   r.elements.push({kind:'rail', label: `Rail ${r.railType} — ${trick}`, railType: r.railType});
   r.ratings.push(null);
   r.addMode = '';
-  renderLiveSession();
-}
-function sbRunRemoveEl(name, i) {
-  const r = sbRunState(name);
-  r.elements.splice(i, 1);
-  r.ratings.splice(i, 1);
-  renderLiveSession();
-}
-function sbRunRate(name, i, val) {
-  const r = sbRunState(name);
-  r.ratings[i] = r.ratings[i] === val ? null : val;
-  renderLiveSession();
-}
-function sbRunNoteToggle(name, i) {
-  const r = sbRunState(name);
-  r.noteOpen = (i === null || r.noteOpen === i) ? null : i;
   renderLiveSession();
 }
 function sbRunTagToggle(name, i, tag) {
@@ -5442,5 +5293,5 @@ function init() {
   document.body.classList.add('sport-freeski');
   sbLoadRailData();   // team-weite Rail-Arten, -Tricks und Run-Tags nachladen
 }
-return { fragments, init, showPage, dbRawLoad, sbRunToggleAdd, sbRunSetRailType, sbRunNewRailType, sbRunAddJump, sbRunAddRailCommit, sbRunRemoveEl, sbRunRate, sbRunNoteToggle, sbRunTagToggle, sbRunNoteInput, sbRunSave, sbMonTimeSel, sbMonOpenTrickReport, sbMonToggleHistory, sbMonSaveComment, loadReportsTab, renderReportsList, sbOpenReportInline, sbRepSetTyp, sbRepSetRange, sbRepApplyCustom, sbRepDeleteCurrent, sbRVPrintPdf, sbRVShowDetail, sbRVEditStart, sbRVEditCatSet, sbRVEditCancel, sbRVEditDelete, sbRVEditSave, openSessionReportView, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, logRatedAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit };
+return { fragments, init, showPage, dbRawLoad, sbRunToggleAdd, sbRunSetRailType, sbRunNewRailType, sbRunAddJump, sbRunAddRailCommit, sbRunRemoveEl, sbRunRate, sbRunNoteToggle, sbRunTagToggle, sbRunNoteInput, sbRunSave, sbMonTimeSel, sbMonOpenTrickReport, sbMonToggleHistory, sbMonSaveComment, loadReportsTab, renderReportsList, sbOpenReportInline, sbRepSetTyp, sbRepSetRange, sbRepApplyCustom, sbRepDeleteCurrent, sbRVPrintPdf, sbRVShowDetail, sbRVEditStart, sbRVEditCatSet, sbRVEditCancel, sbRVEditDelete, sbRVEditSave, openSessionReportView, loadMonitoring, renderMonitoring, sbMonSetRange, sbMonSetTyp, sbMonApplyCustom, sbMonRealityCheck, sbMonTeamPdf, sbMonAthletePdf, sbMonOpenAthlete, sbMonOpenTrick, sbMonBack, updateSbDisciplines, updateFwdSwBtn, toggleDisziplin, trickDesc, setPerfFilter, onPfSeasonChange, setPerfDateRange, clearPerfDateRange, getSeasonRange, extractRotation, extractQuality, renderSessionPerformance, realityCheck, applyRealityCheckSelected, updateSeasonLabels, loadDB, deleteSessionReport, rebuildReportFromTimestamps, renderSessionReports, generateAthleteReport, openTeamPdfReport, saveSessionState, clearSessionStorage, restoreSessionState, toggleSessionAthlete, baseLabel, renderLiveSession, selectSessAthlete, setSessRating, highlightRatingBtn, autoLogAttempt, logRatedAttempt, sessSetTrick, sessSelectGrab, logAttempt, renderSessionLog, deleteLogEntry, editLogEntry, setEditRating, saveFsLogEdit, clearSessionSelection, addAthleteToSession, resetSession, cancelSession, endSession, parseSubRating, buildFsTrickBlocks, saveSessionReport, loadLastSessionReport, openReportPrint, viewSessionReportByDate, loadStandort, renderSbDirRadar, drawSessionDirRadar, renderStandort, sbSave, cycleGrabStatus, loadEntwicklung, sortFsTricksByDir, initTrickAnalytics, buildSessionList, appendTrendChart, renderSessionSummary, renderRawEntries, syncTrickNameLocally, editRawEntry, cancelRawEdit, saveRawEdit, deleteRawEntry, setStatsMode, parseDateInput, setDateRange, clearDateRange, setTypeFilter, renderTrickAnalytics, openSbEdit, saveSbEdit, renderMonAthlete, renderMonTeam, renderMonTrick }
 })();

@@ -83,8 +83,10 @@ def return_liste(zeilen):
 
 sb, fs = lies('js/snowboard.js'), lies('js/freeski.js')
 f_sb, f_fs = funktionen(sb), funktionen(fs)
-lokal = modul_namen(sb, f_sb) | modul_namen(fs, f_fs)
 export = return_liste(sb) | return_liste(fs)
+# Exportierte Funktionen haengt boot.js ans window - eine Funktion im Kern
+# findet sie dort zur Laufzeit. Sie sind also kein Hindernis.
+lokal = (modul_namen(sb, f_sb) | modul_namen(fs, f_fs)) - export
 
 gemeinsam = sorted(set(f_sb) & set(f_fs))
 identisch = [n for n in gemeinsam if normal(rumpf(sb, f_sb[n])) == normal(rumpf(fs, f_fs[n]))]

@@ -84,6 +84,8 @@ const SPORT_CONFIGS = {
             <option>Robin Zürcher</option>
           </optgroup>
           `,
+    // Vorschlaege fuer Rail-Tricks in der Live-Session
+    railSuggestions: ['50-50','Switch 50-50','Nose Press','Tail Press','Front Board','Back Board','Front Nose Slide','Back Nose Slide','Front Lip','Back Lip','Front Tail Slide','Back Tail Slide','Front Blunt','Back Blunt','Front Nose Blunt','Back Nose Blunt','Front 270 on','Back 270 on','Hardway 270 on','270 out','450 out','Pretzel 270 out','270 to fakie'],
     selectFill: {
       'sb-disziplin': `
           <option value="">— select —</option>
@@ -272,6 +274,8 @@ const SPORT_CONFIGS = {
             <option>Neo Zingg</option>
           </optgroup>
           `,
+    // Vorschlaege fuer Rail-Tricks in der Live-Session
+    railSuggestions: ['50-50','Switch 50-50','Slide','Front Slide','Back Slide','Lip On','Switch Lip On','Switch Tails On','Front Swap','Back Swap','FS 360 Swap','BS 360 Swap'],
     selectFill: {
       'edit-disziplin': `
           <option value="">— select —</option><option>Jump</option><option>Rail</option><option>Halfpipe</option><option>Landing Bag</option>

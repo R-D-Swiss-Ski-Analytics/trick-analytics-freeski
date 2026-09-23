@@ -4,6 +4,11 @@ const SUPABASE_URL = CFG.supabaseUrl;
 
 const SUPABASE_KEY = CFG.supabaseKey;
 
+// ── Rail-Tricks: Vorschlagsliste kommt aus der Config, der Rest ist gemeinsam ──
+const SB_RAIL_SUGGESTIONS = CFG.railSuggestions || [];
+let SB_CUSTOM_RAIL_TYPES = [];   // in dieser Session neu erfasste Rail-Arten
+let SB_RAIL_TRICKS = [];         // team-weit bereits verwendete Rail-Tricks (aus der DB)
+
 // Invite-/Recovery-Links tragen den Typ im URL-Hash — vor supabase-js einlesen
 const AUTH_URL_TYPE = (location.hash.match(/type=(\w+)/) || [])[1] || null;
 const AUTH_URL_ERROR = decodeURIComponent(((location.hash.match(/error_description=([^&]*)/) || [])[1] || '').replace(/\+/g, ' '));
@@ -1131,3 +1136,178 @@ function showPage(id, btn) {
 }
 
 function typMatches(typ, filter) { return !filter || typ === filter || (filter === 'Big Air Training' && typ === 'Jump On-Snow'); }
+
+// ═══════════════ AUS BEIDEN MODULEN ZUSAMMENGEFUEHRT ═══════════════
+// Diese Funktionen standen wortgleich in snowboard.js und freeski.js.
+// Aenderungen hier wirken auf beide Sportarten.
+
+function sbAllRailTricks() {
+  return [...new Set(SB_RAIL_SUGGESTIONS.concat(SB_RAIL_TRICKS))];
+}
+
+function sbAllRailTypes() {
+  const fromSelect = [...(document.getElementById('sb-railart')?.options || [])]
+    .map(o => o.value).filter(Boolean);
+  return [...new Set(fromSelect.concat(SB_CUSTOM_RAIL_TYPES))];
+}
+
+function sbCanonRailTrick(txt) {
+  const norm = s => s.toLowerCase().replace(/\s+/g, ' ').trim();
+  const hit = sbAllRailTricks().find(t => norm(t) === norm(txt));
+  return hit || txt.replace(/\s+/g, ' ').trim();
+}
+
+function sbRunState(name) {
+  const d = sessAthleteData[name];
+  if (!d.run) d.run = {no: 1, elements: [], ratings: [], addMode: '', railType: sbAllRailTypes()[0] || 'Rail', noteOpen: null};
+  return d.run;
+}
+
+// ── Monitoring: Zustand, in beiden Sportarten gleich ──────────────────
+let sbMonView = {level:'team', athlete:null, trick:null};
+let sbMonFrom = '';            // custom range bounds (YYYY-MM-DD)
+let sbMonTo = '';
+let sbMonRows = null;          // cached attempt rows (tricks table, all pages)
+let sbMonTyp = '';             // '' | session type
+let sbMonRange = 'season';     // 'season' | 'last' | 'all' | 'custom'
+let _monAthletes = [];
+let _monTricks = [];
+
+// ═══════════════ AUS BEIDEN MODULEN ZUSAMMENGEFUEHRT ═══════════════
+// Diese Funktionen standen wortgleich in snowboard.js und freeski.js.
+// Aenderungen hier wirken auf beide Sportarten.
+
+function renderMonitoring() {
+  const v = sbMonView;
+  if (v.level === 'trick' && v.athlete && v.trick) renderMonTrick();
+  else if (v.level === 'athlete' && v.athlete) renderMonAthlete();
+  else renderMonTeam();
+}
+
+function sbMonApplyCustom() {
+  sbMonFrom = document.getElementById('mon-date-from')?.value || '';
+  sbMonTo = document.getElementById('mon-date-to')?.value || '';
+  renderMonitoring();
+}
+
+function sbMonBack() {
+  sbMonView = sbMonView.level === 'trick'
+    ? {level:'athlete', athlete:sbMonView.athlete, trick:null}
+    : {level:'team', athlete:null, trick:null};
+  renderMonitoring();
+}
+
+function sbMonOpenAthlete(i) { sbMonView = {level:'athlete', athlete:_monAthletes[i], trick:null}; renderMonitoring(); window.scrollTo(0,0); }
+
+function sbMonOpenTrick(i) { sbMonView = {level:'trick', athlete:sbMonView.athlete, trick:_monTricks[i] ? _monTricks[i].trick : null}; renderMonitoring(); window.scrollTo(0,0); }
+
+function sbMonRangeBounds() {
+  const now = new Date();
+  const y = now.getMonth() + 1 >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+  if (sbMonRange === 'season') return {from: y + '-05-01', to: ''};
+  if (sbMonRange === 'last')   return {from: (y-1) + '-05-01', to: y + '-04-30'};
+  if (sbMonRange === 'custom') return {from: sbMonFrom || '', to: sbMonTo || ''};
+  return {from: '', to: ''};
+}
+
+function sbMonSetRange(val) { sbMonRange = val; renderMonitoring(); }
+
+function sbMonSetTyp(val) { sbMonTyp = val; renderMonitoring(); }
+
+function sbRunAddJump(name, label) {
+  if (!label) return;
+  const r = sbRunState(name);
+  if (r.elements.length >= sbRunMaxEl()) { showToast('Max ' + sbRunMaxEl() + ' elements per run', 'error'); return; }
+  r.elements.push({kind:'jump', label});
+  r.ratings.push(null);
+  r.addMode = '';
+  renderLiveSession();
+}
+
+function sbRunNewRailType(name) {
+  const v = (window.prompt('New rail type:') || '').replace(/\s+/g, ' ').trim();
+  if (!v) return;
+  const norm = s => s.toLowerCase();
+  const existing = sbAllRailTypes().find(t => norm(t) === norm(v));
+  const type = existing || v;
+  if (!existing) {
+    SB_CUSTOM_RAIL_TYPES.push(type);
+    // auch im Assessment-Formular als Auswahl ergänzen
+    const sel = document.getElementById('sb-railart');
+    if (sel) { const o = document.createElement('option'); o.textContent = type; sel.appendChild(o); }
+    const sel2 = document.getElementById('sbe-railart');
+    if (sel2) { const o = document.createElement('option'); o.textContent = type; sel2.appendChild(o); }
+  }
+  sbRunState(name).railType = type;
+  renderLiveSession();
+}
+
+function sbRunNoteToggle(name, i) {
+  const r = sbRunState(name);
+  r.noteOpen = (i === null || r.noteOpen === i) ? null : i;
+  renderLiveSession();
+}
+
+function sbRunRate(name, i, val) {
+  const r = sbRunState(name);
+  r.ratings[i] = r.ratings[i] === val ? null : val;
+  renderLiveSession();
+}
+
+function sbRunRemoveEl(name, i) {
+  const r = sbRunState(name);
+  r.elements.splice(i, 1);
+  r.ratings.splice(i, 1);
+  renderLiveSession();
+}
+
+function sbRunSetRailType(name, t) {
+  sbRunState(name).railType = t;
+  renderLiveSession();
+  const inp = document.getElementById('run-rail-trick-' + name.replace(/\s/g,'_'));
+  if (inp) inp.focus();
+}
+
+function sbRunToggleAdd(name, mode) {
+  const r = sbRunState(name);
+  r.addMode = r.addMode === mode ? '' : mode;
+  renderLiveSession();
+}
+
+function setStatsMode(mode) {
+  const trickSel = document.getElementById('ev-trick-sel');
+  const dateSel  = document.getElementById('ev-date-sel');
+  const btnT = document.getElementById('ev-mode-trick');
+  const btnS = document.getElementById('ev-mode-session');
+  [btnT,btnS].forEach(b=>{if(b){b.style.background='var(--surface2)';b.style.borderColor='var(--border)';b.style.color='var(--muted)';}});
+  const active = mode==='trick'?btnT:btnS;
+  if(active){active.style.background='rgba(57,195,212,0.2)';active.style.borderColor='#39c3d4';active.style.color='#39c3d4';}
+  if(trickSel) trickSel.style.display = mode==='trick' ? '' : 'none';
+  if(dateSel)  dateSel.style.display  = mode==='session' ? '' : 'none';
+  const fRow = document.getElementById('ev-type-filter');
+  if(fRow) fRow.style.display = mode==='session' ? 'none' : 'flex';
+  if(mode!=='trick'   && trickSel) trickSel.value='';
+  if(mode!=='session' && dateSel)  dateSel.value='';
+  renderTrickAnalytics();
+}
+
+function sbMonFiltered() {
+  let rows = sbMonRows || [];
+  const {from, to} = sbMonRangeBounds();
+  if (from) rows = rows.filter(t => (t.datum || '') >= from);
+  if (to)   rows = rows.filter(t => (t.datum || '') <= to);
+  if (sbMonTyp) rows = rows.filter(t => typMatches(t.typ, sbMonTyp));
+  return rows;
+}
+
+function sbMonSyncSelects(prefix) {
+  const {from, to} = sbMonRangeBounds();
+  const seasonSel = document.getElementById(prefix + '-season-sel');
+  const typSel = document.getElementById(prefix + '-typ-sel');
+  const fromEl = document.getElementById(prefix + '-date-from');
+  const toEl = document.getElementById(prefix + '-date-to');
+  if (seasonSel) seasonSel.value = sbMonRange === 'season' ? 'current' : sbMonRange === 'all' ? 'all' : 'custom';
+  if (fromEl) fromEl.value = from;
+  if (toEl) toEl.value = to;
+  if (typSel) typSel.value = sbMonTyp;
+}
