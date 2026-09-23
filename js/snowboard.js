@@ -125,7 +125,6 @@ function trickDesc(t, prefix) {
   }
 }
 
-
 async function loadDB() {
   updateSeasonLabels();
   const perfEl = document.getElementById('perf-table');
@@ -1124,7 +1123,6 @@ function renderLiveSession() {
 
 // Rail-Arten: EINE Quelle — die Optionen des Assessment-Selects (#sb-railart) + neue Custom-Arten
 
-
 // Schreibweise stabil halten: passt der getippte Trick (case-/spacing-insensitiv) auf einen
 // bekannten, wird automatisch dessen kanonische Schreibweise übernommen
 
@@ -1150,102 +1148,12 @@ async function sbLoadRailData() {
 }
 
 
-function sbRunCardHtml(name, d, trickOptions) {
-  const r = sbRunState(name);
-  const sid = name.replace(/\s/g,'_');
-  const elRows = r.elements.map((el, i) => {
-    const rate = r.ratings[i] || null;
-    const btn = (val, icon, col) => `<button onclick="sbRunRate('${name}',${i},'${val}')" style="padding:8px 12px;border-radius:8px;border:2px solid ${rate===val?col:'var(--border)'};background:${rate===val?col+'22':'var(--surface2)'};color:${rate===val?col:'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;">${icon}</button>`;
-    const hasNote = (el.tags && el.tags.length) || el.note;
-    const noteLine = hasNote ? `<div style="margin:-2px 0 6px 62px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-        ${(el.tags||[]).map(t => `<span style="font-size:10px;color:#f59e0b;border:1px solid #f59e0b55;border-radius:999px;padding:2px 8px;">${t}</span>`).join('')}
-        ${el.note ? `<span style="font-size:11px;color:var(--muted);">${el.note}</span>` : ''}
-      </div>` : '';
-    const notePanel = r.noteOpen === i ? `<div style="margin:0 0 8px 30px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;">
-        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Tags</div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
-          ${sbAllFailReasons().map(t => { const on = (el.tags||[]).includes(t); return `<button onclick="sbRunTagToggle('${name}',${i},'${t.replace(/'/g,"\\'")}')" style="padding:5px 10px;border-radius:999px;border:1.5px solid ${on?'#f59e0b':'var(--border)'};background:${on?'rgba(245,158,11,0.15)':'none'};color:${on?'#f59e0b':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">${t}</button>`; }).join('')}
-        </div>
-        <div style="display:flex;gap:8px;">
-          <input value="${(el.note||'').replace(/"/g,'&quot;')}" oninput="sbRunNoteInput('${name}',${i},this.value)" placeholder="Comment (optional)" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
-          <button onclick="sbRunNoteToggle('${name}',null)" style="padding:8px 14px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Done</button>
-        </div>
-      </div>` : '';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);">
-      <span style="width:20px;height:20px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0;">${i+1}</span>
-      <span style="flex-shrink:0;font-size:9px;font-weight:700;letter-spacing:.5px;color:${el.kind==='rail'?'#a78bfa':'#39c3d4'};border:1px solid ${el.kind==='rail'?'#a78bfa':'#39c3d4'};border-radius:4px;padding:2px 5px;">${el.kind==='rail'?'RAIL':(sessType && sessType.startsWith('Halfpipe')?'HIT':'JUMP')}</span>
-      <span style="flex:1;font-size:12px;font-weight:600;color:var(--text);line-height:1.3;">${el.label}</span>
-      ${btn('failed','✗','#e2001a')}${btn('landed','✓','#34d399')}${btn('stomped','★','#39c3d4')}
-      <button onclick="sbRunNoteToggle('${name}',${i})" title="Tags / comment" style="background:none;border:1px solid ${hasNote || r.noteOpen === i ?'#f59e0b':'var(--border)'};border-radius:8px;color:${hasNote || r.noteOpen === i ?'#f59e0b':'var(--muted)'};cursor:pointer;font-size:13px;padding:6px 9px;">✎</button>
-      <button onclick="sbRunRemoveEl('${name}',${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 4px;">✕</button>
-    </div>${noteLine}${notePanel}`;
-  }).join('');
-
-  let addPanel = '';
-  if (r.addMode === 'jump') {
-    addPanel = `<div style="margin-top:10px;">
-      <select onchange="sbRunAddJump('${name}', this.value)" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-        <option value="">— select ${sessType && sessType.startsWith('Halfpipe') ? 'hit' : 'jump'} trick —</option>
-        ${trickOptions}
-      </select>
-    </div>`;
-  } else if (r.addMode === 'rail') {
-    addPanel = `<div style="margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Rail type</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-        ${sbAllRailTypes().map(t => `<button onclick="sbRunSetRailType('${name}','${t.replace(/'/g,"\\'")}')" style="padding:6px 12px;border-radius:999px;border:1.5px solid ${r.railType===t?'#39c3d4':'var(--border)'};background:${r.railType===t?'rgba(57,195,212,0.18)':'none'};color:${r.railType===t?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">${t}</button>`).join('')}
-        <button onclick="sbRunNewRailType('${name}')" style="padding:6px 12px;border-radius:999px;border:1.5px dashed #39c3d4;background:none;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">+ New</button>
-      </div>
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Trick (free text, with suggestions)</div>
-      <div style="display:flex;gap:8px;">
-        <input id="run-rail-trick-${sid}" list="run-rail-suggest" placeholder="e.g. Front 270 on" style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
-        <datalist id="run-rail-suggest">${sbAllRailTricks().map(s => `<option value="${s}">`).join('')}</datalist>
-        <button onclick="sbRunAddRailCommit('${name}')" style="padding:9px 16px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Add</button>
-      </div>
-    </div>`;
-  }
-
-  const rated = r.ratings.filter(Boolean).length;
-  return `<div class="card" style="padding:24px;" id="sess-col-${sid}">
-    <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:4px;text-align:center;">${shortName(name)}</div>
-    <div style="text-align:center;margin-bottom:14px;">
-      <span style="background:rgba(167,139,250,0.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:999px;padding:4px 14px;font-size:11px;font-weight:700;">${sessType && sessType.startsWith('Halfpipe') ? 'HALFPIPE' : 'SLOPESTYLE'} RUN #${r.no}</span>
-
-    </div>
-    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Run setup — ${r.elements.length}/${sbRunMaxEl()} ${sessType && sessType.startsWith('Halfpipe') ? 'hits' : 'elements'}</div>
-    ${elRows || '<div style="color:var(--muted);font-size:12px;padding:10px 0;">No elements yet — build the run below.</div>'}
-    <div style="display:flex;gap:8px;margin-top:10px;">
-      <button onclick="sbRunToggleAdd('${name}','jump')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='jump'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='jump'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='jump'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">${sessType && sessType.startsWith('Halfpipe') ? '+ Hit' : '+ Jump'}</button>
-      ${sessType && sessType.startsWith('Halfpipe') ? '' : `<button onclick="sbRunToggleAdd('${name}','rail')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='rail'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='rail'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='rail'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Rail</button>`}
-    </div>
-    ${addPanel}
-    <button onclick="sbRunSave('${name}')" ${r.elements.length && rated === r.elements.length ? '' : 'disabled'} style="width:100%;margin-top:14px;padding:14px;border-radius:10px;border:none;background:${r.elements.length && rated === r.elements.length ? '#34d399' : 'var(--surface2)'};color:${r.elements.length && rated === r.elements.length ? '#06281c' : 'var(--muted)'};font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Save Run #${r.no} (${rated}/${r.elements.length} rated)</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;">Each element is saved as one attempt (tagged «Run ${r.no} · position»).${sessType && sessType.startsWith('Halfpipe') ? '' : ` New rail tricks are added to the athlete's Assessment automatically as Goal.`}</div>
-  </div>`;
-}
-
-
-function sbRunAddRailCommit(name) {
-  const r = sbRunState(name);
-  const inp = document.getElementById('run-rail-trick-' + name.replace(/\s/g,'_'));
-  const trick = sbCanonRailTrick(inp?.value || '');
-  if (!trick) { showToast('Enter the rail trick', 'error'); return; }
-  if (r.elements.length >= sbRunMaxEl()) { showToast('Max ' + sbRunMaxEl() + ' elements per run', 'error'); return; }
-  if (!SB_RAIL_TRICKS.includes(trick)) SB_RAIL_TRICKS.push(trick);
-  r.elements.push({kind:'rail', label: `Rail ${r.railType} — ${trick}`, railType: r.railType});
-  r.ratings.push(null);
-  r.addMode = '';
-  renderLiveSession();
-}
 function sbRunTagToggle(name, i, tag) {
   const el = sbRunState(name).elements[i];
   el.tags = el.tags || [];
   const idx = el.tags.indexOf(tag);
   if (idx >= 0) el.tags.splice(idx, 1); else el.tags.push(tag);
   renderLiveSession();
-}
-function sbRunNoteInput(name, i, val) {
-  sbRunState(name).elements[i].note = val;   // ohne Re-Render, damit das Tippen flüssig bleibt
 }
 function sbRunSave(name) {
   const r = sbRunState(name);
@@ -1712,72 +1620,6 @@ async function cancelSession() {
   showToast('Session cancelled — all data deleted', 'error');
 }
 
-function endSession() {
-  const rawMin = Math.round((Date.now() - sessStartTime) / 1000 / 60 / 30) * 30;
-  const duration = Math.max(30, rawMin);
-  let existingModal = document.getElementById('sess-report-modal');
-  if (existingModal) existingModal.remove();
-  const modal = document.createElement('div');
-  modal.id = 'sess-report-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
-  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:28px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto;">
-    <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;color:#39c3d4;margin-bottom:4px;">Session Complete</div>
-    <div style="font-size:13px;color:#6b8299;margin-bottom:20px;">${sessLog.length} attempts logged ·
-      <input id="sr-duration" type="number" min="5" step="5" value="${duration}" style="width:70px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:3px 6px;font-family:'Poppins',sans-serif;font-size:13px;text-align:center;"> min
-      <span style="font-size:10px;">(editable)</span></div>
-    <div style="display:flex;flex-direction:column;gap:14px;">
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;">
-        <div>
-          <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Location</label>
-          <input id="sr-location" type="text" placeholder="e.g. Laax" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
-        </div>
-        <div style="${sessType && (sessType.startsWith('Slopestyle') || sessType.startsWith('Halfpipe')) ? 'display:none;' : ''}">
-          <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Jump Size</label>
-          <select id="sr-jumpsize" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
-            <option value="">—</option><option>M</option><option>L</option><option>XL</option>
-          </select>
-        </div>
-      </div>
-      <div>
-        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Conditions</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="sr-cond-btns">
-          ${[['1','Poor'],['2','Below Avg'],['3','Average'],['4','Good'],['5','Excellent']].map(([v,l])=>`<button onclick="setSrCondition(${v},this)" data-val="${v}" style="padding:7px 12px;border-radius:8px;border:2px solid #1a3450;background:#112236;color:#6b8299;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">${v} — ${l}</button>`).join('')}
-        </div>
-      </div>
-      <div>
-        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Comments</label>
-        <textarea id="sr-comments" placeholder="Coach notes, observations…" rows="2" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;resize:vertical;"></textarea>
-      </div>
-      <div>
-        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Athlete Notes</label>
-        ${sessSelectedAthletes.map(n => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
-          <input type="text" id="sr-ath-${n.replace(/\s/g,'_')}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;">
-        </div>`).join('')}
-      </div>
-      ${sessType && sessType.includes('Competition') ? (() => {
-        const nFinal = sessType.startsWith('Slopestyle') ? 2 : 3;   // BA/HP: 2 Quali + 3 Final · SS: 2 + 2
-        const inp = (id, ph) => `<input type="number" step="0.01" min="0" id="${id}" placeholder="${ph}" style="width:76px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;text-align:center;">`;
-        return `<div>
-        <label style="font-size:11px;color:#f59e0b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Contest Results <span style="text-transform:none;font-weight:400;">(Final empty if not reached)</span></label>
-        ${sessSelectedAthletes.map(n => { const sid = n.replace(/\s/g,'_'); return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
-          <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
-          <span style="font-size:10px;color:#6b8299;font-weight:600;">QUALI</span>
-          ${inp('sr-q1-'+sid,'Run 1')}${inp('sr-q2-'+sid,'Run 2')}
-          <span style="font-size:10px;color:#6b8299;font-weight:600;margin-left:6px;">FINAL</span>
-          ${inp('sr-f1-'+sid,'Run 1')}${inp('sr-f2-'+sid,'Run 2')}${nFinal === 3 ? inp('sr-f3-'+sid,'Run 3') : ''}
-          <span style="font-size:10px;color:#6b8299;font-weight:600;margin-left:6px;">RANK</span>
-          <input type="number" step="1" min="1" id="sr-rank-${sid}" placeholder="#" style="width:56px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;text-align:center;">
-        </div>`; }).join('')}
-      </div>`; })() : ''}
-    </div>
-    <div style="display:flex;gap:10px;margin-top:20px;">
-      <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
-      
-    </div>
-  </div>`;
-  document.body.appendChild(modal);
-}
 
 function buildFsTrickBlocks(entries) {
   // entries = [{trick, result}] in chronological order
@@ -2030,7 +1872,6 @@ function openReportPrint(report) {
 }
 
 // ── Interactive Session Report: per-trick bar+line chart with click-to-detail ──
-let _sbRV = null; // {report, groups: [[{trick, attempts:[...]}]]}
 
 function sbGroupAttempts(attempts) {
   const groups = [], byTrick = {};
@@ -2240,11 +2081,6 @@ async function sbRVEditDelete() {
   showToast('Attempt deleted', 'success');
 }
 
-function sbRVEditCancel() {
-  const e = _sbRVEdit;
-  _sbRVEdit = null;
-  if (e) sbRVShowDetail(e.ai, e.ti, e.i);
-}
 
 async function sbRVEditSave(mode) {
   if (!_sbRVEdit || !_sbRV) return;
@@ -2392,35 +2228,13 @@ function openSessionReportView(report) {
 }
 
 // ── Reports tab: browse past sessions in the interactive chart view ──
-let _sbRepList = [];
-let _sbRepTyp = '';        // '' | 'Landing Bag' | 'Jump On-Snow' | 'Big Air Competition'
-let _sbRepRange = 'all';   // 'season' | 'last' | 'all' | 'custom'
-let _sbRepFrom = '';
-let _sbRepTo = '';
-let _sbRepSelIdx = -1;
-let _sbRVEditable = false; // edit affordance only in the Reports tab
-let _sbRVEdit = null;      // {ai, ti, i} while editing an attempt
+
 let _sbRVEditKpis = {};
 let _sbRVEditFail = '';
 
 const SB_TYPE_FILTERS = [['','All'],['Landing Bag','Bag'],['Big Air Training','BA Train'],['Big Air Competition','BA Comp'],['Slopestyle Training','SS Train'],['Slopestyle Competition','SS Comp'],['Halfpipe Training','HP Train'],['Halfpipe Competition','HP Comp']];
 // Alt-Daten: «Jump On-Snow» zählt zum neuen «Big Air Training»
 
-function sbRepSetTyp(v) { _sbRepTyp = v; renderReportsList(); }
-function sbRepSetRange(v) { _sbRepRange = v; renderReportsList(); }
-function sbRepApplyCustom() {
-  _sbRepFrom = document.getElementById('rep-date-from')?.value || '';
-  _sbRepTo = document.getElementById('rep-date-to')?.value || '';
-  renderReportsList();
-}
-function sbRepRangeBounds() {
-  const now = new Date();
-  const y = now.getMonth() + 1 >= 5 ? now.getFullYear() : now.getFullYear() - 1;
-  if (_sbRepRange === 'season') return {from: y + '-05-01', to: ''};
-  if (_sbRepRange === 'last')   return {from: (y-1) + '-05-01', to: y + '-04-30'};
-  if (_sbRepRange === 'custom') return {from: _sbRepFrom || '', to: _sbRepTo || ''};
-  return {from: '', to: ''};
-}
 
 function sbTypeChipsHtml(current, handler) {
   return `<div style="display:flex;gap:6px;flex-wrap:wrap;">${SB_TYPE_FILTERS.map(([v,l]) =>
@@ -2522,11 +2336,6 @@ async function sbOpenReportInline(i) {
   window.scrollTo(0,0);
 }
 
-function sbRepDeleteCurrent() {
-  const report = _sbRV && _sbRV.report;
-  if (!report || !report.id) return;
-  deleteSessionReport(report.id, true);
-}
 
 async function viewSessionReportByDate(date) {
   const {data, error} = await db.from('session_reports').select('*').eq('datum', date).eq('app','snowboard');
@@ -3447,7 +3256,6 @@ function buildSessionList(data) {
   return sessions;
 }
 
-
 function setTypeFilter(typ) {
   _sbTaTypeFilter = typ;
   const map = {'':'ev-tf-all','Landing Bag':'ev-tf-bag','Jump On-Snow':'ev-tf-jump','Big Air Competition':'ev-tf-comp'};
@@ -3468,7 +3276,6 @@ function setTypeFilter(typ) {
   }
   renderTrickAnalytics();
 }
-
 
 function setDateRange() {
   const fromEl = document.getElementById('ev-date-from');
@@ -4048,17 +3855,6 @@ function getSeasonRange() {
   return { from: '', to: '' };
 }
 
-function updateSeasonLabels() {
-  const now = new Date();
-  const yr = now.getFullYear();
-  const mo = now.getMonth() + 1;
-  const s = mo >= 5 ? yr : yr - 1;
-  const fmt = (a, b) => `${String(a).slice(2)}/${String(b).slice(2)}`;
-  const sel = document.getElementById('pf-season');
-  if (!sel) return;
-  sel.options[0].text = `Current season ${fmt(s, s+1)}`;
-  sel.options[1].text = `Last season ${fmt(s-1, s)}`;
-}
 
 function renderSessionPerformance() {
   const el = document.getElementById('perf-table');
@@ -4347,41 +4143,6 @@ async function applyRealityCheckSelected(flagged, btn) {
   loadDB();
 }
 
-function drawSessionDirRadar(canvasId, dirCnt, dirs, dirColors) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  const total = dirs.reduce((s,d)=>s+dirCnt[d].att,0) || 1;
-  const dpr = window.devicePixelRatio || 1;
-  const size = 160;
-  canvas.width = size*dpr; canvas.height = size*dpr;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
-  const cx=size/2, cy=size/2, r=size/2-4;
-  ctx.clearRect(0,0,size,size);
-
-  let startAngle = -Math.PI/2;
-  dirs.forEach(d=>{
-    const slice = dirCnt[d].att/total * 2*Math.PI;
-    if(slice===0) return;
-    ctx.beginPath();
-    ctx.moveTo(cx,cy);
-    ctx.arc(cx,cy,r,startAngle,startAngle+slice);
-    ctx.closePath();
-    ctx.fillStyle=dirColors[d]; ctx.fill();
-    startAngle += slice;
-  });
-  startAngle = -Math.PI/2;
-  dirs.forEach(d=>{
-    const slice = dirCnt[d].att/total * 2*Math.PI;
-    if(slice===0) return;
-    ctx.beginPath();
-    ctx.moveTo(cx,cy);
-    ctx.arc(cx,cy,r,startAngle,startAngle+slice);
-    ctx.closePath();
-    ctx.strokeStyle='rgba(11,25,41,0.6)'; ctx.lineWidth=1; ctx.stroke();
-    startAngle += slice;
-  });
-}
 
 const SB_HP_GRABS = ['Bloody Dracula', 'Canadian Bacon', 'Chicken Salad', 'Cookie Monster', 'Crail', 'Crooked Cop', 'Cross Rocket', 'Double Tail', 'Dracula Method', 'Drunk Driver', 'Freshfish', 'Frontside', 'Indy', 'Japan', 'Lien', 'Melon', 'Method', 'Nose', 'Nuclear', 'Nuclear Method', 'Reach Around', 'Roast Beef', 'Rocket Air', 'Rusty Trombone', 'Sad Air', 'Seat Belt', 'Slob', 'Spaghetti', 'Stalefish', 'Stelmasky', 'Stink Bug', 'Suitcase', 'Swiss Cheese', 'Tai Pan', 'Tail', 'Truck Driver', 'Tuck Knee', 'Weddle (Mute)'];
 const SB_JUMP_GRABS = ['Canadian Bacon', 'Chicken Salad', 'Crail', 'Double Japan', 'Double Nose', 'Double Tail', 'Drunk Driver', 'Indy', 'Japan', 'Melon', 'Method', 'Nose', 'Roast Beef', 'Rocket Air', 'Rusty Trombone', 'Seat Belt', 'Stalefish', 'Tai Pan', 'Tail', 'Truck Driver', 'Tuck Knee', 'Weddle (Mute)'];
@@ -4459,16 +4220,6 @@ async function sbMonFetchAll() {
 }
 
 
-function sbMonPeriodLabel() {
-  const fmt = d => { if (!d) return '…'; const p = d.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); };
-  const typ = sbMonTyp ? ' · ' + (SESS_TYPE_SHORT[sbMonTyp]||sbMonTyp) : '';
-  if (sbMonRange === 'season') return 'current season' + typ;
-  if (sbMonRange === 'last')   return 'last season' + typ;
-  if (sbMonRange === 'custom') return fmt(sbMonFrom) + ' – ' + fmt(sbMonTo) + typ;
-  return 'all time' + typ;
-}
-
-
 function sbMonStatusKey(att, stomped) {
   if (att < 5) return 'lowdata';
   const r = stomped / att;
@@ -4502,13 +4253,6 @@ function sbMonTrend(rows, isHit) {
   return {dir:'flat', diff};
 }
 
-function sbMonTrendHtml(tr) {
-  if (!tr) return '';
-  if (tr.dir === 'up') return `<span style="color:#34d399;font-weight:600;">↗ rising${tr.diff ? ', +' + Math.round(tr.diff*100) + '%' : ''}</span>`;
-  if (tr.dir === 'down') return `<span style="color:#e2001a;font-weight:600;">↘ falling${tr.diff ? ', ' + Math.round(tr.diff*100) + '%' : ''}</span>`;
-  return `<span style="color:var(--muted);font-weight:600;">→ stable</span>`;
-}
-
 
 function sbMonDonut(s, l, f, size) {
   const total = s + l + f;
@@ -4533,8 +4277,6 @@ async function loadMonitoring() {
   await sbMonFetchAll();
   renderMonitoring();
 }
-
-
 
 // Sync the Database-page period selects with Monitoring's choice, then reuse the existing exports
 
@@ -4877,16 +4619,9 @@ function sbMonTimeChart(rows) {
 // Effizienz-Rate = Stomp-Rate pro Session (Entscheid Emilie 31.8.2026).
 // «Current status» = neuester Kommentar (V1); LLM-Synthese via Edge Function ist Phase 2.
 let _monTimeBy = {};
-let _monCmts = [];
-let _monStatus = null;   // KI-Status aus trick_status (Edge Function), null = keiner
-let _monCmtHistOpen = false;
+
 const MON_PLATEAU_TOL = 5; // Prozentpunkte über 3 Sessions — offener Parameter, an echten Daten testen
 
-function sbMonSessions(rows) {
-  const by = {};
-  rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
-  return Object.keys(by).sort().map(d => ({date: d, rows: by[d]}));
-}
 
 function sbMonCoachingHtml(rows) {
   const GREY = '#6b8299', AMBER = '#f59e0b', RED = '#e2001a';
@@ -5087,38 +4822,7 @@ async function sbMonLoadComments() {
   sbMonRenderComments();
 }
 
-function sbMonRenderComments() {
-  const st = document.getElementById('mon-cmt-status');
-  const link = document.getElementById('mon-cmt-hist-link');
-  const hist = document.getElementById('mon-cmt-history');
-  if (!st) return;
-  const fmt = d => { if (!d) return ''; const p = String(d).split('-'); return p.length===3 ? p[2]+'.'+p[1]+'.'+p[0].slice(2) : d; };
-  const cur = _monCmts[0];
-  const aiTag = document.getElementById('mon-cmt-ai-tag');
-  if (_monStatus) {
-    st.innerHTML = `${_monStatus.status_text} <span style="color:var(--muted);font-size:11px;">(${fmt(String(_monStatus.updated_at).slice(0,10))})</span>`;
-    if (aiTag) aiTag.style.display = '';
-  } else {
-    st.innerHTML = cur
-      ? `${cur.kommentar} <span style="color:var(--muted);font-size:11px;">(${fmt(cur.datum)})</span>`
-      : '<span style="color:var(--muted);">No comments yet.</span>';
-    if (aiTag) aiTag.style.display = 'none';
-  }
-  if (link) {
-    link.style.display = _monCmts.length ? '' : 'none';
-    link.textContent = (_monCmtHistOpen ? 'Hide history' : 'History') + ` (${_monCmts.length})`;
-  }
-  if (hist) {
-    hist.style.display = _monCmtHistOpen ? '' : 'none';
-    hist.innerHTML = _monCmts.map(c => `<div style="font-size:12px;color:var(--text);padding:6px 0;border-top:1px solid var(--border);">
-      <span style="color:var(--muted);font-size:10px;">${fmt(c.datum)}</span><br>${c.kommentar}</div>`).join('');
-  }
-}
 
-function sbMonToggleHistory() {
-  _monCmtHistOpen = !_monCmtHistOpen;
-  sbMonRenderComments();
-}
 
 async function sbMonSaveComment() {
   const inp = document.getElementById('mon-cmt-input');

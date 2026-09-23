@@ -51,13 +51,28 @@ Code veraendert, nur verteilt.
 
 ## Doppelte Funktionen
 
-107 Funktionen tragen in beiden Modulen denselben Namen, 44 davon sind wortgleich.
-`werkzeuge/zusammenfuehren.py` findet sie und zieht die gefahrlosen Faelle in den
-Kern: verschoben wird nur, was zeichengleich ist und keinen modulinternen Namen
-braucht. Probelauf ohne Argumente, Ausfuehrung mit `--schreiben`:
+Seit dem 23.09.2026 gibt es **keine wortgleiche Funktion mehr**, die in beiden
+Modulen doppelt steht. Von urspruenglich 107 gleichnamigen Funktionen (44 davon
+wortgleich) sind 63 uebrig - und die unterscheiden sich alle wirklich.
 
-    python3 werkzeuge/zusammenfuehren.py . 
+Der Weg dorthin, in dieser Reihenfolge:
 
-Beim ersten Durchgang wanderten fuenf Funktionen in den Kern. Die restlichen
-rund 39 haengen an modulinternem Zustand - die sind Handarbeit und lohnen sich
-einzeln, nicht als Stapel.
+1. **Zustand zuerst.** Eine Funktion laesst sich nur verschieben, wenn ihre
+   Variablen es auch sind. Wortgleiche Zustandsvariablen wandern mit
+   `werkzeuge/zustand_umzug.py` in den Kern; was sich je Sportart unterscheidet,
+   gehoert als Daten in `SPORT_CONFIGS` (so geschehen mit `railSuggestions`).
+2. **Dann die Funktionen.** `werkzeuge/zusammenfuehren.py` verschiebt nur, was
+   zeichengleich ist und keinen modulinternen Namen mehr braucht. Probelauf ohne
+   Argumente, Ausfuehrung mit `--schreiben`.
+
+Funktionen, die sich je Sportart unterscheiden, aber vom Kern aufgerufen werden,
+stehen in der `return`-Liste des Moduls; `boot.js` haengt sie ans `window`.
+
+## Inline-Styles
+
+Ein Versuch, haeufige `style="..."` durch Klassen zu ersetzen, wurde am
+23.09.2026 zurueckgenommen: aus `style="display:none;"` wurde eine Klasse, und
+die liess sich durch `el.style.display = ''` nicht mehr aufheben - vier Reiter
+blieben unsichtbar. Wer es erneut versucht: `display` auslassen, Elemente mit
+`id` oder `cssText`-Zuweisung auslassen, und beim Pruefen das **ganze Dokument**
+vergleichen, nicht nur die sichtbare Seite.

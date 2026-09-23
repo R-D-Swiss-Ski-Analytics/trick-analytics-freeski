@@ -53,7 +53,10 @@ def modul_namen(zeilen, funcs):
     for i, l in enumerate(zeilen):
         if i in belegt:
             continue
-        for m in re.finditer(r'\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)', l):
+        # Nur Deklarationen ganz links sind modulweit - eingerueckte stehen in
+        # Pfeilfunktionen oder Bloecken und sind dort lokal.
+        m = re.match(r'(?:const|let|var)\s+([A-Za-z_$][\w$]*)', l)
+        if m:
             namen.add(m.group(1))
     return namen
 
