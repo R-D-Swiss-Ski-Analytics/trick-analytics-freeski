@@ -404,32 +404,3 @@ body.sport-snowboard button, body.sport-freeski button,
 body.sport-snowboard select, body.sport-freeski select,
 body.sport-snowboard input, body.sport-freeski input,
 body.sport-snowboard textarea, body.sport-freeski textarea { font-family: 'Poppins', sans-serif; }
-
-/* ── Aus haeufigen Inline-Styles gewonnene Klassen ──────────────── */
-/* Gleiche Deklarationen wie vorher, nur einmal statt hundertfach.  */
-.gut { color:#34d399; }
-.schlecht { color:#e2001a; }
-.warnung { color:#f59e0b; }
-.akzent { color:#39c3d4; }
-.gedaempft { color:var(--muted); }
-.haupttext { color:var(--text); }
-.hinweis { font-size:11px; color:var(--muted); }
-.hinweis-klein { font-size:10px; color:var(--muted); }
-.hinweis-winzig { font-size:9px; color:var(--muted); }
-.hinweis-gross { font-size:12px; color:var(--muted); }
-.gedaempft-10 { color:var(--muted); font-size:10px; }
-.gedaempft-11 { color:var(--muted); font-size:11px; }
-.gedaempft-12 { color:var(--muted); font-size:12px; }
-.hinweis-block { font-size:11px; color:var(--muted); margin-bottom:14px; }
-.wert-mittel { font-size:13px; font-weight:600; color:var(--text); }
-.wert-gross { font-size:16px; font-weight:800; color:var(--text); }
-.versteckt { display:none; }
-.reihe { display:flex; align-items:center; gap:6px; }
-.reihe-8 { display:flex; gap:8px; }
-.reihe-verteilt { display:flex; justify-content:space-between; }
-.abstand-12 { margin-bottom:12px; }
-.abstand-16 { margin-bottom:16px; }
-.abstand-20 { margin-bottom:20px; }
-.polster-20 { padding:20px; }
-.leer { color:var(--muted); text-align:center; padding:24px; }
-.leer-schmal { color:var(--muted); padding:12px; }

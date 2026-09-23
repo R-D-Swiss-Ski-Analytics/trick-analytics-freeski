@@ -345,7 +345,7 @@ function renderSessionReports() {
     const typeShort = {'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[r.session_type]||r.session_type||'—';
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
       <div style="flex:1;min-width:0;">
-        <div class="wert-mittel">${dateStr} &nbsp;<span style="color:var(--muted);font-weight:400;font-size:12px;">${typeShort} · ${durStr}</span></div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);">${dateStr} &nbsp;<span style="color:var(--muted);font-weight:400;font-size:12px;">${typeShort} · ${durStr}</span></div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${athStr}${condStars?' · '+condStars:''}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
@@ -899,7 +899,7 @@ function renderSessionTrickSelection() {
         <div style="margin-top:10px;">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Selected tricks</div>
           <div id="sess-selected-${safeId}" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;">
-            <span class="gedaempft-12">None yet</span>
+            <span style="color:var(--muted);font-size:12px;">None yet</span>
           </div>
         </div>
       </div>`;
@@ -934,7 +934,7 @@ function renderSessSelected(name) {
         ${t}
         <button onclick="removeSessTrick('${name}',${i})" style="background:none;border:none;color:#39c3d4;cursor:pointer;font-size:14px;line-height:1;padding:0;opacity:.7;" title="Remove">×</button>
       </span>`).join('')
-    : '<span class="gedaempft-12">None yet</span>';
+    : '<span style="color:var(--muted);font-size:12px;">None yet</span>';
 }
 
 function toggleSessAssessmentTrick(name, trick, btn) {
@@ -1060,7 +1060,7 @@ function renderLiveSession() {
     const grabs = Object.keys(grabStat).sort();
     if (grabs.length) {
       const selParts = (d.currentGrab || '').split(' to ').filter(Boolean);
-      grabHtml = `<div class="abstand-16">
+      grabHtml = `<div style="margin-bottom:16px;">
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Grab <span style="text-transform:none;letter-spacing:0;">(tap a 2nd grab for a double grab)</span></div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;" id="sess-grabs-${sid}">
           <button onclick="sbSelectGrab('${name}','')"
@@ -1077,7 +1077,7 @@ function renderLiveSession() {
 
   const cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${sid}">
     <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:16px;text-align:center;">${shortName(name)}</div>
-    <div class="abstand-20">
+    <div style="margin-bottom:20px;">
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Working on</div>
       <select onchange="sbSetTrick('${name}',this.value)"
         style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
@@ -1089,15 +1089,15 @@ function renderLiveSession() {
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;text-align:center;">
       <div style="background:var(--surface2);border-radius:8px;padding:12px 4px;">
         <div style="font-size:28px;font-weight:800;color:var(--text);">${s.attempts}</div>
-        <div class="hinweis-klein">Attempts</div>
+        <div style="font-size:10px;color:var(--muted);">Attempts</div>
       </div>
       <div style="background:var(--surface2);border-radius:8px;padding:12px 4px;">
         <div style="font-size:28px;font-weight:800;color:#34d399;">${s.landed+s.perfect}</div>
-        <div class="hinweis-klein">Landed</div>
+        <div style="font-size:10px;color:var(--muted);">Landed</div>
       </div>
       <div style="background:var(--surface2);border-radius:8px;padding:12px 4px;">
         <div style="font-size:28px;font-weight:800;color:#39c3d4;">${pct}%</div>
-        <div class="hinweis-klein">Rate</div>
+        <div style="font-size:10px;color:var(--muted);">Rate</div>
       </div>
     </div>
     ${d.currentTrick ? `<div style="display:flex;justify-content:flex-end;margin-bottom:8px;"><span style="background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--muted);">Attempt #${sbAttemptNo(name)}</span></div>` : ''}
@@ -1159,14 +1159,14 @@ function sbRunCardHtml(name, d, trickOptions) {
     const hasNote = (el.tags && el.tags.length) || el.note;
     const noteLine = hasNote ? `<div style="margin:-2px 0 6px 62px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
         ${(el.tags||[]).map(t => `<span style="font-size:10px;color:#f59e0b;border:1px solid #f59e0b55;border-radius:999px;padding:2px 8px;">${t}</span>`).join('')}
-        ${el.note ? `<span class="hinweis">${el.note}</span>` : ''}
+        ${el.note ? `<span style="font-size:11px;color:var(--muted);">${el.note}</span>` : ''}
       </div>` : '';
     const notePanel = r.noteOpen === i ? `<div style="margin:0 0 8px 30px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;">
         <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Tags</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
           ${sbAllFailReasons().map(t => { const on = (el.tags||[]).includes(t); return `<button onclick="sbRunTagToggle('${name}',${i},'${t.replace(/'/g,"\\'")}')" style="padding:5px 10px;border-radius:999px;border:1.5px solid ${on?'#f59e0b':'var(--border)'};background:${on?'rgba(245,158,11,0.15)':'none'};color:${on?'#f59e0b':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">${t}</button>`; }).join('')}
         </div>
-        <div class="reihe-8">
+        <div style="display:flex;gap:8px;">
           <input value="${(el.note||'').replace(/"/g,'&quot;')}" oninput="sbRunNoteInput('${name}',${i},this.value)" placeholder="Comment (optional)" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
           <button onclick="sbRunNoteToggle('${name}',null)" style="padding:8px 14px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Done</button>
         </div>
@@ -1640,10 +1640,10 @@ function renderSessionLog() {
       <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;${isEditing?'':'background:var(--surface2);border-radius:8px;'}font-size:12px;">
         <span style="color:${c};font-weight:800;font-size:15px;min-width:16px;">${icon}</span>
         <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
-        <span style="flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${normSbTrick(e.trick||'—')}${e.comment?` <span class="gedaempft-10">— ${e.comment}</span>`:''}</span>
+        <span style="flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${normSbTrick(e.trick||'—')}${e.comment?` <span style="color:var(--muted);font-size:10px;">— ${e.comment}</span>`:''}</span>
         ${e.result!=='miss' && typeof e.sterne==='number' ? `<span style="color:${e.sterne===5?'#39c3d4':'#34d399'};font-size:10px;font-weight:700;white-space:nowrap;">${e.sterne}/5★</span>` : ''}
         ${e.result==='miss' && e.failGrund ? `<span style="color:#e2001a;font-size:10px;white-space:nowrap;background:rgba(226,0,26,0.08);border-radius:4px;padding:2px 6px;">${sbFailLabel(e.failGrund)}</span>` : ''}
-        <span class="gedaempft-11">${e.time}</span>
+        <span style="color:var(--muted);font-size:11px;">${e.time}</span>
         <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">✏️</button>
         <button onclick="deleteLogEntry(${i})" style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;flex-shrink:0;">🗑</button>
       </div>
@@ -2112,13 +2112,13 @@ function sbRVShowDetail(ai, ti, i) {
     const met = SB_KPIS.filter(([k])=>a.kpis[k]).map(([,l])=>l);
     const open = SB_KPIS.filter(([k])=>!a.kpis[k]).map(([,l])=>l);
     txt = `<span style="color:${a.outcome==='stomped'?'#39c3d4':'#34d399'};font-weight:600;">Attempt ${i+1} — ${a.outcome==='stomped'?'Stomped ⭐ 5/5':'Landed '+(a.sterne??'?')+'/5'}</span>`
-      + (met.length ? ` <span class="gut">✓ ${met.join(', ')}</span>` : '')
-      + (open.length ? ` <span class="gedaempft">✗ ${open.join(', ')}</span>` : '');
+      + (met.length ? ` <span style="color:#34d399;">✓ ${met.join(', ')}</span>` : '')
+      + (open.length ? ` <span style="color:var(--muted);">✗ ${open.join(', ')}</span>` : '');
   } else {
-    txt = `<span style="color:#34d399;font-weight:600;">Attempt ${i+1} — ${a.outcome==='stomped'?'Stomped':'Landed'}</span> <span class="gedaempft">(no detail data)</span>`;
+    txt = `<span style="color:#34d399;font-weight:600;">Attempt ${i+1} — ${a.outcome==='stomped'?'Stomped':'Landed'}</span> <span style="color:var(--muted);">(no detail data)</span>`;
   }
-  if (a.comment) txt += ` <span class="gedaempft">— ${a.comment}</span>`;
-  if (a.time) txt += ` <span class="gedaempft-10">${a.time}</span>`;
+  if (a.comment) txt += ` <span style="color:var(--muted);">— ${a.comment}</span>`;
+  if (a.time) txt += ` <span style="color:var(--muted);font-size:10px;">${a.time}</span>`;
   if (_sbRVEditable && _sbRV.report && _sbRV.report.id && a.dbId) {
     txt += ` <button onclick="sbRVEditStart(${ai},${ti},${i})" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:1px 7px;font-size:10px;">✏️ Edit</button>`;
   }
@@ -2320,26 +2320,26 @@ function sbReportInnerHtml(report) {
         const r2 = g.attempts.slice(half).filter(x=>x.outcome==='stomped').length/(n-half);
         const i1 = g.attempts.slice(0,half).filter(x=>x.outcome!=='failed').length/half;
         const i2 = g.attempts.slice(half).filter(x=>x.outcome!=='failed').length/(n-half);
-        if (r2 < r1 - 0.15 || i2 < i1 - 0.2) fatigue = `<span class="warnung">↘ Rate drops in 2nd half</span>`;
+        if (r2 < r1 - 0.15 || i2 < i1 - 0.2) fatigue = `<span style="color:#f59e0b;">↘ Rate drops in 2nd half</span>`;
       }
-      const cmtRows = g.attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💬 <b class="haupttext">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
+      const cmtRows = g.attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💬 <b style="color:var(--text);">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
       const cmtCol = cmtRows ? `<div style="flex:0 1 220px;min-width:170px;border-left:1px solid var(--border);padding-left:14px;">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Comments</div>${cmtRows}</div>` : '';
       return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;">
           <div style="font-size:14px;font-weight:700;color:var(--text);">${g.trick}</div>
-          <div class="hinweis">${n} attempt${n!==1?'s':''}</div>
+          <div style="font-size:11px;color:var(--muted);">${n} attempt${n!==1?'s':''}</div>
         </div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
           <div style="flex:1 1 300px;min-width:0;">
             ${sbTrickChartSvg(g, ai, ti)}
             <div id="sbrv-det-${ai}-${ti}" style="font-size:11px;color:var(--muted);min-height:16px;margin:2px 0 8px;">Tap a bar for details</div>
             <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
-              <span><b class="akzent">${s}</b> stomped</span>
-              <span><b class="gut">${l}</b> landed</span>
-              <span><b class="schlecht">${f}</b> failed</span>
+              <span><b style="color:#39c3d4;">${s}</b> stomped</span>
+              <span><b style="color:#34d399;">${l}</b> landed</span>
+              <span><b style="color:#e2001a;">${f}</b> failed</span>
               <span><b>${gRate}%</b> stomp rate</span>
-              ${topFail ? `<span class="schlecht">✗ mostly: ${topFail[0]} (${topFail[1]}×)</span>` : ''}
+              ${topFail ? `<span style="color:#e2001a;">✗ mostly: ${topFail[0]} (${topFail[1]}×)</span>` : ''}
               ${fatigue}
             </div>
           </div>
@@ -2347,18 +2347,18 @@ function sbReportInnerHtml(report) {
         </div>
       </div>`;
     }).join('');
-    return `<div class="abstand-20">
+    return `<div style="margin-bottom:20px;">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
         <div style="font-size:17px;font-weight:800;color:#39c3d4;">${a.athlet}</div>
-        <div class="hinweis">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · Ø stomp rate <b class="haupttext">${rate}%</b>${a.quali_scores && a.quali_scores.length ? ' · Quali <b class="warnung">' + a.quali_scores.join(' / ') + '</b>' : ''}${a.final_scores && a.final_scores.length ? ' · Final <b class="warnung">' + a.final_scores.join(' / ') + '</b>' : ''}${a.contest_rank ? ' · Rank <b class="warnung">' + a.contest_rank + '</b>' : ''}</div>
+        <div style="font-size:11px;color:var(--muted);">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · Ø stomp rate <b style="color:var(--text);">${rate}%</b>${a.quali_scores && a.quali_scores.length ? ' · Quali <b style="color:#f59e0b;">' + a.quali_scores.join(' / ') + '</b>' : ''}${a.final_scores && a.final_scores.length ? ' · Final <b style="color:#f59e0b;">' + a.final_scores.join(' / ') + '</b>' : ''}${a.contest_rank ? ' · Rank <b style="color:#f59e0b;">' + a.contest_rank + '</b>' : ''}</div>
       </div>
       ${a.note ? `<div style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border-left:3px solid #f59e0b;border-radius:8px;padding:8px 10px;margin-bottom:10px;">📝 <b>Coach note:</b> ${a.note}</div>` : ''}
       ${cards}
     </div>`;
   }).join('');
 
-  return `<div class="hinweis-block">${typeShort}${report.location ? ' · '+report.location : ''}${report.duration_min ? ' · '+report.duration_min+' min' : ''}</div>
-${report.comments ? `<div style="background:var(--surface2);border-left:3px solid #39c3d4;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:14px;"><b class="akzent">Coach comments:</b> ${report.comments}</div>` : ''}
+  return `<div style="font-size:11px;color:var(--muted);margin-bottom:14px;">${typeShort}${report.location ? ' · '+report.location : ''}${report.duration_min ? ' · '+report.duration_min+' min' : ''}</div>
+${report.comments ? `<div style="background:var(--surface2);border-left:3px solid #39c3d4;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:14px;"><b style="color:#39c3d4;">Coach comments:</b> ${report.comments}</div>` : ''}
     <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:14px;">
       <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Landed/Stomped (height = stars)</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#e2001a;border-radius:2px;vertical-align:-1px;"></span> Failed</span>
@@ -2379,8 +2379,8 @@ function openSessionReportView(report) {
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2100;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;';
   modal.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;max-width:640px;width:100%;margin:auto 0;">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
-      <div class="wert-gross">Session Report · ${dateStr}</div>
-      <div class="reihe-8">
+      <div style="font-size:16px;font-weight:800;color:var(--text);">Session Report · ${dateStr}</div>
+      <div style="display:flex;gap:8px;">
         <button onclick="sbRVPrintPdf()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">PDF</button>
         <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
       </div>
@@ -2468,11 +2468,11 @@ function renderReportsList() {
     </div>`;
   }).join('');
   const dateInput = id => `<input type="date" id="${id}" value="${id==='rep-date-from'?_sbRepFrom:_sbRepTo}" onchange="sbRepApplyCustom()" style="padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:'Poppins',sans-serif;">`;
-  root.innerHTML = `<div class="card polster-20">
+  root.innerHTML = `<div class="card" style="padding:20px;">
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px;">
       <div style="flex:1;min-width:160px;">
         <div style="font-size:20px;font-weight:800;color:var(--text);">Session Reports</div>
-        <div class="hinweis-gross">Tap a session to open the report</div>
+        <div style="font-size:12px;color:var(--muted);">Tap a session to open the report</div>
       </div>
       <select onchange="sbRepSetRange(this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
         <option value="all" ${_sbRepRange==='all'?'selected':''}>All time</option>
@@ -2483,9 +2483,9 @@ function renderReportsList() {
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 12px;">
       ${sbTypeChipsHtml(_sbRepTyp, 'sbRepSetTyp')}
-      ${_sbRepRange==='custom' ? `<div class="reihe">${dateInput('rep-date-from')}<span class="gedaempft">–</span>${dateInput('rep-date-to')}</div>` : ''}
+      ${_sbRepRange==='custom' ? `<div style="display:flex;align-items:center;gap:6px;">${dateInput('rep-date-from')}<span style="color:var(--muted);">–</span>${dateInput('rep-date-to')}</div>` : ''}
     </div>
-    ${rows || '<div class="leer-schmal">No reports match the current filters.</div>'}
+    ${rows || '<div style="color:var(--muted);padding:12px;">No reports match the current filters.</div>'}
   </div>`;
 }
 
@@ -2506,11 +2506,11 @@ async function sbOpenReportInline(i) {
   const inner = sbReportInnerHtml(report);
   if (inner === null) { openReportPrint(report); return; }
   const dateStr = report.datum ? (() => { const p=report.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
-  root.innerHTML = `<div class="card polster-20">
+  root.innerHTML = `<div class="card" style="padding:20px;">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
       <div style="display:flex;align-items:center;gap:12px;">
         <button onclick="renderReportsList()" style="padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">← Back</button>
-        <div class="wert-gross">Session Report · ${dateStr}</div>
+        <div style="font-size:16px;font-weight:800;color:var(--text);">Session Report · ${dateStr}</div>
       </div>
       <button onclick="sbRVPrintPdf()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">PDF</button>
     </div>
@@ -2753,8 +2753,8 @@ function renderStandort() {
       <span class="sb-trick-name">
         <span style="font-weight:500;">${normSbTrick((e.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim())}</span>
         <span style="display:flex;gap:8px;align-items:center;margin-top:2px;">
-          ${e.datum ? `<span class="hinweis-klein">📅 ${e.datum}</span>` : ''}
-          ${e.notiz ? `<span class="hinweis-klein">${e.notiz}</span>` : ''}
+          ${e.datum ? `<span style="font-size:10px;color:var(--muted);">📅 ${e.datum}</span>` : ''}
+          ${e.notiz ? `<span style="font-size:10px;color:var(--muted);">${e.notiz}</span>` : ''}
         </span>
         ${grabChipsHtml(e)}
       </span>
@@ -2927,8 +2927,8 @@ async function loadEntwicklung() {
     </div>
     <div class="chart-grid single">
       <div class="chart-card" id="ev-analytics-card">
-        <div class="abstand-16">
-          <div class="chart-title abstand-12">📊 Trick Statistics</div>
+        <div style="margin-bottom:16px;">
+          <div class="chart-title" style="margin-bottom:12px;">📊 Trick Statistics</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
             <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
             <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
@@ -3183,17 +3183,17 @@ async function loadEntwicklung() {
     fRow.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-          <span class="hinweis">Filter:</span>
+          <span style="font-size:11px;color:var(--muted);">Filter:</span>
           <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
           <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
           <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
           <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
         </div>
-        <div class="reihe">
+        <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-size:11px;color:var(--muted);white-space:nowrap;">Period:</span>
           <input type="text" id="ev-date-from" oninput="setDateRange()" placeholder="DD.MM.YY"
             style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
-          <span class="hinweis">→</span>
+          <span style="font-size:11px;color:var(--muted);">→</span>
           <input type="text" id="ev-date-to" oninput="setDateRange()" placeholder="DD.MM.YY"
             style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
           <button onclick="clearDateRange()" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
@@ -3494,7 +3494,7 @@ function clearDateRange() {
 function renderTrickAnalytics() {
   const el = document.getElementById('ev-trick-analytics');
   if (!el || !_sbTaData.length) {
-    if(el) el.innerHTML = '<div>No session data yet.</div>';
+    if(el) el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;">No session data yet.</div>';
     return;
   }
   const sel = document.getElementById('ev-trick-sel');
@@ -3865,7 +3865,7 @@ function renderRawEntries(entries, subtitle) {
     <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;">
       <button onclick="(function(b,c){c.style.display=c.style.display==='none'?'block':'none';b.querySelector('.raw-arrow').textContent=c.style.display==='none'?'▶':'▼';})(this,document.getElementById('ev-raw-list'))"
         style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border:none;cursor:pointer;font-family:Poppins,sans-serif;color:var(--muted);font-size:12px;font-weight:600;">
-        <span style="display:flex;align-items:center;gap:8px;"><span class="raw-arrow leer">${wasOpen?'▼':'▶'}</span> Raw Entries (${sorted.length})${subtitle?` <span style="font-weight:400;opacity:.7;">— ${subtitle}</span>`:''}</span>
+        <span style="display:flex;align-items:center;gap:8px;"><span class="raw-arrow">${wasOpen?'▼':'▶'}</span> Raw Entries (${sorted.length})${subtitle?` <span style="font-weight:400;opacity:.7;">— ${subtitle}</span>`:''}</span>
         <span style="font-size:11px;opacity:.6;">Inspect or delete entries</span>
       </button>
       <div id="ev-raw-list" style="display:${wasOpen?'block':'none'};max-height:420px;overflow-y:auto;">
@@ -3889,9 +3889,9 @@ function renderRawEntries(entries, subtitle) {
             </div>` : '';
           return `
           <div id="ev-raw-row-${e.id}" style="display:grid;grid-template-columns:60px 36px 48px 1fr 80px 28px 28px;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--border);font-size:11px;${isEditing?'background:rgba(57,195,212,0.06);':''};flex-wrap:wrap;">
-            <span class="gedaempft">${fmtDate(e.datum)}</span>
-            <span class="gedaempft-10">${ts}</span>
-            <span class="gedaempft-10">${typShort(e.typ)}</span>
+            <span style="color:var(--muted);">${fmtDate(e.datum)}</span>
+            <span style="color:var(--muted);font-size:10px;">${ts}</span>
+            <span style="color:var(--muted);font-size:10px;">${typShort(e.typ)}</span>
             <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${normSbTrick(e.trickaufbau||'')}">${normSbTrick(e.trickaufbau||'—')}</span>
             <span>${resultBadge(e)}</span>
             <button onclick="editRawEntry(${e.id})" title="Edit entry"
@@ -3980,7 +3980,7 @@ function showPerfTip(e, text) {
   }
   const parts = text.split(' | ');
   tt.innerHTML = `<div style="font-weight:700;color:#e8edf2;margin-bottom:4px;">${parts[0]||''}</div>
-    <div class="gedaempft-11">${parts[1]||''}</div>`;
+    <div style="color:var(--muted);font-size:11px;">${parts[1]||''}</div>`;
   tt.style.display = 'block';
   const tx = e.clientX+14, ty = e.clientY-10;
   tt.style.left = (tx+tt.offsetWidth > window.innerWidth-10 ? e.clientX-tt.offsetWidth-14 : tx)+'px';
@@ -4117,7 +4117,7 @@ function renderSessionPerformance() {
   }
 
   el.innerHTML = `
-    <div class="hinweis-block">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
       <span>All recorded tricks per athlete, grouped by direction</span>
     </div>
     <div>
@@ -4154,9 +4154,9 @@ function renderSessionPerformance() {
                 <div style="font-size:12px;color:var(--text);">${normSbTrick(trick)}</div>
                 <div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:11px;font-weight:700;flex-wrap:wrap;">
                   <span style="color:${colL};">${landPct}%</span>
-                  <span class="schlecht">F&nbsp;${failed}</span>
-                  <span class="gut">L&nbsp;${landedOnly}</span>
-                  <span class="akzent">S&nbsp;${s.stomped}</span>
+                  <span style="color:#e2001a;">F&nbsp;${failed}</span>
+                  <span style="color:#34d399;">L&nbsp;${landedOnly}</span>
+                  <span style="color:#39c3d4;">S&nbsp;${s.stomped}</span>
                   <span style="color:var(--muted);font-weight:400;">/ ${s.att}</span>
                 </div>
               </div>`;
@@ -4282,7 +4282,7 @@ async function realityCheck() {
   modal.innerHTML = `
     <div style="background:#0d1f33;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:660px;width:100%;max-height:88vh;display:flex;flex-direction:column;">
       <div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">🔍 Reality Check</div>
-      <div class="hinweis-block">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
         Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} suggestion${flagged.length!==1?'s':''} (Learned &lt;70% ↓ · Goals ≥70% ↑) · select athletes to apply
       </div>
       <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
@@ -4298,7 +4298,7 @@ async function realityCheck() {
               <input type="checkbox" class="rc-chk" data-athlet="${athlet}" checked
                 style="width:15px;height:15px;accent-color:#f59e0b;cursor:pointer;flex-shrink:0;">
               <span style="font-size:13px;font-weight:700;color:var(--text);flex:1;">${athlet}</span>
-              <span class="hinweis">${byAthlet[athlet].length} trick${byAthlet[athlet].length!==1?'s':''} affected</span>
+              <span style="font-size:11px;color:var(--muted);">${byAthlet[athlet].length} trick${byAthlet[athlet].length!==1?'s':''} affected</span>
             </label>
             ${byAthlet[athlet].map(f=>`
               <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;padding:7px 14px 7px 38px;border-top:1px solid var(--border);">
@@ -4568,7 +4568,7 @@ function monHeaderHtml(title, sub, backable) {
     ${backable ? `<button onclick="sbMonBack()" style="padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">← Back</button>` : ''}
     <div style="flex:1;min-width:160px;">
       <div style="font-size:20px;font-weight:800;color:var(--text);">${title}</div>
-      ${sub ? `<div class="hinweis-gross">${sub}</div>` : ''}
+      ${sub ? `<div style="font-size:12px;color:var(--muted);">${sub}</div>` : ''}
     </div>
     <select onchange="sbMonSetRange(this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
       <option value="season" ${sbMonRange==='season'?'selected':''}>Current season</option>
@@ -4579,7 +4579,7 @@ function monHeaderHtml(title, sub, backable) {
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
     ${sbTypeChipsHtml(sbMonTyp, 'sbMonSetTyp')}
-    ${sbMonRange==='custom' ? `<div class="reihe">${dateInput('mon-date-from')}<span class="gedaempft">–</span>${dateInput('mon-date-to')}</div>` : ''}
+    ${sbMonRange==='custom' ? `<div style="display:flex;align-items:center;gap:6px;">${dateInput('mon-date-from')}<span style="color:var(--muted);">–</span>${dateInput('mon-date-to')}</div>` : ''}
   </div>`;
 }
 
@@ -4618,9 +4618,9 @@ function renderMonTeam() {
           </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;text-align:center;border-top:1px solid var(--border);padding-top:10px;">
-          <div><div style="font-size:15px;font-weight:800;color:#34d399;">${cnt.ready}</div><div class="hinweis-winzig">Ready</div></div>
-          <div><div style="font-size:15px;font-weight:800;color:#f59e0b;">${cnt.building}</div><div class="hinweis-winzig">Building</div></div>
-          <div><div style="font-size:15px;font-weight:800;color:#e2001a;">${cnt.critical}</div><div class="hinweis-winzig">Critical</div></div>
+          <div><div style="font-size:15px;font-weight:800;color:#34d399;">${cnt.ready}</div><div style="font-size:9px;color:var(--muted);">Ready</div></div>
+          <div><div style="font-size:15px;font-weight:800;color:#f59e0b;">${cnt.building}</div><div style="font-size:9px;color:var(--muted);">Building</div></div>
+          <div><div style="font-size:15px;font-weight:800;color:#e2001a;">${cnt.critical}</div><div style="font-size:9px;color:var(--muted);">Critical</div></div>
         </div>
         <div style="text-align:center;font-size:11px;color:#39c3d4;margin-top:10px;">View details →</div>
       </div>`;
@@ -4630,10 +4630,10 @@ function renderMonTeam() {
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">${tiles}</div>
     </div>`;
   }).join('');
-  root.innerHTML = `<div class="card polster-20">
+  root.innerHTML = `<div class="card" style="padding:20px;">
     ${monHeaderHtml('Team Monitoring', rows.length + ' attempts · ' + sbMonPeriodLabel(), false)}
-    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Trick status: ≥70% stomp rate = <b class="gut">Ready</b> · 40–69% = <b class="warnung">Building</b> · &lt;40% = <b class="schlecht">Critical</b> · fewer than 5 attempts = Low data</div>
-    ${sections || '<div class="leer-schmal">No athletes configured.</div>'}
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Trick status: ≥70% stomp rate = <b style="color:#34d399;">Ready</b> · 40–69% = <b style="color:#f59e0b;">Building</b> · &lt;40% = <b style="color:#e2001a;">Critical</b> · fewer than 5 attempts = Low data</div>
+    ${sections || '<div style="color:var(--muted);padding:12px;">No athletes configured.</div>'}
     <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
       <button onclick="sbMonRealityCheck()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
       <button onclick="sbMonTeamPdf()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Team PDF</button>
@@ -4683,10 +4683,10 @@ function renderMonAthlete() {
         <div style="display:flex;gap:12px;align-items:center;">
           <div style="font-size:24px;font-weight:800;color:${rateCol};flex-shrink:0;">${r}%</div>
           <div style="flex:1;font-size:10px;color:var(--muted);line-height:1.7;">
-            <div class="reihe-verteilt"><span>Total</span><b class="haupttext">${tr.att}</b></div>
-            <div class="reihe-verteilt"><span class="gut">Stomped</span><b class="gut">${tr.stomped}</b></div>
-            <div class="reihe-verteilt"><span style="color:#4a7dd6;">Landed</span><b style="color:#4a7dd6;">${tr.landed}</b></div>
-            <div class="reihe-verteilt"><span class="schlecht">Fail</span><b class="schlecht">${tr.failed}</b></div>
+            <div style="display:flex;justify-content:space-between;"><span>Total</span><b style="color:var(--text);">${tr.att}</b></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:#34d399;">Stomped</span><b style="color:#34d399;">${tr.stomped}</b></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:#4a7dd6;">Landed</span><b style="color:#4a7dd6;">${tr.landed}</b></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:#e2001a;">Fail</span><b style="color:#e2001a;">${tr.failed}</b></div>
           </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:10px;">
@@ -4701,10 +4701,10 @@ function renderMonAthlete() {
     </div>`;
   }).join('');
 
-  root.innerHTML = `<div class="card polster-20">
+  root.innerHTML = `<div class="card" style="padding:20px;">
     ${monHeaderHtml(name, att + ' attempts · ' + stomped + ' stomped · <b>' + rate + '% stomp rate</b> · ' + sbMonPeriodLabel(), true)}
     ${balanceBar}
-    ${groups || '<div class="leer-schmal">No session attempts in this period.</div>'}
+    ${groups || '<div style="color:var(--muted);padding:12px;">No session attempts in this period.</div>'}
     <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;justify-content:center;">
       <button onclick="sbMonAthletePdf()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Athlete Report (PDF)</button>
     </div>
@@ -4730,14 +4730,14 @@ function sbMonVariantsHtml(rows) {
     return `<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:12px;">
       <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${full}">${grab}</span>
       <span style="color:var(--muted);font-size:11px;white-space:nowrap;">${m.att} att.</span>
-      <span style="font-size:11px;white-space:nowrap;"><b class="akzent">${m.s}</b><span class="gedaempft">/</span><b class="gut">${m.l}</b><span class="gedaempft">/</span><b class="schlecht">${m.f}</b></span>
+      <span style="font-size:11px;white-space:nowrap;"><b style="color:#39c3d4;">${m.s}</b><span style="color:var(--muted);">/</span><b style="color:#34d399;">${m.l}</b><span style="color:var(--muted);">/</span><b style="color:#e2001a;">${m.f}</b></span>
       <b style="color:${col};min-width:38px;text-align:right;">${r}%</b>
     </div>`;
   }).join('');
   return `<div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Variants &amp; grabs (${list.length})</div>
-      <div class="hinweis-winzig">Stomped/Landed/Failed · stomp rate</div>
+      <div style="font-size:9px;color:var(--muted);">Stomped/Landed/Failed · stomp rate</div>
     </div>
     ${rowsHtml}
   </div>`;
@@ -4766,7 +4766,7 @@ function renderMonTrick() {
         const col = pct >= 80 ? '#34d399' : pct >= 50 ? '#f59e0b' : '#e2001a';
         return `<span style="border:1px solid ${col};color:${col};border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;">${label} ${pct}%</span>`;
       }).join(' ')
-    : `<span class="hinweis">No KPI data yet — fills up with new session logs</span>`;
+    : `<span style="font-size:11px;color:var(--muted);">No KPI data yet — fills up with new session logs</span>`;
 
   // Fail reasons + tendency
   const failRows = rows.filter(t => sbMonOutcome(t) === 'failed' && t.fail_grund);
@@ -4778,13 +4778,13 @@ function renderMonTrick() {
     const half = Math.floor(failRows.length / 2) || 1;
     const early = failRows.slice(0, half).filter(t => sbFailLabel(t.fail_grund) === top[0]).length / half;
     const late = failRows.slice(half).filter(t => sbFailLabel(t.fail_grund) === top[0]).length / Math.max(1, failRows.length - half);
-    const tend = failRows.length >= 4 ? (late < early - 0.15 ? ' · <span class="gut">decreasing</span>' : late > early + 0.15 ? ' · <span class="schlecht">increasing</span>' : ' · stable') : '';
-    failHtml = `<div style="font-size:11px;color:var(--muted);margin-top:10px;">Most common fail reason: <b class="schlecht">${top[0]}</b> (${top[1]}×)${tend}</div>`;
+    const tend = failRows.length >= 4 ? (late < early - 0.15 ? ' · <span style="color:#34d399;">decreasing</span>' : late > early + 0.15 ? ' · <span style="color:#e2001a;">increasing</span>' : ' · stable') : '';
+    failHtml = `<div style="font-size:11px;color:var(--muted);margin-top:10px;">Most common fail reason: <b style="color:#e2001a;">${top[0]}</b> (${top[1]}×)${tend}</div>`;
   }
 
   const kpiNote = n > kpiRows.length + f ? `<div style="font-size:10px;color:var(--muted);margin-top:6px;">KPI rates based on ${kpiRows.length} attempts with detail data (n=${n} total incl. legacy attempts).</div>` : '';
 
-  root.innerHTML = `<div class="card polster-20">
+  root.innerHTML = `<div class="card" style="padding:20px;">
     ${monHeaderHtml(trick, name, true)}
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;">
       <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
@@ -4795,14 +4795,14 @@ function renderMonTrick() {
           ${sbMonDonut(s, l, f, 130)}
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
             <div style="font-size:26px;font-weight:800;color:var(--text);">${n}</div>
-            <div class="hinweis-winzig">attempts</div>
+            <div style="font-size:9px;color:var(--muted);">attempts</div>
           </div>
         </div>
         <div style="flex:1;min-width:170px;font-size:12px;">
           <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#34d399;margin-right:6px;"></span>Stomped (5/5 KPI's)</span><b>${s}</b></div>
           <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#4a7dd6;margin-right:6px;"></span>Landed</span><b>${l}</b></div>
           <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#e2001a;margin-right:6px;"></span>Failed</span><b>${f}</b></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;"><span>Landed rate <span class="gedaempft-10">(Landed+Stomped)</span></span><span style="white-space:nowrap;"><b class="gut">${landedRate}%</b>${trendLanded ? ' ' + sbMonTrendHtml(trendLanded) : ''}</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;"><span>Landed rate <span style="color:var(--muted);font-size:10px;">(Landed+Stomped)</span></span><span style="white-space:nowrap;"><b style="color:#34d399;">${landedRate}%</b>${trendLanded ? ' ' + sbMonTrendHtml(trendLanded) : ''}</span></div>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 0;"><span>Stomp rate</span><span style="white-space:nowrap;"><b style="color:${SB_MON_STATUS[stKey].color};">${rate}%</b>${trend ? ' ' + sbMonTrendHtml(trend) : ''}</span></div>
         </div>
       </div>
@@ -4835,7 +4835,7 @@ function sbMonTimeChart(rows) {
   rows.forEach(t => { const d = t.datum || '?'; (by[d] = by[d] || []).push(t); });
   _monTimeBy = by;
   const dates = Object.keys(by).sort().slice(-12);
-  if (!dates.length) return '<div class="gedaempft-12">No data.</div>';
+  if (!dates.length) return '<div style="color:var(--muted);font-size:12px;">No data.</div>';
   const H = 110, slot = 46, barW = 26, PAD = 34;
   const maxN = Math.max(...dates.map(d => by[d].length));
   const chartW = dates.length * slot;
@@ -4963,7 +4963,7 @@ function sbMonCoachingHtml(rows) {
   const grid = items.map(([label, txt, col]) => `
     <div style="border-left:3px solid ${col};padding-left:10px;">
       <div style="font-size:9px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600;">${label}</div>
-      <div class="wert-mittel">${txt}</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text);">${txt}</div>
     </div>`).join('');
 
   return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px;">
@@ -4994,10 +4994,10 @@ function sbMonTimeSel(d) {
   const l = rs.filter(x => sbMonOutcome(x) === 'landed').length;
   const f = n - s - l;
   const fmt = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' + d.slice(2,4) : d;
-  el.innerHTML = `<b class="haupttext">${fmt}</b> — ${n} attempts ·
-    <span class="akzent">${s} stomped</span> ·
-    <span class="gut">${l} landed</span> ·
-    <span class="schlecht">${f} failed</span> ·
+  el.innerHTML = `<b style="color:var(--text);">${fmt}</b> — ${n} attempts ·
+    <span style="color:#39c3d4;">${s} stomped</span> ·
+    <span style="color:#34d399;">${l} landed</span> ·
+    <span style="color:#e2001a;">${f} failed</span> ·
     <b>${n ? Math.round(s/n*100) : 0}%</b> stomp rate
     <button onclick="sbMonOpenTrickReport('${d}')" style="margin-left:8px;padding:3px 10px;border-radius:6px;border:1px solid #39c3d4;background:rgba(57,195,212,0.12);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">Open session view →</button>`;
 }
@@ -5023,7 +5023,7 @@ function sbMonOpenTrickReport(d) {
   const failCnt = {};
   attempts.forEach(x => { if (x.outcome === 'failed' && x.fail) { const fl = sbFailLabel(x.fail); failCnt[fl] = (failCnt[fl]||0) + 1; } });
   const top = Object.entries(failCnt).sort((a,b)=>b[1]-a[1])[0];
-  const cmtRows = attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💬 <b class="haupttext">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
+  const cmtRows = attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💬 <b style="color:var(--text);">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
   const cmtCol = cmtRows ? `<div style="flex:0 1 220px;min-width:170px;border-left:1px solid var(--border);padding-left:14px;">
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Comments</div>${cmtRows}</div>` : '';
   const fmt = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' + d.slice(2,4) : d;
@@ -5034,8 +5034,8 @@ function sbMonOpenTrickReport(d) {
   modal.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;max-width:640px;width:100%;margin:auto 0;">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
       <div style="min-width:0;">
-        <div class="wert-gross">${g.trick}</div>
-        <div class="hinweis-gross">${sbMonView.athlete} · Session ${fmt}</div>
+        <div style="font-size:16px;font-weight:800;color:var(--text);">${g.trick}</div>
+        <div style="font-size:12px;color:var(--muted);">${sbMonView.athlete} · Session ${fmt}</div>
       </div>
       <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
     </div>
@@ -5050,11 +5050,11 @@ function sbMonOpenTrickReport(d) {
           ${sbTrickChartSvg(g, 0, 0)}
           <div id="sbrv-det-0-0" style="font-size:11px;color:var(--muted);min-height:16px;margin:2px 0 8px;">Tap a bar for details</div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
-            <span><b class="akzent">${s}</b> stomped</span>
-            <span><b class="gut">${l}</b> landed</span>
-            <span><b class="schlecht">${f}</b> failed</span>
+            <span><b style="color:#39c3d4;">${s}</b> stomped</span>
+            <span><b style="color:#34d399;">${l}</b> landed</span>
+            <span><b style="color:#e2001a;">${f}</b> failed</span>
             <span><b>${n ? Math.round(s/n*100) : 0}%</b> stomp rate</span>
-            ${top ? `<span class="schlecht">✗ mostly: ${top[0]} (${top[1]}×)</span>` : ''}
+            ${top ? `<span style="color:#e2001a;">✗ mostly: ${top[0]} (${top[1]}×)</span>` : ''}
           </div>
         </div>
         ${cmtCol}
@@ -5074,7 +5074,7 @@ async function sbMonLoadComments() {
     .eq('athlet', sbMonView.athlete).eq('trick', sbMonView.trick)
     .order('datum', {ascending: false}).order('id', {ascending: false});
   if (error) {
-    st.innerHTML = '<span class="gedaempft-11">Comments unavailable — run the trick_comments SQL in Supabase first.</span>';
+    st.innerHTML = '<span style="color:var(--muted);font-size:11px;">Comments unavailable — run the trick_comments SQL in Supabase first.</span>';
     return;
   }
   _monCmts = data || [];
@@ -5096,12 +5096,12 @@ function sbMonRenderComments() {
   const cur = _monCmts[0];
   const aiTag = document.getElementById('mon-cmt-ai-tag');
   if (_monStatus) {
-    st.innerHTML = `${_monStatus.status_text} <span class="gedaempft-11">(${fmt(String(_monStatus.updated_at).slice(0,10))})</span>`;
+    st.innerHTML = `${_monStatus.status_text} <span style="color:var(--muted);font-size:11px;">(${fmt(String(_monStatus.updated_at).slice(0,10))})</span>`;
     if (aiTag) aiTag.style.display = '';
   } else {
     st.innerHTML = cur
-      ? `${cur.kommentar} <span class="gedaempft-11">(${fmt(cur.datum)})</span>`
-      : '<span class="gedaempft">No comments yet.</span>';
+      ? `${cur.kommentar} <span style="color:var(--muted);font-size:11px;">(${fmt(cur.datum)})</span>`
+      : '<span style="color:var(--muted);">No comments yet.</span>';
     if (aiTag) aiTag.style.display = 'none';
   }
   if (link) {
@@ -5111,7 +5111,7 @@ function sbMonRenderComments() {
   if (hist) {
     hist.style.display = _monCmtHistOpen ? '' : 'none';
     hist.innerHTML = _monCmts.map(c => `<div style="font-size:12px;color:var(--text);padding:6px 0;border-top:1px solid var(--border);">
-      <span class="gedaempft-10">${fmt(c.datum)}</span><br>${c.kommentar}</div>`).join('');
+      <span style="color:var(--muted);font-size:10px;">${fmt(c.datum)}</span><br>${c.kommentar}</div>`).join('');
   }
 }
 
@@ -5165,7 +5165,7 @@ const fragments = {
         </div>
       </div>`,
   dbRankings: `  <div class="card" style="margin-bottom:20px;display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;">
-    <div class="hinweis-gross">Compare assessment with actual session data</div>
+    <div style="font-size:12px;color:var(--muted);">Compare assessment with actual session data</div>
     <button onclick="realityCheck()" style="padding:8px 16px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
   </div>`,
   grabBlock: `        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(1× click = ✓ Learned · 2× = 🎯 Goal · 3× = off)</span></label>
