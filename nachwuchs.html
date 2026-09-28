@@ -145,7 +145,7 @@ textarea{min-height:64px;resize:vertical}
 .rule{display:flex;gap:10px;align-items:center;font-size:13px;margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--soft)}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:4px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
-.legend .ic{width:16px;height:16px;font-size:10px}
+.legend .ic{width:16px;height:16px;font-size:10px;font-weight:800;font-style:normal;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
 
 /* Formular */
 .preview{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--soft);font-size:13px}
@@ -522,6 +522,7 @@ const I18N = {
   '✓ Video uploaded':['✓ Video hochgeladen','✓ Vidéo téléchargée','✓ Video caricato'], 'Replace video':['Video ersetzen','Remplacer la vidéo','Sostituisci video'], 'OK':['OK','OK','OK'],
   'This video was recorded directly in the upload dialog and its quality is too low (below 720p). Please film with the camera app and choose the video from your photo library.':['Dieses Video wurde direkt im Upload-Dialog aufgenommen und hat zu tiefe Qualität (unter 720p). Bitte mit der Kamera-App filmen und das Video aus der Fotomediathek wählen.','Cette vidéo a été filmée directement dans la fenêtre de téléchargement et sa qualité est trop faible (moins de 720p). Merci de filmer avec l’app Appareil photo et de choisir la vidéo dans la photothèque.','Questo video è stato registrato direttamente nella finestra di caricamento e la qualità è troppo bassa (sotto 720p). Filma con l’app Fotocamera e scegli il video dalla libreria foto.'],
   'Choose the video from your photo library (film with the camera app first).':['Video aus der Fotomediathek wählen (vorher mit der Kamera-App filmen).','Choisir la vidéo dans la photothèque (filmer d’abord avec l’app Appareil photo).','Scegli il video dalla libreria foto (prima filma con l’app Fotocamera).'],
+  'Skills-Check requirement at another level':['Skills-Check-Anforderung einer anderen Stufe','Exigence Skills-Check d’un autre niveau','Requisito Skills-Check di un altro livello'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned — in the review inbox':['Zu «gelernt» verschoben — in der Review-Inbox','Déplacé vers acquis — dans la boîte d’évaluation','Spostato in imparati — nella casella valutazioni'],
@@ -665,6 +666,7 @@ const I18N_PAT = [
   [/^\(([\d]+)×\) · $/, (m, i) => null],
   [/^(\d+) attempts · (.+)$/, (m, i) => `${m[1]} ${['Versuche','essais','tentativi'][i]} · ${I18N_PERIOD(m[2], i)}`],
   [/^(\d+) attempts · (\d+) stomped · $/, (m, i) => `${m[1]} ${['Versuche','essais','tentativi'][i]} · ${m[2]} stomped · `],
+  [/^Also fits (.+)$/, (m, i) => [`Passt auch zu ${m[1]}`, `Correspond aussi à ${m[1]}`, `Vale anche per ${m[1]}`][i]],
   [/^\+(\d+) in other levels?$/, (m, i) => [`+${m[1]} in anderen Stufen`, `+${m[1]} dans d’autres niveaux`, `+${m[1]} in altri livelli`][i]],
   [/^(Women|Men) · own level (T\d)$/, (m, i) => `${m[1]} · ${['eigene Stufe','propre niveau','livello proprio'][i]} ${m[2]}`],
   [/^Trick status: ≥70% stomp rate =$/, (m, i) => ['Trick-Status: ≥70% Stomp-Rate =', 'Statut du trick : ≥70% taux de stomp =', 'Stato del trick: ≥70% stomp rate ='][i]],
@@ -1822,7 +1824,7 @@ function entryRow(e, opts2={}){
   const ath = prof(e.athlete_id); const staff = isStaff();
   const m = ath?.gender ? directMatches(e.discipline, ath.gender, e.trick) : [];
   const mine = assignedSlots(e);
-  const others = staff ? m.filter(x => x.level!==ath.level).length : 0;
+  const others = staff ? [...new Set(m.filter(x => x.level!==ath.level).map(x => x.level))].sort().join(', ') : '';
   const ownMatch = m.some(x => x.level===ath.level);
   const covered = !mine.length && m.some(x => x.level===ath.level);
   const canEdit = staff || e.status!=='reviewed';
@@ -1832,7 +1834,7 @@ function entryRow(e, opts2={}){
       <div class="t">${esc(e.label)}</div>
       <div class="m">${opts2.showName ? esc(ath?.name) + ' · ' : ''}${DISC_LABEL[e.discipline]} · ${fmtDate(e.created_at)}${e.status==='reviewed' && reviewer ? ` · rated by ${esc(reviewer)}` : ''}</div>
       <div class="chips">${statusChip(e)}${e.video_path ? `<button class="chip" style="cursor:pointer" onclick="playVideo('${e.id}')">▶ Video</button>` : ''}
-        ${mine.map(x => `<span class="chip dark">✓ ${x.level} · ${esc(x.text)}</span>`).join('')}${covered ? `<span class="chip">${ath.level} · already covered by another trick</span>` : ''}${others ? `<span class="chip">+${others} in other levels</span>` : ''}${!(staff ? m.length : ownMatch) ? '<span class="chip">Free trick</span>' : ''}</div>
+        ${mine.map(x => `<span class="chip dark">✓ ${x.level} · ${esc(x.text)}</span>`).join('')}${covered ? `<span class="chip">${ath.level} · already covered by another trick</span>` : ''}${others ? `<span class="chip" title="Skills-Check requirement at another level">Also fits ${others}</span>` : ''}${!(staff ? m.length : ownMatch) ? '<span class="chip">Free trick</span>' : ''}</div>
       ${e.note ? `<div class="small" style="margin-top:6px">💬 ${esc(e.note)}</div>` : ''}
       ${e.review_note ? `<div class="small" style="margin-top:6px;color:var(--char)"><b>Coach:</b> ${esc(e.review_note)}</div>` : ''}
     </div>
