@@ -486,3 +486,5 @@ header h1 { flex:1 1 auto; }
   #auth-controls{gap:6px !important}
   #auth-controls select{max-width:96px}
 }
+/* Handy: Versuchs-Grafiken im Session-Report auf Bildschirmbreite skalieren (kein seitliches Wischen) */
+@media (max-width:768px){ div[style*="overflow-x:auto"] > svg[viewBox]{ max-width:100%; height:auto; } }
