@@ -505,3 +505,7 @@ header h1 { flex:1 1 auto; }
   .mobile-nav-btn svg{width:22px !important;height:22px !important}
   .page{padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px)) !important}
 }
+
+/* Kopf nie unter der iPhone-Statusleiste */
+header{padding-top:calc(14px + env(safe-area-inset-top, 0px)) !important}
+@media (max-width:768px){header{padding-top:calc(10px + env(safe-area-inset-top, 0px)) !important}}
