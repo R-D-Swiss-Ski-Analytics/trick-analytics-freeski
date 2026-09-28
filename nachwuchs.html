@@ -461,6 +461,12 @@ label.f,.form-group > label{font-size:12px}
 .tbl td{font-size:15px}
 main svg text{font-size:12.5px}
 .slot .sm,.slot .st + .sm{font-size:13.5px}
+.ico{width:1.05em;height:1.05em;vertical-align:-.17em;flex-shrink:0;display:inline-block}
+.ico-star{color:#C9A227}
+.ico-checkc{color:var(--green)}
+.ico-alert{color:#C96A1F}
+.ico-clock{color:var(--cblue, #396FA8)}
+.ico-target{color:#C96A1F}
 </style>
 </head>
 <body>
@@ -550,7 +556,7 @@ const I18N = {
   'Reset all demo data?':['Alle Demo-Daten zurücksetzen?','Réinitialiser toutes les données démo ?','Ripristinare tutti i dati demo?'], 'Demo data reset':['Demo-Daten zurückgesetzt','Données démo réinitialisées','Dati demo ripristinati'],
   // Assessment
   'ATHLETE':['ATHLET:IN','ATHLÈTE','ATLETA'], '+ Add Entry':['+ Eintrag','+ Ajouter','+ Aggiungi'], 'Rated Tricks':['Bewertete Tricks','Tricks évalués','Trick valutati'],
-  'Waiting for Coach':['Wartet auf Coach','En attente du coach','In attesa del coach'], 'Open Goals':['Offene Ziele','Objectifs ouverts','Obiettivi aperti'],
+  'Waiting for Coach':['Bewertung ausstehend','Évaluation en attente','Valutazione in sospeso'], 'Open Goals':['Offene Ziele','Objectifs ouverts','Obiettivi aperti'],
   '✅ LEARNED TRICKS':['✅ GELERNTE TRICKS','✅ TRICKS ACQUIS','✅ TRICK IMPARATI'], '🎯 GOALS / IN PROGRESS':['🎯 ZIELE / IN ARBEIT','🎯 OBJECTIFS / EN COURS','🎯 OBIETTIVI / IN CORSO'],
   'No entries yet':['Noch keine Einträge','Pas encore d’entrées','Ancora nessuna voce'], 'No goals yet':['Noch keine Ziele','Pas encore d’objectifs','Ancora nessun obiettivo'],
   'No tricks yet: add your first one!':['Noch keine Tricks: erfasse deinen ersten!','Pas encore de tricks: ajoute ton premier !','Ancora nessun trick: aggiungi il primo!'],
@@ -567,7 +573,7 @@ const I18N = {
   'SKILLS-CHECK MATCH':['SKILLS-CHECK-TREFFER','CORRESPONDANCE SKILLS-CHECK','CORRISPONDENZA SKILLS-CHECK'],
   'No Skills-Check requirement matches this trick: it is still saved as a free trick.':['Keine Skills-Check-Vorgabe passt zu diesem Trick: er wird trotzdem als freier Trick gespeichert.','Aucune exigence du Skills-Check ne correspond à ce trick: il est tout de même enregistré comme trick libre.','Nessun requisito dello Skills-Check corrisponde a questo trick: viene comunque salvato come trick libero.'],
   'Set gender & level for this athlete (Team tab) to see the Skills-Check match.':['Geschlecht & Stufe im Tab Team setzen, um den Skills-Check-Treffer zu sehen.','Définis le sexe et le niveau (onglet Team) pour voir la correspondance Skills-Check.','Imposta sesso e livello (scheda Team) per vedere la corrispondenza Skills-Check.'],
-  'Free trick':['Freier Trick','Trick libre','Trick libero'], '⏳ Waiting for coach':['⏳ Wartet auf Coach','⏳ En attente du coach','⏳ In attesa del coach'], '↺ New video requested':['↺ Neues Video gewünscht','↺ Nouvelle vidéo demandée','↺ Nuovo video richiesto'],
+  'Free trick':['Freier Trick','Trick libre','Trick libero'], '⏳ Waiting for coach':['⏳ Bewertung ausstehend','⏳ Évaluation en attente','⏳ Valutazione in sospeso'], '↺ New video requested':['↺ Neues Video gewünscht','↺ Nouvelle vidéo demandée','↺ Nuovo video richiesto'],
   '🎯 Goal':['🎯 Ziel','🎯 Objectif','🎯 Obiettivo'], 'Rate':['Bewerten','Évaluer','Valuta'], 'Edit rating':['Bewertung ändern','Modifier l’évaluation','Modifica valutazione'],
   '✓ Learned · submit':['✓ Gelernt · senden','✓ Acquis · envoyer','✓ Imparato · invia'], 'Move to learned':['Zu «gelernt» verschieben','Déplacer vers acquis','Sposta in imparati'],
   'Video':['Video','Vidéo','Video'], 'New video':['Neues Video','Nouvelle vidéo','Nuovo video'], 'Upload video':['Video hochladen','Télécharger une vidéo','Carica video'], '▶ Video':['▶ Video','▶ Vidéo','▶ Video'],
@@ -647,7 +653,7 @@ const I18N = {
   'No athletes visible yet. Assign athletes to your group in the Team tab.':['Noch keine Athlet:innen sichtbar. Weise sie im Tab Team deiner Gruppe zu.','Aucun·e athlète visible. Attribue-les à ton groupe dans l’onglet Team.','Nessun atleta visibile. Assegnali al tuo gruppo nella scheda Team.'],
   // Skills-Check
   'Total':['Total','Total','Totale'], 'all criteria achieved':['alle Kriterien erfüllt','tous les critères remplis','tutti i criteri soddisfatti'], 'rated, not yet full points':['bewertet, noch nicht volle Punktzahl','évalué, pas encore le maximum','valutato, non ancora punteggio pieno'],
-  'waiting for coach':['wartet auf Coach','en attente du coach','in attesa del coach'], 'goal':['Ziel','objectif','obiettivo'], 'open':['offen','ouvert','aperto'],
+  'waiting for coach':['Bewertung Coach ausstehend','évaluation du coach en attente','valutazione del coach in sospeso'], 'goal':['Ziel','objectif','obiettivo'], 'open':['offen','ouvert','aperto'],
   'not required (condition not met)':['nicht nötig (Bedingung nicht erfüllt)','pas requis (condition non remplie)','non richiesto (condizione non soddisfatta)'],
   'Points = best coach rating per requirement (Jumps/Rails 0–4, Halfpipe 0–5 incl. Amplitude). A requirement counts as achieved with full points. Pending tricks count once the coach has rated them.':['Punkte = beste Coach-Bewertung pro Vorgabe (Jumps/Rails 0–4, Halfpipe 0–5 inkl. Amplitude). Eine Vorgabe gilt mit voller Punktzahl als erreicht. Offene Tricks zählen, sobald der Coach sie bewertet hat.','Points = meilleure évaluation du coach par exigence (Jumps/Rails 0–4, Halfpipe 0–5 incl. Amplitude). Une exigence est atteinte avec le maximum de points. Les tricks en attente comptent dès que le coach les a évalués.','Punti = migliore valutazione del coach per requisito (Jumps/Rails 0–4, Halfpipe 0–5 incl. Amplitude). Un requisito è raggiunto con il punteggio pieno. I trick in attesa contano appena il coach li ha valutati.'],
   'No athlete selected.':['Keine Athlet:in gewählt.','Aucun·e athlète sélectionné·e.','Nessun atleta selezionato.'], 'not in focus':['nicht im Fokus','hors focus','fuori focus'],
@@ -897,7 +903,7 @@ const I18N_RXP = [
   [/(\d+) att\./g, (m, i) => m[1] + [' Vers.', ' ess.', ' tent.'][i]],
   [/(\d+) attempts\b/g, (m, i) => m[1] + [' Versuche', ' tentatives', ' tentativi'][i]],
   [/(\d+) of (\d+) fully achieved/g, (m, i) => [`${m[1]} von ${m[2]} voll erreicht`, `${m[1]} sur ${m[2]} pleinement atteints`, `${m[1]} di ${m[2]} pienamente raggiunti`][i]],
-  [/(\d+) waiting\b/g, (m, i) => m[1] + [' wartend', ' en attente', ' in attesa'][i]],
+  [/(\d+) waiting\b/g, (m, i) => m[1] + [' Bewertung ausstehend', ' évaluation en attente', ' valutazione in sospeso'][i]],
   [/(\d+)\/(\d+) rated\b/g, (m, i) => `${m[1]}/${m[2]} ` + ['bewertet', 'évalués', 'valutati'][i]],
   [/(\d+) different grabs? in (\d+) matched tricks?/g, (m, i) => [`${m[1]} verschiedene Grabs in ${m[2]} passenden Tricks`, `${m[1]} grabs différents dans ${m[2]} tricks correspondants`, `${m[1]} grab diversi in ${m[2]} trick corrispondenti`][i]],
   [/\bWomen\b/g, (m, i) => ['Frauen', 'Femmes', 'Donne'][i]],
@@ -921,11 +927,44 @@ function trString(s){
   return lead + out + trail;
 }
 const I18N_ATTRS = ['placeholder', 'title', 'aria-label', 'data-l'];
+// Einheitliche Linien-Icons statt bunter Emojis (Farbe = Textfarbe). Emojis in Texten werden automatisch ersetzt.
+const ICO_PATH = {
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>',
+  star:'<path fill="currentColor" stroke="none" d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z"/>',
+  file:'<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13M9 7V4h6v3"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  checkc:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 10"/>',
+  inbox:'<path d="M3 13l2.5-8h13L21 13v6a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/>',
+  videooff:'<path d="M3 3l18 18M15 11V8a1 1 0 00-1-1H9M5 7H4a1 1 0 00-1 1v8a1 1 0 001 1h10a1 1 0 00.9-.6M15 11l6-3v8l-3.5-1.7"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+  msg:'<path d="M4 5h16v11H9l-5 4z"/>',
+  upload:'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
+  pencil:'<path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/>',
+  alert:'<path d="M12 3L2 20h20z"/><path d="M12 10v4M12 17.2v.1"/>',
+  trophy:'<path d="M8 4h8v5a4 4 0 01-8 0zM8 6H4v1a3 3 0 003 3M16 6h4v1a3 3 0 01-3 3M12 13v4M8 20h8M9 17h6"/>',
+  note:'<path d="M6 3h9l4 4v14H6z"/><path d="M9 11h6M9 15h6M9 7h3"/>',
+  play:'<path fill="currentColor" stroke="none" d="M8 5.5v13l10.5-6.5z"/>',
+  redo:'<path d="M4 12a8 8 0 108-8 8.5 8.5 0 00-6 2.5L3 9"/><path d="M3 4v5h5"/>',
+};
+const ico = (k, cls='') => `<svg class="ico ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO_PATH[k]}</svg>`;
+const EMOJI_ICO = {'🎯':'target','⭐':'star','📄':'file','🗑':'trash','⏳':'clock','⌛':'clock','✅':'checkc','📥':'inbox','📵':'videooff','🔍':'search','💬':'msg','⬆':'upload','✏':'pencil','✎':'pencil','⚠':'alert','🏆':'trophy','📝':'note','▶':'play','↺':'redo'};
+const EMOJI_RX = /(🎯|⭐|📄|🗑|⏳|⌛|✅|📥|📵|🔍|💬|⬆|✏|✎|⚠|🏆|📝|▶|↺)️?/g;
+const stripEmoji = t => t.replace(EMOJI_RX, '').replace(/^\s+/, '');
+function iconizeText(n){
+  const v = n.nodeValue; EMOJI_RX.lastIndex = 0;
+  if (!EMOJI_RX.test(v)) return;
+  const pe = n.parentElement;
+  if (!pe || pe.closest('svg,option,select,textarea,title,[data-noicon]')){ if (pe && pe.closest('option')) n.nodeValue = stripEmoji(v); return; }
+  const tmp = document.createElement('span');
+  tmp.innerHTML = v.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]).replace(EMOJI_RX, (m, e) => ico(EMOJI_ICO[e], 'ico-' + EMOJI_ICO[e]));
+  n.replaceWith(...tmp.childNodes);
+}
 function i18nNode(root){
   const walk = n => {
-    if (n.nodeType === 3){ const v = n.nodeValue, t = trString(v); if (t !== v) n.nodeValue = t; return; }
+    if (n.nodeType === 3){ const v = n.nodeValue, t = trString(v); if (t !== v) n.nodeValue = t; iconizeText(n); return; }
     if (n.nodeType !== 1 || n.tagName === 'SCRIPT' || n.tagName === 'STYLE' || n.hasAttribute?.('data-noi18n')) return;
-    for (const a of I18N_ATTRS){ const v = n.getAttribute(a); if (v){ const t = trString(v); if (t !== v) n.setAttribute(a, t); } }
+    for (const a of I18N_ATTRS){ const v = n.getAttribute(a); if (v){ const t = stripEmoji(trString(v)); if (t !== v) n.setAttribute(a, t); } }
     n.childNodes.forEach(walk);
   };
   walk(root);
@@ -933,9 +972,9 @@ function i18nNode(root){
 new MutationObserver(ms => { for (const m of ms){ if (m.type==='characterData') i18nNode(m.target); else m.addedNodes.forEach(i18nNode); } })
   .observe(document.documentElement, {childList:true, subtree:true, characterData:true});
 const _confirm = window.confirm.bind(window), _prompt = window.prompt.bind(window);
-window.confirm = m => _confirm(trString(String(m)));
+window.confirm = m => _confirm(stripEmoji(trString(String(m))));
 window.prompt = (m, d) => _prompt(trString(String(m)), d);
-const _alert = window.alert.bind(window); window.alert = m => _alert(trString(String(m)));
+const _alert = window.alert.bind(window); window.alert = m => _alert(stripEmoji(trString(String(m))));
 function langSelect(){
   return `<select class="lang-sel" data-noi18n onchange="setLang(this.value)" aria-label="Language">${LANGS.map(l => `<option value="${l}" ${l===LANG?'selected':''}>${l.toUpperCase()}</option>`).join('')}</select>`;
 }
