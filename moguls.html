@@ -632,7 +632,9 @@ async function setStandortStatus(id, status) {
 }
 
 async function deleteStandort(id) {
-  const vp = stRows.find(r => r.id === id)?.video_path;
+  const row = stRows.find(r => r.id === id);
+  if (!confirm(`Remove ${row?.jump || 'this jump'} from the assessment?${row?.video_path ? ' The video will be deleted too.' : ''}`)) return;
+  const vp = row?.video_path;
   const {error} = await db.from('standort').delete().eq('id', id);
   if (!error && vp) db.storage.from(MO_VIDEO_BUCKET).remove([vp]);
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
@@ -1135,6 +1137,7 @@ function recalcStats(name) {
 async function deleteLogEntry(idx) {
   const e = sessLog[idx];
   if (!e) return;
+  if (!confirm('Delete this attempt?')) return;
   if (e.dbId && db) await db.from('entries').delete().eq('id', e.dbId);
   sessLog.splice(idx, 1);
   recalcStats(e.name);
