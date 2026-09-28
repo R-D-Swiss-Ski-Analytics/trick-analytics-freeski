@@ -235,7 +235,8 @@ textarea{min-height:64px;resize:vertical}
 .sb-col-body.goal{border-color:#C96A1F}
 .dir-group{border-bottom:1px solid var(--line)}
 .dir-group:last-child{border-bottom:none}
-.dir-h{padding:6px 14px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;background:#fbf9f8}
+.dir-h{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#fff!important;border-top:1px solid rgba(0,0,0,.06)}
+.dir-h .n{margin-left:auto;font-size:12px;font-weight:700;letter-spacing:0;background:rgba(255,255,255,.25);border-radius:99px;padding:1px 9px}
 .sb-trick-row{display:flex;align-items:flex-start;gap:8px;padding:10px 14px;border-top:1px solid var(--line);font-size:13px}
 .dir-h + .sb-trick-row{border-top:none}
 .sb-trick-name{flex:1;min-width:0}
@@ -940,7 +941,7 @@ function setLang(l){
   location.reload();   // sauber neu aufbauen (Session läuft in der DB weiter)
 }
 
-const DEMO_KEY = 'nw-demo-v7';
+const DEMO_KEY = 'nw-demo-v8';
 
 /* ══════════════════════════════════════════════════════════════════════
    TRICK-VOKABULAR
@@ -2078,7 +2079,7 @@ function asList(items, emptyMsg){
   items.forEach(e => (groups[asDir(e)] ||= []).push(e));
   return AS_DIR_ORDER.filter(d => groups[d]).map(d => {
     groups[d].sort((a,b) => (+(b.trick?.rot)||0) - (+(a.trick?.rot)||0));
-    return `<div class="dir-group"><div class="dir-h" style="color:${AS_DIR_COL[d]}">${d}</div>${groups[d].map(asRow).join('')}</div>`;
+    return `<div class="dir-group"><div class="dir-h" style="background:${AS_DIR_COL[d]}">${d}<span class="n">${groups[d].length}</span></div>${groups[d].map(asRow).join('')}</div>`;
   }).join('');
 }
 function renderAssessment(){
