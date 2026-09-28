@@ -44,6 +44,7 @@ h1 .dot{color:var(--red)}
 .who .chip{background:rgba(255,255,255,.85)}
 .iconbtn{position:relative;border:1px solid var(--line);background:rgba(255,255,255,.85);border-radius:999px;height:34px;min-width:34px;padding:0 12px;cursor:pointer;font-size:13px;font-weight:600;color:var(--char);display:inline-flex;align-items:center;gap:6px}
 .iconbtn:hover{border-color:#cfc8c5}
+.lang-sel{width:auto;height:34px;padding:0 26px 0 12px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.85) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%233E3E3F' fill='none' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 10px center;font-size:13px;font-weight:700;color:var(--char);cursor:pointer}
 .badge{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;border-radius:999px;font-size:11px;font-weight:800;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 5px}
 .tabs{position:sticky;top:0;z-index:60;background:rgba(250,247,246,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .tabs-in{max-width:1180px;margin:0 auto;padding:0 24px;display:flex;gap:26px;overflow-x:auto;scrollbar-width:none}
@@ -438,6 +439,266 @@ const SUPABASE_URL = 'https://yoeqjlonyyuwrojvlcqm.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_oLwde7BCOv-KpTHegncZTQ_-gMz_otw';
 const VIDEO_BUCKET = 'skills-videos';
 const DEMO = !SUPABASE_URL || new URLSearchParams(location.search).has('demo');
+/* ══════════════════════════════════════════════════════════════════════
+   SPRACHE (DE / FR / IT / EN) — übersetzt nur, was fürs Verständnis nötig ist.
+   Sportspezifisches (Tricks, Achsen, Grabs, Stomped/Landed/Failed, Kriterien,
+   Skills-Check-Vorgaben, Session-Typen) bleibt bewusst Englisch.
+   Umsetzung: Wörterbuch (Quelltext → [de, fr, it]) + Muster für Texte mit Zahlen;
+   ein MutationObserver übersetzt jeden neu gerenderten Text automatisch.
+   ══════════════════════════════════════════════════════════════════════ */
+const LANGS = ['de','fr','it','en'];
+let LANG = (() => {
+  try { const l = localStorage.getItem('nw-lang'); if (LANGS.includes(l)) return l; } catch {}
+  const n = (navigator.language || 'en').slice(0, 2).toLowerCase();
+  return LANGS.includes(n) ? n : 'en';
+})();
+document.documentElement.lang = LANG;
+const I18N = {
+  // Navigation & Kopf
+  'Log out':['Abmelden','Déconnexion','Esci'], 'Notifications':['Mitteilungen','Notifications','Notifiche'], 'Switch user':['Person wechseln','Changer de personne','Cambia persona'],
+  'Assess':['Assess','Assess','Assess'], 'Team':['Team','Équipe','Team'],
+  'Athlete':['Athlet:in','Athlète','Atleta'], 'Coach':['Coach','Coach','Coach'], 'DVLP / Nachwuchs':['DVLP / Nachwuchs','DVLP / Relève','DVLP / Giovani'],
+  'No notifications':['Keine Mitteilungen','Aucune notification','Nessuna notifica'],
+  '📥 New trick to review':['📥 Neuer Trick zur Bewertung','📥 Nouveau trick à évaluer','📥 Nuovo trick da valutare'],
+  '↺ Coach asks for a new video':['↺ Coach wünscht ein neues Video','↺ Le coach demande une nouvelle vidéo','↺ Il coach chiede un nuovo video'],
+  '⭐ Your trick was rated':['⭐ Dein Trick wurde bewertet','⭐ Ton trick a été évalué','⭐ Il tuo trick è stato valutato'],
+  'just now':['gerade eben','à l’instant','proprio ora'],
+  // Login
+  'Log in':['Anmelden','Connexion','Accedi'], 'E-mail':['E-Mail','E-mail','E-mail'], 'Password':['Passwort','Mot de passe','Password'],
+  'Forgot password?':['Passwort vergessen?','Mot de passe oublié ?','Password dimenticata?'], 'Reset password':['Passwort zurücksetzen','Réinitialiser le mot de passe','Reimposta password'],
+  'We send you a code by e-mail. Enter it here together with your new password.':['Wir schicken dir einen Code per E-Mail. Gib ihn hier zusammen mit deinem neuen Passwort ein.','Nous t’envoyons un code par e-mail. Saisis-le ici avec ton nouveau mot de passe.','Ti inviamo un codice via e-mail. Inseriscilo qui insieme alla nuova password.'],
+  'Send code':['Code senden','Envoyer le code','Invia codice'], 'Code from the e-mail':['Code aus der E-Mail','Code reçu par e-mail','Codice dall’e-mail'], 'New password':['Neues Passwort','Nouveau mot de passe','Nuova password'],
+  'Set password':['Passwort speichern','Enregistrer le mot de passe','Salva password'], 'Back':['Zurück','Retour','Indietro'], 'Password saved':['Passwort gespeichert','Mot de passe enregistré','Password salvata'],
+  'Welcome! Choose your password':['Willkommen! Wähle dein Passwort','Bienvenue ! Choisis ton mot de passe','Benvenuto/a! Scegli la tua password'], 'Save & continue':['Speichern & weiter','Enregistrer et continuer','Salva e continua'],
+  'Code sent — check your inbox.':['Code gesendet — schau in dein Postfach.','Code envoyé — vérifie ta boîte mail.','Codice inviato — controlla la posta.'],
+  // Demo
+  'Demo — choose a view':['Demo — Ansicht wählen','Démo — choisir une vue','Demo — scegli una vista'], 'Nothing is saved to a server; data stays in this browser.':['Es wird nichts auf einem Server gespeichert; die Daten bleiben in diesem Browser.','Rien n’est enregistré sur un serveur ; les données restent dans ce navigateur.','Nulla viene salvato su un server; i dati restano in questo browser.'],
+  'ATHLETES — see only themselves':['ATHLET:INNEN — sehen nur sich selbst','ATHLÈTES — ne voient qu’eux-mêmes','ATLETI — vedono solo sé stessi'], 'COACHES — see their group':['COACHES — sehen ihre Gruppe','COACHS — voient leur groupe','COACH — vedono il loro gruppo'],
+  'DVLP / NACHWUCHS — see everyone':['DVLP / NACHWUCHS — sehen alle','DVLP / RELÈVE — voient tout le monde','DVLP / GIOVANI — vedono tutti'], 'Reset demo data':['Demo-Daten zurücksetzen','Réinitialiser les données démo','Ripristina dati demo'],
+  'Reset all demo data?':['Alle Demo-Daten zurücksetzen?','Réinitialiser toutes les données démo ?','Ripristinare tutti i dati demo?'], 'Demo data reset':['Demo-Daten zurückgesetzt','Données démo réinitialisées','Dati demo ripristinati'],
+  // Assessment
+  'ATHLETE':['ATHLET:IN','ATHLÈTE','ATLETA'], '+ Add Entry':['+ Eintrag','+ Ajouter','+ Aggiungi'], 'Rated Tricks':['Bewertete Tricks','Tricks évalués','Trick valutati'],
+  'Waiting for Coach':['Wartet auf Coach','En attente du coach','In attesa del coach'], 'Open Goals':['Offene Ziele','Objectifs ouverts','Obiettivi aperti'],
+  '✅ LEARNED TRICKS':['✅ GELERNTE TRICKS','✅ TRICKS ACQUIS','✅ TRICK IMPARATI'], '🎯 GOALS / IN PROGRESS':['🎯 ZIELE / IN ARBEIT','🎯 OBJECTIFS / EN COURS','🎯 OBIETTIVI / IN CORSO'],
+  'No entries yet':['Noch keine Einträge','Pas encore d’entrées','Ancora nessuna voce'], 'No goals yet':['Noch keine Ziele','Pas encore d’objectifs','Ancora nessun obiettivo'],
+  'No tricks yet — add your first one!':['Noch keine Tricks — erfasse deinen ersten!','Pas encore de tricks — ajoute ton premier !','Ancora nessun trick — aggiungi il primo!'],
+  'Add Trick':['Trick erfassen','Ajouter un trick','Aggiungi trick'], 'Edit Trick':['Trick bearbeiten','Modifier le trick','Modifica trick'], 'Date':['Datum','Date','Data'], 'Discipline':['Disziplin','Discipline','Disciplina'],
+  '(click to select · click again = no grab)':['(antippen = wählen · nochmals = kein Grab)','(toucher = choisir · encore = pas de grab)','(tocca = scegli · di nuovo = nessun grab)'],
+  'Video for your coach':['Video für deinen Coach','Vidéo pour ton coach','Video per il tuo coach'], 'Video (optional)':['Video (optional)','Vidéo (optionnel)','Video (facoltativo)'],
+  'Note (optional)':['Notiz (optional)','Note (optionnel)','Nota (facoltativa)'], 'Anything your coach should know?':['Etwas, das dein Coach wissen sollte?','Quelque chose que ton coach devrait savoir ?','Qualcosa che il tuo coach dovrebbe sapere?'],
+  'Note for the athlete':['Notiz für die Athlet:in','Note pour l’athlète','Nota per l’atleta'],
+  'A video is already attached — choose a file to replace it.':['Es ist bereits ein Video angehängt — wähle eine Datei, um es zu ersetzen.','Une vidéo est déjà jointe — choisis un fichier pour la remplacer.','È già allegato un video — scegli un file per sostituirlo.'],
+  '✓ LEARNED · SUBMIT TO COACH':['✓ GELERNT · AN COACH SENDEN','✓ ACQUIS · ENVOYER AU COACH','✓ IMPARATO · INVIA AL COACH'], '✓ LEARNED · RATE NOW':['✓ GELERNT · JETZT BEWERTEN','✓ ACQUIS · ÉVALUER MAINTENANT','✓ IMPARATO · VALUTA ORA'],
+  '🎯 GOAL / IN PROGRESS':['🎯 ZIEL / IN ARBEIT','🎯 OBJECTIF / EN COURS','🎯 OBIETTIVO / IN CORSO'], 'Cancel':['Abbrechen','Annuler','Annulla'],
+  'Save to review inbox (rate later)':['In die Review-Inbox (später bewerten)','Dans la boîte d’évaluation (évaluer plus tard)','Nella casella valutazioni (valuta dopo)'],
+  'Your coach gets a notification and rates the trick (Take-off, Trick, Grab, Landing — max. 4 points; Halfpipe + Amplitude = max. 5).':['Dein Coach bekommt eine Mitteilung und bewertet den Trick (Take-off, Trick, Grab, Landing — max. 4 Punkte; Halfpipe + Amplitude = max. 5).','Ton coach reçoit une notification et évalue le trick (Take-off, Trick, Grab, Landing — max. 4 points ; Halfpipe + Amplitude = max. 5).','Il tuo coach riceve una notifica e valuta il trick (Take-off, Trick, Grab, Landing — max. 4 punti; Halfpipe + Amplitude = max. 5).'],
+  'SKILLS-CHECK MATCH':['SKILLS-CHECK-TREFFER','CORRESPONDANCE SKILLS-CHECK','CORRISPONDENZA SKILLS-CHECK'],
+  'No Skills-Check requirement matches this trick — it is still saved as a free trick.':['Keine Skills-Check-Vorgabe passt zu diesem Trick — er wird trotzdem als freier Trick gespeichert.','Aucune exigence du Skills-Check ne correspond à ce trick — il est tout de même enregistré comme trick libre.','Nessun requisito dello Skills-Check corrisponde a questo trick — viene comunque salvato come trick libero.'],
+  'Set gender & level for this athlete (Team tab) to see the Skills-Check match.':['Geschlecht & Stufe im Tab Team setzen, um den Skills-Check-Treffer zu sehen.','Définis le sexe et le niveau (onglet Team) pour voir la correspondance Skills-Check.','Imposta sesso e livello (scheda Team) per vedere la corrispondenza Skills-Check.'],
+  'Free trick':['Freier Trick','Trick libre','Trick libero'], '⏳ Waiting for coach':['⏳ Wartet auf Coach','⏳ En attente du coach','⏳ In attesa del coach'], '↺ New video requested':['↺ Neues Video gewünscht','↺ Nouvelle vidéo demandée','↺ Nuovo video richiesto'],
+  '🎯 Goal':['🎯 Ziel','🎯 Objectif','🎯 Obiettivo'], 'Rate':['Bewerten','Évaluer','Valuta'], 'Edit rating':['Bewertung ändern','Modifier l’évaluation','Modifica valutazione'],
+  '✓ Learned · submit':['✓ Gelernt · senden','✓ Acquis · envoyer','✓ Imparato · invia'], 'Move to learned':['Zu «gelernt» verschieben','Déplacer vers acquis','Sposta in imparati'],
+  'Video':['Video','Vidéo','Video'], 'New video':['Neues Video','Nouvelle vidéo','Nuovo video'], 'Upload video':['Video hochladen','Télécharger une vidéo','Carica video'], '▶ Video':['▶ Video','▶ Vidéo','▶ Video'],
+  'Edit':['Bearbeiten','Modifier','Modifica'], 'Remove':['Entfernen','Supprimer','Rimuovi'], 'Delete':['Löschen','Supprimer','Elimina'], 'Close':['Schliessen','Fermer','Chiudi'],
+  'Coach:':['Coach:','Coach :','Coach:'], 'Progress — Goals Achieved':['Fortschritt — erreichte Ziele','Progrès — objectifs atteints','Progressi — obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
+  'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
+  'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
+  'Moved to learned — in the review inbox':['Zu «gelernt» verschoben — in der Review-Inbox','Déplacé vers acquis — dans la boîte d’évaluation','Spostato in imparati — nella casella valutazioni'],
+  'Deleted':['Gelöscht','Supprimé','Eliminato'], 'Video uploaded':['Video hochgeladen','Vidéo téléchargée','Video caricato'], 'New video sent to your coach':['Neues Video an deinen Coach gesendet','Nouvelle vidéo envoyée à ton coach','Nuovo video inviato al tuo coach'],
+  'Rated tricks can only be changed by your coach.':['Bewertete Tricks kann nur dein Coach ändern.','Seul ton coach peut modifier les tricks évalués.','Solo il tuo coach può modificare i trick valutati.'],
+  'Trick saved, but the video upload failed — try again via «Upload video».':['Trick gespeichert, aber der Video-Upload ist fehlgeschlagen — nochmals über «Video hochladen» versuchen.','Trick enregistré, mais le téléchargement de la vidéo a échoué — réessaie via «Télécharger une vidéo».','Trick salvato, ma il caricamento del video non è riuscito — riprova con «Carica video».'],
+  'This trick no longer exists.':['Diesen Trick gibt es nicht mehr.','Ce trick n’existe plus.','Questo trick non esiste più.'],
+  'Your profile is not set up yet — please contact your coach.':['Dein Profil ist noch nicht eingerichtet — bitte melde dich bei deinem Coach.','Ton profil n’est pas encore configuré — contacte ton coach.','Il tuo profilo non è ancora configurato — contatta il tuo coach.'],
+  'No athletes visible yet. Assign athletes to your group in the Team tab.':['Noch keine Athlet:innen sichtbar. Weise sie im Tab Team deiner Gruppe zu.','Aucun·e athlète visible. Attribue-les à ton groupe dans l’onglet Team.','Nessun atleta visibile. Assegnali al tuo gruppo nella scheda Team.'],
+  // Skills-Check
+  'Total':['Total','Total','Totale'], 'all criteria achieved':['alle Kriterien erfüllt','tous les critères remplis','tutti i criteri soddisfatti'], 'rated, not yet full points':['bewertet, noch nicht volle Punktzahl','évalué, pas encore le maximum','valutato, non ancora punteggio pieno'],
+  'waiting for coach':['wartet auf Coach','en attente du coach','in attesa del coach'], 'goal':['Ziel','objectif','obiettivo'], 'open':['offen','ouvert','aperto'],
+  'not required (condition not met)':['nicht nötig (Bedingung nicht erfüllt)','pas requis (condition non remplie)','non richiesto (condizione non soddisfatta)'],
+  'Points = best coach rating per requirement (Jumps/Rails 0–4, Halfpipe 0–5 incl. Amplitude). A requirement counts as achieved with full points. Pending tricks count once the coach has rated them.':['Punkte = beste Coach-Bewertung pro Vorgabe (Jumps/Rails 0–4, Halfpipe 0–5 inkl. Amplitude). Eine Vorgabe gilt mit voller Punktzahl als erreicht. Offene Tricks zählen, sobald der Coach sie bewertet hat.','Points = meilleure évaluation du coach par exigence (Jumps/Rails 0–4, Halfpipe 0–5 incl. Amplitude). Une exigence est atteinte avec le maximum de points. Les tricks en attente comptent dès que le coach les a évalués.','Punti = migliore valutazione del coach per requisito (Jumps/Rails 0–4, Halfpipe 0–5 incl. Amplitude). Un requisito è raggiunto con il punteggio pieno. I trick in attesa contano appena il coach li ha valutati.'],
+  'No athlete selected.':['Keine Athlet:in gewählt.','Aucun·e athlète sélectionné·e.','Nessun atleta selezionato.'], 'not in focus':['nicht im Fokus','hors focus','fuori focus'],
+  // Reviews
+  'Review inbox':['Review-Inbox','Boîte d’évaluation','Casella valutazioni'], 'Nothing to review right now.':['Gerade nichts zu bewerten.','Rien à évaluer pour le moment.','Niente da valutare al momento.'],
+  'Tricks your athletes submitted — oldest first. Rate Take-off, Trick, Grab and Landing (1 point each, max. 4) — Halfpipe additionally Amplitude (max. 5).':['Von deinen Athlet:innen eingereichte Tricks — älteste zuerst. Bewerte Take-off, Trick, Grab und Landing (je 1 Punkt, max. 4) — Halfpipe zusätzlich Amplitude (max. 5).','Tricks soumis par tes athlètes — les plus anciens d’abord. Évalue Take-off, Trick, Grab et Landing (1 point chacun, max. 4) — Halfpipe en plus Amplitude (max. 5).','Trick inviati dai tuoi atleti — prima i più vecchi. Valuta Take-off, Trick, Grab e Landing (1 punto ciascuno, max. 4) — Halfpipe anche Amplitude (max. 5).'],
+  'Waiting for a new video':['Wartet auf ein neues Video','En attente d’une nouvelle vidéo','In attesa di un nuovo video'], 'Recently rated':['Zuletzt bewertet','Évalués récemment','Valutati di recente'], 'No ratings yet.':['Noch keine Bewertungen.','Pas encore d’évaluations.','Ancora nessuna valutazione.'],
+  'Feedback for the athlete':['Feedback für die Athlet:in','Feedback pour l’athlète','Feedback per l’atleta'], 'What was good, what to work on?':['Was war gut, woran arbeiten?','Qu’est-ce qui était bien, sur quoi travailler ?','Cosa è andato bene, su cosa lavorare?'],
+  'Save rating':['Bewertung speichern','Enregistrer l’évaluation','Salva valutazione'], 'Request new video':['Neues Video anfordern','Demander une nouvelle vidéo','Richiedi un nuovo video'],
+  '📵 No video attached. You can still rate from what you saw on the hill — or request a video.':['📵 Kein Video angehängt. Du kannst trotzdem nach dem bewerten, was du am Hang gesehen hast — oder ein Video anfordern.','📵 Aucune vidéo jointe. Tu peux quand même évaluer ce que tu as vu sur la piste — ou demander une vidéo.','📵 Nessun video allegato. Puoi comunque valutare ciò che hai visto in pista — o richiedere un video.'],
+  'Loading video…':['Video wird geladen…','Chargement de la vidéo…','Caricamento video…'], 'Athlete asked for a new video':['Athlet:in um neues Video gebeten','Nouvelle vidéo demandée à l’athlète','Nuovo video richiesto all’atleta'],
+  // Team
+  'All athletes':['Alle Athlet:innen','Tous les athlètes','Tutti gli atleti'], 'All groups':['Alle Gruppen','Tous les groupes','Tutti i gruppi'], '— No group yet —':['— Noch ohne Gruppe —','— Sans groupe —','— Senza gruppo —'],
+  '+ Add athlete':['+ Athlet:in hinzufügen','+ Ajouter un·e athlète','+ Aggiungi atleta'], 'Add athlete':['Athlet:in hinzufügen','Ajouter un·e athlète','Aggiungi atleta'],
+  'Skills-Check at each athlete\'s own level. Total = Jumps, Rails and Halfpipe weighted ⅓ each; from T4 a focus (Halfpipe only, or Jumps & Rails only) can be set. Click a row to open the Skills-Check.':['Skills-Check auf der eigenen Stufe jeder Athlet:in. Total = Jumps, Rails und Halfpipe je ⅓; ab T4 kann ein Fokus gesetzt werden (nur Halfpipe oder nur Jumps & Rails). Zeile anklicken öffnet den Skills-Check.','Skills-Check au niveau propre de chaque athlète. Total = Jumps, Rails et Halfpipe à ⅓ chacun ; dès T4 un focus peut être défini (seulement Halfpipe ou seulement Jumps & Rails). Clique sur une ligne pour ouvrir le Skills-Check.','Skills-Check al livello di ogni atleta. Totale = Jumps, Rails e Halfpipe ⅓ ciascuno; da T4 si può impostare un focus (solo Halfpipe o solo Jumps & Rails). Clicca una riga per aprire lo Skills-Check.'],
+  'Sex':['Geschlecht','Sexe','Sesso'], 'Level':['Stufe','Niveau','Livello'], 'Focus':['Fokus','Focus','Focus'], 'Group':['Gruppe','Groupe','Gruppo'], 'Athlete':['Athlet:in','Athlète','Atleta'],
+  'all (T1–T3)':['alle (T1–T3)','tous (T1–T3)','tutti (T1–T3)'], 'All':['Alle','Tous','Tutti'], 'Coaches & staff':['Coaches & Staff','Coachs & staff','Coach & staff'], 'Name':['Name','Nom','Nome'], 'Role':['Rolle','Rôle','Ruolo'],
+  '✓ login':['✓ Login','✓ connexion','✓ accesso'], 'no login yet':['noch kein Login','pas encore de connexion','ancora nessun accesso'], '+ e-mail for login':['+ E-Mail für Login','+ e-mail pour la connexion','+ e-mail per l’accesso'],
+  'Edit name':['Name bearbeiten','Modifier le nom','Modifica nome'], 'Linked to a login':['Mit einem Login verknüpft','Lié à une connexion','Collegato a un accesso'],
+  'The athlete can be tracked right away; a login can be added later via the e-mail.':['Die Athlet:in kann sofort erfasst werden; ein Login kann später über die E-Mail ergänzt werden.','L’athlète peut être suivi·e tout de suite ; une connexion peut être ajoutée plus tard via l’e-mail.','L’atleta può essere seguito subito; un accesso può essere aggiunto più tardi tramite l’e-mail.'],
+  'Year of birth':['Jahrgang','Année de naissance','Anno di nascita'], 'E-mail (optional)':['E-Mail (optional)','E-mail (optionnel)','E-mail (facoltativa)'], 'First Last':['Vorname Nachname','Prénom Nom','Nome Cognome'], 'e.g. 2011':['z.B. 2011','p. ex. 2011','p. es. 2011'],
+  'Add':['Hinzufügen','Ajouter','Aggiungi'], 'Please enter a name':['Bitte einen Namen eingeben','Merci de saisir un nom','Inserisci un nome'], 'Saved':['Gespeichert','Enregistré','Salvato'], 'No athletes.':['Keine Athlet:innen.','Aucun·e athlète.','Nessun atleta.'],
+  // Session
+  'New session':['Neue Session','Nouvelle session','Nuova sessione'], 'Session Date':['Session-Datum','Date de la session','Data della sessione'], 'Location':['Ort','Lieu','Luogo'], 'e.g. Laax':['z.B. Laax','p. ex. Laax','p. es. Laax'],
+  'Session type':['Session-Typ','Type de session','Tipo di sessione'], 'Athletes':['Athlet:innen','Athlètes','Atleti'], 'None':['Keine','Aucun','Nessuno'], 'Last sessions':['Letzte Sessions','Dernières sessions','Ultime sessioni'],
+  'No athletes in your group yet.':['Noch keine Athlet:innen in deiner Gruppe.','Pas encore d’athlètes dans ton groupe.','Ancora nessun atleta nel tuo gruppo.'],
+  '+ Add Athlete':['+ Athlet:in','+ Athlète','+ Atleta'], '✕ Cancel':['✕ Abbrechen','✕ Annuler','✕ Annulla'], '✓ End Session':['✓ Session beenden','✓ Terminer la session','✓ Termina sessione'],
+  '⚠ BACKDATED':['⚠ NACHERFASST','⚠ ANTIDATÉ','⚠ RETRODATATA'], '+ Other trick':['+ Anderer Trick','+ Autre trick','+ Altro trick'], 'No Grab':['Kein Grab','Pas de grab','Nessun grab'], '+ Other grab…':['+ Anderer Grab…','+ Autre grab…','+ Altro grab…'],
+  '(2nd tap on another grab = double grab)':['(zweiter Grab antippen = Doppelgrab)','(toucher un 2e grab = double grab)','(tocca un 2° grab = doppio grab)'], 'Selected:':['Gewählt:','Choisi :','Selezionato:'],
+  '● already logged today · 🎯 goal in the assessment':['● heute schon geloggt · 🎯 Ziel im Assessment','● déjà enregistré aujourd’hui · 🎯 objectif dans l’assessment','● già registrato oggi · 🎯 obiettivo nell’assessment'],
+  'No tricks in the assessment yet — add one with «+ Other trick».':['Noch keine Tricks im Assessment — mit «+ Anderer Trick» ergänzen.','Pas encore de tricks dans l’assessment — ajoute-en un avec «+ Autre trick».','Ancora nessun trick nell’assessment — aggiungine uno con «+ Altro trick».'],
+  'Use this trick':['Diesen Trick verwenden','Utiliser ce trick','Usa questo trick'], 'Comment before rating (optional)':['Kommentar vor der Bewertung (optional)','Commentaire avant l’évaluation (optionnel)','Commento prima della valutazione (facoltativo)'],
+  'Attempts':['Versuche','Essais','Tentativi'], 'Rate':['Bewerten','Évaluer','Valuta'], 'Criteria met':['Erfüllte Kriterien','Critères remplis','Criteri soddisfatti'], 'Select reason(s)':['Grund/Gründe wählen','Choisir la/les raison(s)','Scegli il/i motivo/i'],
+  '＋ Other…':['＋ Anderer…','＋ Autre…','＋ Altro…'], 'New fail reason:':['Neuer Fail-Grund:','Nouvelle raison d’échec :','Nuovo motivo di errore:'],
+  'Session log':['Session-Log','Journal de session','Registro sessione'], 'No attempts yet.':['Noch keine Versuche.','Pas encore d’essais.','Ancora nessun tentativo.'],
+  'Use this rating in the athlete\'s Skills-Check':['Diese Bewertung im Skills-Check der Athlet:in verwenden','Utiliser cette évaluation dans le Skills-Check de l’athlète','Usa questa valutazione nello Skills-Check dell’atleta'],
+  'Edit attempt':['Versuch bearbeiten','Modifier l’essai','Modifica tentativo'], 'Delete attempt':['Versuch löschen','Supprimer l’essai','Elimina tentativo'], 'Delete this attempt?':['Diesen Versuch löschen?','Supprimer cet essai ?','Eliminare questo tentativo?'],
+  'Attempt deleted':['Versuch gelöscht','Essai supprimé','Tentativo eliminato'], 'Attempt updated':['Versuch aktualisiert','Essai mis à jour','Tentativo aggiornato'], 'Reason(s)':['Grund/Gründe','Raison(s)','Motivo/i'], 'Comment':['Kommentar','Commentaire','Commento'],
+  '🗑 Delete':['🗑 Löschen','🗑 Supprimer','🗑 Elimina'], 'Save':['Speichern','Enregistrer','Salva'], 'Session Complete':['Session abgeschlossen','Session terminée','Sessione conclusa'],
+  'Duration (min)':['Dauer (Min.)','Durée (min)','Durata (min)'], 'Conditions':['Bedingungen','Conditions','Condizioni'], 'Comments':['Kommentare','Commentaires','Commenti'],
+  'Conditions, focus of the day …':['Bedingungen, Fokus des Tages …','Conditions, focus du jour …','Condizioni, focus del giorno …'], 'Contest results':['Wettkampf-Resultate','Résultats de compétition','Risultati gara'],
+  'empty final = not reached':['leeres Final = nicht erreicht','finale vide = pas atteinte','finale vuota = non raggiunta'], 'Athlete notes':['Notizen pro Athlet:in','Notes par athlète','Note per atleta'], 'optional':['optional','optionnel','facoltativo'],
+  'Save & Close':['Speichern & schliessen','Enregistrer et fermer','Salva e chiudi'], 'Back to session':['Zurück zur Session','Retour à la session','Torna alla sessione'],
+  'Session saved':['Session gespeichert','Session enregistrée','Sessione salvata'], 'Empty session discarded':['Leere Session verworfen','Session vide supprimée','Sessione vuota scartata'], 'Session discarded':['Session verworfen','Session supprimée','Sessione scartata'],
+  'This athlete already has attempts in this session.':['Diese Athlet:in hat in dieser Session schon Versuche.','Cet·te athlète a déjà des essais dans cette session.','Questo atleta ha già tentativi in questa sessione.'],
+  'A session needs at least one athlete.':['Eine Session braucht mindestens eine Athlet:in.','Une session nécessite au moins un·e athlète.','Una sessione richiede almeno un atleta.'],
+  'Enter the rail trick':['Rail-Trick eingeben','Saisis le trick rail','Inserisci il trick rail'], 'No elements yet.':['Noch keine Elemente.','Pas encore d’éléments.','Ancora nessun elemento.'], 'Tags & note':['Tags & Notiz','Tags & note','Tag & nota'],
+  'Note (optional)':['Notiz (optional)','Note (optionnel)','Nota (facoltativa)'], 'Done':['Fertig','Terminé','Fatto'], 'New rail type:':['Neuer Rail-Typ:','Nouveau type de rail :','Nuovo tipo di rail:'], 'New transfer:':['Neuer Transfer:','Nouveau transfert :','Nuovo transfer:'],
+  // Reports
+  'Session reports':['Session-Berichte','Rapports de session','Report delle sessioni'], 'All types':['Alle Typen','Tous les types','Tutti i tipi'],
+  'No sessions in this filter. Start one in the Session tab.':['Keine Sessions in diesem Filter. Starte eine im Tab Session.','Aucune session avec ce filtre. Démarre-en une dans l’onglet Session.','Nessuna sessione con questo filtro. Avviane una nella scheda Session.'],
+  '← All reports':['← Alle Berichte','← Tous les rapports','← Tutti i report'], '📄 PDF':['📄 PDF','📄 PDF','📄 PDF'], '🗑 Delete report':['🗑 Bericht löschen','🗑 Supprimer le rapport','🗑 Elimina report'], 'Report deleted':['Bericht gelöscht','Rapport supprimé','Report eliminato'],
+  'Duration':['Dauer','Durée','Durata'], 'No attempts.':['Keine Versuche.','Aucun essai.','Nessun tentativo.'], 'Raw Entries':['Rohdaten','Données brutes','Dati grezzi'], '— select athlete —':['— Athlet:in wählen —','— choisir un·e athlète —','— scegli atleta —'],
+  'All attempts':['Alle Versuche','Tous les essais','Tutti i tentativi'], 'Fail reasons:':['Fail-Gründe:','Raisons d’échec :','Motivi di errore:'],
+  'Please allow pop-ups to create the PDF.':['Bitte Pop-ups erlauben, um das PDF zu erstellen.','Merci d’autoriser les pop-ups pour créer le PDF.','Consenti i pop-up per creare il PDF.'],
+  'Print / Save as PDF':['Drucken / als PDF sichern','Imprimer / enregistrer en PDF','Stampa / salva come PDF'], 'Tip: choose «Save as PDF» as the printer.':['Tipp: als Drucker «Als PDF sichern» wählen.','Astuce : choisis «Enregistrer en PDF» comme imprimante.','Suggerimento: scegli «Salva come PDF» come stampante.'],
+  // Monitoring
+  'Team Monitoring':['Team-Monitoring','Monitoring d’équipe','Monitoring del team'], 'Current season':['Aktuelle Saison','Saison en cours','Stagione attuale'], 'Last season':['Letzte Saison','Saison passée','Stagione scorsa'],
+  'All time':['Gesamte Zeit','Toute la période','Sempre'], 'Custom period…':['Eigener Zeitraum…','Période personnalisée…','Periodo personalizzato…'], '← Back':['← Zurück','← Retour','← Indietro'],
+  'View details →':['Details ansehen →','Voir les détails →','Vedi dettagli →'], 'stomp rate':['Stomp-Rate','taux de stomp','stomp rate'], 'Stomp rate':['Stomp-Rate','Taux de stomp','Stomp rate'],
+  'Direction balance — session data only':['Richtungsverteilung — nur Session-Daten','Répartition des directions — données de session uniquement','Distribuzione delle direzioni — solo dati di sessione'],
+  'No session data in this period.':['Keine Session-Daten in diesem Zeitraum.','Aucune donnée de session sur cette période.','Nessun dato di sessione in questo periodo.'],
+  'Landed rate (Landed+Stomped)':['Landed-Rate (Landed+Stomped)','Taux de landed (Landed+Stomped)','Landed rate (Landed+Stomped)'],
+  'Criteria fulfillment (Landed + Stomped)':['Kriterien-Erfüllung (Landed + Stomped)','Critères remplis (Landed + Stomped)','Criteri soddisfatti (Landed + Stomped)'],
+  'No landed attempts yet.':['Noch keine gelandeten Versuche.','Pas encore d’essais landed.','Ancora nessun tentativo landed.'], 'No failed attempts.':['Keine gescheiterten Versuche.','Aucun essai failed.','Nessun tentativo failed.'],
+  'Progress over sessions':['Verlauf über die Sessions','Évolution sur les sessions','Andamento nelle sessioni'], 'Volume (attempts)':['Volumen (Versuche)','Volume (essais)','Volume (tentativi)'],
+  '⚠ Sessions with fewer than 5 attempts — rates are statistically weak.':['⚠ Sessions mit weniger als 5 Versuchen — Quoten statistisch schwach.','⚠ Sessions avec moins de 5 essais — taux statistiquement faibles.','⚠ Sessioni con meno di 5 tentativi — percentuali statisticamente deboli.'],
+  'Tap a bar for session details.':['Balken antippen für Session-Details.','Touche une barre pour les détails de la session.','Tocca una barra per i dettagli della sessione.'], 'Open session view →':['Session-Ansicht öffnen →','Ouvrir la vue de session →','Apri vista sessione →'],
+  'Coaching Analysis':['Coaching-Analyse','Analyse coaching','Analisi coaching'], 'Coach comment · current status':['Coach-Kommentar · aktueller Stand','Commentaire du coach · état actuel','Commento del coach · stato attuale'],
+  'AI summary':['KI-Zusammenfassung','Résumé IA','Riepilogo IA'], 'Add new comment':['Neuen Kommentar erfassen','Ajouter un commentaire','Aggiungi un commento'], 'No comments yet.':['Noch keine Kommentare.','Pas encore de commentaires.','Ancora nessun commento.'],
+  'Comment saved':['Kommentar gespeichert','Commentaire enregistré','Commento salvato'], 'Loading…':['Lädt…','Chargement…','Caricamento…'], '🔍 Reality Check':['🔍 Realitäts-Check','🔍 Contrôle de réalité','🔍 Verifica realtà'],
+  'Reality Check':['Realitäts-Check','Contrôle de réalité','Verifica realtà'], '📄 Team PDF':['📄 Team-PDF','📄 PDF équipe','📄 PDF team'], '📄 Athlete Report (PDF)':['📄 Athlet:innen-Bericht (PDF)','📄 Rapport athlète (PDF)','📄 Report atleta (PDF)'],
+  'Search athlete…':['Athlet:in suchen…','Chercher un·e athlète…','Cerca atleta…'], '✓ All':['✓ Alle','✓ Tous','✓ Tutti'], '✗ None':['✗ Keine','✗ Aucun','✗ Nessuno'],
+  'Everything matches — no suggestions.':['Alles stimmt überein — keine Vorschläge.','Tout concorde — aucune suggestion.','Tutto corrisponde — nessun suggerimento.'], '↑ Learned':['↑ Gelernt','↑ Acquis','↑ Imparato'], '↓ Goal':['↓ Ziel','↓ Objectif','↓ Obiettivo'],
+  'Running stomp rate':['Laufende Stomp-Rate','Taux de stomp cumulé','Stomp rate progressiva'], 'running stomp rate':['laufende Stomp-Rate','taux de stomp cumulé','stomp rate progressiva'],
+  'decreasing':['abnehmend','en baisse','in calo'], 'increasing':['zunehmend','en hausse','in aumento'], 'stable':['stabil','stable','stabile'], '→ stable':['→ stabil','→ stable','→ stabile'],
+  'Comp Ready':['Wettkampfbereit','Prêt pour la compétition','Pronto per la gara'], 'attempts':['Versuche','essais','tentativi'],
+  'Session summary':['Session-Übersicht','Résumé des sessions','Riepilogo sessioni'], 'Sessions':['Sessions','Sessions','Sessioni'], 'Sex/level not set.':['Geschlecht/Stufe nicht gesetzt.','Sexe/niveau non défini.','Sesso/livello non impostato.'],
+};
+// Deutschsprachige Quelltexte (aus dem Skills-Check-SVG) → [de, fr, it, en]
+const I18N_DE = {
+  'Die vier Drehrichtungen werden pro Athlet:in von der stärksten bis zur schwächsten geordnet — die App sucht automatisch die beste Zuordnung.':['Die vier Drehrichtungen werden pro Athlet:in von der stärksten bis zur schwächsten geordnet — die App sucht automatisch die beste Zuordnung.','Les quatre sens de rotation sont classés du plus fort au plus faible pour chaque athlète — l’app cherche automatiquement la meilleure attribution.','Le quattro direzioni di rotazione sono ordinate dalla più forte alla più debole per ogni atleta — l’app cerca automaticamente la migliore assegnazione.','The four spin directions are ranked from strongest to weakest for each athlete — the app finds the best assignment automatically.'],
+  'Tricks können X oder gecarved werden — anzustreben ist beides.':['Tricks können X oder gecarved werden — anzustreben ist beides.','Les tricks peuvent être faits en X ou carvés — l’objectif est de maîtriser les deux.','I trick possono essere fatti in X o carvati — l’obiettivo è entrambi.','Tricks can be done X or carved — aim for both.'],
+  'Wiederholung = Tricks aus früheren Phasen auf dem schwierigeren Obstacle.':['Wiederholung = Tricks aus früheren Phasen auf dem schwierigeren Obstacle.','Répétition = tricks des phases précédentes sur l’obstacle plus difficile.','Ripetizione = trick delle fasi precedenti sull’ostacolo più difficile.','Repetition = tricks from earlier phases on the harder obstacle.'],
+  'Back- & Frontswap to switch and to normal (bzw. Switch-Up).':['Back- & Frontswap to switch und to normal (bzw. Switch-Up).','Back- & Frontswap to switch et to normal (resp. Switch-Up).','Back- & Frontswap to switch e to normal (o Switch-Up).','Back- & frontswap to switch and to normal (or switch-up).'],
+};
+// Texte mit Zahlen/Namen
+const I18N_PAT = [
+  [/^(\d+) attempts · (.+)$/, (m, i) => `${m[1]} ${['Versuche','essais','tentativi'][i]} · ${I18N_PERIOD(m[2], i)}`],
+  [/^(\d+) attempts · (\d+) stomped · $/, (m, i) => `${m[1]} ${['Versuche','essais','tentativi'][i]} · ${m[2]} stomped · `],
+  [/^\+(\d+) in other levels?$/, (m, i) => [`+${m[1]} in anderen Stufen`, `+${m[1]} dans d’autres niveaux`, `+${m[1]} in altri livelli`][i]],
+  [/^(Women|Men) · own level (T\d)$/, (m, i) => `${m[1]} · ${['eigene Stufe','propre niveau','livello proprio'][i]} ${m[2]}`],
+  [/^Trick status: ≥70% stomp rate =$/, (m, i) => ['Trick-Status: ≥70% Stomp-Rate =', 'Statut du trick : ≥70% taux de stomp =', 'Stato del trick: ≥70% stomp rate ='][i]],
+  [/^· fewer than 5 attempts = Low data\. Stomped = all criteria met\.$/, (m, i) => ['· weniger als 5 Versuche = Low data. Stomped = alle Kriterien erfüllt.', '· moins de 5 essais = Low data. Stomped = tous les critères remplis.', '· meno di 5 tentativi = Low data. Stomped = tutti i criteri soddisfatti.'][i]],
+  [/^(.+) · (?:current season|last season|all time)(.*)$/, (m, i) => null],
+  [/^(.+) · (Athlete|Coach|DVLP \/ Nachwuchs)$/, (m, i) => `${m[1]} · ${({Athlete:['Athlet:in','Athlète','Atleta'], Coach:['Coach','Coach','Coach'], 'DVLP / Nachwuchs':['DVLP / Nachwuchs','DVLP / Relève','DVLP / Giovani']})[m[2]][i]}`],
+  [/^Hi (.+)$/, (m, i) => [`Hallo ${m[1]}`, `Salut ${m[1]}`, `Ciao ${m[1]}`][i]],
+  [/^Level (.+?) · (.+)$/, (m, i) => [`Stufe ${m[1]} · ${m[2]}`, `Niveau ${m[1]} · ${m[2]}`, `Livello ${m[1]} · ${m[2]}`][i]],
+  [/^Your Skills-Check (T\d)$/, (m, i) => [`Dein Skills-Check ${m[1]}`, `Ton Skills-Check ${m[1]}`, `Il tuo Skills-Check ${m[1]}`][i]],
+  [/^Start session(?: \((\d+)\))?$/, (m, i) => ['Session starten', 'Démarrer la session', 'Avvia sessione'][i] + (m[1] ? ` (${m[1]})` : '')],
+  [/^⚠ Backdated — all entries (?:will be|are) saved for (.+)\.$/, (m, i) => [`⚠ Nacherfasst — alle Einträge werden für den ${m[1]} gespeichert.`, `⚠ Antidaté — toutes les entrées sont enregistrées pour le ${m[1]}.`, `⚠ Retrodatata — tutte le voci vengono salvate per il ${m[1]}.`][i]],
+  [/^Attempt #(\d+)$/, (m, i) => [`Versuch #${m[1]}`, `Essai n°${m[1]}`, `Tentativo #${m[1]}`][i]],
+  [/^✓ Save Landed \((.+)\)$/, (m, i) => [`✓ Landed speichern (${m[1]})`, `✓ Enregistrer Landed (${m[1]})`, `✓ Salva Landed (${m[1]})`][i]],
+  [/^⭐ Save as Stomped$/, (m, i) => ['⭐ Als Stomped speichern', '⭐ Enregistrer comme Stomped', '⭐ Salva come Stomped'][i]],
+  [/^✗ Save Failed(?: \((\d+) reasons?\)| \(no reason\))$/, (m, i) => ['✗ Failed speichern', '✗ Enregistrer Failed', '✗ Salva Failed'][i] + (m[1] ? ` (${m[1]} ${['Grund/Gründe','raison(s)','motivo/i'][i]})` : ` (${['ohne Grund','sans raison','senza motivo'][i]})`)],
+  [/^(\d+)\/(\d+) = automatically Stomped$/, (m, i) => [`${m[1]}/${m[2]} = automatisch Stomped`, `${m[1]}/${m[2]} = automatiquement Stomped`, `${m[1]}/${m[2]} = automaticamente Stomped`][i]],
+  [/^Save Run #(\d+) \((\d+)\/(\d+) rated\)$/, (m, i) => [`Run #${m[1]} speichern (${m[2]}/${m[3]} bewertet)`, `Enregistrer le run n°${m[1]} (${m[2]}/${m[3]} évalués)`, `Salva run #${m[1]} (${m[2]}/${m[3]} valutati)`][i]],
+  [/^Run setup — (\d+)\/(\d+) (hits|elements) · pick a trick above and add it$/, (m, i) => [`Run-Aufbau — ${m[1]}/${m[2]} ${m[3]==='hits'?'Hits':'Elemente'} · oben Trick wählen und hinzufügen`, `Composition du run — ${m[1]}/${m[2]} ${m[3]==='hits'?'hits':'éléments'} · choisis un trick ci-dessus et ajoute-le`, `Composizione run — ${m[1]}/${m[2]} ${m[3]==='hits'?'hit':'elementi'} · scegli un trick sopra e aggiungilo`][i]],
+  [/^(\d+) attempts?$/, (m, i) => `${m[1]} ${['Versuche','essais','tentativi'][i]}`],
+  [/^(\d+) att\.$/, (m, i) => `${m[1]} ${['Vers.','ess.','tent.'][i]}`],
+  [/^(\d+)% landed$/, (m, i) => `${m[1]}% ${['gelandet','landed','landed'][i]}`],
+  [/^(\d+) of (\d+) fully achieved(.*)$/, (m, i) => [`${m[1]} von ${m[2]} voll erreicht`, `${m[1]} sur ${m[2]} pleinement atteints`, `${m[1]} di ${m[2]} pienamente raggiunti`][i] + m[3].replace(/waiting/, ['wartend','en attente','in attesa'][i])],
+  [/^(\d+)\/(\d+) achieved(.*)$/, (m, i) => `${m[1]}/${m[2]} ${['erreicht','atteints','raggiunti'][i]}${m[3]}`],
+  [/^Jumps, Rails & Halfpipe count ⅓ each(.*)$/, (m, i) => ['Jumps, Rails & Halfpipe zählen je ⅓', 'Jumps, Rails & Halfpipe comptent ⅓ chacun', 'Jumps, Rails & Halfpipe contano ⅓ ciascuno'][i] + m[1].replace(/(\d+) of (\d+) fully achieved/, (x, a, b) => [`${a} von ${b} voll erreicht`, `${a} sur ${b} pleinement atteints`, `${a} di ${b} pienamente raggiunti`][i]).replace(/waiting/, ['wartend','en attente','in attesa'][i])],
+  [/^Rated (\d+)\/(\d+): (.+)$/, (m, i) => [`Bewertet ${m[1]}/${m[2]}: ${m[3]}`, `Évalué ${m[1]}/${m[2]} : ${m[3]}`, `Valutato ${m[1]}/${m[2]}: ${m[3]}`][i]],
+  [/^New video requested: (.+)$/, (m, i) => [`Neues Video gewünscht: ${m[1]}`, `Nouvelle vidéo demandée : ${m[1]}`, `Nuovo video richiesto: ${m[1]}`][i]],
+  [/^Rated (\d+)\/(\d+) — athlete notified$/, (m, i) => [`Bewertet ${m[1]}/${m[2]} — Athlet:in benachrichtigt`, `Évalué ${m[1]}/${m[2]} — athlète notifié·e`, `Valutato ${m[1]}/${m[2]} — atleta avvisato`][i]],
+  [/^rated by (.+)$/, (m, i) => [`bewertet von ${m[1]}`, `évalué par ${m[1]}`, `valutato da ${m[1]}`][i]],
+  [/^submitted (.+)$/, (m, i) => [`eingereicht ${m[1]}`, `soumis ${m[1]}`, `inviato ${m[1]}`][i]],
+  [/^(\d+) min ago$/, (m, i) => [`vor ${m[1]} Min.`, `il y a ${m[1]} min`, `${m[1]} min fa`][i]],
+  [/^(\d+) h ago$/, (m, i) => [`vor ${m[1]} Std.`, `il y a ${m[1]} h`, `${m[1]} h fa`][i]],
+  [/^Delete «(.+)»\?$/, (m, i) => [`«${m[1]}» löschen?`, `Supprimer «${m[1]}» ?`, `Eliminare «${m[1]}»?`][i]],
+  [/^Discard this session(?: and all (\d+) attempts)?\?$/, (m, i) => (m[1] ? [`Diese Session mit allen ${m[1]} Versuchen verwerfen?`, `Supprimer cette session et ses ${m[1]} essais ?`, `Scartare questa sessione e tutti i ${m[1]} tentativi?`] : ['Diese Session verwerfen?', 'Supprimer cette session ?', 'Scartare questa sessione?'])[i]],
+  [/^Delete this report and its (\d+) attempts\?$/, (m, i) => [`Diesen Bericht und seine ${m[1]} Versuche löschen?`, `Supprimer ce rapport et ses ${m[1]} essais ?`, `Eliminare questo report e i suoi ${m[1]} tentativi?`][i]],
+  [/^Run #(\d+) saved$/, (m, i) => [`Run #${m[1]} gespeichert`, `Run n°${m[1]} enregistré`, `Run #${m[1]} salvato`][i]],
+  [/^(\d+) entr(?:y|ies) updated$/, (m, i) => [`${m[1]} Einträge aktualisiert`, `${m[1]} entrées mises à jour`, `${m[1]} voci aggiornate`][i]],
+  [/^Apply selected \((\d+)\)$/, (m, i) => [`Auswahl übernehmen (${m[1]})`, `Appliquer la sélection (${m[1]})`, `Applica selezione (${m[1]})`][i]],
+  [/^History \((\d+)\)$/, (m, i) => [`Verlauf (${m[1]})`, `Historique (${m[1]})`, `Cronologia (${m[1]})`][i]],
+  [/^Hide history \((\d+)\)$/, (m, i) => [`Verlauf ausblenden (${m[1]})`, `Masquer l’historique (${m[1]})`, `Nascondi cronologia (${m[1]})`][i]],
+  [/^Most common fail reason: (.+)$/, (m, i) => [`Häufigster Fail-Grund: ${m[1]}`, `Raison d’échec la plus fréquente : ${m[1]}`, `Motivo di errore più frequente: ${m[1]}`][i]],
+  [/^Could not (?:save|add|delete|send|start|discard|apply|load video|save attempt|save comment|save run): (.*)$/, (m, i) => ['Fehler: ', 'Erreur : ', 'Errore: '][i] + m[1]],
+  [/^Upload failed: (.*)$/, (m, i) => ['Upload fehlgeschlagen: ', 'Échec du téléchargement : ', 'Caricamento non riuscito: '][i] + m[1]],
+  [/^(.+) added$/, (m, i) => [`${m[1]} hinzugefügt`, `${m[1]} ajouté·e`, `${m[1]} aggiunto/a`][i]],
+  [/^Uploading video… (\d+)%$/, (m, i) => ['Video wird hochgeladen… ', 'Téléchargement de la vidéo… ', 'Caricamento video… '][i] + m[1] + '%'],
+];
+const I18N_ALL = Object.assign(Object.create(null), I18N);
+function I18N_PERIOD(p, i){
+  return p.replace('current season', ['aktuelle Saison','saison en cours','stagione attuale'][i]).replace('last season', ['letzte Saison','saison passée','stagione scorsa'][i]).replace('all time', ['gesamte Zeit','toute la période','sempre'][i]);
+}
+function trText(src){
+  if (LANG==='en' && !(src in I18N_DE)) return null;
+  const li = {de:0, fr:1, it:2, en:3}[LANG];
+  if (src in I18N_DE) return I18N_DE[src][li];
+  if (LANG==='en') return null;
+  if (src in I18N_ALL) return I18N_ALL[src][li];
+  for (const [re, fn] of I18N_PAT){ const m = src.match(re); if (m){ const r = fn(m, li); if (r != null) return r; } }
+  // längere deutsche Sätze innerhalb eines Textes (z.B. Skills-Check-Hinweise)
+  return null;
+}
+function trString(s){
+  if (!s) return s;
+  const lead = s.match(/^\s*/)[0], trail = s.match(/\s*$/)[0], core = s.trim();
+  if (!core) return s;
+  let out = trText(core);
+  if (out == null){
+    // eingebettete deutsche Sätze übersetzen (z.B. «… 540 in the weakest. Die vier Drehrichtungen …»)
+    let changed = false, t = core;
+    for (const k of Object.keys(I18N_DE)) if (t.includes(k) && k !== t){ t = t.replace(k, I18N_DE[k][{de:0, fr:1, it:2, en:3}[LANG]]); changed = true; }
+    if (!changed) return s;
+    out = t;
+  }
+  return lead + out + trail;
+}
+const I18N_ATTRS = ['placeholder', 'title', 'aria-label'];
+function i18nNode(root){
+  const walk = n => {
+    if (n.nodeType === 3){ const v = n.nodeValue, t = trString(v); if (t !== v) n.nodeValue = t; return; }
+    if (n.nodeType !== 1 || n.tagName === 'SCRIPT' || n.tagName === 'STYLE' || n.hasAttribute?.('data-noi18n')) return;
+    for (const a of I18N_ATTRS){ const v = n.getAttribute(a); if (v){ const t = trString(v); if (t !== v) n.setAttribute(a, t); } }
+    n.childNodes.forEach(walk);
+  };
+  walk(root);
+}
+new MutationObserver(ms => { for (const m of ms){ if (m.type==='characterData') i18nNode(m.target); else m.addedNodes.forEach(i18nNode); } })
+  .observe(document.documentElement, {childList:true, subtree:true, characterData:true});
+const _confirm = window.confirm.bind(window), _prompt = window.prompt.bind(window);
+window.confirm = m => _confirm(trString(String(m)));
+window.prompt = (m, d) => _prompt(trString(String(m)), d);
+function langSelect(){
+  return `<select class="lang-sel" data-noi18n onchange="setLang(this.value)" aria-label="Language">${LANGS.map(l => `<option value="${l}" ${l===LANG?'selected':''}>${l.toUpperCase()}</option>`).join('')}</select>`;
+}
+function setLang(l){
+  try { localStorage.setItem('nw-lang', l); } catch {}
+  location.reload();   // sauber neu aufbauen (Session läuft in der DB weiter)
+}
+
 const DEMO_KEY = 'nw-demo-v6';
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -1174,6 +1435,7 @@ const NAV_ICONS = (() => {
 function renderChrome(){
   const unread = ST.notes.filter(n => !n.read_at).length;
   $('#who').innerHTML = `
+    ${langSelect()}
     <button class="iconbtn" onclick="toggleNotifs(event)" title="Notifications">🔔${unread?`<span class="badge">${unread}</span>`:''}</button>
     <span class="chip">${esc(ST.me.name)} · ${ROLE_LABEL[ST.me.role]}</span>
     <button class="iconbtn" onclick="logout()">Log out</button>`;
@@ -2856,7 +3118,7 @@ document.addEventListener('keydown', e => { if (e.key==='Escape' && $('#modal-ro
    ══════════════════════════════════════════════════════════════════════ */
 function gateShell(inner){
   return `<header><div class="hd"><div><h1>Trick Analyses Freeski Youth<span class="dot">.</span></h1></div>
-    <div class="brand">${document.querySelector('.brand svg').outerHTML}</div></div></header><div class="box">${inner}</div>`;
+    <div class="brand">${document.querySelector('.brand svg').outerHTML}<div class="who">${langSelect()}</div></div></div></header><div class="box">${inner}</div>`;
 }
 function showDemoGate(){
   const d = DemoStore.data;
