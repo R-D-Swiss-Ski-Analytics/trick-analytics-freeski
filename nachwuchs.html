@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest-youth.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon-youth.png">
 <link rel="icon" type="image/png" href="icons/icon-youth-192.png">
-<title>Trick Analyses Freeski Youth</title>
+<title>Trick Analyses Youth</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4/dist/tus.min.js"></script>
 <style>
@@ -533,6 +533,17 @@ main svg text{font-size:var(--fs-label)}
 .status-pill{display:flex !important;align-items:center;gap:8px;border:0 !important;border-left:4px solid var(--c) !important;border-radius:8px !important;background:#fff !important;padding:7px 12px !important}
 .status-pill span{margin-left:auto}
 .status-key-n{margin-top:2px}
+.sport-sw{display:inline-flex;gap:2px;padding:3px;background:rgba(255,255,255,.85);border:1px solid var(--line);border-radius:999px}
+.sport-sw button{border:0;background:none;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;color:var(--muted);cursor:pointer;font-family:inherit}
+.sport-sw button.on{background:var(--red);color:#fff}
+@media (max-width:768px){.sport-sw button{padding:4px 8px;font-size:11px}}
+.sport-bar{display:none}
+@media (max-width:768px){
+  #who .sport-sw{display:none}
+  .sport-bar:not([hidden]){display:flex;justify-content:center;margin:10px 16px 0}
+  .sport-bar .sport-sw{width:100%}
+  .sport-bar .sport-sw button{flex:1;padding:7px 8px;font-size:12px}
+}
 </style>
 </head>
 <body>
@@ -544,7 +555,7 @@ main svg text{font-size:var(--fs-label)}
   <header>
     <div class="hd">
       <div>
-        <h1>Trick Analyses Freeski Youth<span class="dot">.</span></h1>
+        <h1 id="app-title">Trick Analyses Freeski Youth<span class="dot">.</span></h1>
       </div>
       <div class="brand" aria-label="Swiss-Ski">
         <svg viewBox="0 0 88.62 19.26" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img"><title>Swiss-Ski</title><path d="M51.94 6.25C50.64 5.72 49.3 5.5 47.81 5.5 44.59 5.5 42.26 7.16 42.26 10.31 42.26 11.97 43.46 12.88 44.5 13.55 45.58 14.25 46.07 14.56 46.07 15.09 46.07 15.79 45.37 16.08 44.43 16.08 43.49 16.08 42.53 15.74 41.81 15.29L40.58 18.51C41.9 19.09 43.35 19.26 44.84 19.26 47.7 19.28 50.66 17.86 50.66 14.45 50.66 12.67 49.33 11.71 48.23 11.01 47.39 10.48 46.67 10.1 46.67 9.49 46.67 9.01 47.08 8.55 48.14 8.55 49.1 8.55 50.04 8.89 50.74 9.35L51.97 6.25ZM40.88 6.35C39.79 5.75 38.6 5.5 37.19 5.5 34.03 5.5 32.16 7.32 32.16 9.92 32.16 11.72 33.42 12.61 34.54 13.35 35.78 14.18 36.29 14.64 36.29 15.34 36.29 16.39 35.29 16.73 34.32 16.73 33.35 16.73 32.3 16.36 31.55 15.85L30.38 18.38C31.48 19.04 33.05 19.26 34.42 19.26 36.97 19.26 39.57 17.68 39.57 14.74 39.57 12.82 38.16 11.87 36.94 11.12 36.26 10.68 35.31 10.1 35.31 9.25 35.31 8.69 35.75 7.99 37.13 7.99 38.13 7.99 39.05 8.28 39.76 8.77L40.88 6.36ZM8.34 7.57C7.82 6.66 6.91 6.33 5.87 6.33 4.35 6.33 3.03 7.26 3.03 8.88 3.03 10.11 3.79 10.77 4.98 11.68 5.3 11.92 5.62 12.16 5.93 12.42 6.24 12.68 6.54 12.95 6.79 13.26 7.31 13.87 7.67 14.6 7.67 15.52 7.67 17.84 5.62 19.26 3.54 19.26 2.21 19.26 0.85 18.86 0.06 17.62L-0.01 17.52 0.74 16.9 0.82 17.05C1.37 18.05 2.42 18.41 3.53 18.41 5.17 18.41 6.66 17.38 6.66 15.61 6.66 14.86 6.41 14.31 6 13.83 5.79 13.58 5.55 13.36 5.27 13.13 4.99 12.9 4.69 12.67 4.37 12.43 3.24 11.59 2.04 10.58 2.04 8.98 2.04 6.82 3.94 5.5 5.86 5.5 7.09 5.5 8.36 5.87 9.07 7.02L9.14 7.12 8.41 7.71 8.33 7.57ZM20.86 14.03 24.42 5.77 25.97 5.77 20.08 19.01 18.49 19.01 17.97 10.4C17.89 9.36 17.86 8.39 17.86 7.78 17.59 8.4 17.16 9.37 16.62 10.44L12.35 19.02 10.81 19.02 10.63 5.78 12.14 5.78 12.12 14.08C12.12 15.16 12.11 16.28 12.09 16.93 12.37 16.28 12.88 15.15 13.4 14.08L17.51 5.77 19.17 5.77 19.62 14.09C19.68 15.21 19.71 16.28 19.72 16.89 19.96 16.28 20.38 15.23 20.89 14.03M30.4 5.76 28.12 5.76 25.32 19 27.6 19 30.4 5.76ZM31.61 1.1C31.61 0.45 31.11 0 30.44 0 29.51 0 28.76 0.8 28.76 1.78 28.76 2.46 29.29 2.88 29.94 2.88 30.86 2.88 31.62 2.08 31.62 1.1" fill="#E2001A"/><path d="M66.01 0.5 66.01 19.01 71.51 19.01 71.51 15.38 72.29 14.3 74.04 19.01 80.8 19.01 76.72 10.99 80.67 5.5 74.16 5.5 71.51 10.12 71.51 0.5 66.01 0.5Z" fill="#E2001A"/><g><path d="M53.68 15.1C54.57 15.43 55.63 15.67 56.64 15.67 57.48 15.67 57.96 15.36 57.96 14.88 57.96 14.32 57.42 14.09 56.88 13.92L55.94 13.62C54.5 13.16 53.09 12.05 53.09 10.05 53.09 7.26 55.3 5.25 59.38 5.25 60.7 5.25 62.19 5.43 63.68 5.75L63.06 9.17C62.13 8.88 61.1 8.66 60.06 8.66 59.3 8.66 58.97 8.94 58.97 9.38 58.97 9.79 59.38 10 59.85 10.16L60.69 10.44C62.58 11.06 64.16 11.91 64.16 14.16 64.16 17.53 61.41 19.26 57.5 19.26 56.03 19.26 54.5 19.1 53.03 18.74L53.7 15.1Z" fill="#E2001A"/><path d="M85.54 4.67C83.65 4.67 82.41 3.76 82.41 2.35 82.41 1.16 83.38 0 85.54 0 87.52 0 88.62 0.96 88.62 2.35 88.62 3.81 87.38 4.67 85.54 4.67" fill="#E2001A"/></g><path d="M82.52 5.5 82.52 19.01 88.51 19.01 88.51 14.51 87.76 14.51 87.76 16.26 86.26 16.26 86.26 14.51 84.51 14.51 84.51 13 86.26 13 86.26 11.25 87.76 11.25 87.76 13 88.51 13 88.51 5.5 82.52 5.5Z" fill="#E2001A"/></svg>
@@ -556,6 +567,7 @@ main svg text{font-size:var(--fs-label)}
     <div class="tabs-in" id="tabs"></div>
     <div class="dropdown" id="notif-dd" hidden></div>
   </nav>
+  <div class="sport-bar" id="sport-bar" hidden></div>
   <div class="mode-sw" id="mode-sw" hidden></div>
   <main class="wrap">
     <section class="page" id="page-assessment"></section>
@@ -763,6 +775,11 @@ const I18N = {
   'No videos to clean up.':['Keine Videos zum Aufräumen.','Aucune vidéo à nettoyer.','Nessun video da pulire.'],
   'Video clean-up: from today you can delete videos that are no longer required in the Selection tab.':['Video-Aufräumen: Ab heute kannst du im Tab «Selektion» die nicht mehr verlangten Videos löschen.','Nettoyage des vidéos : dès aujourd’hui, tu peux supprimer les vidéos qui ne sont plus exigées dans l’onglet Sélection.','Pulizia video: da oggi puoi eliminare i video non più richiesti nella scheda Selezione.'],
   'Runs automatically every year from 31 May (after selection and appeal period), only for videos uploaded before 31 May':['Läuft jedes Jahr ab 31. Mai automatisch (nach Selektion und Rekursfrist), nur für Videos, die vor dem 31. Mai hochgeladen wurden','S’exécute automatiquement chaque année dès le 31 mai (après la sélection et le délai de recours), uniquement pour les vidéos téléchargées avant le 31 mai','Si esegue automaticamente ogni anno dal 31 maggio (dopo la selezione e il termine di ricorso), solo per i video caricati prima del 31 maggio'],
+  'The Snowboard Skills-Check is being prepared and will be added here.':['Der Skills-Check Snowboard ist in Vorbereitung und wird hier ergänzt.','Le Skills-Check snowboard est en préparation et sera ajouté ici.','Lo Skills-Check snowboard è in preparazione e verrà aggiunto qui.'],
+  'Tricks, ratings and sessions already work as usual':['Tricks, Bewertungen und Sessions funktionieren schon wie gewohnt','Tricks, évaluations et sessions fonctionnent déjà normalement','Trick, valutazioni e sessioni funzionano già normalmente'],
+  'As soon as the requirements are defined, all existing tricks are matched automatically':['Sobald die Vorgaben stehen, werden alle erfassten Tricks automatisch abgeglichen','Dès que les exigences seront définies, tous les tricks saisis seront comparés automatiquement','Appena i requisiti saranno definiti, tutti i trick registrati verranno abbinati automaticamente'],
+  'The Snowboard ranking needs the Snowboard Skills-Check. It will be available as soon as the requirements are defined.':['Die Snowboard-Rangliste braucht den Skills-Check Snowboard. Sie ist verfügbar, sobald die Vorgaben stehen.','Le classement snowboard nécessite le Skills-Check snowboard. Il sera disponible dès que les exigences seront définies.','La classifica snowboard richiede lo Skills-Check snowboard. Sarà disponibile appena i requisiti saranno definiti.'],
+  'Trick Analyses Snowboard Youth':['Trick Analyses Snowboard Youth','Trick Analyses Snowboard Youth','Trick Analyses Snowboard Youth'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
@@ -1130,15 +1147,30 @@ const DEMO_KEY = 'nw-demo-v8';
 /* ══════════════════════════════════════════════════════════════════════
    TRICK-VOKABULAR
    ══════════════════════════════════════════════════════════════════════ */
-const DIRN = {L:'Left', R:'Right', SL:'Switch Left', SR:'Switch Right', F:'Forward', S:'Switch'};
+// Sportart: EINE App und EINE Datenbank für Freeski und Snowboard Youth.
+// Quelle: ?sport=…, <meta name="app-sport"> (Snowboard-Seite), Host-Name, sonst die letzte Wahl (Admin-Umschalter).
+const SPORT = (() => {
+  const q = new URLSearchParams(location.search).get('sport');
+  if (q === 'freeski' || q === 'snowboard'){ try { localStorage.setItem('nw-sport', q); } catch {} return q; }
+  const meta = document.querySelector('meta[name="app-sport"]')?.content;
+  if (meta === 'freeski' || meta === 'snowboard') return meta;
+  if (/snowboard/i.test(location.hostname)) return 'snowboard';
+  try { const l = localStorage.getItem('nw-sport'); if (l === 'freeski' || l === 'snowboard') return l; } catch {}
+  return 'freeski';
+})();
+const SB = SPORT === 'snowboard';
+const APP_TITLE = SB ? 'Trick Analyses Snowboard Youth' : 'Trick Analyses Freeski Youth';
+// Snowboard: gleiche Schlüssel (L/R/SL/SR), nur andere Namen → Logik bleibt gleich
+const DIRN = SB ? {L:'Frontside', R:'Backside', SL:'Switch Frontside', SR:'Switch Backside', F:'Forward', S:'Switch'}
+                : {L:'Left', R:'Right', SL:'Switch Left', SR:'Switch Right', F:'Forward', S:'Switch'};
 const D4 = ['L','R','SL','SR'];
-const SIDE = {L:'Left', R:'Right'};
-const OFFAX = ['Cork','Bio/Misty','Flat Spin','Rodeo'];
-const NOROT = ['Zero Spin','Frontflip','Backflip','Sideflip'];
+const SIDE = SB ? {L:'Frontside', R:'Backside'} : {L:'Left', R:'Right'};
+const OFFAX = SB ? ['Cork','Crippler','McTwist','Todeo','Rodeo','Infinity Axis','Underflip'] : ['Cork','Bio/Misty','Flat Spin','Rodeo'];
+const NOROT = SB ? ['Straight Air','Backroll','Frontroll','Wildcat','Tamedog'] : ['Zero Spin','Frontflip','Backflip','Sideflip'];
 const FLIPN = {1:'Single', 2:'Double', 3:'Triple', 4:'Quad'};
-const GRABS = ['Blunt','Bow and Arrow','Broken Arrow','Critical','Cuban','Double Grab (both hands)','Double Japan','Esco','Guitar','High Mute','In and out','Indi-Truck','Inside Tail','Japan','Mute','Nose','Octo','Rocket','Safety',"Screamin' Seamen",'Seatbelt','Seatbelt Japan','Stale','Stink Bug','Tail','Truckdriver','Venom'];
+const GRABS = SB ? ['Bloody Dracula','Canadian Bacon','Chicken Salad','Crail','Crooked Cop','Cross Rocket','Double Tail','Drunk Driver','Frontside','Indy','Japan','Lien','Melon','Method','Mute','Nose','Nuclear','Roast Beef','Rocket Air','Sad Air','Seat Belt','Slob','Stalefish','Stelmasky','Stink Bug','Suitcase','Tai Pan','Tail','Truck Driver','Tuck Knee'] : ['Blunt','Bow and Arrow','Broken Arrow','Critical','Cuban','Double Grab (both hands)','Double Japan','Esco','Guitar','High Mute','In and out','Indi-Truck','Inside Tail','Japan','Mute','Nose','Octo','Rocket','Safety',"Screamin' Seamen",'Seatbelt','Seatbelt Japan','Stale','Stink Bug','Tail','Truckdriver','Venom'];
 const BOTH_HANDS = ['Double Grab (both hands)','Double Japan','Truckdriver'];
-const TAKEOFFS = ['Carved','Blender','Hand-Drag','Inside Edge','Nosebutter','Tailbutter',"N'Ollie"];
+const TAKEOFFS = SB ? ["N'Ollie",'Nosebutter','Noseslide','Tailbutter','Tailslide','Hardway'] : ['Carved','Blender','Hand-Drag','Inside Edge','Nosebutter','Tailbutter',"N'Ollie"];
 const CREATIVE = ['Nosebutter','Tailbutter',"N'Ollie"];
 const OBST = {'Tube':1, 'Simple rail':2, 'Demanding rail':3};   // wie Skills-Check (keine Box)
 const obstLevel = o => OBST[o] || (o==='Tube / Box' ? 1 : 0);   // Altwert
@@ -1147,7 +1179,8 @@ const railLevel = rt => ['Box','Tube'].includes(rt) ? 'Tube' : rt==='Rail' ? 'Si
 const RAIL_ON = ['50-50','Skislide','Lipslide','270','Lip 270','450','Lip 450'];
 const RAIL_SWAP = ['Frontswap','Backswap','K-Fed','Britney','Super-Fed','Front 360 Swap','Back 360 Swap','Switch-Up'];
 const RAIL_OUT = ['to normal','to switch','270 out','450 out','630 out','810 out','Pretzel 270','Pretzel 450'];
-const HP_BASICS = ['Drop in','Switch drop in','Riding on the edges','Straight air','Straight air over coping','Waltz','Banana','Slash'];
+const HP_BASICS = SB ? ['Drop in','Switch drop in','Riding on the edges','Straight air','Straight air over coping','Ollie to fakie','Slash']
+                     : ['Drop in','Switch drop in','Riding on the edges','Straight air','Straight air over coping','Waltz','Banana','Slash'];
 const HP_AXES = ['Upright','Cork','Flat Spin','Flair','Bio/Misty','Rodeo'];
 const LEVELS = ['T1','T2','T3','T4'];
 const DISCS = ['Jump','Rail','Halfpipe'];
@@ -1163,6 +1196,10 @@ const railOnName = t => {
     '450': sw?'Switch Tail 450 on':'450 on', 'Lip 450': sw?'Switch Lip 450 on':'Lip 450 on'})[t.on] || t.on;
 };
 const railSpinOut = t => /out$|^Pretzel/.test(t.out || '');
+// Snowboard-Rail-Vokabular (wie Snowboard-App, FIS-Rail-Trick-Guide)
+const SB_SLIDE = ['50-50','Nose Press','Tail Press','Board Slide','Nose Slide','Lip Slide','Tail Slide','Blunt Slide','Nose Blunt'];
+const SB_INSPIN = ['FS 270','BS 270','Switch FS 270','Switch BS 270','FS Hardway 270','BS Hardway 270','FS 450','BS 450','Switch FS 450','Switch BS 450'];
+const SB_OUTSPIN = ['FS 270 out','BS 270 out','Switch FS 270 out','Switch BS 270 out','FS 450 out','BS 450 out','FS 630 out','BS 630 out','Pretzel 270 out','Pretzel 450 out','to Fakie','to Forward'];
 
 const extraLbl = t => (t.style ? ' ' + t.style : '') + (t.bringback ? ' · Bring Back ' + t.bringback : '');
 function trickLabel(disc, t){
@@ -1171,6 +1208,9 @@ function trickLabel(disc, t){
     const fl = isOff(t) && +t.flips >= 2 ? FLIPN[t.flips] : '';
     const ax = t.axis && t.axis !== 'Upright' ? (t.axis==='Flat Spin' ? 'Flat' : t.axis) : '';
     return [DIRN[t.dir], fl, ax, t.rot, t.grab].filter(Boolean).join(' ') + extraLbl(t) + (t.takeoff?` · ${t.takeoff}`:'');
+  }
+  if (disc === 'Rail' && (SB || t.slideform)){
+    return [t.inspin ? t.inspin + ' on' : '', t.variant, t.slideform, t.outspin ? '→ ' + t.outspin : ''].filter(Boolean).join(' ') + (t.railType ? ` · ${t.railType}` : '');
   }
   if (disc === 'Rail'){
     let s = `${SIDE[t.side]||''} ${railOnName(t)}`;
@@ -1181,7 +1221,7 @@ function trickLabel(disc, t){
     return s.trim() + ` · ${t.railType || t.obstacle}`;
   }
   if (t.kind === 'basic') return `${t.basic}${/drop in/i.test(t.basic) ? ' '+(SIDE[t.side]||'') : ''}`.trim();
-  const fl = ['Cork','Bio/Misty','Rodeo','Flat Spin'].includes(t.axis) && +t.flips >= 2 ? FLIPN[t.flips] : '';
+  const fl = (SB ? OFFAX : ['Cork','Bio/Misty','Rodeo','Flat Spin']).includes(t.axis) && +t.flips >= 2 ? FLIPN[t.flips] : '';
   const ax = t.axis && t.axis !== 'Upright' ? (t.axis==='Flat Spin'?'Flat':t.axis) : '';
   return [t.sw?'Switch':'', t.ao?'Alley-oop':'', SIDE[t.dir], fl, ax, +t.rot ? t.rot : '', t.grab].filter(Boolean).join(' ') + extraLbl(t) + (+t.height ? ` · ${t.height} m` : '');
 }
@@ -1403,7 +1443,8 @@ function hpCatalog(g){
   };
 }
 
-const CATALOG = {
+const HAS_SC = !SB;   // Skills-Check Snowboard folgt
+const CATALOG = SB ? {Jump:{}, Rail:{}, Halfpipe:{}} : {
   Jump: {M: jumpCatalog('M'), W: jumpCatalog('W')},
   Rail: {M: railCatalog('M'), W: railCatalog('W')},
   Halfpipe: {M: hpCatalog('M'), W: hpCatalog('W')},
@@ -1785,7 +1826,7 @@ const SupaStore = {
     const run = r => (exists ? db.from(table).update(r).eq('id', row.id) : db.from(table).insert(r)).select().single();
     let { data, error } = await run(rest);
     if (error && /column|schema cache/i.test(error.message || '')){
-      const OPT = ['jump_size','results','outcome','run_no'];   // aus Update 3
+      const OPT = ['jump_size','results','outcome','run_no','sport'];   // aus Update 3 / 7
       const slim = Object.fromEntries(Object.entries(rest).filter(([k]) => !OPT.includes(k)));
       ({ data, error } = await run(slim));
       if (!error){ console.warn('Update 3 (nachwuchs_migration_3.sql) fehlt: neue Felder nicht gespeichert'); data = {...rest, ...data}; }
@@ -1987,10 +2028,17 @@ function renderPushBanner(){
 }
 function pushLater(){ try { localStorage.setItem('nw-push-later', '1'); } catch {} renderPushBanner(); }
 
+function sportSwitch(){
+  if (DEMO || ST.me?.role !== 'dvlp') return '';
+  return `<span class="sport-sw">${[['freeski','Freeski'],['snowboard','Snowboard']].map(([k, l]) => `<button class="${SPORT===k?'on':''}" onclick="switchSport('${k}')">${l}</button>`).join('')}</span>`;
+}
+function switchSport(k){ if (k === SPORT) return; try { localStorage.setItem('nw-sport', k); } catch {} location.href = location.pathname + '?sport=' + k; }
 function renderChrome(){
+  const t = $('#app-title'); if (t) t.innerHTML = `${esc(APP_TITLE)}<span class="dot">.</span>`; document.title = APP_TITLE;
+  const sb = $('#sport-bar'); if (sb){ const h = sportSwitch(); sb.hidden = !h; sb.innerHTML = h; }
   const unread = ST.notes.filter(n => !n.read_at).length;
   $('#who').innerHTML = `
-    ${langSelect()}
+    ${sportSwitch()}${langSelect()}
     ${isStaff() ? '' : `<button class="iconbtn" onclick="toggleNotifs(event)" title="Notifications"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg>${unread?`<span class="badge">${unread}</span>`:''}</button>`}
     <span class="chip">${ADMIN_IDS.includes(ST.me.id) ? 'Admin' : `${esc(ST.me.name)} · ${roleLabel(ST.me)}`}</span>
     <button class="iconbtn logout-btn" onclick="logout()" title="Log out"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Log out</span></button>`;
@@ -2053,7 +2101,8 @@ function render(){
    ══════════════════════════════════════════════════════════════════════ */
 const FORM_DEFAULTS = {
   Jump: {axis:'Upright', dir:'L', flips:'1', rot:'360', grab:'', takeoff:'', bringback:'', style:''},
-  Rail: {railType:'Tube', obstacle:'Tube', side:'L', approach:'F', on:'Skislide', swap:'', transfer:'', out:'to normal', outSide:'FS', foot:'Right', outStyle:''},
+  Rail: SB ? {railType:'Box', slideform:'50-50', variant:'Frontside', inspin:'', outspin:'', transfer:''}
+           : {railType:'Tube', obstacle:'Tube', side:'L', approach:'F', on:'Skislide', swap:'', transfer:'', out:'to normal', outSide:'FS', foot:'Right', outStyle:''},
   Halfpipe: {kind:'air', basic:'Drop in', side:'L', dir:'L', sw:'', ao:'', axis:'Upright', flips:'1', rot:'360', grab:'', height:'', bringback:'', style:''},
 };
 const opts = (list, v) => list.map(o => {
@@ -2072,7 +2121,11 @@ function formFields(disc, F, fn='formSet'){
     const noRot = NOROT.includes(F.axis);
     add('dir', 'Direction', noRot ? [['F','Forward'],['S','Switch']] : D4.map(d => [d, DIRN[d]]));
     add('flips', 'Flips', [['1','Single'],['2','Double'],['3','Triple'],['4','Quad']], OFFAX.includes(F.axis));
-    add('axis', 'Axis', [{group:'Off-Axis', items:[['Cork','Cork'],['Bio/Misty','Bio/Misty'],['Flat Spin','Flat Spins'],['Rodeo','Rodeo']]},
+    add('axis', 'Axis', SB ? [{group:'Off-Axis', items:OFFAX},
+      {group:'Upright Spins (Longitudinal Axis)', items:[['Upright','Upright Spins']]},
+      {group:'Classic Acrobatic Axis (Transverse Axis and Sagittal Axis)', items:['Backroll','Frontroll','Wildcat','Tamedog']},
+      {group:'Straight Air', items:[['Straight Air','Straight Air']]}]
+    : [{group:'Off-Axis', items:[['Cork','Cork'],['Bio/Misty','Bio/Misty'],['Flat Spin','Flat Spins'],['Rodeo','Rodeo']]},
       {group:'Upright Spins (Longitudinal Axis)', items:[['Upright','Upright Spins']]},
       {group:'Classic Acrobatic Axis (Transverse Axis and Sagittal Axis)', items:['Frontflip','Backflip','Sideflip']},
       {group:'Straight Air', items:[['Zero Spin','Zero Spin']]}]);
@@ -2080,7 +2133,16 @@ function formFields(disc, F, fn='formSet'){
     add('takeoff', 'Take-Off', [['','–'], ...TAKEOFFS]);
     grabBlock();
     add('bringback', 'Bring Back', [['','–'],'180','360','540']);
-    add('style', 'Style Element', [['','–'],'Tweak/Bone','Poke']);
+    add('style', 'Style Element', SB ? [['','–'],'Frontfoot Bone','Backfoot Bone','Shifty','Double Shifty','Tweak'] : [['','–'],'Tweak/Bone','Poke']);
+  } else if (disc==='Rail' && SB){
+    // Snowboard-Rail wie Snowboard-App: Slide Form, Richtung, In-Spin, Out-Spin
+    f.push('<div class="section-divider">Rail</div>');
+    const customRail = [...new Set(ST.entries.map(e => e.trick?.railType).filter(Boolean))].filter(t => !RAIL_TYPES.includes(t));
+    f.push(`<div class="form-group"><label>Rail Type</label><select onchange="${fn}('railType', this.value==='__add__' ? (prompt('New rail type:')||'${esc(F.railType)}') : this.value)">${opts([...RAIL_TYPES, ...customRail, ...(F.railType && !RAIL_TYPES.includes(F.railType) && !customRail.includes(F.railType) ? [F.railType] : []), ['__add__','＋ Add new…']], F.railType)}</select></div>`);
+    add('slideform', 'Slide Form', SB_SLIDE);
+    add('variant', 'Direction', ['Frontside','Backside','Switch Frontside','Switch Backside']);
+    add('inspin', 'In-Spin', [['','–'], ...SB_INSPIN]);
+    add('outspin', 'Out-Spin', [['','–'], ...SB_OUTSPIN]);
   } else if (disc==='Rail'){
     f.push('<div class="section-divider">Rail</div>');
     // Vokabular wie Freeski-Assessment; die Skills-Check-Stufe (Tube / einfaches / anspruchsvolles Rail) ergibt sich aus dem Rail Type
@@ -2107,8 +2169,9 @@ function formFields(disc, F, fn='formSet'){
       add('dir', 'Direction', [['L','Left'],['R','Right']]);
       add('sw', 'Stance', [['','Forward'],['1','Switch']]);
       add('ao', 'Alley-oop', [['','No (down the pipe)'],['1','Yes']]);
-      add('flips', 'Flips', [['1','Single'],['2','Double'],['3','Triple']], ['Cork','Bio/Misty','Flat Spin','Rodeo'].includes(F.axis));
-      add('axis', 'Axis', [{group:'Off-Axis', items:[['Cork','Cork'],['Bio/Misty','Bio/Misty'],['Flat Spin','Flat Spins'],['Rodeo','Rodeo'],['Flair','Flair']]},
+      add('flips', 'Flips', [['1','Single'],['2','Double'],['3','Triple']], (SB ? OFFAX : ['Cork','Bio/Misty','Flat Spin','Rodeo']).includes(F.axis));
+      add('axis', 'Axis', SB ? [{group:'Off-Axis', items:OFFAX}, {group:'Upright Spins (Longitudinal Axis)', items:[['Upright','Upright Spins']]}]
+        : [{group:'Off-Axis', items:[['Cork','Cork'],['Bio/Misty','Bio/Misty'],['Flat Spin','Flat Spins'],['Rodeo','Rodeo'],['Flair','Flair']]},
         {group:'Upright Spins (Longitudinal Axis)', items:[['Upright','Upright Spins']]}]);
       add('rot', 'Rotation', [['0','– (straight / flair)'], ...rotList(180, 1620)]);
       f.push(`<div class="form-group"><label>Air Height (m)</label><input type="number" step="0.5" min="0" max="8" value="${esc(F.height)}" oninput="${fn}('height', this.value, true)" placeholder="e.g. 3.5"></div>`);
@@ -2127,18 +2190,19 @@ function normTrick(disc, F){
     const noRot = NOROT.includes(F.axis);
     return {axis:F.axis, dir:F.dir, flips:OFFAX.includes(F.axis) ? +F.flips||1 : null, rot:noRot ? null : +F.rot, grab:F.grab||'', takeoff:F.takeoff||'', bringback:F.bringback||'', style:F.style||''};
   }
+  if (disc==='Rail' && SB) return {railType:F.railType, slideform:F.slideform, variant:F.variant, inspin:F.inspin||'', outspin:F.outspin||''};
   if (disc==='Rail'){
     const so = railSpinOut(F);
     return {railType:F.railType, obstacle:railLevel(F.railType), transfer:F.transfer||'', side:F.side, approach:F.approach, on:F.on, swap:F.swap||'', out:F.out, outSide:so?F.outSide:'', foot:so?F.foot:'', outStyle:so?F.outStyle:''};
   }
   if (F.kind==='basic') return {kind:'basic', basic:F.basic, side:/drop in/i.test(F.basic) ? F.side : ''};
-  return {kind:'air', dir:F.dir, sw:!!F.sw, ao:!!F.ao, axis:F.axis, flips:['Cork','Bio/Misty','Flat Spin','Rodeo'].includes(F.axis) ? +F.flips||1 : null, rot:+F.rot||0, grab:F.grab||'', height:F.height===''?null:+F.height, bringback:F.bringback||'', style:F.style||''};
+  return {kind:'air', dir:F.dir, sw:!!F.sw, ao:!!F.ao, axis:F.axis, flips:(SB ? OFFAX : ['Cork','Bio/Misty','Flat Spin','Rodeo']).includes(F.axis) ? +F.flips||1 : null, rot:+F.rot||0, grab:F.grab||'', height:F.height===''?null:+F.height, bringback:F.bringback||'', style:F.style||''};
 }
 function trickToForm(disc, t){
   const F = {...FORM_DEFAULTS[disc]};
   for (const [k, v] of Object.entries(t||{})) F[k] = v === true ? '1' : v === false || v == null ? '' : String(v);
   if (disc==='Jump' && !F.flips) F.flips = '1';
-  if (disc==='Rail' && !(t||{}).railType) F.railType = ({'Tube':'Tube', 'Tube / Box':'Tube', 'Simple rail':'Rail', 'Demanding rail':'Down Rail'})[t?.obstacle] || 'Tube';
+  if (disc==='Rail' && !SB && !(t||{}).railType) F.railType = ({'Tube':'Tube', 'Tube / Box':'Tube', 'Simple rail':'Rail', 'Demanding rail':'Down Rail'})[t?.obstacle] || 'Tube';
   if (disc==='Halfpipe' && !F.flips) F.flips = '1';
   return F;
 }
@@ -2175,7 +2239,7 @@ function renderFormPreview(){
   box.innerHTML = `<div class="lbl">${esc(trickLabel(disc, t))}</div>
     ${!ath?.gender ? '<div class="muted">Set gender & level for this athlete (Team tab) to see the Skills-Check match.</div>'
       : m.length ? `<div class="muted tiny" style="margin-bottom:6px">SKILLS-CHECK MATCH</div><div class="chips">${mine.map(x => `<span class="chip dark">${x.level} · ${esc(x.text)}</span>`).join('')}${other.map(x => `<span class="chip">${x.level} · ${esc(x.text)}</span>`).join('')}</div>`
-      : '<div class="muted">No Skills-Check requirement matches this trick: it is still saved as a free trick.</div>'}`;
+      : HAS_SC ? '<div class="muted">No Skills-Check requirement matches this trick: it is still saved as a free trick.</div>' : ''}`;
 }
 function renderFormInner(){
   const card = $('#form-card'); if (!card) return;
@@ -2335,7 +2399,7 @@ function entryRow(e, opts2={}){
       <div class="t">${esc(e.label)}</div>
       <div class="m">${opts2.showName ? esc(ath?.name) + ' · ' : ''}${DISC_LABEL[e.discipline]} · ${fmtDate(e.created_at)}${e.status==='reviewed' && reviewer ? ` · rated by ${esc(reviewer)}` : ''}</div>
       <div class="chips">${statusChip(e)}${e.video_path ? `<button class="chip" style="cursor:pointer" onclick="playVideo('${e.id}')">▶ Video</button>` : ''}
-        ${mine.map(x => `<span class="chip dark">✓ ${x.level} · ${esc(x.text)}</span>`).join('')}${covered ? `<span class="chip">${ath.level} · already covered by another trick</span>` : ''}${!(staff ? m.length : ownMatch) ? '<span class="chip">Free trick</span>' : ''}</div>
+        ${mine.map(x => `<span class="chip dark">✓ ${x.level} · ${esc(x.text)}</span>`).join('')}${covered ? `<span class="chip">${ath.level} · already covered by another trick</span>` : ''}${!(staff ? m.length : ownMatch) ? (HAS_SC ? '<span class="chip">Free trick</span>' : '') : ''}</div>
       ${e.note ? `<div class="small" style="margin-top:6px">💬 ${esc(e.note)}</div>` : ''}
       ${e.review_note ? `<div class="small" style="margin-top:6px;color:var(--char)"><b>Coach:</b> ${esc(e.review_note)}</div>` : ''}
     </div>
@@ -2349,8 +2413,8 @@ function entryRow(e, opts2={}){
 }
 
 // Assessment-Übersicht wie Freeski: Spalten «Learned Tricks | Goals», gruppiert nach Richtung
-const AS_DIR_ORDER = ['Left','Right','Switch Left','Switch Right','Forward','Switch','Halfpipe','Rails','Other'];
-const AS_DIR_COL = {'Left':'#148FA0','Right':'#396FA8','Switch Left':'#8E5BB8','Switch Right':'#C96A1F','Forward':'#1F9E93','Switch':'#B08D1E','Halfpipe':'#3E3E3F','Rails':'#3E3E3F','Other':'#8a8a8f'};
+const AS_DIR_ORDER = ['Left','Right','Switch Left','Switch Right','Frontside','Backside','Switch Frontside','Switch Backside','Forward','Switch','Halfpipe','Rails','Other'];
+const AS_DIR_COL = {'Left':'#148FA0','Right':'#396FA8','Switch Left':'#8E5BB8','Switch Right':'#C96A1F','Frontside':'#148FA0','Backside':'#396FA8','Switch Frontside':'#8E5BB8','Switch Backside':'#C96A1F','Forward':'#1F9E93','Switch':'#B08D1E','Halfpipe':'#3E3E3F','Rails':'#3E3E3F','Other':'#8a8a8f'};
 const asDir = e => e.discipline==='Rail' ? 'Rails' : e.discipline==='Halfpipe' ? 'Halfpipe' : (DIRN[e.trick?.dir] || 'Other');
 function asRow(e){
   const ath = prof(e.athlete_id), staff = isStaff();
@@ -2362,7 +2426,7 @@ function asRow(e){
       <div style="font-weight:600;color:var(--char)">${esc(e.label)}</div>
       <div class="row" style="gap:6px;margin-top:4px">
         <span class="tiny muted">${fmtDate(e.created_at)}</span>${e.status!=='goal' ? statusChip(e) : goalLandedHint(e)}
-        ${mine.map(x => `<span class="chip dark">✓ ${x.level} · ${esc(x.text)}</span>`).join('')}${!mine.length && m.some(x => x.level===ath?.level) ? `<span class="chip">${ath.level} · already covered</span>` : ''}${!m.length ? '<span class="chip">Free trick</span>' : ''}
+        ${mine.map(x => `<span class="chip dark">✓ ${x.level} · ${esc(x.text)}</span>`).join('')}${!mine.length && m.some(x => x.level===ath?.level) ? `<span class="chip">${ath.level} · already covered</span>` : ''}${!m.length ? (HAS_SC ? '<span class="chip">Free trick</span>' : '') : ''}
         ${e.video_path ? `<button class="chip" style="cursor:pointer;background:#e6f6ec;color:#1f7a3f;border-color:#bfe5cc" onclick="playVideo('${e.id}')"><span>✓ Video uploaded</span> ▶</button>` : ''}
       </div>
       ${e.note ? `<div class="tiny" style="margin-top:4px">💬 ${esc(e.note)}</div>` : ''}
@@ -2438,6 +2502,7 @@ const FOCUS = {'':'All disciplines', park:'Jumps & Rails only', hp:'Halfpipe onl
 const FOCUS_DISCS = {park:['Jump','Rail'], hp:['Halfpipe']};
 const focusDiscs = (ath, level) => level==='T4' && FOCUS_DISCS[ath.focus] ? FOCUS_DISCS[ath.focus] : DISCS;
 function levelTotals(ath, level, ents = entriesOf(ath.id)){
+  if (!HAS_SC) return null;
   const incl = focusDiscs(ath, level);
   const r = {pts:0, max:0, done:0, n:0, pending:0, by:{}, incl};
   for (const d of DISCS){
@@ -2459,6 +2524,7 @@ function progressBar(ev){
 }
 function renderSkills(){
   const root = $('#page-skills');
+  if (!HAS_SC){ root.innerHTML = `<div class="card"><h2>Skills-Check Snowboard</h2><div class="empty">The Snowboard Skills-Check is being prepared and will be added here.</div><ul class="hints"><li>Tricks, ratings and sessions already work as usual</li><li>As soon as the requirements are defined, all existing tricks are matched automatically</li></ul></div>`; return; }
   const staff = isStaff();
   const ath = prof(ST.athleteId);
   if (!ath){ root.innerHTML = '<div class="card"><div class="empty">No athlete selected.</div></div>'; return; }
@@ -2531,7 +2597,7 @@ async function openReview(id){
   const m = ath?.gender ? directMatches(e.discipline, ath.gender, e.trick) : [];
   modal(`<div class="muted small">${esc(ath?.name)} · ${ath?.level||'–'} · ${DISC_LABEL[e.discipline]} · submitted ${fmtAgo(e.created_at)}</div>
     <h3>${esc(e.label)}</h3>
-    <div class="chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${m.map(x => `<span class="chip ${x.level===ath.level?'dark':''}">${x.level} · ${esc(x.text)}</span>`).join('') || '<span class="chip">Free trick</span>'}</div>
+    <div class="chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${m.map(x => `<span class="chip ${x.level===ath.level?'dark':''}">${x.level} · ${esc(x.text)}</span>`).join('') || (HAS_SC ? '<span class="chip">Free trick</span>' : '')}</div>
     <div id="rv-video">${e.video_path ? '<div class="empty">Loading video…</div>' : '<div class="rule" style="margin:14px 0">📵 No video attached. A rating is only possible with a video: request one from the athlete or upload it yourself.</div>'}</div>
     ${e.note ? `<div class="small" style="margin-bottom:6px">💬 <b>Athlete:</b> ${esc(e.note)}</div>` : ''}
     <div id="rv-crit" ${e.video_path ? '' : 'hidden'}></div>
@@ -2667,6 +2733,7 @@ async function loadSelectionSnapshot(){
 }
 async function renderSelection(){
   const root = $('#page-selection');
+  if (!HAS_SC){ root.innerHTML = `<div class="card"><h2>Selection</h2><div class="empty">The Snowboard ranking needs the Snowboard Skills-Check. It will be available as soon as the requirements are defined.</div></div>`; return; }
   if (!isAdmin()){ root.innerHTML = '<div class="card"><div class="empty">Admins only.</div></div>'; return; }
   if (!ST.sel || ST.sel.rev !== ST._rev){ root.innerHTML = '<div class="card"><div class="empty">Loading…</div></div>'; await loadSelectionSnapshot(); ST.sel.rev = ST._rev; }
   const F = ST.selF || (ST.selF = {level:'T3', sex:'W'});
@@ -2703,6 +2770,7 @@ function cleanupDate(){ const d = selectionDeadline(); return new Date(Date.UTC(
 // Upload-Zeitpunkt steht im Dateinamen: <athlet>/<eintrag>-<ms>.<ext>
 const videoTs = p => +((/-(\d{12,})\.[a-z0-9]+$/i.exec(p || '') || [])[1] || 0);
 function cleanupCandidates(onlyBefore){
+  if (!HAS_SC) return [];   // ohne Skills-Check nie aufräumen (sonst wären alle Videos «nicht verlangt»)
   return ST.entries.filter(e => {
     if (!e.video_path) return false;
     if (onlyBefore && !(videoTs(e.video_path) && videoTs(e.video_path) < onlyBefore)) return false;   // nur Videos von vor dem 31. Mai
@@ -2769,7 +2837,7 @@ async function addAthlete(){
   const row = {name, role:'athlete', gender:$('#aa-sex').value || null, level:$('#aa-level').value || null,
     birthdate: y ? `${y}-01-01` : null,
     group_id: ST.me.role==='dvlp' ? ($('#aa-group').value || null) : ST.me.group_id,
-    email: ST.me.role==='dvlp' ? ($('#aa-mail').value.trim().toLowerCase() || null) : null};
+    email: ST.me.role==='dvlp' ? ($('#aa-mail').value.trim().toLowerCase() || null) : null, ...(SB ? {sport:'snowboard'} : {})};
   try { const p = await Store.addProfile(row); if (!ST.profiles.includes(p)) ST.profiles.push(p); closeModal(); toast(`${name} added`); render(); }
   catch (err){ toast('Could not add: ' + (err.message||err), true); }
 }
@@ -2963,7 +3031,7 @@ function sxSetupAll(){ const aths = visibleAthletes(), a = SX.setup.ath; if (ath
 async function startSession(){
   const su = SX.setup, ids = [...su.ath];
   const gid = ST.me.role==='coach' ? ST.me.group_id : (ST.groupFilter || prof(ids[0])?.group_id || null);
-  const s = {id:uid(), group_id:gid, date:su.date, type:su.type, location:su.location.trim() || null, athlete_ids:ids, athlete_notes:{}, started_at:nowIso(), ended_at:null, created_by:ST.me.id};
+  const s = {id:uid(), group_id:gid, date:su.date, type:su.type, location:su.location.trim() || null, athlete_ids:ids, athlete_notes:{}, started_at:nowIso(), ended_at:null, created_by:ST.me.id, ...(SB ? {sport:'snowboard'} : {})};
   try {
     upsertIn(ST.sessions, await Store.saveSession(ST.me, s));
     SX = sxFresh({athleteId:ids[0]});
@@ -3423,7 +3491,7 @@ async function deleteReport(id){
 const MON_ST = {ready:{c:'#3E8E5A', l:'Ready'}, building:{c:'#C96A1F', l:'Building'}, critical:{c:'#D64545', l:'Critical'}, lowdata:{c:'#8a8a8f', l:'Low data'}};
 // Stomped = bestes Ergebnis → Grün; Landed → Türkis; Failed → Rot
 const OC = {stomped:'#3E8E5A', landed:'#148FA0', failed:'#D64545', volume:'#396FA8', good:'#3E8E5A'};
-const MON_DIR_COL = {'Left':'#148FA0', 'Right':'#396FA8', 'Switch Left':'#8E5BB8', 'Switch Right':'#C96A1F', 'Forward':'#1F9E93', 'Switch':'#B08D1E', 'Rails':'#3E3E3F', 'Basics':'#6b6b70', 'Other':'#8a8a8f'};
+const MON_DIR_COL = {'Left':'#148FA0', 'Right':'#396FA8', 'Switch Left':'#8E5BB8', 'Switch Right':'#C96A1F', 'Frontside':'#148FA0', 'Backside':'#396FA8', 'Switch Frontside':'#8E5BB8', 'Switch Backside':'#C96A1F', 'Forward':'#1F9E93', 'Switch':'#B08D1E', 'Rails':'#3E3E3F', 'Basics':'#6b6b70', 'Other':'#8a8a8f'};
 const MON_DIR_ORDER = ['Left','Right','Switch Left','Switch Right','Forward','Switch','Rails','Basics','Other'];
 const MON_PLATEAU_TOL = 5;
 const monStatus = (n, s) => n < 5 ? 'lowdata' : s / n >= .7 ? 'ready' : s / n >= .4 ? 'building' : 'critical';
@@ -3735,7 +3803,7 @@ async function openPrintWindow(title, sub, html){
   const box = document.createElement('div');
   box.className = 'pdf-doc';
   box.innerHTML = `<div class="pdf-head"><div><h1>${esc(title)}<span class="dot">.</span></h1><div class="sub">${sub}</div></div><div>${logo}</div></div>
-    ${html}<div class="pdf-foot">Trick Analyses Freeski Youth · Swiss-Ski · created ${fmtDate(nowIso())}</div>`;
+    ${html}<div class="pdf-foot">${APP_TITLE} · Swiss-Ski · created ${fmtDate(nowIso())}</div>`;
   i18nNode(box);   // übersetzen + Icons, bevor html2pdf den Inhalt kopiert (Container ist nicht im DOM)
   try {
     const h2p = await loadHtml2Pdf();
@@ -3905,7 +3973,7 @@ document.addEventListener('keydown', e => { if (e.key==='Escape' && $('#modal-ro
    LOGIN / START
    ══════════════════════════════════════════════════════════════════════ */
 function gateShell(inner){
-  return `<header><div class="hd"><div><h1>Trick Analyses Freeski Youth<span class="dot">.</span></h1></div>
+  return `<header><div class="hd"><div><h1>${APP_TITLE}<span class="dot">.</span></h1></div>
     <div class="brand">${document.querySelector('.brand svg').outerHTML}<div class="who">${langSelect()}</div></div></div></header><div class="box">${inner}</div>`;
 }
 function showDemoGate(){
@@ -3998,8 +4066,20 @@ async function logout(){ await Store.logout(); location.reload(); }
 
 async function loadData(){
   const d = await Store.loadAll(ST.me);
-  Object.assign(ST, {profiles:d.profiles, groups:d.groups, entries:d.entries, notes:d.notes, sessions:d.sessions||[], attempts:d.attempts||[]});
-  const me = ST.profiles.find(p => p.id===ST.me.id); if (me) ST.me = me;
+  const me0 = d.profiles.find(p => p.id===ST.me.id) || ST.me;
+  // Athlet:innen und Coaches landen immer in ihrer eigenen Sportart
+  if (!DEMO && me0 && me0.role !== 'dvlp'){
+    const g0 = d.groups.find(g => g.id===me0.group_id);
+    const own = me0.sport || g0?.sport || 'freeski';
+    if (own !== SPORT){ location.replace(location.pathname + '?sport=' + own); await new Promise(() => {}); }
+  }
+  const sp = x => DEMO || (x?.sport || 'freeski') === SPORT;
+  const groups = d.groups.filter(sp), gids = new Set(groups.map(g => g.id));
+  const profiles = d.profiles.filter(p => p.role !== 'athlete' ? (!p.group_id || gids.has(p.group_id) || p.role==='dvlp') : sp(p));
+  const aids = new Set(profiles.filter(p => p.role==='athlete').map(p => p.id));
+  const sessions = (d.sessions||[]).filter(sp), sids = new Set(sessions.map(x => x.id));
+  Object.assign(ST, {profiles, groups, entries:d.entries.filter(e => aids.has(e.athlete_id)), notes:d.notes, sessions, attempts:(d.attempts||[]).filter(a => sids.has(a.session_id))});
+  const me = d.profiles.find(p => p.id===ST.me.id); if (me) ST.me = me;
   const vis = visibleAthletes();
   if (ST.me.role==='athlete') ST.athleteId = ST.me.id;
   else if (!vis.some(a => a.id===ST.athleteId)) ST.athleteId = vis[0]?.id || null;
