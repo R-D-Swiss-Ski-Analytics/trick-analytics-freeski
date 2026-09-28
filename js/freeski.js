@@ -4243,7 +4243,7 @@ function fsGroupAttempts(attempts) {
 const FS_RV_CHART_CATS = [['takeoff','#148FA0'],['trick_r','#396FA8'],['grab','#8E5BB8'],['land','#3E8E5A']];
 function fsTrickChartSvg(g, ai, ti) {
   const n = g.attempts.length;
-  const H = 90, PAD = 30, catW = 6, catGap = 1;
+  const H = 90, PAD = 36, catW = 6, catGap = 1;
   const groupW = 4*catW + 3*catGap, gap = 10, slot = groupW + gap;
   const yOf = p => H - p/100 * (H - 8);
   const SCORE = {perfect:100, okay:50, miss:0};
@@ -4295,7 +4295,7 @@ function sbRVShowDetail(ai, ti, i) {
   // Ausgewählten Versuch im Chart markieren (Konstanten identisch zu fsTrickChartSvg)
   const selRect = document.getElementById(`sbrv-sel-${ai}-${ti}`);
   if (selRect) {
-    const PAD = 30, groupW = 4*6 + 3*1, slot = groupW + 10;
+    const PAD = 36, groupW = 4*6 + 3*1, slot = groupW + 10;
     selRect.setAttribute('x', PAD + i*slot - 3);
     selRect.style.display = '';
   }

@@ -1,5 +1,5 @@
 // Versuchs-Grafik pro Trick (Session-Report) grösser darstellen — Geometrie bleibt, SVG wird skaliert
-const TRICK_CHART_SCALE = 1.7;
+const TRICK_CHART_SCALE = (window.innerWidth || 1024) <= 768 ? 1 : 1.7;   // Handy: normal gross und auf Bildschirmbreite (ganze Session ohne Wischen)
 // Gemeinsamer Kern: alles, was in beiden Sportarten identisch ist.
 // ═══════════════ GEMEINSAMER KERN (identisch in beiden Apps) ═══════════════
 const SUPABASE_URL = CFG.supabaseUrl;
