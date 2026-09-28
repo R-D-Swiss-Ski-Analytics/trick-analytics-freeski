@@ -14,29 +14,29 @@
 <script src="js/ui-regeln.js" defer></script>
 <style>
   :root {
-    --bg: #060f1a; --surface: #0c1a2b; --surface2: #112236;
-    --border: #1a3450; --accent: #ffffff; --accent2: #39c3d4;
-    --text: #e8edf2; --muted: #93a7bb; --success: #2d8a4e; --danger: #e2001a;
-    --warn: #f59e0b;
+    --bg: #faf7f6; --surface: #ffffff; --surface2: #f4efed;
+    --border: #e7e3e1; --accent: #ffffff; --accent2: #148FA0;
+    --text: #2c2c2e; --muted: #5c5c61; --success: #2d8a4e; --danger: #e2001a;
+    --warn: #C96A1F;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; font-size: 16px; line-height: 1.45; min-height: 100vh; }
 
   header {
-    background: linear-gradient(135deg, #001a2e 0%, #004877 100%);
-    border-bottom: 1px solid #003560;
+    background: linear-gradient(135deg, #f4efed 0%, #f4efed 100%);
+    border-bottom: 1px solid #e7e3e1;
     padding: 0 24px; display: flex; align-items: center; gap: 16px;
     height: 60px; position: sticky; top: 0; z-index: 100;
   }
-  header h1 { font-family:inherit; font-size: 26px; letter-spacing: 1px; color: #ffffff; }
+  header h1 { font-family:inherit; font-size: 26px; letter-spacing: 1px; color:var(--char); }
   .nav-tabs { display: flex; gap: 4px; margin-left: auto; }
   .nav-tab {
     padding: 7px 18px; border-radius: 6px; cursor: pointer; font-weight: 500;
-    font-size: 14px; color: rgba(255,255,255,0.6); border: none; background: none;
+    font-size: 14px; color:var(--muted); border: none; background: none;
     font-family:inherit; transition: all .2s;
   }
-  .nav-tab.active { background: rgba(255,255,255,0.15); color: #ffffff; border: 1px solid rgba(255,255,255,0.3); }
-  .nav-tab:hover:not(.active) { color: #ffffff; background: rgba(255,255,255,0.08); }
+  .nav-tab.active { background: rgba(0,0,0,0.09); color:var(--char); border: 1px solid rgba(0,0,0,0.18); }
+  .nav-tab:hover:not(.active) { color:var(--char); background: rgba(0,0,0,0.048); }
 
   .page { display: none; padding: 24px; max-width: 960px; margin: 0 auto; }
   .page.active { display: block; }
@@ -53,7 +53,7 @@
     -webkit-appearance: none; appearance: none; color-scheme: dark;
   }
   select:focus, input:focus, textarea:focus { border-color: var(--accent); }
-  option { background: #112236; }
+  option { background: #f4efed; }
 
   .toast {
     position: fixed; bottom: 24px; right: 24px; padding: 12px 20px;
@@ -66,7 +66,7 @@
 
   .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
   .stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
-  .stat-value { font-family:inherit; font-size: 34px; color: #ffffff; line-height: 1; }
+  .stat-value { font-family:inherit; font-size: 34px; color:var(--char); line-height: 1; }
   .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
 
   .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
@@ -76,7 +76,7 @@
   td { padding: 10px 14px; border-top: 1px solid var(--border); font-size: 14px; }
   tr:hover td { background: var(--surface2); }
 
-  .badge-typ { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; background: #1a3450; color: #ffffff; white-space: nowrap; }
+  .badge-typ { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; background: #EAF1F8; color: #396FA8; white-space: nowrap; }
 
   .empty-state { text-align: center; padding: 48px; color: var(--muted); }
   .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
@@ -90,7 +90,7 @@
   .btn-secondary:hover { border-color: var(--accent); }
 
   .sess-type-btn { padding:10px 18px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s; }
-  .sess-type-btn.active { background:rgba(57,195,212,0.15);border-color:#39c3d4;color:#39c3d4; }
+  .sess-type-btn.active { background:rgba(20,143,160,0.15);border-color:#148FA0;color:#148FA0; }
 
   .rate-btn {
     padding: 18px 8px; border-radius: 12px; font-family:inherit;
@@ -112,10 +112,10 @@
     padding: 10px 14px; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 8px;
   }
   .sb-col-header.mastered { background: rgba(45,138,78,0.15); color: #2d8a4e; border: 1px solid #2d8a4e; border-bottom: none; }
-  .sb-col-header.goal { background: #1a1a05; color: #f59e0b; border: 1px solid #f59e0b; border-bottom: none; }
+  .sb-col-header.goal { background: #FBF3E9; color: #C96A1F; border: 1px solid #C96A1F; border-bottom: none; }
   .sb-col-body { border-radius: 0 0 8px 8px; min-height: 80px; border: 1px solid var(--border); background: var(--surface2); }
   .sb-col-body.mastered { border-color: #2d8a4e; }
-  .sb-col-body.goal { border-color: #f59e0b; }
+  .sb-col-body.goal { border-color: #C96A1F; }
   .sb-row { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
   .sb-row:last-child { border-bottom: none; }
 
@@ -130,27 +130,43 @@
 
     .mobile-nav {
       display: flex; position: fixed; bottom: 0; left: 0; right: 0;
-      background: #0b1929; border-top: 1px solid #1a3450; z-index: 200;
+      background: #ffffff; border-top: 1px solid #e7e3e1; z-index: 200;
       padding-bottom: env(safe-area-inset-bottom, 0px);
       height: calc(56px + env(safe-area-inset-bottom, 0px));
     }
     .mobile-nav-btn {
       flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 3px; border: none; background: none; cursor: pointer; padding: 8px 4px;
-      color: rgba(255,255,255,0.5); font-family:inherit; font-size: 12px;
+      color:var(--muted); font-family:inherit; font-size: 12px;
       font-weight: 500; letter-spacing: 0.3px; transition: color .2s;
       -webkit-tap-highlight-color: transparent;
     }
-    .mobile-nav-btn.active { color: #39c3d4; }
+    .mobile-nav-btn.active { color: #E2001A; }
     .mobile-nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .sb-columns { grid-template-columns: 1fr; }
   }
+
+/* ── Helles Swiss-Ski-Design wie Youth ── */
+:root{--red:#E2001A;--char:#3E3E3F}
+header{position:sticky;overflow:hidden;background:#f4efed !important}
+header::after{content:"";position:absolute;right:-10%;top:-120%;width:45%;height:340%;pointer-events:none;background:radial-gradient(closest-side,rgba(226,0,26,.45),rgba(226,0,26,.1),transparent 70%);transform:rotate(8deg)}
+header > *{position:relative;z-index:1}
+header h1{font-weight:800 !important;letter-spacing:-.3px !important}
+.brand-logo{flex-shrink:0;margin-left:18px;display:flex;align-items:center}.brand-logo svg{width:92px;height:auto;display:block}
+.nav-tab{padding:18px 10px 15px !important;font-weight:800 !important;letter-spacing:1.2px;text-transform:uppercase;font-size:13px !important;color:var(--muted) !important;border:none !important;border-bottom:3px solid transparent !important;background:none !important;border-radius:0 !important}
+.nav-tab.active{color:var(--char) !important;border-bottom-color:var(--red) !important}
+.card-title{font-size:13px !important;font-weight:800;letter-spacing:1.5px !important;text-transform:uppercase;color:var(--char) !important}
+.card{box-shadow:0 1px 2px rgba(0,0,0,.04)}
+input,select,textarea{background:#fff !important;color:var(--text) !important}
+.mobile-nav{background:#fff !important;border-top:1px solid var(--border) !important}
+@media (max-width:768px){.brand-logo{margin-left:auto}.brand-logo svg{width:60px}}
 </style>
 </head>
 <body>
 
 <header>
   <h1>Trick Analyses Moguls</h1>
+  <div class="brand-logo"><svg viewBox="0 0 88.62 19.26" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="Swiss-Ski"><title>Swiss-Ski</title><path d="M51.94 6.25C50.64 5.72 49.3 5.5 47.81 5.5 44.59 5.5 42.26 7.16 42.26 10.31 42.26 11.97 43.46 12.88 44.5 13.55 45.58 14.25 46.07 14.56 46.07 15.09 46.07 15.79 45.37 16.08 44.43 16.08 43.49 16.08 42.53 15.74 41.81 15.29L40.58 18.51C41.9 19.09 43.35 19.26 44.84 19.26 47.7 19.28 50.66 17.86 50.66 14.45 50.66 12.67 49.33 11.71 48.23 11.01 47.39 10.48 46.67 10.1 46.67 9.49 46.67 9.01 47.08 8.55 48.14 8.55 49.1 8.55 50.04 8.89 50.74 9.35L51.97 6.25ZM40.88 6.35C39.79 5.75 38.6 5.5 37.19 5.5 34.03 5.5 32.16 7.32 32.16 9.92 32.16 11.72 33.42 12.61 34.54 13.35 35.78 14.18 36.29 14.64 36.29 15.34 36.29 16.39 35.29 16.73 34.32 16.73 33.35 16.73 32.3 16.36 31.55 15.85L30.38 18.38C31.48 19.04 33.05 19.26 34.42 19.26 36.97 19.26 39.57 17.68 39.57 14.74 39.57 12.82 38.16 11.87 36.94 11.12 36.26 10.68 35.31 10.1 35.31 9.25 35.31 8.69 35.75 7.99 37.13 7.99 38.13 7.99 39.05 8.28 39.76 8.77L40.88 6.36ZM8.34 7.57C7.82 6.66 6.91 6.33 5.87 6.33 4.35 6.33 3.03 7.26 3.03 8.88 3.03 10.11 3.79 10.77 4.98 11.68 5.3 11.92 5.62 12.16 5.93 12.42 6.24 12.68 6.54 12.95 6.79 13.26 7.31 13.87 7.67 14.6 7.67 15.52 7.67 17.84 5.62 19.26 3.54 19.26 2.21 19.26 0.85 18.86 0.06 17.62L-0.01 17.52 0.74 16.9 0.82 17.05C1.37 18.05 2.42 18.41 3.53 18.41 5.17 18.41 6.66 17.38 6.66 15.61 6.66 14.86 6.41 14.31 6 13.83 5.79 13.58 5.55 13.36 5.27 13.13 4.99 12.9 4.69 12.67 4.37 12.43 3.24 11.59 2.04 10.58 2.04 8.98 2.04 6.82 3.94 5.5 5.86 5.5 7.09 5.5 8.36 5.87 9.07 7.02L9.14 7.12 8.41 7.71 8.33 7.57ZM20.86 14.03 24.42 5.77 25.97 5.77 20.08 19.01 18.49 19.01 17.97 10.4C17.89 9.36 17.86 8.39 17.86 7.78 17.59 8.4 17.16 9.37 16.62 10.44L12.35 19.02 10.81 19.02 10.63 5.78 12.14 5.78 12.12 14.08C12.12 15.16 12.11 16.28 12.09 16.93 12.37 16.28 12.88 15.15 13.4 14.08L17.51 5.77 19.17 5.77 19.62 14.09C19.68 15.21 19.71 16.28 19.72 16.89 19.96 16.28 20.38 15.23 20.89 14.03M30.4 5.76 28.12 5.76 25.32 19 27.6 19 30.4 5.76ZM31.61 1.1C31.61 0.45 31.11 0 30.44 0 29.51 0 28.76 0.8 28.76 1.78 28.76 2.46 29.29 2.88 29.94 2.88 30.86 2.88 31.62 2.08 31.62 1.1" fill="#E2001A"/><path d="M66.01 0.5 66.01 19.01 71.51 19.01 71.51 15.38 72.29 14.3 74.04 19.01 80.8 19.01 76.72 10.99 80.67 5.5 74.16 5.5 71.51 10.12 71.51 0.5 66.01 0.5Z" fill="#E2001A"/><g><path d="M53.68 15.1C54.57 15.43 55.63 15.67 56.64 15.67 57.48 15.67 57.96 15.36 57.96 14.88 57.96 14.32 57.42 14.09 56.88 13.92L55.94 13.62C54.5 13.16 53.09 12.05 53.09 10.05 53.09 7.26 55.3 5.25 59.38 5.25 60.7 5.25 62.19 5.43 63.68 5.75L63.06 9.17C62.13 8.88 61.1 8.66 60.06 8.66 59.3 8.66 58.97 8.94 58.97 9.38 58.97 9.79 59.38 10 59.85 10.16L60.69 10.44C62.58 11.06 64.16 11.91 64.16 14.16 64.16 17.53 61.41 19.26 57.5 19.26 56.03 19.26 54.5 19.1 53.03 18.74L53.7 15.1Z" fill="#E2001A"/><path d="M85.54 4.67C83.65 4.67 82.41 3.76 82.41 2.35 82.41 1.16 83.38 0 85.54 0 87.52 0 88.62 0.96 88.62 2.35 88.62 3.81 87.38 4.67 85.54 4.67" fill="#E2001A"/></g><path d="M82.52 5.5 82.52 19.01 88.51 19.01 88.51 14.51 87.76 14.51 87.76 16.26 86.26 16.26 86.26 14.51 84.51 14.51 84.51 13 86.26 13 86.26 11.25 87.76 11.25 87.76 13 88.51 13 88.51 5.5 82.52 5.5Z" fill="#E2001A"/></svg></div>
   <nav class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('standort', this)">Assessment</button>
     <button class="nav-tab" onclick="showPage('erfassen', this)">Session</button>
@@ -160,15 +176,15 @@
 </header>
 
 <div class="toast" id="toast"></div>
-<div id="db-warning" style="display:none;background:#2a1505;border-bottom:1px solid #f59e0b;color:#f59e0b;padding:8px 24px;font-size:12px;font-weight:600;">
+<div id="db-warning" style="display:none;background:#FBF3E9;border-bottom:1px solid #C96A1F;color:#C96A1F;padding:8px 24px;font-size:12px;font-weight:600;">
   ⚠ Supabase is not configured yet — entries will NOT be saved. Add URL &amp; key in moguls.html.
 </div>
 
 <!-- ══════════════════════════════════════════ ASSESSMENT -->
 <div class="page active" id="page-standort">
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
-    <label style="font-size:16px;color:#ffffff;font-family:inherit;letter-spacing:0.5px;">ATHLETE</label>
-    <select id="st-athlet" style="max-width:220px;border:2px solid #39c3d4;border-radius:8px;" onchange="loadStandort()">
+    <label style="font-size:16px;color:var(--char);font-family:inherit;letter-spacing:0.5px;">ATHLETE</label>
+    <select id="st-athlet" style="max-width:220px;border:2px solid #148FA0;border-radius:8px;" onchange="loadStandort()">
       <option value="">— select —</option>
     </select>
   </div>
@@ -204,7 +220,7 @@
       <div id="sess-athlete-grid"></div>
     </div>
 
-    <button id="sess-start-btn" onclick="startSession()" style="display:none;width:100%;padding:18px;background:#39c3d4;color:#060f1a;border:none;border-radius:12px;font-family:inherit;font-size:18px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">
+    <button id="sess-start-btn" onclick="startSession()" style="display:none;width:100%;padding:18px;background:#148FA0;color:#faf7f6;border:none;border-radius:12px;font-family:inherit;font-size:18px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">
       ▶ START SESSION
     </button>
   </div>
@@ -300,14 +316,14 @@
 
 <!-- ══════════════════════════════════════════ EDIT MODAL -->
 <div id="edit-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:20px;">
-  <div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:14px;padding:24px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;">
+  <div style="background:#ffffff;border:1px solid #e7e3e1;border-radius:14px;padding:24px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <div style="font-family:inherit;font-size:20px;letter-spacing:0.5px;color:#ffffff;">✏️ EDIT ENTRY</div>
+      <div style="font-family:inherit;font-size:20px;letter-spacing:0.5px;color:var(--char);">✏️ EDIT ENTRY</div>
       <button onclick="closeEdit()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
     </div>
     <div id="edit-body"></div>
     <div style="display:flex;gap:10px;margin-top:18px;">
-      <button onclick="saveEdit()" style="flex:1;padding:12px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Save</button>
+      <button onclick="saveEdit()" style="flex:1;padding:12px;background:#148FA0;color:#faf7f6;border:none;border-radius:8px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Save</button>
       <button onclick="closeEdit()" class="btn-secondary" style="padding:12px 20px;">Cancel</button>
     </div>
   </div>
@@ -328,9 +344,9 @@ const ATHLETES = [
   {name:'Marco Albertalli',squad:'S'},
 ];
 const SQUADS = [
-  {key:'B', label:'B-Kader',         color:'#39c3d4'},
-  {key:'C', label:'C-Kader',         color:'#f59e0b'},
-  {key:'S', label:'Sichtungskader',  color:'#a78bfa'},
+  {key:'B', label:'B-Kader',         color:'#148FA0'},
+  {key:'C', label:'C-Kader',         color:'#C96A1F'},
+  {key:'S', label:'Sichtungskader',  color:'#8E5BB8'},
 ];
 
 const JUMPS_NO_GRAB = ['Strait','360','bt','Ft','bL','bp','L','360op','7op','bf','10op','bdf','14op','btf'];
@@ -375,7 +391,7 @@ function critsFor(e) {
 const LEVELS = [
   {val:1, label:'✗ MISS',    color:'#e2001a', bg:'rgba(226,0,26,0.1)'},
   {val:2, label:'✓ OKAY',    color:'#2d8a4e', bg:'rgba(45,138,78,0.1)'},
-  {val:3, label:'⭐ PERFECT', color:'#39c3d4', bg:'rgba(57,195,212,0.1)'},
+  {val:3, label:'⭐ PERFECT', color:'#148FA0', bg:'rgba(20,143,160,0.1)'},
 ];
 const levelColor = v => (LEVELS.find(l => l.val === v) || {color:'var(--muted)'}).color;
 
@@ -473,7 +489,7 @@ async function loadStandort() {
 function stRowHtml(r) {
   const grabBadge = isGrabJump(r.jump)
     ? '<span class="badge-typ" style="font-size:12px;">Grab</span>'
-    : '<span class="badge-typ" style="font-size:12px;background:#1a3a2a;color:#34d399;">No Grab</span>';
+    : '<span class="badge-typ" style="font-size:12px;background:#EAF4EE;color:#3E8E5A;">No Grab</span>';
   const other = r.status === 'mastered' ? 'goal' : 'mastered';
   return `<div class="sb-row">
     <span style="flex:1;font-weight:600;">${r.jump}</span>${grabBadge}
@@ -508,7 +524,7 @@ function moOverlay(html, closable = true) {
 function moVideoBtn(r) {
   const st = 'border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-right:4px;';
   return r.video_path
-    ? `<button onclick="moPlayVideo(${r.id})" style="${st}background:rgba(52,211,153,.15);border:1px solid #34d399;color:#34d399;">▶ Video</button>`
+    ? `<button onclick="moPlayVideo(${r.id})" style="${st}background:rgba(62,142,90,.15);border:1px solid #3E8E5A;color:#3E8E5A;">▶ Video</button>`
     : `<button onclick="moPickVideo(${r.id})" style="${st}background:none;border:1px solid var(--border);color:var(--muted);">⬆ Video</button>`;
 }
 function moPickVideo(id) {
@@ -543,7 +559,7 @@ async function moPlayVideo(id) {
   if (error) { showToast('Could not load video: ' + error.message, 'error'); return; }
   moOverlay(`<div style="font-weight:700;font-size:16px;margin-bottom:10px;">${r.jump || ''}</div>
     <video src="${data.signedUrl}" controls playsinline autoplay style="width:100%;max-height:70vh;border-radius:10px;background:#000;"></video>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;"><button onclick="document.getElementById('mov-modal').remove();moPickVideo(${id})" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--text);cursor:pointer;">Replace video</button><button onclick="document.getElementById('mov-modal').remove()" style="padding:8px 14px;border-radius:8px;border:0;background:#39c3d4;color:#06281c;font-weight:700;cursor:pointer;">Close</button></div>`);
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;"><button onclick="document.getElementById('mov-modal').remove();moPickVideo(${id})" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--text);cursor:pointer;">Replace video</button><button onclick="document.getElementById('mov-modal').remove()" style="padding:8px 14px;border-radius:8px;border:0;background:#148FA0;color:#ffffff;font-weight:700;cursor:pointer;">Close</button></div>`);
 }
 
 function renderStandort() {
@@ -557,7 +573,7 @@ function renderStandort() {
         <div class="form-group" style="flex:1;min-width:160px;"><label>Jump</label>
           <select id="st-jump">${jumpOptions('all', '')}</select></div>
         <button onclick="addStandort('mastered')" style="padding:11px 20px;background:linear-gradient(135deg,#1a5c38,#2d8a4e);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">✓ MASTERED</button>
-        <button onclick="addStandort('goal')" style="padding:11px 20px;background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">🎯 GOAL</button>
+        <button onclick="addStandort('goal')" style="padding:11px 20px;background:linear-gradient(135deg,#b45309,#C96A1F);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">🎯 GOAL</button>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-top:10px;">In the live session, the jump dropdown only shows these jumps (goals marked 🎯).</div>
     </div>
@@ -678,7 +694,7 @@ function renderAthleteGrid() {
       <div style="display:flex;flex-wrap:wrap;gap:8px;">
         ${athletes.map(a => {
           const checked = sessSelectedAthletes.includes(a.name);
-          return `<label style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface2);border:2px solid ${checked?'#39c3d4':'var(--border)'};border-radius:10px;cursor:pointer;transition:border-color .15s;" id="sess-ath-card-${sid(a.name)}">
+          return `<label style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface2);border:2px solid ${checked?'#148FA0':'var(--border)'};border-radius:10px;cursor:pointer;transition:border-color .15s;" id="sess-ath-card-${sid(a.name)}">
             <input type="checkbox" value="${escAttr(a.name)}" onchange="toggleSessionAthlete('${a.name}')" ${checked?'checked':''} style="width:16px;height:16px;accent-color:${sq.color};cursor:pointer;flex-shrink:0;">
             <span style="font-weight:600;font-size:14px;color:var(--text);">${shortName(a.name)}</span>
           </label>`;
@@ -705,7 +721,7 @@ function toggleSessionAthlete(name) {
     sessSelectedAthletes.push(name);
     sessAthleteData[name] = { sel: {}, stats: {attempts:0, stomped:0} };
     const card = document.getElementById('sess-ath-card-' + sid(name));
-    if (card) card.style.borderColor = '#39c3d4';
+    if (card) card.style.borderColor = '#148FA0';
     if (db) db.from('standort').select('jump,status').eq('athlet', name).then(({data}) => {
       if (data && sessAthleteData[name]) sessAthleteData[name].assessJumps = data;
     });
@@ -787,9 +803,9 @@ function setSrCondition(val, btn) {
   _srCondition = val;
   document.querySelectorAll('#sr-cond-btns button').forEach(b => {
     const active = b === btn;
-    b.style.borderColor = active ? '#39c3d4' : '#1a3450';
-    b.style.color = active ? '#39c3d4' : '#6b8299';
-    b.style.background = active ? 'rgba(57,195,212,0.12)' : '#112236';
+    b.style.borderColor = active ? '#148FA0' : '#e7e3e1';
+    b.style.color = active ? '#148FA0' : '#5c5c61';
+    b.style.background = active ? 'rgba(20,143,160,0.12)' : '#f4efed';
   });
 }
 
@@ -801,11 +817,11 @@ function endSession() {
   const modal = document.createElement('div');
   modal.id = 'sess-report-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
-  const lbl = 'font-size:12px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;';
-  const inp = 'width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:inherit;font-size:14px;outline:none;';
-  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:28px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;">
-    <div style="font-family:inherit;font-size:20px;font-weight:700;color:#39c3d4;margin-bottom:4px;">Session Complete</div>
-    <div style="font-size:14px;color:#6b8299;margin-bottom:20px;">${sessLog.length} entries logged · ${duration} min</div>
+  const lbl = 'font-size:12px;color:#5c5c61;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;';
+  const inp = 'width:100%;background:#f4efed;border:1px solid #e7e3e1;border-radius:8px;color:#2c2c2e;padding:9px 12px;font-family:inherit;font-size:14px;outline:none;';
+  modal.innerHTML = `<div style="background:#ffffff;border:1px solid #e7e3e1;border-radius:16px;padding:28px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;">
+    <div style="font-family:inherit;font-size:20px;font-weight:700;color:#148FA0;margin-bottom:4px;">Session Complete</div>
+    <div style="font-size:14px;color:#5c5c61;margin-bottom:20px;">${sessLog.length} entries logged · ${duration} min</div>
     <div style="display:flex;flex-direction:column;gap:14px;">
       <div>
         <label style="${lbl}">Location</label>
@@ -815,7 +831,7 @@ function endSession() {
         <label style="${lbl}">Conditions</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;" id="sr-cond-btns">
           ${[['1','Poor'],['2','Below Avg'],['3','Average'],['4','Good'],['5','Excellent']].map(([v,l]) =>
-            `<button onclick="setSrCondition(${v},this)" style="padding:7px 12px;border-radius:8px;border:2px solid #1a3450;background:#112236;color:#6b8299;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">${v} — ${l}</button>`).join('')}
+            `<button onclick="setSrCondition(${v},this)" style="padding:7px 12px;border-radius:8px;border:2px solid #e7e3e1;background:#f4efed;color:#5c5c61;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">${v} — ${l}</button>`).join('')}
         </div>
       </div>
       <div>
@@ -825,13 +841,13 @@ function endSession() {
       <div>
         <label style="${lbl}">Athlete Notes</label>
         ${sessSelectedAthletes.map(n => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
-          <input type="text" id="sr-ath-${sid(n)}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:inherit;font-size:12px;outline:none;">
+          <span style="font-size:12px;font-weight:600;color:#148FA0;min-width:70px;">${shortName(n)}</span>
+          <input type="text" id="sr-ath-${sid(n)}" placeholder="Short note…" style="flex:1;background:#f4efed;border:1px solid #e7e3e1;border-radius:6px;color:#2c2c2e;padding:7px 10px;font-family:inherit;font-size:12px;outline:none;">
         </div>`).join('')}
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:20px;">
-      <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
+      <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#148FA0;color:#faf7f6;border:none;border-radius:8px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
@@ -894,9 +910,9 @@ function renderLiveSession() {
       const isActive = name === sessActiveAthlete;
       return `<button onclick="selectSessAthlete('${name}')" style="
         padding:10px 18px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;
-        background:${isActive?'rgba(57,195,212,0.2)':'var(--surface2)'};
-        border:2px solid ${isActive?'#39c3d4':'var(--border)'};
-        color:${isActive?'#39c3d4':'var(--muted)'};
+        background:${isActive?'rgba(20,143,160,0.2)':'var(--surface2)'};
+        border:2px solid ${isActive?'#148FA0':'var(--border)'};
+        color:${isActive?'#148FA0':'var(--muted)'};
       ">${dot}${shortName(name)}</button>`;
     }).join('')}
   </div>`;
@@ -957,8 +973,8 @@ function renderLiveSession() {
 
     cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${s}">
       <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-        <div style="font-size:26px;font-weight:800;color:#39c3d4;">${shortName(name)}</div>
-        <div style="font-size:12px;color:var(--muted);">${d.stats.attempts} entries · <span style="color:#39c3d4;">${d.stats.stomped} all-perfect</span></div>
+        <div style="font-size:26px;font-weight:800;color:#148FA0;">${shortName(name)}</div>
+        <div style="font-size:12px;color:var(--muted);">${d.stats.attempts} entries · <span style="color:#148FA0;">${d.stats.stomped} all-perfect</span></div>
       </div>
       ${jumpsHtml}
       ${critHtml}
@@ -1028,7 +1044,7 @@ function autoLogEntry(name) {
   // Flash card in the avg colour
   const col = document.getElementById('sess-col-' + sid(name));
   if (col) {
-    col.style.background = avg >= 2.5 ? 'rgba(45,138,78,0.2)' : avg >= 1.5 ? 'rgba(245,158,11,0.2)' : 'rgba(226,0,26,0.2)';
+    col.style.background = avg >= 2.5 ? 'rgba(45,138,78,0.2)' : avg >= 1.5 ? 'rgba(201,106,31,0.2)' : 'rgba(226,0,26,0.2)';
     setTimeout(() => { col.style.background = ''; }, 300);
   }
 
@@ -1078,7 +1094,7 @@ function renderSessionLog() {
   el.innerHTML = sessLog.slice(0, 40).map((e, i) => {
     const jumps = [e.jump1, e.jump2].filter(Boolean).join(' + ');
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;flex-wrap:wrap;">
-      <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
+      <span style="color:#148FA0;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
       <span class="badge-typ" style="font-size:12px;">${e.typ}</span>
       <span style="flex:1;color:var(--text);min-width:100px;">${jumps || '—'} ${ratingDots(e)}${e.kommentar ? `<span style="color:var(--muted);font-size:12px;"> — ${e.kommentar}</span>` : ''}</span>
       <span style="color:var(--muted);font-size:12px;">${e.time || ''}</span>
@@ -1153,7 +1169,7 @@ function openEdit(entry, meta) {
 
   document.getElementById('edit-body').innerHTML = `
     <div style="font-size:14px;color:var(--muted);margin-bottom:14px;">
-      <span style="color:#39c3d4;font-weight:700;">${shortName(entry.athlet || entry.name || '')}</span>
+      <span style="color:#148FA0;font-weight:700;">${shortName(entry.athlet || entry.name || '')}</span>
       &nbsp;·&nbsp;<span class="badge-typ">${entry.typ}</span>
     </div>
     <div class="form-group" style="margin-bottom:14px;"><label>Date</label>
@@ -1286,7 +1302,7 @@ function dbFiltered(prefix) {
 
 // ── Team Overview (Karten pro Sprung, gefärbt nach Leistung — analog Freeski/Snowboard) ──
 function ratingPct(v) { return v == null ? null : (v - 1) * 50; }   // Miss=0% · Okay=50% · Perfect=100%
-function pctColor(p) { return p >= 70 ? '#2d8a4e' : p >= 40 ? '#f59e0b' : '#e2001a'; }
+function pctColor(p) { return p >= 70 ? '#2d8a4e' : p >= 40 ? '#C96A1F' : '#e2001a'; }
 const avgArr = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
 
 function statCardHtml(title, metrics, att) {
@@ -1294,7 +1310,7 @@ function statCardHtml(title, metrics, att) {
   if (!valid.length) return '';
   const overall = valid.reduce((s, [, p]) => s + p, 0) / valid.length;
   const c = pctColor(overall);
-  const bg = overall >= 70 ? 'rgba(45,138,78,0.12)' : overall >= 40 ? 'rgba(245,158,11,0.10)' : 'rgba(226,0,26,0.10)';
+  const bg = overall >= 70 ? 'rgba(45,138,78,0.12)' : overall >= 40 ? 'rgba(201,106,31,0.10)' : 'rgba(226,0,26,0.10)';
   return `<div style="border:1px solid ${c};background:${bg};border-radius:10px;padding:10px 12px;">
     <div style="font-weight:600;font-size:14px;margin-bottom:6px;">${title}</div>
     <div style="display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;font-weight:700;">
@@ -1354,7 +1370,7 @@ function renderDBOverview() {
       const byTyp = {};
       aRows.forEach(r => (byTyp[r.typ] = byTyp[r.typ] || []).push(r));
       const sections = Object.keys(TYPES).filter(t => byTyp[t]).map(t =>
-        `<div><div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#39c3d4;margin-bottom:8px;">${t}</div>
+        `<div><div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#148FA0;margin-bottom:8px;">${t}</div>
           <div style="display:flex;flex-direction:column;gap:8px;">${typeCards(t, byTyp[t])}</div></div>`).join('');
       return `<div style="margin-bottom:20px;${i ? 'border-top:1px solid var(--border);padding-top:16px;' : ''}">
         <div style="font-size:16px;font-weight:800;margin-bottom:10px;">${n}</div>
@@ -1575,17 +1591,17 @@ function anChartHover(e, wrapEl) {
   if (!tt) {
     tt = document.createElement('div');
     tt.id = 'mg-chart-tooltip';
-    tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:10px;padding:10px 14px;font-size:12px;font-family:inherit;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+    tt.style.cssText = 'position:fixed;background:#f4efed;border:1px solid #148FA0;border-radius:10px;padding:10px 14px;font-size:12px;font-family:inherit;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
     document.body.appendChild(tt);
   }
   if (ni < 0) { tt.style.display = 'none'; return; }
   const p = _anChart.points[ni];
   tt.innerHTML =
-    `<div style="font-weight:700;color:#e8edf2;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">${p.d.slice(8,10)}.${p.d.slice(5,7)}.${p.d.slice(2,4)} &nbsp;·&nbsp; ${p.n} attempts</div>`
-    + `<div style="color:#39c3d4;">⭐ Perfect: <b>${p.counts[3]}×</b></div>`
+    `<div style="font-weight:700;color:#2c2c2e;margin-bottom:6px;border-bottom:1px solid rgba(0,0,0,0.06);padding-bottom:5px;">${p.d.slice(8,10)}.${p.d.slice(5,7)}.${p.d.slice(2,4)} &nbsp;·&nbsp; ${p.n} attempts</div>`
+    + `<div style="color:#148FA0;">⭐ Perfect: <b>${p.counts[3]}×</b></div>`
     + `<div style="color:#2d8a4e;">✓ Okay&nbsp;&nbsp;&nbsp;: <b>${p.counts[2]}×</b></div>`
     + `<div style="color:#e2001a;">✗ Miss&nbsp;&nbsp;&nbsp;: <b>${p.counts[1]}×</b></div>`
-    + `<div style="color:#6b8299;margin-top:4px;">Success: <b style="color:#39c3d4;">${Math.round(p.pct)}%</b></div>`;
+    + `<div style="color:#5c5c61;margin-top:4px;">Success: <b style="color:#148FA0;">${Math.round(p.pct)}%</b></div>`;
   tt.style.display = 'block';
   const tx = e.clientX + 14, ty = e.clientY - 10;
   tt.style.left = (tx + tt.offsetWidth > window.innerWidth - 10 ? e.clientX - tt.offsetWidth - 14 : tx) + 'px';
@@ -1606,8 +1622,8 @@ function trendChartSvg(points) {
   const y = p => padT + (100 - p) / 100 * ih;
   const barW = Math.max(10, Math.min(26, iw / points.length * 0.5));
   const grid = [0, 25, 50, 75, 100].map(v =>
-    `<line x1="${padL}" y1="${y(v)}" x2="${W - padR}" y2="${y(v)}" stroke="#1a3450" stroke-dasharray="3 3"/>
-     <text x="4" y="${y(v) + 3}" fill="#6b8299" font-size="11">${v}%</text>`).join('');
+    `<line x1="${padL}" y1="${y(v)}" x2="${W - padR}" y2="${y(v)}" stroke="#e7e3e1" stroke-dasharray="3 3"/>
+     <text x="4" y="${y(v) + 3}" fill="#5c5c61" font-size="11">${v}%</text>`).join('');
   const line = points.length > 1
     ? `<polyline fill="none" stroke="#39c3d466" stroke-width="1.5" stroke-dasharray="3 3" points="${points.map((p, i) => x(i) + ',' + y(p.pct)).join(' ')}"/>` : '';
   const bars = points.map((p, i) => {
@@ -1620,8 +1636,8 @@ function trendChartSvg(points) {
   }).join('');
   const step = Math.max(1, Math.ceil(points.length / 10));
   const labels = points.map((p, i) => i % step === 0
-    ? `<text x="${x(i)}" y="${H - 20}" fill="#6b8299" font-size="11" text-anchor="middle">${p.d.slice(8,10)}.${p.d.slice(5,7)}.</text>
-       <text x="${x(i)}" y="${H - 8}" fill="#6b8299" font-size="11" text-anchor="middle">${p.n}×</text>` : '').join('');
+    ? `<text x="${x(i)}" y="${H - 20}" fill="#5c5c61" font-size="11" text-anchor="middle">${p.d.slice(8,10)}.${p.d.slice(5,7)}.</text>
+       <text x="${x(i)}" y="${H - 8}" fill="#5c5c61" font-size="11" text-anchor="middle">${p.n}×</text>` : '').join('');
   _anChart = { points, xs: points.map((_, i) => x(i)) };
   return `<div style="overflow-x:auto;" onmousemove="anChartHover(event, this)" onmouseleave="anChartLeave()"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${grid}${line}${bars}${labels}</svg></div>`;
 }
@@ -1676,7 +1692,7 @@ function renderAnalytics() {
   let html = `<div class="stats-grid">
     <div class="stat-card"><div class="stat-value">${rows.length}</div><div class="stat-label">Entries</div></div>
     <div class="stat-card"><div class="stat-value">${days}</div><div class="stat-label">Training Days</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:#39c3d4;">${stompedPct}%</div><div class="stat-label">Perfect Share</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:#148FA0;">${stompedPct}%</div><div class="stat-label">Perfect Share</div></div>
   </div>`;
 
   if (!typ) {
@@ -1786,18 +1802,18 @@ function renderAnalytics() {
       const badges = Object.entries(typCounts).map(([tn, c]) => `<span class="badge-typ" style="font-size:12px;">${tn} · ${c}</span>`).join(' ');
       const reps = dbReports.filter(r => r.datum === d);
       const repHint = reps.length
-        ? `<span style="font-size:12px;color:#39c3d4;">📋 ${[reps[0].location, reps[0].conditions ? 'Conditions ' + reps[0].conditions + '/5' : ''].filter(Boolean).join(' · ')}</span>` : '';
+        ? `<span style="font-size:12px;color:#148FA0;">📋 ${[reps[0].location, reps[0].conditions ? 'Conditions ' + reps[0].conditions + '/5' : ''].filter(Boolean).join(' · ')}</span>` : '';
       const repHtml = !open ? '' : reps.map(rep => `<div style="background:var(--surface2);border:1px solid #39c3d444;border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:6px;">
           <div style="color:var(--text);font-weight:600;margin-bottom:4px;">📋 Session Report${rep.session_type ? ' · ' + rep.session_type : ''}${rep.duration_min ? ' · ' + rep.duration_min + ' min' : ''}</div>
           <div style="color:var(--muted);">${[rep.location ? '📍 ' + rep.location : '', rep.conditions ? 'Conditions ' + rep.conditions + '/5' : ''].filter(Boolean).join(' · ')}</div>
           ${rep.comments ? `<div style="color:var(--text);margin-top:4px;">${rep.comments}</div>` : ''}
-          ${rep.athlete_notes ? Object.entries(rep.athlete_notes).map(([n, note]) => `<div style="margin-top:3px;font-size:12px;"><span style="color:#39c3d4;font-weight:600;">${n}</span> <span style="color:var(--muted);">${note}</span></div>`).join('') : ''}
+          ${rep.athlete_notes ? Object.entries(rep.athlete_notes).map(([n, note]) => `<div style="margin-top:3px;font-size:12px;"><span style="color:#148FA0;font-weight:600;">${n}</span> <span style="color:var(--muted);">${note}</span></div>`).join('') : ''}
         </div>`).join('');
       const entriesHtml = !open ? '' : `<div style="display:flex;flex-direction:column;gap:6px;padding:4px 0 12px;">
         ${repHtml}
         ${es.slice(0, 200).map(r => `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);border-radius:8px;font-size:12px;flex-wrap:wrap;">
           <span style="color:var(--muted);font-size:12px;">${(r.created_at || '').slice(11, 16)}</span>
-          <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(r.athlet || '')}</span>
+          <span style="color:#148FA0;font-weight:600;min-width:60px;">${shortName(r.athlet || '')}</span>
           <span class="badge-typ" style="font-size:12px;">${r.typ}</span>
           <span style="flex:1;min-width:90px;">${[r.jump1, r.jump2].filter(Boolean).join(' + ') || '—'} ${ratingDots(r)}${r.kommentar ? `<span style="color:var(--muted);font-size:12px;"> — ${r.kommentar}</span>` : ''}</span>
         </div>`).join('')}

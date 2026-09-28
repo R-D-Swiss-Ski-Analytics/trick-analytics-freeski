@@ -41,7 +41,7 @@ function showAuthGate(msg) {
     <label style="display:block;margin-bottom:4px;">Password</label>
     <input type="password" id="auth-pass" autocomplete="current-password" required style="margin-bottom:6px;">
     <div id="auth-err" style="min-height:16px;font-size:12px;color:#e2001a;margin-bottom:10px;">${msg||''}</div>
-    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Sign in</button>
+    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#148FA0;color:#ffffff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Sign in</button>
     <div style="text-align:center;margin-top:12px;"><a class="hinweis" href="#" onclick="authForgotPassword();return false;">Forgot password?</a> <span class="hinweis">·</span> <a class="hinweis" href="#" onclick="authHaveCode();return false;">Have a code?</a></div>
   </form>`;
   document.body.appendChild(gate);
@@ -75,7 +75,7 @@ function showSetPasswordGate() {
     <label style="display:block;margin-bottom:4px;">Repeat password</label>
     <input type="password" id="setpw-2" autocomplete="new-password" required minlength="8" style="margin-bottom:6px;">
     <div id="setpw-err" style="min-height:16px;font-size:12px;color:#e2001a;margin-bottom:10px;"></div>
-    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Save password</button>
+    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#148FA0;color:#ffffff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Save password</button>
   </form>`;
   document.body.appendChild(gate);
   document.getElementById('setpw-form').addEventListener('submit', async e => {
@@ -132,7 +132,7 @@ function showOtpGate(email) {
     <label style="display:block;margin-bottom:4px;">Code</label>
     <input type="text" id="otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required style="margin-bottom:6px;text-align:center;font-size:20px;letter-spacing:4px;">
     <div id="otp-err" style="min-height:16px;font-size:12px;color:#e2001a;margin-bottom:10px;"></div>
-    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Verify code</button>
+    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#148FA0;color:#ffffff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Verify code</button>
     <div style="text-align:center;margin-top:12px;"><a class="hinweis" href="#" onclick="showAuthGate();return false;">Back to login</a></div>
   </form>`;
   document.body.appendChild(gate);
@@ -473,8 +473,8 @@ async function updateGrabStatus(entryId, gs, localEntry) {
 function styleAssessGrabBtn(btn, g, st) {
   const base = "border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;";
   if (st === 'mastered')  { btn.textContent = '✓ ' + g;  btn.style.cssText = base + `background:${UI_GREEN_BG25};border:1px solid ${UI_GREEN};color:${UI_GREEN_TEXT};`; }
-  else if (st === 'goal') { btn.textContent = '🎯 ' + g; btn.style.cssText = base + "background:rgba(245,158,11,0.2);border:1px solid #f59e0b;color:#f59e0b;"; }
-  else                    { btn.textContent = g;         btn.style.cssText = base + "background:#112236;border:1px solid #1a3450;color:#6b8299;"; }
+  else if (st === 'goal') { btn.textContent = '🎯 ' + g; btn.style.cssText = base + "background:rgba(201,106,31,0.2);border:1px solid #C96A1F;color:#C96A1F;"; }
+  else                    { btn.textContent = g;         btn.style.cssText = base + "background:#f4efed;border:1px solid #e7e3e1;color:#5c5c61;"; }
 }
 
 function nextGrabState(cur) {
@@ -487,8 +487,8 @@ function grabChipsHtml(e) {
   const gs = (e.grab_status && typeof e.grab_status === 'object') ? e.grab_status : null;
   if (!gs || !Object.keys(gs).length) return '';
   const chips = Object.entries(gs).map(([g, st]) => {
-    const col  = st === 'mastered' ? UI_GREEN_TEXT : '#f59e0b';
-    const bg   = st === 'mastered' ? UI_GREEN_BG20 : 'rgba(245,158,11,0.15)';
+    const col  = st === 'mastered' ? UI_GREEN_TEXT : '#C96A1F';
+    const bg   = st === 'mastered' ? UI_GREEN_BG20 : 'rgba(201,106,31,0.15)';
     const icon = st === 'mastered' ? '✓' : '🎯';
     return `<span onclick="event.stopPropagation();cycleGrabStatus(${e.id},'${g.replace(/'/g,"\\'")}')" title="Tap: ✓ ${SPORT==='snowboard'?'Learned':'Mastered'} → 🎯 Goal → remove" style="cursor:pointer;font-size:12px;padding:2px 8px;border-radius:10px;background:${bg};border:1px solid ${col};color:${col};white-space:nowrap;">${icon} ${g}</span>`;
   }).join('');
@@ -680,9 +680,9 @@ function setSrCondition(val, btn) {
   _srCondition = val;
   document.querySelectorAll('#sr-cond-btns button').forEach(b => {
     const active = b === btn;
-    b.style.borderColor = active ? '#39c3d4' : '#1a3450';
-    b.style.color = active ? '#39c3d4' : '#6b8299';
-    b.style.background = active ? 'rgba(57,195,212,0.15)' : '#112236';
+    b.style.borderColor = active ? '#148FA0' : '#e7e3e1';
+    b.style.color = active ? '#148FA0' : '#5c5c61';
+    b.style.background = active ? 'rgba(20,143,160,0.15)' : '#f4efed';
   });
 }
 
@@ -789,7 +789,7 @@ async function deleteSbEntry(id) {
   showToast('Removed', 'success');
 }
 
-const EV_COLORS = ['#3b82f6','#06b6d4','#10b981','#f59e0b','#a78bfa','#f472b6','#34d399','#fb923c','#60a5fa','#fbbf24'];
+const EV_COLORS = ['#396FA8','#06b6d4','#3E8E5A','#C96A1F','#8E5BB8','#f472b6','#3E8E5A','#fb923c','#60a5fa','#fbbf24'];
 
 
 
@@ -863,9 +863,9 @@ function drawRadarDual(canvasId, labels, vals1, vals2, raw1, raw2, lbl1, lbl2, c
   [0.25,0.5,0.75,1].forEach(frac => {
     ctx.beginPath();
     angles.forEach((a,i) => { const x=cx+Math.cos(a)*r*frac,y=cy+Math.sin(a)*r*frac; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
-    ctx.closePath(); ctx.strokeStyle='#1e2d45'; ctx.lineWidth=1; ctx.stroke(); ctx.fillStyle='#111827'; ctx.fill();
+    ctx.closePath(); ctx.strokeStyle='#e7e3e1'; ctx.lineWidth=1; ctx.stroke(); ctx.fillStyle='#ffffff'; ctx.fill();
   });
-  angles.forEach(a => { ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); ctx.strokeStyle='#1e2d45'; ctx.lineWidth=1; ctx.stroke(); });
+  angles.forEach(a => { ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); ctx.strokeStyle='#e7e3e1'; ctx.lineWidth=1; ctx.stroke(); });
 
   // Polygon 2
   if(vals2.some(v=>v>0)){ ctx.beginPath(); angles.forEach((a,i)=>{ const x=cx+Math.cos(a)*r*vals2[i],y=cy+Math.sin(a)*r*vals2[i]; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); }); ctx.closePath(); ctx.fillStyle=col2+'33'; ctx.fill(); ctx.strokeStyle=col2; ctx.lineWidth=2; ctx.stroke(); }
@@ -889,7 +889,7 @@ function drawRadarDual(canvasId, labels, vals1, vals2, raw1, raw2, lbl1, lbl2, c
   // Legend
   [[lbl1,col1],[lbl2,col2]].forEach(([l,c],i) => {
     ctx.fillStyle=c; ctx.fillRect(10, H-22+i*12, 10, 8);
-    ctx.fillStyle='#64748b'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left'; ctx.fillText(l, 24, H-14+i*12);
+    ctx.fillStyle='#6b6b70'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='left'; ctx.fillText(l, 24, H-14+i*12);
   });
 }
 
@@ -913,15 +913,15 @@ function drawRadarSplit(canvasId, labels, valsT, valsS, rawT, rawS) {
       i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
     });
     ctx.closePath();
-    ctx.strokeStyle='#1e2d45'; ctx.lineWidth=1; ctx.stroke();
-    ctx.fillStyle='#111827'; ctx.fill();
+    ctx.strokeStyle='#e7e3e1'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='#ffffff'; ctx.fill();
   });
 
   // Spokes
   angles.forEach(a => {
     ctx.beginPath(); ctx.moveTo(cx,cy);
     ctx.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r);
-    ctx.strokeStyle='#1e2d45'; ctx.lineWidth=1; ctx.stroke();
+    ctx.strokeStyle='#e7e3e1'; ctx.lineWidth=1; ctx.stroke();
   });
 
   // Standort polygon (amber)
@@ -932,8 +932,8 @@ function drawRadarSplit(canvasId, labels, valsT, valsS, rawT, rawS) {
       i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
     });
     ctx.closePath();
-    ctx.fillStyle='rgba(245,158,11,0.18)'; ctx.fill();
-    ctx.strokeStyle='#f59e0b'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='rgba(201,106,31,0.18)'; ctx.fill();
+    ctx.strokeStyle='#C96A1F'; ctx.lineWidth=2; ctx.stroke();
   }
 
   // Training polygon (blue)
@@ -945,7 +945,7 @@ function drawRadarSplit(canvasId, labels, valsT, valsS, rawT, rawS) {
     });
     ctx.closePath();
     ctx.fillStyle='rgba(59,130,246,0.22)'; ctx.fill();
-    ctx.strokeStyle='#3b82f6'; ctx.lineWidth=2; ctx.stroke();
+    ctx.strokeStyle='#396FA8'; ctx.lineWidth=2; ctx.stroke();
   }
 
   // Dots + labels
@@ -953,12 +953,12 @@ function drawRadarSplit(canvasId, labels, valsT, valsS, rawT, rawS) {
     // Training dot
     if(valsT[i]>0){
       const x=cx+Math.cos(a)*r*valsT[i], y=cy+Math.sin(a)*r*valsT[i];
-      ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI); ctx.fillStyle='#3b82f6'; ctx.fill();
+      ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI); ctx.fillStyle='#396FA8'; ctx.fill();
     }
     // Standort dot
     if(valsS[i]>0){
       const x=cx+Math.cos(a)*r*valsS[i], y=cy+Math.sin(a)*r*valsS[i];
-      ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI); ctx.fillStyle='#f59e0b'; ctx.fill();
+      ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI); ctx.fillStyle='#C96A1F'; ctx.fill();
     }
     // Label
     const lx=cx+Math.cos(a)*(r+30), ly=cy+Math.sin(a)*(r+30);
@@ -971,8 +971,8 @@ function drawRadarSplit(canvasId, labels, valsT, valsS, rawT, rawS) {
     const countStr = (rawT[i]>0?`\u25CF${rawT[i]}`:'') + (rawT[i]>0&&rawS[i]>0?' ':'') + (rawS[i]>0?`\u25CF${rawS[i]}`:'');
     // Draw each part in correct color
     const parts=[];
-    if(rawT[i]!=null && rawT[i]!==0) parts.push({text:`●${rawT[i]}%`,color:'#39c3d4'});
-    if(rawS[i]>0) parts.push({text:`●${rawS[i]}`,color:'#f59e0b'});
+    if(rawT[i]!=null && rawT[i]!==0) parts.push({text:`●${rawT[i]}%`,color:'#148FA0'});
+    if(rawS[i]>0) parts.push({text:`●${rawS[i]}`,color:'#C96A1F'});
     let totalW=0;
     parts.forEach(p=>{ ctx.font='bold 11px Bebas Neue,sans-serif'; totalW+=ctx.measureText(p.text+' ').width; });
     let drawX=lx-totalW/2;
@@ -997,8 +997,8 @@ function drawBarsSplit(containerId, entries) {
       <div class="bar-label">${label}</div>
       <div class="bar-track" style="position:relative;">
         <div style="position:absolute;left:0;top:0;height:100%;width:${pctT+pctS}%;display:flex;border-radius:4px;overflow:hidden;">
-          ${cT>0?`<div style="width:${total?Math.round(cT/total*100):0}%;background:#3b82f6;display:flex;align-items:center;padding-left:6px;"><span class="bar-val">${cT>0?cT+'×':''}</span></div>`:''}
-          ${cS>0?`<div style="width:${total?Math.round(cS/total*100):0}%;background:#f59e0b;display:flex;align-items:center;padding-left:${cT>0?2:6}px;"><span class="bar-val">${cS+'×'}</span></div>`:''}
+          ${cT>0?`<div style="width:${total?Math.round(cT/total*100):0}%;background:#396FA8;display:flex;align-items:center;padding-left:6px;"><span class="bar-val">${cT>0?cT+'×':''}</span></div>`:''}
+          ${cS>0?`<div style="width:${total?Math.round(cS/total*100):0}%;background:#C96A1F;display:flex;align-items:center;padding-left:${cT>0?2:6}px;"><span class="bar-val">${cS+'×'}</span></div>`:''}
         </div>
       </div>
     </div>`;
@@ -1010,7 +1010,7 @@ function drawBarsRating(containerId, entries) {
   if (!el || !entries.length) { if(el) el.innerHTML='<div style="color:var(--muted);font-size:14px;padding:8px;">No rating data</div>'; return; }
   el.innerHTML = entries.map(([label, avg], i) => {
     const pct = Math.round(avg/10*100);
-    const col = avg>=8?'#10b981':avg>=6?'#84cc16':'#f59e0b';
+    const col = avg>=8?'#3E8E5A':avg>=6?'#84cc16':'#C96A1F';
     return `<div class="bar-row">
       <div class="bar-label">${label}</div>
       <div class="bar-track">
@@ -1039,8 +1039,8 @@ function drawLine(canvasId, labels, values) {
   [0,2,4,6,8,10].forEach(v => {
     const y = pad.top + ch - (v-minV)/(maxV-minV)*ch;
     ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(pad.left+cw,y);
-    ctx.strokeStyle='#1e2d45'; ctx.lineWidth=1; ctx.stroke();
-    ctx.fillStyle='#64748b'; ctx.font='11px DM Sans,sans-serif';
+    ctx.strokeStyle='#e7e3e1'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='#6b6b70'; ctx.font='11px DM Sans,sans-serif';
     ctx.textAlign='right'; ctx.textBaseline='middle';
     ctx.fillText(v, pad.left-6, y);
   });
@@ -1066,20 +1066,20 @@ function drawLine(canvasId, labels, values) {
   // Line
   ctx.beginPath();
   pts.forEach((p,i) => i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y));
-  ctx.strokeStyle='#3b82f6'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
+  ctx.strokeStyle='#396FA8'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
 
   // Dots + values
   pts.forEach((p,i) => {
     ctx.beginPath(); ctx.arc(p.x,p.y,4,0,2*Math.PI);
-    ctx.fillStyle='#3b82f6'; ctx.fill();
-    ctx.strokeStyle='#0a0e1a'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#396FA8'; ctx.fill();
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=2; ctx.stroke();
     ctx.fillStyle='#e2e8f0'; ctx.font='bold 11px DM Sans,sans-serif';
     ctx.textAlign='center'; ctx.textBaseline='bottom';
     ctx.fillText(values[i], p.x, p.y-7);
   });
 
   // X-axis labels (show max 8 to avoid overlap)
-  ctx.fillStyle='#64748b'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
+  ctx.fillStyle='#6b6b70'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
   const step = Math.ceil(labels.length/8);
   labels.forEach((l,i) => {
     if (i % step !== 0 && i !== labels.length-1) return;
@@ -1289,7 +1289,7 @@ function setStatsMode(mode) {
   const btnS = document.getElementById('ev-mode-session');
   [btnT,btnS].forEach(b=>{if(b){b.style.background='var(--surface2)';b.style.borderColor='var(--border)';b.style.color='var(--muted)';}});
   const active = mode==='trick'?btnT:btnS;
-  if(active){active.style.background='rgba(57,195,212,0.2)';active.style.borderColor='#39c3d4';active.style.color='#39c3d4';}
+  if(active){active.style.background='rgba(20,143,160,0.2)';active.style.borderColor='#148FA0';active.style.color='#148FA0';}
   if(trickSel) trickSel.style.display = mode==='trick' ? '' : 'none';
   if(dateSel)  dateSel.style.display  = mode==='session' ? '' : 'none';
   const fRow = document.getElementById('ev-type-filter');
@@ -1382,59 +1382,59 @@ function endSession() {
   const modal = document.createElement('div');
   modal.id = 'sess-report-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
-  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:28px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto;">
-    <div style="font-family:inherit;font-size:20px;font-weight:700;color:#39c3d4;margin-bottom:4px;">Session Complete</div>
-    <div style="font-size:14px;color:#6b8299;margin-bottom:20px;">${sessLog.length} attempts logged ·
-      <input id="sr-duration" type="number" min="5" step="5" value="${duration}" style="width:70px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:3px 6px;font-family:inherit;font-size:14px;text-align:center;"> min
+  modal.innerHTML = `<div style="background:#ffffff;border:1px solid #e7e3e1;border-radius:16px;padding:28px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto;">
+    <div style="font-family:inherit;font-size:20px;font-weight:700;color:#148FA0;margin-bottom:4px;">Session Complete</div>
+    <div style="font-size:14px;color:#5c5c61;margin-bottom:20px;">${sessLog.length} attempts logged ·
+      <input id="sr-duration" type="number" min="5" step="5" value="${duration}" style="width:70px;background:#f4efed;border:1px solid #e7e3e1;border-radius:6px;color:#2c2c2e;padding:3px 6px;font-family:inherit;font-size:14px;text-align:center;"> min
       <span style="font-size:12px;">(editable)</span></div>
     <div style="display:flex;flex-direction:column;gap:14px;">
       <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;">
         <div>
-          <label style="font-size:12px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Location</label>
-          <input id="sr-location" type="text" placeholder="e.g. Laax" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:inherit;font-size:14px;outline:none;">
+          <label style="font-size:12px;color:#5c5c61;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Location</label>
+          <input id="sr-location" type="text" placeholder="e.g. Laax" style="width:100%;background:#f4efed;border:1px solid #e7e3e1;border-radius:8px;color:#2c2c2e;padding:9px 12px;font-family:inherit;font-size:14px;outline:none;">
         </div>
         <div style="${sessType && (sessType.startsWith('Slopestyle') || sessType.startsWith('Halfpipe')) ? 'display:none;' : ''}">
-          <label style="font-size:12px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Jump Size</label>
-          <select id="sr-jumpsize" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:inherit;font-size:14px;outline:none;">
+          <label style="font-size:12px;color:#5c5c61;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Jump Size</label>
+          <select id="sr-jumpsize" style="width:100%;background:#f4efed;border:1px solid #e7e3e1;border-radius:8px;color:#2c2c2e;padding:9px 12px;font-family:inherit;font-size:14px;outline:none;">
             <option value="">—</option><option>M</option><option>L</option><option>XL</option>
           </select>
         </div>
       </div>
       <div>
-        <label style="font-size:12px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Conditions</label>
+        <label style="font-size:12px;color:#5c5c61;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Conditions</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;" id="sr-cond-btns">
-          ${[['1','Poor'],['2','Below Avg'],['3','Average'],['4','Good'],['5','Excellent']].map(([v,l])=>`<button onclick="setSrCondition(${v},this)" data-val="${v}" style="padding:7px 12px;border-radius:8px;border:2px solid #1a3450;background:#112236;color:#6b8299;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">${v} — ${l}</button>`).join('')}
+          ${[['1','Poor'],['2','Below Avg'],['3','Average'],['4','Good'],['5','Excellent']].map(([v,l])=>`<button onclick="setSrCondition(${v},this)" data-val="${v}" style="padding:7px 12px;border-radius:8px;border:2px solid #e7e3e1;background:#f4efed;color:#5c5c61;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">${v} — ${l}</button>`).join('')}
         </div>
       </div>
       <div>
-        <label style="font-size:12px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Comments</label>
-        <textarea id="sr-comments" placeholder="Coach notes, observations…" rows="2" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:inherit;font-size:14px;outline:none;resize:vertical;"></textarea>
+        <label style="font-size:12px;color:#5c5c61;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Comments</label>
+        <textarea id="sr-comments" placeholder="Coach notes, observations…" rows="2" style="width:100%;background:#f4efed;border:1px solid #e7e3e1;border-radius:8px;color:#2c2c2e;padding:9px 12px;font-family:inherit;font-size:14px;outline:none;resize:vertical;"></textarea>
       </div>
       <div>
-        <label style="font-size:12px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Athlete Notes</label>
+        <label style="font-size:12px;color:#5c5c61;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Athlete Notes</label>
         ${sessSelectedAthletes.map(n => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
-          <input type="text" id="sr-ath-${n.replace(/\s/g,'_')}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:inherit;font-size:12px;outline:none;">
+          <span style="font-size:12px;font-weight:600;color:#148FA0;min-width:70px;">${shortName(n)}</span>
+          <input type="text" id="sr-ath-${n.replace(/\s/g,'_')}" placeholder="Short note…" style="flex:1;background:#f4efed;border:1px solid #e7e3e1;border-radius:6px;color:#2c2c2e;padding:7px 10px;font-family:inherit;font-size:12px;outline:none;">
         </div>`).join('')}
       </div>
       ${sessType && sessType.includes('Competition') ? (() => {
         const nFinal = sessType.startsWith('Slopestyle') ? 2 : 3;   // BA/HP: 2 Quali + 3 Final · SS: 2 + 2
-        const inp = (id, ph) => `<input type="number" step="0.01" min="0" id="${id}" placeholder="${ph}" style="width:76px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:inherit;font-size:12px;outline:none;text-align:center;">`;
+        const inp = (id, ph) => `<input type="number" step="0.01" min="0" id="${id}" placeholder="${ph}" style="width:76px;background:#f4efed;border:1px solid #e7e3e1;border-radius:6px;color:#2c2c2e;padding:7px 8px;font-family:inherit;font-size:12px;outline:none;text-align:center;">`;
         return `<div>
-        <label style="font-size:12px;color:#f59e0b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Contest Results <span style="text-transform:none;font-weight:400;">(Final empty if not reached)</span></label>
+        <label style="font-size:12px;color:#C96A1F;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Contest Results <span style="text-transform:none;font-weight:400;">(Final empty if not reached)</span></label>
         ${sessSelectedAthletes.map(n => { const sid = n.replace(/\s/g,'_'); return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
-          <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
-          <span style="font-size:12px;color:#6b8299;font-weight:600;">QUALI</span>
+          <span style="font-size:12px;font-weight:600;color:#148FA0;min-width:70px;">${shortName(n)}</span>
+          <span style="font-size:12px;color:#5c5c61;font-weight:600;">QUALI</span>
           ${inp('sr-q1-'+sid,'Run 1')}${inp('sr-q2-'+sid,'Run 2')}
-          <span style="font-size:12px;color:#6b8299;font-weight:600;margin-left:6px;">FINAL</span>
+          <span style="font-size:12px;color:#5c5c61;font-weight:600;margin-left:6px;">FINAL</span>
           ${inp('sr-f1-'+sid,'Run 1')}${inp('sr-f2-'+sid,'Run 2')}${nFinal === 3 ? inp('sr-f3-'+sid,'Run 3') : ''}
-          <span style="font-size:12px;color:#6b8299;font-weight:600;margin-left:6px;">RANK</span>
-          <input type="number" step="1" min="1" id="sr-rank-${sid}" placeholder="#" style="width:56px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:inherit;font-size:12px;outline:none;text-align:center;">
+          <span style="font-size:12px;color:#5c5c61;font-weight:600;margin-left:6px;">RANK</span>
+          <input type="number" step="1" min="1" id="sr-rank-${sid}" placeholder="#" style="width:56px;background:#f4efed;border:1px solid #e7e3e1;border-radius:6px;color:#2c2c2e;padding:7px 8px;font-family:inherit;font-size:12px;outline:none;text-align:center;">
         </div>`; }).join('')}
       </div>`; })() : ''}
     </div>
     <div style="display:flex;gap:10px;margin-top:20px;">
-      <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
+      <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#148FA0;color:#faf7f6;border:none;border-radius:8px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
       
     </div>
   </div>`;
@@ -1486,7 +1486,7 @@ function sbMonSessions(rows) {
 
 function sbMonTrendHtml(tr) {
   if (!tr) return '';
-  if (tr.dir === 'up') return `<span style="color:#34d399;font-weight:600;">↗ rising${tr.diff ? ', +' + Math.round(tr.diff*100) + '%' : ''}</span>`;
+  if (tr.dir === 'up') return `<span style="color:#3E8E5A;font-weight:600;">↗ rising${tr.diff ? ', +' + Math.round(tr.diff*100) + '%' : ''}</span>`;
   if (tr.dir === 'down') return `<span style="color:#e2001a;font-weight:600;">↘ falling${tr.diff ? ', ' + Math.round(tr.diff*100) + '%' : ''}</span>`;
   return `<span style="color:var(--muted);font-weight:600;">→ stable</span>`;
 }
@@ -1543,25 +1543,25 @@ function sbRunCardHtml(name, d, trickOptions) {
     const btn = (val, icon, col) => `<button onclick="sbRunRate('${name}',${i},'${val}')" style="padding:8px 12px;border-radius:8px;border:2px solid ${rate===val?col:'var(--border)'};background:${rate===val?col+'22':'var(--surface2)'};color:${rate===val?col:'var(--muted)'};font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;">${icon}</button>`;
     const hasNote = (el.tags && el.tags.length) || el.note;
     const noteLine = hasNote ? `<div style="margin:-2px 0 6px 62px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-        ${(el.tags||[]).map(t => `<span style="font-size:12px;color:#f59e0b;border:1px solid #f59e0b55;border-radius:999px;padding:2px 8px;">${t}</span>`).join('')}
+        ${(el.tags||[]).map(t => `<span style="font-size:12px;color:#C96A1F;border:1px solid #f59e0b55;border-radius:999px;padding:2px 8px;">${t}</span>`).join('')}
         ${el.note ? `<span class="hinweis">${el.note}</span>` : ''}
       </div>` : '';
     const notePanel = r.noteOpen === i ? `<div style="margin:0 0 8px 30px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;">
         <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Tags</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
-          ${sbAllFailReasons().map(t => { const on = (el.tags||[]).includes(t); return `<button onclick="sbRunTagToggle('${name}',${i},'${t.replace(/'/g,"\\'")}')" style="padding:5px 10px;border-radius:999px;border:1.5px solid ${on?'#f59e0b':'var(--border)'};background:${on?'rgba(245,158,11,0.15)':'none'};color:${on?'#f59e0b':'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">${t}</button>`; }).join('')}
+          ${sbAllFailReasons().map(t => { const on = (el.tags||[]).includes(t); return `<button onclick="sbRunTagToggle('${name}',${i},'${t.replace(/'/g,"\\'")}')" style="padding:5px 10px;border-radius:999px;border:1.5px solid ${on?'#C96A1F':'var(--border)'};background:${on?'rgba(201,106,31,0.15)':'none'};color:${on?'#C96A1F':'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">${t}</button>`; }).join('')}
         </div>
         <div style="display:flex;gap:8px;">
           <input value="${(el.note||'').replace(/"/g,'&quot;')}" oninput="sbRunNoteInput('${name}',${i},this.value)" placeholder="Comment (optional)" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-family:inherit;">
-          <button onclick="sbRunNoteToggle('${name}',null)" style="padding:8px 14px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Done</button>
+          <button onclick="sbRunNoteToggle('${name}',null)" style="padding:8px 14px;border-radius:8px;border:1px solid #148FA0;background:rgba(20,143,160,0.15);color:#148FA0;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Done</button>
         </div>
       </div>` : '';
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);">
       <span style="width:20px;height:20px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0;">${i+1}</span>
-      <span style="flex-shrink:0;font-size:12px;font-weight:700;letter-spacing:.5px;color:${el.kind==='rail'?'#a78bfa':'#39c3d4'};border:1px solid ${el.kind==='rail'?'#a78bfa':'#39c3d4'};border-radius:4px;padding:2px 5px;">${el.kind==='rail'?'RAIL':(sessType && sessType.startsWith('Halfpipe')?'HIT':'JUMP')}</span>
+      <span style="flex-shrink:0;font-size:12px;font-weight:700;letter-spacing:.5px;color:${el.kind==='rail'?'#8E5BB8':'#148FA0'};border:1px solid ${el.kind==='rail'?'#8E5BB8':'#148FA0'};border-radius:4px;padding:2px 5px;">${el.kind==='rail'?'RAIL':(sessType && sessType.startsWith('Halfpipe')?'HIT':'JUMP')}</span>
       <span style="flex:1;font-size:12px;font-weight:600;color:var(--text);line-height:1.3;">${el.label}</span>
-      ${btn('failed','✗','#e2001a')}${btn('landed','✓','#34d399')}${btn('stomped','★','#39c3d4')}
-      <button onclick="sbRunNoteToggle('${name}',${i})" title="Tags / comment" style="background:none;border:1px solid ${hasNote || r.noteOpen === i ?'#f59e0b':'var(--border)'};border-radius:8px;color:${hasNote || r.noteOpen === i ?'#f59e0b':'var(--muted)'};cursor:pointer;font-size:14px;padding:6px 9px;">✎</button>
+      ${btn('failed','✗','#e2001a')}${btn('landed','✓','#3E8E5A')}${btn('stomped','★','#148FA0')}
+      <button onclick="sbRunNoteToggle('${name}',${i})" title="Tags / comment" style="background:none;border:1px solid ${hasNote || r.noteOpen === i ?'#C96A1F':'var(--border)'};border-radius:8px;color:${hasNote || r.noteOpen === i ?'#C96A1F':'var(--muted)'};cursor:pointer;font-size:14px;padding:6px 9px;">✎</button>
       <button onclick="sbRunRemoveEl('${name}',${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 4px;">✕</button>
     </div>${noteLine}${notePanel}`;
   }).join('');
@@ -1569,7 +1569,7 @@ function sbRunCardHtml(name, d, trickOptions) {
   let addPanel = '';
   if (r.addMode === 'jump') {
     addPanel = `<div style="margin-top:10px;">
-      <select onchange="sbRunAddJump('${name}', this.value)" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:14px;font-family:inherit;">
+      <select onchange="sbRunAddJump('${name}', this.value)" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #148FA0;background:var(--surface2);color:var(--text);font-size:14px;font-family:inherit;">
         <option value="">— select ${sessType && sessType.startsWith('Halfpipe') ? 'hit' : 'jump'} trick —</option>
         ${trickOptions}
       </select>
@@ -1578,33 +1578,33 @@ function sbRunCardHtml(name, d, trickOptions) {
     addPanel = `<div style="margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
       <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Rail type</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-        ${sbAllRailTypes().map(t => `<button onclick="sbRunSetRailType('${name}','${t.replace(/'/g,"\\'")}')" style="padding:6px 12px;border-radius:999px;border:1.5px solid ${r.railType===t?'#39c3d4':'var(--border)'};background:${r.railType===t?'rgba(57,195,212,0.18)':'none'};color:${r.railType===t?'#39c3d4':'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">${t}</button>`).join('')}
-        <button onclick="sbRunNewRailType('${name}')" style="padding:6px 12px;border-radius:999px;border:1.5px dashed #39c3d4;background:none;color:#39c3d4;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">+ New</button>
+        ${sbAllRailTypes().map(t => `<button onclick="sbRunSetRailType('${name}','${t.replace(/'/g,"\\'")}')" style="padding:6px 12px;border-radius:999px;border:1.5px solid ${r.railType===t?'#148FA0':'var(--border)'};background:${r.railType===t?'rgba(20,143,160,0.18)':'none'};color:${r.railType===t?'#148FA0':'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">${t}</button>`).join('')}
+        <button onclick="sbRunNewRailType('${name}')" style="padding:6px 12px;border-radius:999px;border:1.5px dashed #148FA0;background:none;color:#148FA0;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">+ New</button>
       </div>
       <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Trick (free text, with suggestions)</div>
       <div style="display:flex;gap:8px;">
         <input id="run-rail-trick-${sid}" list="run-rail-suggest" placeholder="e.g. Front 270 on" style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;">
         <datalist id="run-rail-suggest">${sbAllRailTricks().map(s => `<option value="${s}">`).join('')}</datalist>
-        <button onclick="sbRunAddRailCommit('${name}')" style="padding:9px 16px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">Add</button>
+        <button onclick="sbRunAddRailCommit('${name}')" style="padding:9px 16px;border-radius:8px;border:1px solid #148FA0;background:rgba(20,143,160,0.15);color:#148FA0;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">Add</button>
       </div>
     </div>`;
   }
 
   const rated = r.ratings.filter(Boolean).length;
   return `<div class="card" style="padding:24px;" id="sess-col-${sid}">
-    <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:4px;text-align:center;">${shortName(name)}</div>
+    <div style="font-size:28px;font-weight:800;color:#148FA0;margin-bottom:4px;text-align:center;">${shortName(name)}</div>
     <div style="text-align:center;margin-bottom:14px;">
-      <span style="background:rgba(167,139,250,0.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:999px;padding:4px 14px;font-size:12px;font-weight:700;">${sessType && sessType.startsWith('Halfpipe') ? 'HALFPIPE' : 'SLOPESTYLE'} RUN #${r.no}</span>
+      <span style="background:rgba(142,91,184,0.15);border:1px solid #8E5BB8;color:#8E5BB8;border-radius:999px;padding:4px 14px;font-size:12px;font-weight:700;">${sessType && sessType.startsWith('Halfpipe') ? 'HALFPIPE' : 'SLOPESTYLE'} RUN #${r.no}</span>
 
     </div>
     <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Run setup — ${r.elements.length}/${sbRunMaxEl()} ${sessType && sessType.startsWith('Halfpipe') ? 'hits' : 'elements'}</div>
     ${elRows || '<div style="color:var(--muted);font-size:12px;padding:10px 0;">No elements yet — build the run below.</div>'}
     <div style="display:flex;gap:8px;margin-top:10px;">
-      <button onclick="sbRunToggleAdd('${name}','jump')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='jump'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='jump'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='jump'?'#39c3d4':'var(--muted)'};font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">${sessType && sessType.startsWith('Halfpipe') ? '+ Hit' : '+ Jump'}</button>
-      ${sessType && sessType.startsWith('Halfpipe') ? '' : `<button onclick="sbRunToggleAdd('${name}','rail')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='rail'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='rail'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='rail'?'#39c3d4':'var(--muted)'};font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">+ Rail</button>`}
+      <button onclick="sbRunToggleAdd('${name}','jump')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='jump'?'solid #148FA0':'dashed var(--border)'};background:${r.addMode==='jump'?'rgba(20,143,160,0.12)':'none'};color:${r.addMode==='jump'?'#148FA0':'var(--muted)'};font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">${sessType && sessType.startsWith('Halfpipe') ? '+ Hit' : '+ Jump'}</button>
+      ${sessType && sessType.startsWith('Halfpipe') ? '' : `<button onclick="sbRunToggleAdd('${name}','rail')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='rail'?'solid #148FA0':'dashed var(--border)'};background:${r.addMode==='rail'?'rgba(20,143,160,0.12)':'none'};color:${r.addMode==='rail'?'#148FA0':'var(--muted)'};font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">+ Rail</button>`}
     </div>
     ${addPanel}
-    <button onclick="sbRunSave('${name}')" ${r.elements.length && rated === r.elements.length ? '' : 'disabled'} style="width:100%;margin-top:14px;padding:14px;border-radius:10px;border:none;background:${r.elements.length && rated === r.elements.length ? '#34d399' : 'var(--surface2)'};color:${r.elements.length && rated === r.elements.length ? '#06281c' : 'var(--muted)'};font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">Save Run #${r.no} (${rated}/${r.elements.length} rated)</button>
+    <button onclick="sbRunSave('${name}')" ${r.elements.length && rated === r.elements.length ? '' : 'disabled'} style="width:100%;margin-top:14px;padding:14px;border-radius:10px;border:none;background:${r.elements.length && rated === r.elements.length ? '#3E8E5A' : 'var(--surface2)'};color:${r.elements.length && rated === r.elements.length ? '#ffffff' : 'var(--muted)'};font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">Save Run #${r.no} (${rated}/${r.elements.length} rated)</button>
     <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;">Each element is saved as one attempt (tagged «Run ${r.no} · position»).${sessType && sessType.startsWith('Halfpipe') ? '' : ` New rail tricks are added to the athlete's Assessment automatically as Goal.`}</div>
   </div>`;
 }
@@ -1655,7 +1655,7 @@ function sbVideoOverlay(html, closable = true) {
 }
 function sbVideoProgress(p) {
   if (!document.getElementById('sbv-pct')) sbVideoOverlay(`<div style="font-weight:700;font-size:16px;">Uploading video…</div>
-    <div style="height:10px;border-radius:99px;background:var(--surface2);overflow:hidden;margin-top:14px;"><i id="sbv-bar" style="display:block;height:100%;width:0;background:#39c3d4;transition:width .2s;"></i></div>
+    <div style="height:10px;border-radius:99px;background:var(--surface2);overflow:hidden;margin-top:14px;"><i id="sbv-bar" style="display:block;height:100%;width:0;background:#148FA0;transition:width .2s;"></i></div>
     <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:14px;color:var(--muted);"><span>Please keep the app open until the upload is finished.</span><b id="sbv-pct">0%</b></div>`, false);
   document.getElementById('sbv-bar').style.width = p + '%';
   document.getElementById('sbv-pct').textContent = p + '%';
@@ -1714,6 +1714,6 @@ async function sbPlayVideo(id) {
 function sbVideoBtn(e) {
   const st = 'border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;';
   return e.video_path
-    ? `<button onclick="sbPlayVideo(${e.id})" style="${st}background:rgba(52,211,153,.15);border:1px solid #34d399;color:#34d399;">▶ Video</button>`
-    : `<button onclick="sbPickVideo(${e.id})" style="${st}background:none;border:1px solid #1a3450;color:#6b8299;">⬆ Video</button>`;
+    ? `<button onclick="sbPlayVideo(${e.id})" style="${st}background:rgba(62,142,90,.15);border:1px solid #3E8E5A;color:#3E8E5A;">▶ Video</button>`
+    : `<button onclick="sbPickVideo(${e.id})" style="${st}background:none;border:1px solid #e7e3e1;color:#5c5c61;">⬆ Video</button>`;
 }

@@ -51,9 +51,9 @@ const SPORT_CONFIGS = {
   {name:'Robin Zürcher',squad:'DVLP'},
 ],
     squads: [
-  {key:'M',  label:'TG HP Matty',         short:'TG HP',   color:'#39c3d4'},
-  {key:'PE', label:'TG SS&BA Pascal & Emil', short:'TG 1 & 2', color:'#f59e0b'},
-  {key:'DVLP', label:'TG DVLP Wendelin', short:'TG DVLP', color:'#34d399'},
+  {key:'M',  label:'TG HP Matty',         short:'TG HP',   color:'#148FA0'},
+  {key:'PE', label:'TG SS&BA Pascal & Emil', short:'TG 1 & 2', color:'#C96A1F'},
+  {key:'DVLP', label:'TG DVLP Wendelin', short:'TG DVLP', color:'#3E8E5A'},
 ],
     athleteOptgroups: `<optgroup label="TG HP Matty">
                           <option>Berenice Wicki</option>
@@ -234,10 +234,10 @@ const SPORT_CONFIGS = {
   {name:'Neo Zingg',squad:'DVLP'},
 ],
     squads: [
-  {key:'GK', label:'TG SS&BA Greg & Kai', short:'TG 1', color:'#39c3d4'},
-  {key:'X',  label:'TG SS&BA Xeno',       short:'TG 2', color:'#f59e0b'},
-  {key:'HP', label:'TG Halfpipe',   short:'TG HP',   color:'#a78bfa'},
-  {key:'DVLP', label:'TG DVLP Dominic', short:'TG DVLP', color:'#34d399'},
+  {key:'GK', label:'TG SS&BA Greg & Kai', short:'TG 1', color:'#148FA0'},
+  {key:'X',  label:'TG SS&BA Xeno',       short:'TG 2', color:'#C96A1F'},
+  {key:'HP', label:'TG Halfpipe',   short:'TG HP',   color:'#8E5BB8'},
+  {key:'DVLP', label:'TG DVLP Dominic', short:'TG DVLP', color:'#3E8E5A'},
 ],
     athleteOptgroups: `<optgroup label="TG SS&BA Greg & Kai">
             <option>Adrien Vaudaux</option>
@@ -346,7 +346,7 @@ const SPORT_CONFIGS = {
 };
 const CFG = SPORT_CONFIGS[SPORT];
 // Snowboard uses the refreshed mint green; Freeski keeps the classic palette
-const UI_GREEN      = '#34d399';  // seit 31.8.2026 beide Sportarten Mint
-const UI_GREEN_TEXT = SPORT === 'snowboard' ? '#34d399' : '#4ade80';
-const UI_GREEN_BG25 = SPORT === 'snowboard' ? 'rgba(52,211,153,0.25)' : 'rgba(52,211,153,0.25)';
-const UI_GREEN_BG20 = SPORT === 'snowboard' ? 'rgba(52,211,153,0.2)'  : 'rgba(52,211,153,0.2)';
+const UI_GREEN      = '#3E8E5A';  // seit 31.8.2026 beide Sportarten Mint
+const UI_GREEN_TEXT = SPORT === 'snowboard' ? '#3E8E5A' : '#4ade80';
+const UI_GREEN_BG25 = SPORT === 'snowboard' ? 'rgba(62,142,90,0.25)' : 'rgba(62,142,90,0.25)';
+const UI_GREEN_BG20 = SPORT === 'snowboard' ? 'rgba(62,142,90,0.2)'  : 'rgba(62,142,90,0.2)';

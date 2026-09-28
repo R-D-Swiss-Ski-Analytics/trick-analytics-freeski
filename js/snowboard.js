@@ -35,14 +35,14 @@ function updateFwdSwBtn(prefix) {
         const btn = document.createElement('button');
         btn.type='button'; btn.textContent=val; btn.dataset.val=val;
         const isActive = dirSelect.value === val;
-        btn.style.cssText = `flex:1;padding:8px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .15s;background:${isActive?'rgba(57,195,212,0.18)':'var(--surface2)'};border-color:${isActive?'#39c3d4':'var(--border)'};color:${isActive?'#39c3d4':'var(--muted)'};`;
+        btn.style.cssText = `flex:1;padding:8px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .15s;background:${isActive?'rgba(20,143,160,0.18)':'var(--surface2)'};border-color:${isActive?'#148FA0':'var(--border)'};color:${isActive?'#148FA0':'var(--muted)'};`;
         btn.onclick = () => {
           dirSelect.value = val;
           wrap.querySelectorAll('button').forEach(b => {
             const a = b.dataset.val === val;
-            b.style.background=a?'rgba(57,195,212,0.18)':'var(--surface2)';
-            b.style.borderColor=a?'#39c3d4':'var(--border)';
-            b.style.color=a?'#39c3d4':'var(--muted)';
+            b.style.background=a?'rgba(20,143,160,0.18)':'var(--surface2)';
+            b.style.borderColor=a?'#148FA0':'var(--border)';
+            b.style.color=a?'#148FA0':'var(--muted)';
           });
         };
         wrap.appendChild(btn);
@@ -348,7 +348,7 @@ function renderSessionReports() {
         <div style="font-size:12px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${athStr}${condStars?' · '+condStars:''}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
-        <button onclick="openSessionReportView(window._srReports[${idx}])" style="padding:6px 12px;border-radius:6px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:inherit;font-size:12px;cursor:pointer;">View</button>
+        <button onclick="openSessionReportView(window._srReports[${idx}])" style="padding:6px 12px;border-radius:6px;background:rgba(20,143,160,0.15);border:1px solid #148FA0;color:#148FA0;font-family:inherit;font-size:12px;cursor:pointer;">View</button>
 <button onclick="deleteSessionReport(${r.id},false)" title="Delete report only" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a33;color:#e2001a;font-size:14px;cursor:pointer;">🗑</button>
         <button onclick="deleteSessionReport(${r.id},true)" title="Delete report + all trick data" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a;color:#e2001a;font-size:12px;cursor:pointer;font-weight:700;">🗑+</button>
       </div>
@@ -503,7 +503,7 @@ function openTeamPdfReport() {
     const sessRows = Object.entries(byTrick).sort((a,b)=>b[1].att-a[1].att).map(([trick,s]) => {
       const lp = s.att ? Math.round(s.land/s.att*100) : 0;
       const typeStr = [...s.type].map(t=>({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[t]||t)).join(', ');
-      return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center">${s.land-s.stomped}</td><td style="text-align:center">${s.stomped}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#34d399':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:12px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
+      return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center">${s.land-s.stomped}</td><td style="text-align:center">${s.stomped}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#3E8E5A':lp>=40?'#C96A1F':'#cc0000'}">${lp}%</td><td style="font-size:12px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
     }).join('');
 
     const mastered = assData.filter(t=>t.athlet===athlet&&t.status==='mastered');
@@ -512,11 +512,11 @@ function openTeamPdfReport() {
       .filter(t => t.athlet===athlet && t.grab_status && typeof t.grab_status==='object')
       .map(e => Object.entries(e.grab_status)
         .filter(([,s2]) => s2===st)
-        .map(([g]) => `<tr><td>${normSbTrick(e.trick_label||'—')} — ${g}</td><td>${e.disziplin||'—'}</td><td style="color:${st==='mastered'?'#34d399':'#f59e0b'};font-weight:600">${st==='mastered'?'Learned':'Goal'}</td></tr>`)
+        .map(([g]) => `<tr><td>${normSbTrick(e.trick_label||'—')} — ${g}</td><td>${e.disziplin||'—'}</td><td style="color:${st==='mastered'?'#3E8E5A':'#C96A1F'};font-weight:600">${st==='mastered'?'Learned':'Goal'}</td></tr>`)
         .join(''))
       .join('');
-    const mastRows = mastered.map(e=>`<tr><td>${normSbTrick(e.trick_label||'—')}</td><td>${e.disziplin||'—'}</td><td style="color:#34d399;font-weight:600">Learned</td></tr>`).join('') + grabRowsFor('mastered');
-    const goalRows = goals.map(e=>`<tr><td>${normSbTrick(e.trick_label||'—')}</td><td>${e.disziplin||'—'}</td><td style="color:#f59e0b;font-weight:600">Goal</td></tr>`).join('') + grabRowsFor('goal');
+    const mastRows = mastered.map(e=>`<tr><td>${normSbTrick(e.trick_label||'—')}</td><td>${e.disziplin||'—'}</td><td style="color:#3E8E5A;font-weight:600">Learned</td></tr>`).join('') + grabRowsFor('mastered');
+    const goalRows = goals.map(e=>`<tr><td>${normSbTrick(e.trick_label||'—')}</td><td>${e.disziplin||'—'}</td><td style="color:#C96A1F;font-weight:600">Goal</td></tr>`).join('') + grabRowsFor('goal');
 
     return `<div class="ath-block">
       <div class="ath-name">${athlet}</div>
@@ -631,7 +631,7 @@ async function toggleSessionAthlete(name) {
     sessSelectedAthletes.push(name);
     sessAthleteData[name] = { tricks: [], currentTrick: '', currentGrab: '', stats: {attempts:0,landed:0,perfect:0} };
     const card = document.getElementById('sess-ath-card-' + name.replace(/\s/g,'_'));
-    if (card) card.style.borderColor = '#39c3d4';
+    if (card) card.style.borderColor = '#148FA0';
     sessAthleteData[name].tricks = await fetchStandortTricks(name);
   }
   // Show/hide start button directly — no trick pre-selection step
@@ -771,20 +771,20 @@ function showGrabPicker(name, trickLabel, status, btn) {
   const picker = document.createElement('div');
   picker.className = 'grab-picker-' + safeId;
   picker.id = pickerId;
-  picker.style.cssText = 'margin-top:8px;padding:10px 14px;background:var(--surface);border:1px solid #39c3d4;border-radius:10px;width:100%;';
+  picker.style.cssText = 'margin-top:8px;padding:10px 14px;background:var(--surface);border:1px solid #148FA0;border-radius:10px;width:100%;';
   picker.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-      <span style="font-size:12px;color:#39c3d4;font-weight:700;text-transform:uppercase;letter-spacing:.8px;">Select grab(s)</span>
+      <span style="font-size:12px;color:#148FA0;font-weight:700;text-transform:uppercase;letter-spacing:.8px;">Select grab(s)</span>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--muted);">
-        <input type="checkbox" id="dg-toggle-${safeId}" onchange="toggleDoubleGrab('${name}','${trickLabel.replace(/'/g,"\\'")}','${pickerId}')" style="accent-color:#f59e0b;width:15px;height:15px;">
+        <input type="checkbox" id="dg-toggle-${safeId}" onchange="toggleDoubleGrab('${name}','${trickLabel.replace(/'/g,"\\'")}','${pickerId}')" style="accent-color:#C96A1F;width:15px;height:15px;">
         Double Grab
       </label>
     </div>
-    <div id="dg-hint-${safeId}" style="display:none;font-size:12px;color:#f59e0b;margin-bottom:8px;">Select first grab →</div>
+    <div id="dg-hint-${safeId}" style="display:none;font-size:12px;color:#C96A1F;margin-bottom:8px;">Select first grab →</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;" id="dg-grabs-${safeId}">
       ${grabs.map(g => {
         const sel = alreadySelected.includes(g);
-        const s = sel ? 'background:rgba(57,195,212,0.18);border-color:#39c3d4;color:#39c3d4;' : 'background:var(--surface2);border-color:var(--border);color:var(--text);';
+        const s = sel ? 'background:rgba(20,143,160,0.18);border-color:#148FA0;color:#148FA0;' : 'background:var(--surface2);border-color:var(--border);color:var(--text);';
         return `<button onclick="addTrickWithGrab('${name}','${trickLabel.replace(/'/g,"\\'")}','${g}',this)"
           style="padding:6px 14px;${s}border-width:1.5px;border-style:solid;border-radius:7px;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;">${g}</button>`;
       }).join('')}
@@ -820,7 +820,7 @@ function toggleDoubleGrab(name, trickLabel, pickerId) {
 function doubleGrabClick(name, trickLabel, grab, btn, safeId) {
   if (!doubleGrabFirst[name]) {
     doubleGrabFirst[name] = grab;
-    btn.style.background = 'rgba(245,158,11,0.2)'; btn.style.borderColor = '#f59e0b'; btn.style.color = '#f59e0b';
+    btn.style.background = 'rgba(201,106,31,0.2)'; btn.style.borderColor = '#C96A1F'; btn.style.color = '#C96A1F';
     const hint = document.getElementById('dg-hint-' + safeId);
     if (hint) hint.textContent = grab + ' to → select second grab';
   } else {
@@ -846,9 +846,9 @@ function addTrickWithGrab(name, trickLabel, grab, btn) {
   const idx = sessActiveTricks[name].indexOf(label);
   if (idx === -1) {
     sessActiveTricks[name].push(label);
-    btn.style.background = 'rgba(57,195,212,0.18)';
-    btn.style.borderColor = '#39c3d4';
-    btn.style.color = '#39c3d4';
+    btn.style.background = 'rgba(20,143,160,0.18)';
+    btn.style.borderColor = '#148FA0';
+    btn.style.color = '#148FA0';
   } else {
     sessActiveTricks[name].splice(idx, 1);
     btn.style.background = 'var(--surface2)';
@@ -869,7 +869,7 @@ function renderSessionTrickSelection() {
       const safeId = name.replace(/\s/g,'_');
       const allTricks = sessAthleteData[name].tricks || [];
       return `<div style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);">
-        <div style="font-weight:700;font-size:14px;color:#39c3d4;margin-bottom:14px;">${shortName(name)}</div>
+        <div style="font-weight:700;font-size:14px;color:#148FA0;margin-bottom:14px;">${shortName(name)}</div>
         ${SESS_DIRECTIONS.map(dir => {
           const rotSort = (a,b) => extractRotFromLabel(b.trick_label) - extractRotFromLabel(a.trick_label);
           const mastered = tricksForDir(allTricks.filter(t=>t.status==='mastered'), dir).sort(rotSort);
@@ -912,9 +912,9 @@ function toggleSessGrab(name, dir, grab, btn) {
   const idx = sessActiveTricks[name].indexOf(label);
   if (idx === -1) {
     sessActiveTricks[name].push(label);
-    btn.style.background = 'rgba(57,195,212,0.18)';
-    btn.style.borderColor = '#39c3d4';
-    btn.style.color = '#39c3d4';
+    btn.style.background = 'rgba(20,143,160,0.18)';
+    btn.style.borderColor = '#148FA0';
+    btn.style.color = '#148FA0';
   } else {
     sessActiveTricks[name].splice(idx, 1);
     btn.style.background = 'var(--surface2)';
@@ -929,9 +929,9 @@ function renderSessSelected(name) {
   if (!el) return;
   const tricks = sessActiveTricks[name] || [];
   el.innerHTML = tricks.length
-    ? tricks.map((t,i) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px 4px 10px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;border-radius:6px;font-size:12px;color:#39c3d4;">
+    ? tricks.map((t,i) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px 4px 10px;background:rgba(20,143,160,0.15);border:1px solid #148FA0;border-radius:6px;font-size:12px;color:#148FA0;">
         ${t}
-        <button onclick="removeSessTrick('${name}',${i})" style="background:none;border:none;color:#39c3d4;cursor:pointer;font-size:14px;line-height:1;padding:0;opacity:.7;" title="Remove">×</button>
+        <button onclick="removeSessTrick('${name}',${i})" style="background:none;border:none;color:#148FA0;cursor:pointer;font-size:14px;line-height:1;padding:0;opacity:.7;" title="Remove">×</button>
       </span>`).join('')
     : '<span class="gedaempft-12">None yet</span>';
 }
@@ -941,9 +941,9 @@ function toggleSessAssessmentTrick(name, trick, btn) {
   const idx = sessActiveTricks[name].indexOf(trick);
   if (idx === -1) {
     sessActiveTricks[name].push(trick);
-    btn.style.background = 'rgba(57,195,212,0.18)';
-    btn.style.borderColor = '#39c3d4';
-    btn.style.color = '#39c3d4';
+    btn.style.background = 'rgba(20,143,160,0.18)';
+    btn.style.borderColor = '#148FA0';
+    btn.style.color = '#148FA0';
   } else {
     sessActiveTricks[name].splice(idx, 1);
     btn.style.background = 'var(--surface2)';
@@ -1004,7 +1004,7 @@ function renderLiveSession() {
       const last = sessLog.find(e => e.name === name);
       const dot = last ? (last.result==='miss'?'🔴':last.result==='perfect'?'⭐':'🟢') : '';
       const active = name === sessActiveSbAthlete;
-      return `<button onclick="selectSessAthlete('${name}')" style="padding:10px 18px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:${active?'rgba(57,195,212,0.2)':'var(--surface2)'};border:2px solid ${active?'#39c3d4':'var(--border)'};color:${active?'#39c3d4':'var(--muted)'};">${dot} ${shortName(name)}</button>`;
+      return `<button onclick="selectSessAthlete('${name}')" style="padding:10px 18px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:${active?'rgba(20,143,160,0.2)':'var(--surface2)'};border:2px solid ${active?'#148FA0':'var(--border)'};color:${active?'#148FA0':'var(--muted)'};">${dot} ${shortName(name)}</button>`;
     }).join('')}
   </div>`;
 
@@ -1063,11 +1063,11 @@ function renderLiveSession() {
         <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Grab <span style="text-transform:none;letter-spacing:0;">(tap a 2nd grab for a double grab)</span></div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;" id="sess-grabs-${sid}">
           <button onclick="sbSelectGrab('${name}','')"
-            style="padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;border:1.5px solid ${!d.currentGrab?'#39c3d4':'var(--border)'};background:${!d.currentGrab?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${!d.currentGrab?'#39c3d4':'var(--muted)'};font-family:inherit;">No Grab</button>
+            style="padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;border:1.5px solid ${!d.currentGrab?'#148FA0':'var(--border)'};background:${!d.currentGrab?'rgba(20,143,160,0.18)':'var(--surface2)'};color:${!d.currentGrab?'#148FA0':'var(--muted)'};font-family:inherit;">No Grab</button>
           ${grabs.map(g => {
             const active = selParts.includes(g);
             return `<button onclick="sbSelectGrab('${name}','${g.replace(/'/g,"\\'")}')"
-              style="padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;border:1.5px solid ${active?'#39c3d4':'var(--border)'};background:${active?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${active?'#39c3d4':'var(--muted)'};font-family:inherit;">${g}${grabStat[g]==='goal'?' 🎯':''}</button>`;
+              style="padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;border:1.5px solid ${active?'#148FA0':'var(--border)'};background:${active?'rgba(20,143,160,0.18)':'var(--surface2)'};color:${active?'#148FA0':'var(--muted)'};font-family:inherit;">${g}${grabStat[g]==='goal'?' 🎯':''}</button>`;
           }).join('')}
         </div>
       </div>`;
@@ -1075,7 +1075,7 @@ function renderLiveSession() {
   }
 
   const cardHtml = `<div class="card" style="padding:24px;" id="sess-col-${sid}">
-    <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:16px;text-align:center;">${shortName(name)}</div>
+    <div style="font-size:28px;font-weight:800;color:#148FA0;margin-bottom:16px;text-align:center;">${shortName(name)}</div>
     <div class="abstand-20">
       <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Working on</div>
       <select onchange="sbSetTrick('${name}',this.value)"
@@ -1091,18 +1091,18 @@ function renderLiveSession() {
         <div class="hinweis-klein">Attempts</div>
       </div>
       <div style="background:var(--surface2);border-radius:8px;padding:12px 4px;">
-        <div style="font-size:28px;font-weight:800;color:#34d399;">${s.landed+s.perfect}</div>
+        <div style="font-size:28px;font-weight:800;color:#3E8E5A;">${s.landed+s.perfect}</div>
         <div class="hinweis-klein">Landed</div>
       </div>
       <div style="background:var(--surface2);border-radius:8px;padding:12px 4px;">
-        <div style="font-size:28px;font-weight:800;color:#39c3d4;">${pct}%</div>
+        <div style="font-size:28px;font-weight:800;color:#148FA0;">${pct}%</div>
         <div class="hinweis-klein">Rate</div>
       </div>
     </div>
     ${d.currentTrick ? `<div style="display:flex;justify-content:flex-end;margin-bottom:8px;"><span style="background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--muted);">Attempt #${sbAttemptNo(name)}</span></div>` : ''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <button onclick="logAttemptStart('${name}','failed')" id="sess-btn-failed-${sid}" style="padding:28px 4px;background:${sessPending&&sessPending.name===name&&sessPending.mode==='failed'?'rgba(226,0,26,0.25)':'rgba(226,0,26,0.1)'};border:2px solid #e2001a;color:#e2001a;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;line-height:1.6;-webkit-tap-highlight-color:transparent;">✗<br>FAILED</button>
-      <button onclick="logAttemptStart('${name}','landed')" id="sess-btn-landed-${sid}" style="padding:28px 4px;background:${sessPending&&sessPending.name===name&&sessPending.mode==='landed'?'rgba(52,211,153,0.25)':'rgba(52,211,153,0.1)'};border:2px solid #34d399;color:#34d399;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;line-height:1.6;-webkit-tap-highlight-color:transparent;">✓<br>LANDED</button>
+      <button onclick="logAttemptStart('${name}','landed')" id="sess-btn-landed-${sid}" style="padding:28px 4px;background:${sessPending&&sessPending.name===name&&sessPending.mode==='landed'?'rgba(62,142,90,0.25)':'rgba(62,142,90,0.1)'};border:2px solid #3E8E5A;color:#3E8E5A;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;line-height:1.6;-webkit-tap-highlight-color:transparent;">✓<br>LANDED</button>
     </div>
     <div id="sess-disclose-${sid}"></div>
     <input type="text" id="sess-comment-${sid}" placeholder="Comment before rating (optional)" style="width:100%;margin-top:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
@@ -1290,19 +1290,19 @@ function renderSbDisclosure() {
     el.innerHTML = `<div style="margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <span style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">KPI's met</span>
-        <span style="font-size:14px;font-weight:800;color:#39c3d4;">${count}/5</span>
+        <span style="font-size:14px;font-weight:800;color:#148FA0;">${count}/5</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;text-align:center;">
         ${SB_KPIS.map(([k,label]) => {
           const on = !!sessPendingKpis[k];
           return `<button onclick="toggleSbKpi('${k}')" style="background:none;border:none;cursor:pointer;padding:4px 0;-webkit-tap-highlight-color:transparent;">
             <div style="font-size:26px;line-height:1;filter:${on?'none':'grayscale(1) opacity(.35)'};">⭐</div>
-            <div style="font-size:12px;margin-top:4px;color:${on?'#39c3d4':'var(--muted)'};font-weight:${on?'700':'500'};line-height:1.2;">${label}</div>
+            <div style="font-size:12px;margin-top:4px;color:${on?'#148FA0':'var(--muted)'};font-weight:${on?'700':'500'};line-height:1.2;">${label}</div>
           </button>`;
         }).join('')}
       </div>
       <div style="font-size:12px;color:var(--muted);text-align:center;margin:8px 0 10px;">5/5 = automatically Stomped</div>
-      <button onclick="commitLandedAttempt('${name}')" style="width:100%;padding:12px;border-radius:10px;border:none;background:${count===5?'#39c3d4':'#34d399'};color:#060f1a;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">${count===5?'⭐ Save as Stomped':'✓ Save Landed ('+count+'/5)'}</button>
+      <button onclick="commitLandedAttempt('${name}')" style="width:100%;padding:12px;border-radius:10px;border:none;background:${count===5?'#148FA0':'#3E8E5A'};color:#faf7f6;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">${count===5?'⭐ Save as Stomped':'✓ Save Landed ('+count+'/5)'}</button>
     </div>`;
   } else {
     const nSel = sessPendingFails.length;
@@ -1310,7 +1310,7 @@ function renderSbDisclosure() {
       <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:10px;">Select reason(s)</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;">
         ${sbAllFailReasons().map(r => { const on = sessPendingFails.includes(r); return `<button onclick="toggleSbFail('${r.replace(/'/g,"\\'")}')" style="padding:9px 12px;border-radius:8px;border:1.5px solid ${on?'#e2001a':'var(--border)'};background:${on?'rgba(226,0,26,0.12)':'var(--surface)'};color:${on?'#e2001a':'var(--text)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;">${r}</button>`; }).join('')}
-        <button onclick="sbCustomFailPrompt('${name}')" style="padding:9px 12px;border-radius:8px;border:1.5px dashed #39c3d4;background:none;color:#39c3d4;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;">＋ Other…</button>
+        <button onclick="sbCustomFailPrompt('${name}')" style="padding:9px 12px;border-radius:8px;border:1.5px dashed #148FA0;background:none;color:#148FA0;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;">＋ Other…</button>
       </div>
       <button onclick="commitFailedMulti('${name}')" style="width:100%;margin-top:12px;padding:12px;border-radius:10px;border:none;background:#e2001a;color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">✗ Save Failed${nSel ? ' (' + nSel + ' reason' + (nSel > 1 ? 's' : '') + ')' : ' (no reason)'}</button>
     </div>`;
@@ -1358,7 +1358,7 @@ async function logAttempt(name, result, detail) {
 
   // Flash feedback
   const col = document.getElementById('sess-col-'+name.replace(/\s/g,'_'));
-  const flashColor = result==='miss'?'rgba(226,0,26,0.2)':result==='landed'?'rgba(52,211,153,0.2)':'rgba(57,195,212,0.2)';
+  const flashColor = result==='miss'?'rgba(226,0,26,0.2)':result==='landed'?'rgba(62,142,90,0.2)':'rgba(20,143,160,0.2)';
   col.style.background = flashColor;
   setTimeout(()=>{ col.style.background=''; }, 250);
   sessPlayLogSound(result);
@@ -1513,7 +1513,7 @@ function renderSessionLog() {
     : sessLog.map((e,i)=>({...e,_i:i}));
   el.innerHTML = filtered.slice(0,30).map(e=>{ const i=e._i;
     const icon = e.result==='miss'?'✗':e.result==='landed'?'✓':'⭐';
-    const c = e.result==='miss'?'#e2001a':e.result==='landed'?'#34d399':'#39c3d4';
+    const c = e.result==='miss'?'#e2001a':e.result==='landed'?'#3E8E5A':'#148FA0';
     const isEditing = sessEditIdx === i;
     let editRow = '';
     if (isEditing) {
@@ -1521,15 +1521,15 @@ function renderSessionLog() {
       const editStars = SB_KPIS.filter(([k]) => sessEditKpis[k]).length;
       editRow = `<div style="padding:8px 12px 4px 38px;">
         <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;">
-          <input type="text" id="sess-edit-trick" value="${tg.base.replace(/"/g,'&quot;')}" placeholder="Trick name" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
+          <input type="text" id="sess-edit-trick" value="${tg.base.replace(/"/g,'&quot;')}" placeholder="Trick name" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #148FA0;background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
           ${grabSelectHtml('sess-edit-grab', [...new Set([...SB_HP_GRABS, ...SB_JUMP_GRABS])].sort(), tg.grab)}
         </div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-bottom:6px;">
           ${SB_KPIS.map(([k,label]) => {
             const on = !!sessEditKpis[k];
-            return `<button onclick="toggleSbEditKpi('${k}')" style="padding:5px 8px;border-radius:6px;border:1.5px solid ${on?'#39c3d4':'var(--border)'};background:${on?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${on?'#39c3d4':'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">⭐ ${label}</button>`;
+            return `<button onclick="toggleSbEditKpi('${k}')" style="padding:5px 8px;border-radius:6px;border:1.5px solid ${on?'#148FA0':'var(--border)'};background:${on?'rgba(20,143,160,0.18)':'var(--surface2)'};color:${on?'#148FA0':'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">⭐ ${label}</button>`;
           }).join('')}
-          <button onclick="saveSbLogEdit(${i},'landed')" style="padding:6px 12px;border-radius:8px;border:2px solid ${editStars===5?'#39c3d4':'#34d399'};background:${editStars===5?'rgba(57,195,212,0.15)':'rgba(52,211,153,0.15)'};color:${editStars===5?'#39c3d4':'#34d399'};font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">${editStars===5?'⭐ Save Stomped':'✓ Save Landed '+editStars+'/5'}</button>
+          <button onclick="saveSbLogEdit(${i},'landed')" style="padding:6px 12px;border-radius:8px;border:2px solid ${editStars===5?'#148FA0':'#3E8E5A'};background:${editStars===5?'rgba(20,143,160,0.15)':'rgba(62,142,90,0.15)'};color:${editStars===5?'#148FA0':'#3E8E5A'};font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">${editStars===5?'⭐ Save Stomped':'✓ Save Landed '+editStars+'/5'}</button>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
           <select id="sess-edit-fail" onchange="setSbEditFail(this.value)" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
@@ -1544,15 +1544,15 @@ function renderSessionLog() {
         </div>
       </div>`;
     }
-    return `<div style="border-radius:8px;${isEditing?'background:rgba(57,195,212,0.08);border:1px solid #39c3d433;':''}">
+    return `<div style="border-radius:8px;${isEditing?'background:rgba(20,143,160,0.08);border:1px solid #39c3d433;':''}">
       <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;${isEditing?'':'background:var(--surface2);border-radius:8px;'}font-size:12px;">
         <span style="color:${c};font-weight:800;font-size:16px;min-width:16px;">${icon}</span>
-        <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
+        <span style="color:#148FA0;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
         <span style="flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${normSbTrick(e.trick||'—')}${e.comment?` <span class="gedaempft-10">— ${e.comment}</span>`:''}</span>
-        ${e.result!=='miss' && typeof e.sterne==='number' ? `<span style="color:${e.sterne===5?'#39c3d4':'#34d399'};font-size:12px;font-weight:700;white-space:nowrap;">${e.sterne}/5★</span>` : ''}
+        ${e.result!=='miss' && typeof e.sterne==='number' ? `<span style="color:${e.sterne===5?'#148FA0':'#3E8E5A'};font-size:12px;font-weight:700;white-space:nowrap;">${e.sterne}/5★</span>` : ''}
         ${e.result==='miss' && e.failGrund ? `<span style="color:#e2001a;font-size:12px;white-space:nowrap;background:rgba(226,0,26,0.08);border-radius:4px;padding:2px 6px;">${sbFailLabel(e.failGrund)}</span>` : ''}
         <span class="gedaempft-11">${e.time}</span>
-        <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;padding:2px 7px;font-size:12px;flex-shrink:0;">✏️</button>
+        <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid ${isEditing?'#148FA0':'var(--border)'};border-radius:6px;color:${isEditing?'#148FA0':'var(--muted)'};cursor:pointer;padding:2px 7px;font-size:12px;flex-shrink:0;">✏️</button>
         <button onclick="deleteLogEntry(${i})" style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:14px;padding:2px 6px;flex-shrink:0;">🗑</button>
       </div>
       ${editRow}
@@ -1581,7 +1581,7 @@ function addAthleteToSession() {
       <div style="display:flex;flex-wrap:wrap;gap:8px;">
         ${athletes.map(a => {
           const checked = sessSelectedAthletes.includes(a.name);
-          return `<label style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface2);border:2px solid ${checked?'#39c3d4':'var(--border)'};border-radius:10px;cursor:pointer;transition:border-color .15s;" id="sess-ath-card-${a.name.replace(/\s/g,'_')}">
+          return `<label style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface2);border:2px solid ${checked?'#148FA0':'var(--border)'};border-radius:10px;cursor:pointer;transition:border-color .15s;" id="sess-ath-card-${a.name.replace(/\s/g,'_')}">
             <input type="checkbox" value="${a.name}" onchange="toggleSessionAthlete('${a.name}')" ${checked?'checked':''} style="width:16px;height:16px;accent-color:${sq.color};cursor:pointer;flex-shrink:0;">
             <span style="font-weight:600;font-size:14px;color:var(--text);">${shortName(a.name)}</span>
           </label>`;
@@ -1893,7 +1893,7 @@ function sbTrickChartSvg(g, ai, ti) {
   [0, 3, 5].forEach(s => {
     const y = H - s/5*PH;
     grid += `<line x1="${PADL}" y1="${y.toFixed(1)}" x2="${PADL + chartW}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1" ${s ? 'stroke-dasharray="2 4"' : ''}/>`;
-    grid += `<text x="${PADL - 4}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="11" fill="#6b8299" font-family="Poppins,sans-serif">${s}★</text>`;
+    grid += `<text x="${PADL - 4}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="11" fill="#5c5c61" font-family="Poppins,sans-serif">${s}★</text>`;
   });
   let stompCum = 0;
   const pts = [];
@@ -1905,14 +1905,14 @@ function sbTrickChartSvg(g, ai, ti) {
     const st = typeof a.sterne === 'number' ? a.sterne : (a.outcome==='stomped' ? 5 : 3);
     const h = isFail ? 6 : Math.max(12, st/5*PH);
     const x = PADL + i*(barW+gap);
-    labels += `<text x="${x + barW/2}" y="${H + 12}" text-anchor="middle" font-size="11" font-weight="${isFail?'700':'400'}" fill="${isFail?'#e2001a':'#6b8299'}" font-family="Poppins,sans-serif">${i+1}</text>`;
-    return `<rect x="${x}" y="${H-h}" width="${barW}" height="${h}" rx="3" fill="${isFail?'#e2001a':'#4a7dd6'}" style="cursor:pointer;" onclick="sbRVShowDetail(${ai},${ti},${i})"/>`;
+    labels += `<text x="${x + barW/2}" y="${H + 12}" text-anchor="middle" font-size="11" font-weight="${isFail?'700':'400'}" fill="${isFail?'#e2001a':'#5c5c61'}" font-family="Poppins,sans-serif">${i+1}</text>`;
+    return `<rect x="${x}" y="${H-h}" width="${barW}" height="${h}" rx="3" fill="${isFail?'#e2001a':'#396FA8'}" style="cursor:pointer;" onclick="sbRVShowDetail(${ai},${ti},${i})"/>`;
   }).join('');
   const line = pts.map((p,i) => `${PADL + i*(barW+gap)+barW/2},${(H - p*PH).toFixed(1)}`).join(' ');
   const w = PADL + Math.max(chartW, 40) + PADR;
-  const axisTitle = `<text x="${PADL + chartW/2}" y="${H + 24}" text-anchor="middle" font-size="11" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
+  const axisTitle = `<text x="${PADL + chartW/2}" y="${H + 24}" text-anchor="middle" font-size="11" fill="#5c5c61" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
   return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${(w*TRICK_CHART_SCALE).toFixed(0)}" height="${((H+28)*TRICK_CHART_SCALE).toFixed(0)}" viewBox="0 0 ${w} ${H+28}" style="display:block;">${grid}${bars}
-    ${n>1?`<polyline points="${line}" fill="none" stroke="#9aa8b8" stroke-width="1.5" opacity="0.75"/>`:''}
+    ${n>1?`<polyline points="${line}" fill="none" stroke="#8a8a8f" stroke-width="1.5" opacity="0.75"/>`:''}
     ${labels}${axisTitle}
   </svg></div>`;
 }
@@ -1926,13 +1926,13 @@ function sbRVShowDetail(ai, ti, i) {
   if (_sbRVEdit && _sbRVEdit.ai === ai && _sbRVEdit.ti === ti && _sbRVEdit.i === i) {
     const stars = SB_KPIS.filter(([k]) => _sbRVEditKpis[k]).length;
     el.innerHTML = `<div style="background:var(--surface);border:1px solid #39c3d433;border-radius:10px;padding:10px;margin-top:4px;">
-      <div style="font-size:12px;font-weight:700;color:#39c3d4;margin-bottom:8px;">Edit attempt ${i+1} — ${g.trick}</div>
+      <div style="font-size:12px;font-weight:700;color:#148FA0;margin-bottom:8px;">Edit attempt ${i+1} — ${g.trick}</div>
       <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-bottom:6px;">
         ${SB_KPIS.map(([k,label]) => {
           const on = !!_sbRVEditKpis[k];
-          return `<button onclick="sbRVEditKpiToggle('${k}')" style="padding:5px 8px;border-radius:6px;border:1.5px solid ${on?'#39c3d4':'var(--border)'};background:${on?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${on?'#39c3d4':'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">⭐ ${label}</button>`;
+          return `<button onclick="sbRVEditKpiToggle('${k}')" style="padding:5px 8px;border-radius:6px;border:1.5px solid ${on?'#148FA0':'var(--border)'};background:${on?'rgba(20,143,160,0.18)':'var(--surface2)'};color:${on?'#148FA0':'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">⭐ ${label}</button>`;
         }).join('')}
-        <button onclick="sbRVEditSave('landed')" style="padding:6px 12px;border-radius:8px;border:2px solid ${stars===5?'#39c3d4':'#34d399'};background:${stars===5?'rgba(57,195,212,0.15)':'rgba(52,211,153,0.15)'};color:${stars===5?'#39c3d4':'#34d399'};font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">${stars===5?'⭐ Save Stomped':'✓ Save Landed '+stars+'/5'}</button>
+        <button onclick="sbRVEditSave('landed')" style="padding:6px 12px;border-radius:8px;border:2px solid ${stars===5?'#148FA0':'#3E8E5A'};background:${stars===5?'rgba(20,143,160,0.15)':'rgba(62,142,90,0.15)'};color:${stars===5?'#148FA0':'#3E8E5A'};font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">${stars===5?'⭐ Save Stomped':'✓ Save Landed '+stars+'/5'}</button>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
         <select onchange="sbRVEditFailSet(this.value)" style="padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
@@ -1952,11 +1952,11 @@ function sbRVShowDetail(ai, ti, i) {
   } else if (a.kpis) {
     const met = SB_KPIS.filter(([k])=>a.kpis[k]).map(([,l])=>l);
     const open = SB_KPIS.filter(([k])=>!a.kpis[k]).map(([,l])=>l);
-    txt = `<span style="color:${a.outcome==='stomped'?'#39c3d4':'#34d399'};font-weight:600;">Attempt ${i+1} — ${a.outcome==='stomped'?'Stomped ⭐ 5/5':'Landed '+(a.sterne??'?')+'/5'}</span>`
+    txt = `<span style="color:${a.outcome==='stomped'?'#148FA0':'#3E8E5A'};font-weight:600;">Attempt ${i+1} — ${a.outcome==='stomped'?'Stomped ⭐ 5/5':'Landed '+(a.sterne??'?')+'/5'}</span>`
       + (met.length ? ` <span class="gut">✓ ${met.join(', ')}</span>` : '')
       + (open.length ? ` <span class="gedaempft">✗ ${open.join(', ')}</span>` : '');
   } else {
-    txt = `<span style="color:#34d399;font-weight:600;">Attempt ${i+1} — ${a.outcome==='stomped'?'Stomped':'Landed'}</span> <span class="gedaempft">(no detail data)</span>`;
+    txt = `<span style="color:#3E8E5A;font-weight:600;">Attempt ${i+1} — ${a.outcome==='stomped'?'Stomped':'Landed'}</span> <span class="gedaempft">(no detail data)</span>`;
   }
   if (a.comment) txt += ` <span class="gedaempft">— ${a.comment}</span>`;
   if (a.time) txt += ` <span class="gedaempft-10">${a.time}</span>`;
@@ -1990,13 +1990,13 @@ function sbRVPrintPdf() {
 <title>Session Report ${dateStr} — Snowboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#060f1a; --surface:#0c1a2b; --surface2:#112236; --border:#1a3450;
-          --accent2:#39c3d4; --text:#e8edf2; --muted:#6b8299; --success:#34d399; --danger:#e2001a; }
+  :root { --bg:#faf7f6; --surface:#ffffff; --surface2:#f4efed; --border:#e7e3e1;
+          --accent2:#148FA0; --text:#2c2c2e; --muted:#5c5c61; --success:#3E8E5A; --danger:#e2001a; }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   body{font-family:'Poppins',-apple-system,'Helvetica Neue',Arial,sans-serif;background:var(--bg);
        color:var(--text);padding:28px 32px;max-width:820px;margin:0 auto;}
   .print-btn{margin-bottom:20px;}
-  .print-btn button{padding:9px 22px;background:var(--accent2);color:#060f1a;border:none;border-radius:8px;
+  .print-btn button{padding:9px 22px;background:var(--accent2);color:#faf7f6;border:none;border-radius:8px;
        font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;}
   h1{font-size:20px;font-weight:800;margin-bottom:10px;}
   .meta{display:flex;flex-wrap:wrap;gap:6px 26px;border-top:1px solid var(--border);
@@ -2185,20 +2185,20 @@ function sbReportInnerHtml(report) {
     }).join('');
     return `<div class="abstand-20">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-        <div style="font-size:16px;font-weight:800;color:#39c3d4;">${a.athlet}</div>
+        <div style="font-size:16px;font-weight:800;color:#148FA0;">${a.athlet}</div>
         <div class="hinweis">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · Ø stomp rate <b class="haupttext">${rate}%</b>${a.quali_scores && a.quali_scores.length ? ' · Quali <b class="warnung">' + a.quali_scores.join(' / ') + '</b>' : ''}${a.final_scores && a.final_scores.length ? ' · Final <b class="warnung">' + a.final_scores.join(' / ') + '</b>' : ''}${a.contest_rank ? ' · Rank <b class="warnung">' + a.contest_rank + '</b>' : ''}</div>
       </div>
-      ${a.note ? `<div style="font-size:12px;color:#f59e0b;background:rgba(245,158,11,0.08);border-left:3px solid #f59e0b;border-radius:8px;padding:8px 10px;margin-bottom:10px;">📝 <b>Coach note:</b> ${a.note}</div>` : ''}
+      ${a.note ? `<div style="font-size:12px;color:#C96A1F;background:rgba(201,106,31,0.08);border-left:3px solid #C96A1F;border-radius:8px;padding:8px 10px;margin-bottom:10px;">📝 <b>Coach note:</b> ${a.note}</div>` : ''}
       ${cards}
     </div>`;
   }).join('');
 
   return `<div class="hinweis-block">${typeShort}${report.location ? ' · '+report.location : ''}${report.duration_min ? ' · '+report.duration_min+' min' : ''}</div>
-${report.comments ? `<div style="background:var(--surface2);border-left:3px solid #39c3d4;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:14px;"><b class="akzent">Coach comments:</b> ${report.comments}</div>` : ''}
+${report.comments ? `<div style="background:var(--surface2);border-left:3px solid #148FA0;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:14px;"><b class="akzent">Coach comments:</b> ${report.comments}</div>` : ''}
     <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:14px;">
-      <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Landed/Stomped (height = stars)</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#396FA8;border-radius:2px;vertical-align:-1px;"></span> Landed/Stomped (height = stars)</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#e2001a;border-radius:2px;vertical-align:-1px;"></span> Failed</span>
-      <span><span style="display:inline-block;width:14px;height:2px;background:#9aa8b8;vertical-align:3px;"></span> running stomp rate (0–100%)</span>
+      <span><span style="display:inline-block;width:14px;height:2px;background:#8a8a8f;vertical-align:3px;"></span> running stomp rate (0–100%)</span>
     </div>
     ${sections}`;
 }
@@ -2218,7 +2218,7 @@ function openSessionReportView(report) {
       <div class="wert-gross">Session Report · ${dateStr}</div>
       <div style="display:flex;gap:8px;">
         <button onclick="sbRVPrintPdf()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:12px;cursor:pointer;">PDF</button>
-        <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
+        <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(20,143,160,0.15);border:1px solid #148FA0;color:#148FA0;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
       </div>
     </div>
     ${inner}
@@ -2238,7 +2238,7 @@ const SB_TYPE_FILTERS = [['','All'],['Landing Bag','Bag'],['Big Air Training','B
 
 function sbTypeChipsHtml(current, handler) {
   return `<div style="display:flex;gap:6px;flex-wrap:wrap;">${SB_TYPE_FILTERS.map(([v,l]) =>
-    `<button onclick="${handler}('${v}')" style="padding:6px 14px;border-radius:999px;border:1.5px solid ${current===v?'#39c3d4':'var(--border)'};background:${current===v?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${current===v?'#39c3d4':'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">${l}</button>`).join('')}</div>`;
+    `<button onclick="${handler}('${v}')" style="padding:6px 14px;border-radius:999px;border:1.5px solid ${current===v?'#148FA0':'var(--border)'};background:${current===v?'rgba(20,143,160,0.18)':'var(--surface2)'};color:${current===v?'#148FA0':'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">${l}</button>`).join('')}</div>`;
 }
 
 async function loadReportsTab() {
@@ -2272,13 +2272,13 @@ function renderReportsList() {
     const att = Array.isArray(r.trick_data) ? r.trick_data.reduce((s,a)=>s+(a.totalAtt||0),0) : 0;
     const durStr = r.duration_min ? (r.duration_min/60).toFixed(1).replace('.0','')+'h' : '—';
     return `<div onclick="sbOpenReportInline(${i})" style="display:flex;align-items:center;gap:12px;padding:13px 6px;border-bottom:1px solid var(--border);cursor:pointer;">
-      <div style="min-width:64px;font-size:14px;font-weight:700;color:#39c3d4;">${dateStr}</div>
+      <div style="min-width:64px;font-size:14px;font-weight:700;color:#148FA0;">${dateStr}</div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:14px;color:var(--text);font-weight:600;">${typeShort} · ${durStr}${r.location ? ' · '+r.location : ''}</div>
         <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${athStr}</div>
       </div>
       <div style="font-size:12px;color:var(--muted);flex-shrink:0;">${att ? att+' att.' : ''}</div>
-      <div style="color:#39c3d4;font-size:14px;flex-shrink:0;">→</div>
+      <div style="color:#148FA0;font-size:14px;flex-shrink:0;">→</div>
     </div>`;
   }).join('');
   const dateInput = id => `<input type="date" id="${id}" value="${id==='rep-date-from'?_sbRepFrom:_sbRepTo}" onchange="sbRepApplyCustom()" style="padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">`;
@@ -2346,12 +2346,12 @@ async function viewSessionReportByDate(date) {
   const modal = document.createElement('div');
   modal.id = 'sr-pick-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
-  modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:24px;max-width:400px;width:100%;">
-    <div style="font-size:16px;font-weight:700;color:#39c3d4;margin-bottom:16px;">Multiple reports for ${date}</div>
-    ${data.map((r,i)=>`<button onclick="document.getElementById('sr-pick-modal').remove();openSessionReportView(window._srPickData[${i}])" style="display:block;width:100%;text-align:left;padding:10px 14px;margin-bottom:8px;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;font-family:inherit;font-size:14px;cursor:pointer;">
+  modal.innerHTML = `<div style="background:#ffffff;border:1px solid #e7e3e1;border-radius:16px;padding:24px;max-width:400px;width:100%;">
+    <div style="font-size:16px;font-weight:700;color:#148FA0;margin-bottom:16px;">Multiple reports for ${date}</div>
+    ${data.map((r,i)=>`<button onclick="document.getElementById('sr-pick-modal').remove();openSessionReportView(window._srPickData[${i}])" style="display:block;width:100%;text-align:left;padding:10px 14px;margin-bottom:8px;background:#f4efed;border:1px solid #e7e3e1;border-radius:8px;color:#2c2c2e;font-family:inherit;font-size:14px;cursor:pointer;">
       ${({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Competition'}[r.session_type]||r.session_type||'—')} · ${(r.athletes||[]).map(a=>a.split(' ')[0]).join(', ')} · ${r.duration_min}min
     </button>`).join('')}
-    <button onclick="document.getElementById('sr-pick-modal').remove()" style="padding:8px 16px;background:none;border:1px solid #1a3450;border-radius:8px;color:#6b8299;font-family:inherit;font-size:14px;cursor:pointer;margin-top:4px;">Cancel</button>
+    <button onclick="document.getElementById('sr-pick-modal').remove()" style="padding:8px 16px;background:none;border:1px solid #e7e3e1;border-radius:8px;color:#5c5c61;font-family:inherit;font-size:14px;cursor:pointer;margin-top:4px;">Cancel</button>
   </div>`;
   window._srPickData = data;
   document.body.appendChild(modal);
@@ -2458,57 +2458,57 @@ function renderSbDirRadar() {
   // Grid
   ctx.beginPath();
   angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-  ctx.closePath();ctx.fillStyle='rgba(57,195,212,0.07)';ctx.fill();
+  ctx.closePath();ctx.fillStyle='rgba(20,143,160,0.07)';ctx.fill();
   [0.25,0.5,0.75,1].forEach(f=>{
     ctx.beginPath();
     angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*f,y=cy+Math.sin(a)*r*f;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();
+    ctx.closePath();ctx.strokeStyle='rgba(0,0,0,0.108)';ctx.lineWidth=1;ctx.stroke();
   });
-  angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();});
+  angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='rgba(0,0,0,0.108)';ctx.lineWidth=1;ctx.stroke();});
 
   // Goals polygon (orange dashed)
   if(goals.length){
-    ctx.setLineDash([8,5]);ctx.strokeStyle='#f59e0b';ctx.lineWidth=1.5;
+    ctx.setLineDash([8,5]);ctx.strokeStyle='#C96A1F';ctx.lineWidth=1.5;
     ctx.beginPath();
     angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*goalVals[i],y=cy+Math.sin(a)*r*goalVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-    ctx.closePath();ctx.fillStyle='rgba(245,158,11,0.35)';ctx.fill();ctx.stroke();
+    ctx.closePath();ctx.fillStyle='rgba(201,106,31,0.35)';ctx.fill();ctx.stroke();
     ctx.setLineDash([]);
     angles.forEach((a,i)=>{
       const x=cx+Math.cos(a)*r*goalVals[i],y=cy+Math.sin(a)*r*goalVals[i];
-      ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.fillStyle='#f59e0b';ctx.fill();
-      ctx.strokeStyle='#0b1929';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.fillStyle='#C96A1F';ctx.fill();
+      ctx.strokeStyle='#ffffff';ctx.lineWidth=1.5;ctx.stroke();
     });
   }
 
   // Learned polygon (green solid)
   if(mastered.length){
-    ctx.setLineDash([]);ctx.strokeStyle='#34d399';ctx.lineWidth=1.5;
+    ctx.setLineDash([]);ctx.strokeStyle='#3E8E5A';ctx.lineWidth=1.5;
     ctx.beginPath();
     angles.forEach((a,i)=>{const x=cx+Math.cos(a)*r*mastVals[i],y=cy+Math.sin(a)*r*mastVals[i];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-    ctx.closePath();ctx.fillStyle='rgba(52,211,153,0.45)';ctx.fill();ctx.stroke();
+    ctx.closePath();ctx.fillStyle='rgba(62,142,90,0.45)';ctx.fill();ctx.stroke();
     angles.forEach((a,i)=>{
       const x=cx+Math.cos(a)*r*mastVals[i],y=cy+Math.sin(a)*r*mastVals[i];
-      ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.fillStyle='#34d399';ctx.fill();
-      ctx.strokeStyle='#0b1929';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.fillStyle='#3E8E5A';ctx.fill();
+      ctx.strokeStyle='#ffffff';ctx.lineWidth=1.5;ctx.stroke();
     });
   }
 
   // Labels
-  const DIR_COL={'Frontside':'#39c3d4','Backside':'#f59e0b','Switch Frontside':'#a78bfa','Switch Backside':'#4a7dd6'};
+  const DIR_COL={'Frontside':'#148FA0','Backside':'#C96A1F','Switch Frontside':'#8E5BB8','Switch Backside':'#396FA8'};
   angles.forEach((a,i)=>{
     const lx=cx+Math.cos(a)*(r+62),ly=cy+Math.sin(a)*(r+62);
     const align=Math.cos(a)<-0.3?'right':Math.cos(a)>0.3?'left':'center';
     ctx.textAlign=align;ctx.textBaseline='middle';
-    ctx.font='bold 12px Poppins,sans-serif';ctx.fillStyle='#e8edf2';
+    ctx.font='bold 12px Poppins,sans-serif';ctx.fillStyle='#2c2c2e';
     ctx.fillText(DIRS[i],lx,ly-14);
-    ctx.font='bold 13px Poppins,sans-serif';ctx.fillStyle='#34d399';
+    ctx.font='bold 13px Poppins,sans-serif';ctx.fillStyle='#3E8E5A';
     ctx.fillText('✓ '+mastC[DIRS[i]],lx,ly+2);
-    ctx.font='bold 13px Poppins,sans-serif';ctx.fillStyle='#f59e0b';
+    ctx.font='bold 13px Poppins,sans-serif';ctx.fillStyle='#C96A1F';
     ctx.fillText('◎ '+goalC[DIRS[i]],lx,ly+17);
   });
 
   renderAthleteDirBalance(wrap, ['Frontside','Backside','Switch Frontside','Switch Backside'],
-    {'Frontside':'#39c3d4','Backside':'#f59e0b','Switch Frontside':'#a78bfa','Switch Backside':'#4a7dd6'},
+    {'Frontside':'#148FA0','Backside':'#C96A1F','Switch Frontside':'#8E5BB8','Switch Backside':'#396FA8'},
     t => {
       const tb = t.trickaufbau || t.trick_label || '';
       const fromTb = ['Switch Backside','Switch Frontside','Frontside','Backside','Cab'].find(d => tb.startsWith(d+' ') || tb.startsWith(d+' —')) || null;
@@ -2541,11 +2541,19 @@ function renderStandort() {
   `;
 
   // Two columns: Learned | Ziele
-  const bList = sbData.filter(e => e.status === 'mastered');
-  const zList = sbData.filter(e => e.status === 'goal');
+  // Umschalter Jumps / Rails / Halfpipe (wie Youth): immer eine Disziplin, Start = erste mit Einträgen
+  const discOf = e => e.disziplin === 'Rail' ? 'Rail' : e.disziplin === 'Halfpipe' ? 'Halfpipe' : 'Jump';
+  const DISC_L = {Jump:'Jumps', Rail:'Rails', Halfpipe:'Halfpipe'};
+  const cnt = d => sbData.filter(e => e.status !== 'erreicht' && discOf(e) === d).length;
+  if (!DISC_L[window.sbAsDisc] || (!cnt(window.sbAsDisc) && sbData.length)) window.sbAsDisc = ['Jump','Rail','Halfpipe'].find(cnt) || window.sbAsDisc || 'Jump';
+  let seg = document.getElementById('sb-disc-seg');
+  if (!seg){ seg = document.createElement('div'); seg.id = 'sb-disc-seg'; seg.className = 'disc-seg'; document.getElementById('sb-columns').before(seg); }
+  seg.innerHTML = ['Jump','Rail','Halfpipe'].map(d => `<button class="${window.sbAsDisc===d?'on':''}" onclick="window.sbAsDisc='${d}';renderStandort()"><span>${DISC_L[d]}</span><b>${cnt(d)}</b></button>`).join('');
+  const bList = sbData.filter(e => e.status === 'mastered' && discOf(e) === window.sbAsDisc);
+  const zList = sbData.filter(e => e.status === 'goal' && discOf(e) === window.sbAsDisc);
 
   const DIR_ORDER = ['Frontside','Backside','Switch Frontside','Switch Backside'];
-  const DIR_COLORS = {'Frontside':'#39c3d4','Backside':'#f59e0b','Switch Frontside':'#a78bfa','Switch Backside':'#4a7dd6'};
+  const DIR_COLORS = {'Frontside':'#148FA0','Backside':'#C96A1F','Switch Frontside':'#8E5BB8','Switch Backside':'#396FA8'};
 
   function normDir4(d) {
     if (!d) return null;
@@ -2568,7 +2576,7 @@ function renderStandort() {
         ${grabChipsHtml(e)}
       </span>
       <span style="margin-right:6px;flex-shrink:0;">${sbVideoBtn(e)}</span>
-      <button style="background:none;border:1px solid #1a3450;border-radius:5px;color:#6b8299;cursor:pointer;padding:2px 7px;font-size:12px;margin-right:2px;" onclick="openSbEdit(${e.id})" title="Edit">✏️</button>
+      <button style="background:none;border:1px solid #e7e3e1;border-radius:5px;color:#5c5c61;cursor:pointer;padding:2px 7px;font-size:12px;margin-right:2px;" onclick="openSbEdit(${e.id})" title="Edit">✏️</button>
       <button class="btn-del" onclick="deleteSbEntry(${e.id})" title="Remove">✕</button>
     </div>`;
   }
@@ -2592,10 +2600,11 @@ function renderStandort() {
       groups[dir].sort((a,b) => extractRotFS(b.trick_label) - extractRotFS(a.trick_label));
     });
     const orderedKeys = [...DIR_ORDER.filter(d => groups[d]), ...(groups['Other'] ? ['Other'] : [])];
+    // Drehrichtungs-Balken nur bei Jumps (wie Youth): hellgrau mit farbigem Punkt und Anzahl
+    if (window.sbAsDisc !== 'Jump') return items.slice().sort((a,b) => extractRotFS(b.trick_label) - extractRotFS(a.trick_label)).map(e => renderTrickRow(e)).join('');
     return orderedKeys.map(dir => {
       const col = DIR_COLORS[dir] || 'var(--muted)';
-      return `<div style="border-bottom:1px solid var(--border);">
-        <div style="padding:6px 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${col};background:var(--surface2);">${dir}</div>
+      return `<div class="dir-group"><div class="dir-h"><i class="dir-dot" style="background:${col}"></i>${dir}<span class="n">${groups[dir].length}</span></div>
         ${groups[dir].map(e => renderTrickRow(e)).join('')}
       </div>`;
     }).join('');
@@ -2740,7 +2749,7 @@ async function loadEntwicklung() {
         <div class="abstand-16">
           <div class="chart-title abstand-12">📊 Trick Statistics</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-            <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
+            <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:2px solid #148FA0;background:rgba(20,143,160,0.2);color:#148FA0;">Individual Trick</button>
             <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
           </div>
           <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:14px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
@@ -2917,7 +2926,7 @@ async function loadEntwicklung() {
       landEl.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No session entries with landing data yet.</div>';
     } else {
       landEl.innerHTML = landSorted.map(([label, pct, ja, total]) => {
-        const col = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+        const col = pct >= 80 ? '#22c55e' : pct >= 50 ? '#C96A1F' : '#D64545';
         return `<div style="margin-bottom:10px;">
           <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
             <span style="color:var(--text);font-weight:600;">${label}</span>
@@ -2963,17 +2972,17 @@ async function loadEntwicklung() {
       verlaufEl.innerHTML = rows.map((r, i) => {
         const dateStr = new Date(r.date).toLocaleDateString('de-CH', { day:'2-digit', month:'2-digit', year:'numeric' });
         const newBadge = r.newTricks.length > 0
-          ? `<span style="background:rgba(52,211,153,0.15);color:#34d399;border:1px solid #34d399;border-radius:12px;padding:2px 8px;font-size:12px;margin-left:8px;">+${r.newTricks.length} neu</span>`
+          ? `<span style="background:rgba(62,142,90,0.15);color:#3E8E5A;border:1px solid #3E8E5A;border-radius:12px;padding:2px 8px;font-size:12px;margin-left:8px;">+${r.newTricks.length} neu</span>`
           : '';
         const newList = r.newTricks.length > 0
-          ? `<div style="margin-top:6px;padding-left:12px;border-left:2px solid #34d399;">${r.newTricks.map(t =>
-              `<span style="display:inline-block;background:rgba(52,211,153,0.12);color:#34d399;border-radius:10px;padding:2px 8px;font-size:12px;margin:2px;">${t}</span>`
+          ? `<div style="margin-top:6px;padding-left:12px;border-left:2px solid #3E8E5A;">${r.newTricks.map(t =>
+              `<span style="display:inline-block;background:rgba(62,142,90,0.12);color:#3E8E5A;border-radius:10px;padding:2px 8px;font-size:12px;margin:2px;">${t}</span>`
             ).join('')}</div>`
           : '';
         const borderTop = i > 0 ? 'border-top:1px solid var(--border);' : '';
         return `<div style="padding:12px 0;${borderTop}">
           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
-            <span style="font-family:inherit;font-size:16px;letter-spacing:1px;color:#ffffff;">${dateStr}</span>
+            <span style="font-family:inherit;font-size:16px;letter-spacing:1px;color:var(--char);">${dateStr}</span>
             <span style="font-size:14px;color:var(--text);font-weight:600;">${r.total} Tricks mastered</span>
             ${newBadge}
           </div>
@@ -2994,7 +3003,7 @@ async function loadEntwicklung() {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <span class="hinweis">Filter:</span>
-          <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
+          <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid #148FA0;background:rgba(20,143,160,0.2);color:#148FA0;">All</button>
           <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
           <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
           <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
@@ -3046,18 +3055,18 @@ async function loadEntwicklung() {
         <tbody>
           ${rows.map(([trick, s]) => {
             const pct = s.total ? Math.round(s.landed / s.total * 100) : 0;
-            const barColor = pct >= 70 ? '#34d399' : pct >= 40 ? '#f59e0b' : '#e2001a';
+            const barColor = pct >= 70 ? '#3E8E5A' : pct >= 40 ? '#C96A1F' : '#e2001a';
             const dates = [...s.dates].sort().map(d => new Date(d).toLocaleDateString('de-CH', {day:'2-digit',month:'2-digit'})).join(', ');
             const parts = trick.split(' — ');
             return `<tr style="border-bottom:1px solid var(--border);">
               <td style="padding:10px 12px;">
                 <div style="font-weight:600;color:var(--text);">${parts[0]||trick}</div>
-                ${parts[1] ? `<div style="font-size:12px;color:#39c3d4;margin-top:2px;">Grab: ${parts[1]}</div>` : ''}
+                ${parts[1] ? `<div style="font-size:12px;color:#148FA0;margin-top:2px;">Grab: ${parts[1]}</div>` : ''}
               </td>
               <td style="padding:10px 12px;text-align:center;color:var(--muted);font-size:12px;">${dates}</td>
               <td style="padding:10px 12px;text-align:center;">
                 <div style="font-family:inherit;font-weight:700;font-size:16px;color:var(--text);">${s.landed}/${s.total}</div>
-                ${s.perfect > 0 ? `<div style="font-size:12px;color:#39c3d4;margin-top:2px;">⭐ ${s.perfect}× perfect</div>` : ''}
+                ${s.perfect > 0 ? `<div style="font-size:12px;color:#148FA0;margin-top:2px;">⭐ ${s.perfect}× perfect</div>` : ''}
               </td>
               <td style="padding:10px 12px;min-width:120px;">
                 <div style="display:flex;align-items:center;gap:8px;">
@@ -3265,7 +3274,7 @@ function setTypeFilter(typ) {
     b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
   });
   const active = document.getElementById(map[typ]||'ev-tf-all');
-  if(active){active.style.background='rgba(57,195,212,0.2)';active.style.borderColor='#39c3d4';active.style.color='#39c3d4';}
+  if(active){active.style.background='rgba(20,143,160,0.2)';active.style.borderColor='#148FA0';active.style.color='#148FA0';}
   const sel = document.getElementById('ev-trick-sel');
   if (sel) {
     const filtered = typ ? _sbTaData.filter(t=>t.typ===typ) : _sbTaData;
@@ -3285,8 +3294,8 @@ function setDateRange() {
   _sbTaDateTo   = parseDateInput(toEl?.value);
   [[fromEl,_sbTaDateFrom],[toEl,_sbTaDateTo]].forEach(([el,parsed])=>{
     if(!el) return;
-    el.style.borderColor = parsed ? '#39c3d4' : 'var(--border)';
-    el.style.color       = parsed ? '#39c3d4' : 'var(--muted)';
+    el.style.borderColor = parsed ? '#148FA0' : 'var(--border)';
+    el.style.color       = parsed ? '#148FA0' : 'var(--muted)';
   });
   renderTrickAnalytics();
 }
@@ -3331,11 +3340,11 @@ function renderTrickAnalytics() {
   }
 
   const avg = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
-  const colQ = v => v>=70?'#34d399':v>=40?'#f59e0b':'#e2001a';
+  const colQ = v => v>=70?'#3E8E5A':v>=40?'#C96A1F':'#e2001a';
 
   // SB directions and colors
   const SB_DIRS = ['Frontside','Backside','Switch Frontside','Switch Backside'];
-  const SB_DIR_COL = {'Frontside':'#39c3d4','Backside':'#f59e0b','Switch Frontside':'#a78bfa','Switch Backside':'#4a7dd6'};
+  const SB_DIR_COL = {'Frontside':'#148FA0','Backside':'#C96A1F','Switch Frontside':'#8E5BB8','Switch Backside':'#396FA8'};
 
   // ── SESSION VIEW ─────────────────────────────────────────────────
   if (dateKey) {
@@ -3374,20 +3383,20 @@ function renderTrickAnalytics() {
       const total = s.att || 1;
       return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <span style="font-size:14px;font-weight:600;color:var(--text);flex:1;">${normSbTrick(trick)}${s.perf>0?` <span style="font-size:12px;color:#39c3d4;font-weight:400;">⭐ ${s.perf}×</span>`:''}</span>
+          <span style="font-size:14px;font-weight:600;color:var(--text);flex:1;">${normSbTrick(trick)}${s.perf>0?` <span style="font-size:12px;color:#148FA0;font-weight:400;">⭐ ${s.perf}×</span>`:''}</span>
           <div style="text-align:right;flex-shrink:0;">
             <div style="font-size:18px;font-weight:800;color:${colQ(landPct)};">${s.land} / ${s.att}</div>
             <div style="font-size:12px;color:var(--muted);">landed+stomped</div>
             <div style="font-size:12px;margin-top:2px;">
-              <span style="color:#34d399;font-weight:700;">${s.landed_n}✓</span>
+              <span style="color:#3E8E5A;font-weight:700;">${s.landed_n}✓</span>
               <span style="color:var(--muted);margin:0 2px;">·</span>
-              <span style="color:#39c3d4;font-weight:700;">⭐${s.stomped}</span>
+              <span style="color:#148FA0;font-weight:700;">⭐${s.stomped}</span>
               <span style="color:var(--muted);"> / ${s.att}</span>
             </div>
           </div>
         </div>
         <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;">
-          ${[['Stomped',s.stomped,'#39c3d4'],['Landed',s.landed_n,'#34d399'],['Failed',s.failed,'#e2001a']].map(([lbl,n,col])=>n>0?`<div style="display:flex;align-items:center;gap:8px;">
+          ${[['Stomped',s.stomped,'#148FA0'],['Landed',s.landed_n,'#3E8E5A'],['Failed',s.failed,'#e2001a']].map(([lbl,n,col])=>n>0?`<div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:12px;color:var(--muted);min-width:52px;">${lbl}</span>
             <div style="flex:1;background:var(--border);border-radius:3px;height:7px;overflow:hidden;">
               <div style="background:${col};width:${Math.round(n/total*100)}%;height:7px;border-radius:3px;"></div>
@@ -3420,13 +3429,13 @@ function renderTrickAnalytics() {
       if (!reps||!reps[0]) return;
       const rep = reps[0];
       const notes = (rep.trick_data||[]).filter(a=>a.note).map(a=>
-        `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:4px;"><span style="font-weight:600;color:#39c3d4;min-width:70px;">${a.athlet}</span><span style="color:var(--text);font-size:12px;">${a.note}</span></div>`
+        `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:4px;"><span style="font-weight:600;color:#148FA0;min-width:70px;">${a.athlet}</span><span style="color:var(--text);font-size:12px;">${a.note}</span></div>`
       ).join('');
       if (notes || rep.comments) {
         const notesDiv = document.createElement('div');
         notesDiv.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:10px;';
         notesDiv.innerHTML = `<div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Coach Notes</div>`
-          + (rep.comments ? `<div style="color:var(--text);font-size:12px;margin-bottom:8px;padding:6px 10px;background:rgba(57,195,212,0.06);border-radius:6px;">${rep.comments}</div>` : '')
+          + (rep.comments ? `<div style="color:var(--text);font-size:12px;margin-bottom:8px;padding:6px 10px;background:rgba(20,143,160,0.06);border-radius:6px;">${rep.comments}</div>` : '')
           + notes;
         el.appendChild(notesDiv);
       }
@@ -3434,7 +3443,7 @@ function renderTrickAnalytics() {
 
     const reportBtnDiv = document.createElement('div');
     reportBtnDiv.style.cssText = 'margin-top:12px;text-align:center;';
-    reportBtnDiv.innerHTML = `<button onclick="viewSessionReportByDate('${sessionDate}')" style="padding:10px 22px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">📄 View Session Report</button>`;
+    reportBtnDiv.innerHTML = `<button onclick="viewSessionReportByDate('${sessionDate}')" style="padding:10px 22px;border-radius:8px;background:rgba(20,143,160,0.15);border:1px solid #148FA0;color:#148FA0;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">📄 View Session Report</button>`;
     el.appendChild(reportBtnDiv);
 
     renderRawEntries(sd, label);
@@ -3449,13 +3458,13 @@ function renderTrickAnalytics() {
       .map(t => ({name:t, dir:getDirAll(t), rot:extractRotFromLabel(t)}))
       .sort((a,b) => { const da=dirOrder[a.dir]??4, db=dirOrder[b.dir]??4; return da!==db ? da-db : a.rot-b.rot; });
     if (!allTricks.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;">No data.</div>'; return; }
-    const colQ = v => v>=70?'#34d399':v>=40?'#f59e0b':'#e2001a';
+    const colQ = v => v>=70?'#3E8E5A':v>=40?'#C96A1F':'#e2001a';
     let html = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${allTricks.length} tricks</div>`;
     let lastDir = '';
     const chartIds = [];
     allTricks.forEach((tObj,ti) => {
       if (tObj.dir !== lastDir) {
-        html += `<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#39c3d4;margin:${lastDir?'20':'4'}px 0 8px;">${tObj.dir}</div>`;
+        html += `<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#148FA0;margin:${lastDir?'20':'4'}px 0 8px;">${tObj.dir}</div>`;
         lastDir = tObj.dir;
       }
       const td = baseData.filter(t=>t.trickaufbau===tObj.name);
@@ -3490,7 +3499,7 @@ function renderTrickAnalytics() {
         const xs = pts.map((_,i) => pad.l+(n===1?(W-pad.l-pad.r)/2:i/(n-1)*(W-pad.l-pad.r)));
         const toY = v => pad.t+(1-v/100)*(H-pad.t-pad.b);
         [0,50,100].forEach(pct => {
-          const y=toY(pct); ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;
+          const y=toY(pct); ctx.strokeStyle='rgba(0,0,0,0.036)';ctx.lineWidth=1;
           ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
         });
         const barW = Math.max(4,Math.min(12,(W-pad.l-pad.r)/(n*4)));
@@ -3503,7 +3512,7 @@ function renderTrickAnalytics() {
           pts.forEach((p,i)=>{const y=toY(p.pct);i===0?ctx.moveTo(xs[i],y):ctx.lineTo(xs[i],y);});
           ctx.stroke();ctx.setLineDash([]);
         }
-        ctx.textAlign='center';ctx.fillStyle='#6b8299';ctx.font='9px Poppins,sans-serif';
+        ctx.textAlign='center';ctx.fillStyle='#5c5c61';ctx.font='9px Poppins,sans-serif';
         pts.forEach((p,i)=>ctx.fillText(p.d.split('-')[2]+'.'+p.d.split('-')[1]+'.',xs[i],H-pad.b+12));
       });
     });
@@ -3539,8 +3548,8 @@ function renderTrickAnalytics() {
 
   const statsHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;text-align:center;">
     <div><div style="font-size:22px;font-weight:800;color:var(--text);">${totAtt}</div><div style="font-size:12px;color:var(--muted);">Attempts</div></div>
-    <div><div style="font-size:22px;font-weight:800;color:#34d399;">${totLandedOnly}</div><div style="font-size:12px;color:var(--muted);">✓ Landed</div></div>
-    <div><div style="font-size:22px;font-weight:800;color:#39c3d4;">${totStomped}</div><div style="font-size:12px;color:var(--muted);">⭐ Stomped</div></div>
+    <div><div style="font-size:22px;font-weight:800;color:#3E8E5A;">${totLandedOnly}</div><div style="font-size:12px;color:var(--muted);">✓ Landed</div></div>
+    <div><div style="font-size:22px;font-weight:800;color:#148FA0;">${totStomped}</div><div style="font-size:12px;color:var(--muted);">⭐ Stomped</div></div>
     <div><div style="font-size:22px;font-weight:800;color:${colQ(landRate)};">${landRate}%</div><div style="font-size:12px;color:var(--muted);">Success</div></div>
   </div>`;
 
@@ -3583,9 +3592,9 @@ function renderTrickAnalytics() {
 
     [0,25,50,75,100].forEach(pct=>{
       const y=toY(pct);
-      ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;
+      ctx.strokeStyle='rgba(0,0,0,0.042)';ctx.lineWidth=1;
       ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
-      ctx.fillStyle='#6b8299';ctx.font='10px Poppins,sans-serif';ctx.textAlign='right';
+      ctx.fillStyle='#5c5c61';ctx.font='10px Poppins,sans-serif';ctx.textAlign='right';
       ctx.fillText(pct+'%',pad.l-5,y+3);
     });
 
@@ -3599,17 +3608,17 @@ function renderTrickAnalytics() {
     function drawBars(pt,x){
       const val=pt.landPct; const bx=x-barW/2; const by=toY(val); const bh=H-pad.b-by;
       ctx.fillStyle='#39c3d4cc';ctx.fillRect(bx,by,barW,bh);
-      ctx.fillStyle='#39c3d4';ctx.font='9px Poppins,sans-serif';ctx.textAlign='center';
+      ctx.fillStyle='#148FA0';ctx.font='9px Poppins,sans-serif';ctx.textAlign='center';
       ctx.fillText(val+'%',bx+barW/2,by-3);
     }
 
-    drawConn(pts.map(p=>p.quality),'#f59e0b');
-    drawConn(pts.map(p=>p.landPct),'#39c3d4');
+    drawConn(pts.map(p=>p.quality),'#C96A1F');
+    drawConn(pts.map(p=>p.landPct),'#148FA0');
     pts.forEach((p,i)=>drawBars(p,xs[i]));
 
     ctx.textAlign='center';
     pts.forEach((p,i)=>{
-      ctx.fillStyle='#6b8299';ctx.font='10px Poppins,sans-serif';
+      ctx.fillStyle='#5c5c61';ctx.font='10px Poppins,sans-serif';
       ctx.fillText(p.d.split('-')[2]+'.'+p.d.split('-')[1]+'.',xs[i],H-pad.b+14);
       ctx.fillText(p.att+'×',xs[i],H-pad.b+28);
     });
@@ -3619,7 +3628,7 @@ function renderTrickAnalytics() {
     if (!tt) {
       tt = document.createElement('div');
       tt.id = 'ta-chart-tooltip';
-      tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:10px;padding:10px 14px;font-size:12px;font-family:inherit;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+      tt.style.cssText = 'position:fixed;background:#f4efed;border:1px solid #148FA0;border-radius:10px;padding:10px 14px;font-size:12px;font-family:inherit;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
       document.body.appendChild(tt);
     }
     const fmtD = d => { const [y,m,dd]=d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
@@ -3631,11 +3640,11 @@ function renderTrickAnalytics() {
       if(ni<0){tt.style.display='none';return;}
       const p=pts[ni], lo=p.land-p.stomped, ms=p.att-p.land;
       tt.innerHTML =
-        `<div style="font-weight:700;color:#e8edf2;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">${fmtD(p.d)} &nbsp;·&nbsp; ${p.att} attempts</div>`
-        +`<div style="color:#39c3d4;">⭐ Stomped: <b>${p.stomped}×</b></div>`
-        +`<div style="color:#34d399;">✓ Landed&nbsp;: <b>${lo}×</b></div>`
+        `<div style="font-weight:700;color:#2c2c2e;margin-bottom:6px;border-bottom:1px solid rgba(0,0,0,0.06);padding-bottom:5px;">${fmtD(p.d)} &nbsp;·&nbsp; ${p.att} attempts</div>`
+        +`<div style="color:#148FA0;">⭐ Stomped: <b>${p.stomped}×</b></div>`
+        +`<div style="color:#3E8E5A;">✓ Landed&nbsp;: <b>${lo}×</b></div>`
         +`<div style="color:#e2001a;">✗ Missed&nbsp;: <b>${ms}×</b></div>`
-        +`<div style="color:#6b8299;margin-top:4px;">Success: <b style="color:#39c3d4;">${p.landPct}%</b></div>`;
+        +`<div style="color:#5c5c61;margin-top:4px;">Success: <b style="color:#148FA0;">${p.landPct}%</b></div>`;
       tt.style.display='block';
       const tx = e.clientX+14, ty = e.clientY-10;
       tt.style.left=(tx+tt.offsetWidth>window.innerWidth-10?e.clientX-tt.offsetWidth-14:tx)+'px';
@@ -3664,8 +3673,8 @@ function renderRawEntries(entries, subtitle) {
   const typShort = t => t==='Landing Bag'?'Bag':t==='Jump On-Snow'?'On-Snow':t==='Big Air Competition'?'Comp':t||'—';
   const resultBadge = t => {
     const g = t.gesamt;
-    if (g >= 10) return '<span style="color:#39c3d4;font-weight:700;">⭐ Stomped</span>';
-    if (g >= 7)  return '<span style="color:#34d399;font-weight:700;">✓ Landed</span>';
+    if (g >= 10) return '<span style="color:#148FA0;font-weight:700;">⭐ Stomped</span>';
+    if (g >= 7)  return '<span style="color:#3E8E5A;font-weight:700;">✓ Landed</span>';
     return '<span style="color:#e2001a;font-weight:700;">✗ Failed</span>';
   };
 
@@ -3684,26 +3693,26 @@ function renderRawEntries(entries, subtitle) {
           const editForm = isEditing ? `
             <div style="grid-column:1/-1;padding:8px 0 4px;display:flex;flex-direction:column;gap:6px;">
               <input id="raw-edit-trick-${e.id}" type="text" value="${(e.trickaufbau||'').replace(/"/g,'&quot;')}"
-                style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
+                style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #148FA0;background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
                 <select id="raw-edit-result-${e.id}" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
                   <option value="miss" ${curResult==='miss'?'selected':''}>✗ Failed</option>
                   <option value="landed" ${curResult==='landed'?'selected':''}>✓ Landed</option>
                   <option value="perfect" ${curResult==='perfect'?'selected':''}>⭐ Stomped</option>
                 </select>
-                <button onclick="saveRawEdit(${e.id})" style="padding:5px 12px;border-radius:6px;background:#39c3d4;border:none;color:#060f1a;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Save</button>
+                <button onclick="saveRawEdit(${e.id})" style="padding:5px 12px;border-radius:6px;background:#148FA0;border:none;color:#faf7f6;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Save</button>
                 <button onclick="cancelRawEdit()" style="padding:5px 12px;border-radius:6px;background:none;border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;">Cancel</button>
               </div>
             </div>` : '';
           return `
-          <div id="ev-raw-row-${e.id}" style="display:grid;grid-template-columns:60px 36px 48px 1fr 80px 28px 28px;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--border);font-size:12px;${isEditing?'background:rgba(57,195,212,0.06);':''};flex-wrap:wrap;">
+          <div id="ev-raw-row-${e.id}" style="display:grid;grid-template-columns:60px 36px 48px 1fr 80px 28px 28px;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--border);font-size:12px;${isEditing?'background:rgba(20,143,160,0.06);':''};flex-wrap:wrap;">
             <span class="gedaempft">${fmtDate(e.datum)}</span>
             <span class="gedaempft-10">${ts}</span>
             <span class="gedaempft-10">${typShort(e.typ)}</span>
             <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${normSbTrick(e.trickaufbau||'')}">${normSbTrick(e.trickaufbau||'—')}</span>
             <span>${resultBadge(e)}</span>
             <button onclick="editRawEntry(${e.id})" title="Edit entry"
-              style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;font-size:12px;padding:2px 5px;line-height:1;">✏</button>
+              style="background:none;border:1px solid ${isEditing?'#148FA0':'var(--border)'};border-radius:6px;color:${isEditing?'#148FA0':'var(--muted)'};cursor:pointer;font-size:12px;padding:2px 5px;line-height:1;">✏</button>
             <button onclick="deleteRawEntry(${e.id})" title="Delete entry"
               style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:14px;padding:2px 6px;line-height:1;">🗑</button>
             ${editForm}
@@ -3783,11 +3792,11 @@ function showPerfTip(e, text) {
   if (!tt) {
     tt = document.createElement('div');
     tt.id = 'perf-tooltip';
-    tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:8px;padding:8px 12px;font-size:12px;font-family:inherit;pointer-events:none;z-index:9999;max-width:320px;box-shadow:0 4px 16px rgba(0,0,0,0.5);';
+    tt.style.cssText = 'position:fixed;background:#f4efed;border:1px solid #148FA0;border-radius:8px;padding:8px 12px;font-size:12px;font-family:inherit;pointer-events:none;z-index:9999;max-width:320px;box-shadow:0 4px 16px rgba(0,0,0,0.5);';
     document.body.appendChild(tt);
   }
   const parts = text.split(' | ');
-  tt.innerHTML = `<div style="font-weight:700;color:#e8edf2;margin-bottom:4px;">${parts[0]||''}</div>
+  tt.innerHTML = `<div style="font-weight:700;color:#2c2c2e;margin-bottom:4px;">${parts[0]||''}</div>
     <div class="gedaempft-11">${parts[1]||''}</div>`;
   tt.style.display = 'block';
   const tx = e.clientX+14, ty = e.clientY-10;
@@ -3808,7 +3817,7 @@ function setPerfFilter(typ) {
     b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
   });
   const act=document.getElementById(map[typ]||'pf-all');
-  if(act){act.style.background='rgba(57,195,212,0.2)';act.style.borderColor='#39c3d4';act.style.color='#39c3d4';}
+  if(act){act.style.background='rgba(20,143,160,0.2)';act.style.borderColor='#148FA0';act.style.color='#148FA0';}
   renderSessionPerformance();
 }
 
@@ -3829,8 +3838,8 @@ function setPerfDateRange() {
   _sbPfCustomTo   = parsePerfDate(t);
   [['pf-from',_sbPfCustomFrom],['pf-to',_sbPfCustomTo]].forEach(([id,parsed])=>{
     const el=document.getElementById(id); if(!el) return;
-    el.style.borderColor = parsed ? '#39c3d4' : 'var(--border)';
-    el.style.color       = parsed ? '#39c3d4' : 'var(--muted)';
+    el.style.borderColor = parsed ? '#148FA0' : 'var(--border)';
+    el.style.color       = parsed ? '#148FA0' : 'var(--muted)';
   });
   renderSessionPerformance();
 }
@@ -3862,11 +3871,11 @@ function renderSessionPerformance() {
   if (!el || !dbAllTricks) return;
 
   const DIRS = ['Frontside','Backside','Switch Frontside','Switch Backside'];
-  const DIR_COL = {'Frontside':'#39c3d4','Backside':'#f59e0b','Switch Frontside':'#a78bfa','Switch Backside':'#4a7dd6'};
+  const DIR_COL = {'Frontside':'#148FA0','Backside':'#C96A1F','Switch Frontside':'#8E5BB8','Switch Backside':'#396FA8'};
 
   function status(landPct, avgQ) {
-    if (landPct >= 70 && avgQ >= 70) return {icon:'🟢', label:'Ready', color:'#34d399'};
-    if (landPct >= 50 || avgQ  >= 50) return {icon:'🟡', label:'Developing', color:'#f59e0b'};
+    if (landPct >= 70 && avgQ >= 70) return {icon:'🟢', label:'Ready', color:'#3E8E5A'};
+    if (landPct >= 50 || avgQ  >= 50) return {icon:'🟡', label:'Developing', color:'#C96A1F'};
     return {icon:'🔴', label:'Not ready', color:'#e2001a'};
   }
 
@@ -3903,8 +3912,8 @@ function renderSessionPerformance() {
 
   const athList = Object.keys(athTricks).sort();
 
-  const bkg  = {'🟢':'rgba(52,211,153,0.12)','🟡':'rgba(245,158,11,0.1)','🔴':'rgba(226,0,26,0.08)'};
-  const brd  = {'🟢':'rgba(52,211,153,0.4)', '🟡':'rgba(245,158,11,0.4)','🔴':'rgba(226,0,26,0.3)'};
+  const bkg  = {'🟢':'rgba(62,142,90,0.12)','🟡':'rgba(201,106,31,0.1)','🔴':'rgba(226,0,26,0.08)'};
+  const brd  = {'🟢':'rgba(62,142,90,0.4)', '🟡':'rgba(201,106,31,0.4)','🔴':'rgba(226,0,26,0.3)'};
 
   // Traffic light for SB: based on Landing% only (Stomped = extra info, same weight as Landed)
   function sbPerfStatus(landPct) {
@@ -3945,7 +3954,7 @@ function renderSessionPerformance() {
               const landPct    = s.att ? Math.round(s.land/s.att*100) : 0;
               const landedOnly = s.land - s.stomped;
               const st  = sbPerfStatus(landPct);
-              const colL = landPct>=70?'#34d399':landPct>=50?'#f59e0b':'#e2001a';
+              const colL = landPct>=70?'#3E8E5A':landPct>=50?'#C96A1F':'#e2001a';
               const failed = s.att - s.land;
               return `<div style="background:${bkg[st.icon]};border:1px solid ${brd[st.icon]};border-radius:8px;padding:6px 10px;margin-bottom:5px;">
                 <div style="font-size:12px;color:var(--text);">${normSbTrick(trick)}</div>
@@ -4077,7 +4086,7 @@ async function realityCheck() {
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   modal.innerHTML = `
-    <div style="background:#0d1f33;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:660px;width:100%;max-height:88vh;display:flex;flex-direction:column;">
+    <div style="background:#f4efed;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:660px;width:100%;max-height:88vh;display:flex;flex-direction:column;">
       <div style="font-family:inherit;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">🔍 Reality Check</div>
       <div class="hinweis-block">
         Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} suggestion${flagged.length!==1?'s':''} (Learned &lt;70% ↓ · Goals ≥70% ↑) · select athletes to apply
@@ -4093,7 +4102,7 @@ async function realityCheck() {
           <div class="rc-ath-row" data-name="${athlet.toLowerCase()}" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;">
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--surface2);">
               <input type="checkbox" class="rc-chk" data-athlet="${athlet}" checked
-                style="width:15px;height:15px;accent-color:#f59e0b;cursor:pointer;flex-shrink:0;">
+                style="width:15px;height:15px;accent-color:#C96A1F;cursor:pointer;flex-shrink:0;">
               <span style="font-size:14px;font-weight:700;color:var(--text);flex:1;">${athlet}</span>
               <span class="hinweis">${byAthlet[athlet].length} trick${byAthlet[athlet].length!==1?'s':''} affected</span>
             </label>
@@ -4103,13 +4112,13 @@ async function realityCheck() {
                   <div style="font-size:12px;color:var(--text);font-weight:500;">${rcTrickDesc(f)}</div>
                   ${f.disziplin?`<div style="font-size:12px;color:var(--muted);margin-top:1px;">${f.disziplin}</div>`:''}
                 </div>
-                <span style="font-size:12px;color:${f.action.startsWith('upgrade')?'#34d399':'#f59e0b'};white-space:nowrap;font-weight:600;">${f.action.startsWith('upgrade')?'↑':'↓'} ${f.reason}</span>
+                <span style="font-size:12px;color:${f.action.startsWith('upgrade')?'#3E8E5A':'#C96A1F'};white-space:nowrap;font-weight:600;">${f.action.startsWith('upgrade')?'↑':'↓'} ${f.reason}</span>
               </div>`).join('')}
           </div>`).join('')}
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:14px;">
         <button onclick="this.closest('[style*=inset]').remove()" style="padding:8px 18px;border-radius:8px;font-family:inherit;font-size:14px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Cancel</button>
-        <button onclick="applyRealityCheckSelected(window._rcFlagged,this)" style="padding:8px 18px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply selected</button>
+        <button onclick="applyRealityCheckSelected(window._rcFlagged,this)" style="padding:8px 18px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:none;background:#C96A1F;color:#000;">Apply selected</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -4178,12 +4187,12 @@ function initStandortGrabs() {
 // ═══════════════ MONITORING (Team → Athlete → Trick) ═══════════════
 
 const SB_MON_STATUS = {
-  ready:    {label:'Ready',    color:'#34d399'},
-  building: {label:'Building', color:'#f59e0b'},
+  ready:    {label:'Ready',    color:'#3E8E5A'},
+  building: {label:'Building', color:'#C96A1F'},
   critical: {label:'Critical', color:'#e2001a'},
-  lowdata:  {label:'Low data', color:'#6b8299'},
+  lowdata:  {label:'Low data', color:'#5c5c61'},
 };
-const SB_MON_DIR_COLORS = {'Frontside':'#39c3d4','Backside':'#f59e0b','Switch Frontside':'#a78bfa','Switch Backside':'#4a7dd6','Other':'#6b8299'};
+const SB_MON_DIR_COLORS = {'Frontside':'#148FA0','Backside':'#C96A1F','Switch Frontside':'#8E5BB8','Switch Backside':'#396FA8','Other':'#5c5c61'};
 
 function sbMonOutcome(t) {
   if (t.outcome === 'stomped' || t.outcome === 'landed' || t.outcome === 'failed') return t.outcome;
@@ -4259,7 +4268,7 @@ function sbMonDonut(s, l, f, size) {
   const total = s + l + f;
   const stroke = 14, r = (size - stroke) / 2, c = 2 * Math.PI * r;
   if (!total) return sbMonRing(0, 'var(--border)', size, stroke);
-  const segs = [[s, '#34d399'], [l, '#4a7dd6'], [f, '#e2001a']];
+  const segs = [[s, '#3E8E5A'], [l, '#396FA8'], [f, '#e2001a']];
   let off = 0, out = '';
   segs.forEach(([n, col]) => {
     if (!n) return;
@@ -4344,10 +4353,10 @@ function renderMonTeam() {
       const cnt = {ready:0, building:0, critical:0, lowdata:0};
       sbMonTrickAgg(ar).forEach(tr => cnt[sbMonStatusKey(tr.att, tr.stomped)]++);
       const initials = a.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
-      const ringColor = att < 5 ? '#6b8299' : rate >= 0.7 ? '#34d399' : rate >= 0.4 ? '#f59e0b' : '#e2001a';
+      const ringColor = att < 5 ? '#5c5c61' : rate >= 0.7 ? '#3E8E5A' : rate >= 0.4 ? '#C96A1F' : '#e2001a';
       return `<div onclick="sbMonOpenAthlete(${i})" style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <div style="width:34px;height:34px;border-radius:50%;background:rgba(57,195,212,0.15);color:#39c3d4;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">${initials}</div>
+          <div style="width:34px;height:34px;border-radius:50%;background:rgba(20,143,160,0.15);color:#148FA0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">${initials}</div>
           <div style="min-width:0;">
             <div style="font-weight:700;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.name}</div>
             <div style="font-size:12px;color:${sq.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sq.label}</div>
@@ -4361,11 +4370,11 @@ function renderMonTeam() {
           </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;text-align:center;border-top:1px solid var(--border);padding-top:10px;">
-          <div><div style="font-size:16px;font-weight:800;color:#34d399;">${cnt.ready}</div><div class="hinweis-winzig">Ready</div></div>
-          <div><div style="font-size:16px;font-weight:800;color:#f59e0b;">${cnt.building}</div><div class="hinweis-winzig">Building</div></div>
+          <div><div style="font-size:16px;font-weight:800;color:#3E8E5A;">${cnt.ready}</div><div class="hinweis-winzig">Ready</div></div>
+          <div><div style="font-size:16px;font-weight:800;color:#C96A1F;">${cnt.building}</div><div class="hinweis-winzig">Building</div></div>
           <div><div style="font-size:16px;font-weight:800;color:#e2001a;">${cnt.critical}</div><div class="hinweis-winzig">Critical</div></div>
         </div>
-        <div style="text-align:center;font-size:12px;color:#39c3d4;margin-top:10px;">View details →</div>
+        <div style="text-align:center;font-size:12px;color:#148FA0;margin-top:10px;">View details →</div>
       </div>`;
     }).join('');
     return `<div style="margin-bottom:22px;">
@@ -4375,10 +4384,10 @@ function renderMonTeam() {
   }).join('');
   root.innerHTML = `<div class="card polster-20">
     ${monHeaderHtml('Team Monitoring', rows.length + ' attempts · ' + sbMonPeriodLabel(), false)}
-    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Trick status: ≥70% stomp rate = <b class="gut">Ready</b> · 40–69% = <b class="warnung">Building</b> · &lt;40% = <b class="schlecht">Critical</b> · fewer than 5 attempts = Low data</div>
+    <div class="status-key"><span class="status-key-t">Trick status (stomp rate)</span><span class="status-pill" style="--c:#3E8E5A"><i></i><b>Ready</b><span>≥ 70%</span></span><span class="status-pill" style="--c:#C96A1F"><i></i><b>Building</b><span>40–69%</span></span><span class="status-pill" style="--c:#D64545"><i></i><b>Critical</b><span>&lt; 40%</span></span><span class="status-pill" style="--c:#8a8a8f"><i></i><b>Low data</b><span>&lt; 5 attempts</span></span><span class="status-key-n">Stomped = all KPIs met</span></div>
     ${sections || '<div class="leer-schmal">No athletes configured.</div>'}
     <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
-      <button onclick="sbMonRealityCheck()" style="padding:8px 16px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
+      <button onclick="sbMonRealityCheck()" style="padding:8px 16px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #C96A1F;background:rgba(201,106,31,0.15);color:#C96A1F;">🔍 Reality Check</button>
       <button onclick="sbMonTeamPdf()" style="padding:8px 16px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Team PDF</button>
     </div>
   </div>`;
@@ -4428,7 +4437,7 @@ function renderMonAthlete() {
           <div style="flex:1;font-size:12px;color:var(--muted);line-height:1.7;">
             <div style="display:flex;justify-content:space-between;"><span>Total</span><b class="haupttext">${tr.att}</b></div>
             <div style="display:flex;justify-content:space-between;"><span class="gut">Stomped</span><b class="gut">${tr.stomped}</b></div>
-            <div style="display:flex;justify-content:space-between;"><span style="color:#4a7dd6;">Landed</span><b style="color:#4a7dd6;">${tr.landed}</b></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:#396FA8;">Landed</span><b style="color:#396FA8;">${tr.landed}</b></div>
             <div style="display:flex;justify-content:space-between;"><span class="schlecht">Fail</span><b class="schlecht">${tr.failed}</b></div>
           </div>
         </div>
@@ -4468,7 +4477,7 @@ function sbMonVariantsHtml(rows) {
   if (list.length < 2 && !list.some(([f]) => f.includes(' — '))) return '';
   const rowsHtml = list.map(([full, m]) => {
     const r = m.att ? Math.round(m.s/m.att*100) : 0;
-    const col = m.att < 5 ? 'var(--muted)' : r >= 70 ? '#34d399' : r >= 40 ? '#f59e0b' : '#e2001a';
+    const col = m.att < 5 ? 'var(--muted)' : r >= 70 ? '#3E8E5A' : r >= 40 ? '#C96A1F' : '#e2001a';
     const grab = full.includes(' — ') ? full.split(' — ').slice(1).join(' — ') : 'no grab';
     return `<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:12px;">
       <span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${full}">${grab}</span>
@@ -4506,7 +4515,7 @@ function renderMonTrick() {
   const kpiChips = kpiRows.length
     ? SB_KPIS.map(([k, label]) => {
         const pct = Math.round(kpiRows.filter(t => t.kpis[k]).length / kpiRows.length * 100);
-        const col = pct >= 80 ? '#34d399' : pct >= 50 ? '#f59e0b' : '#e2001a';
+        const col = pct >= 80 ? '#3E8E5A' : pct >= 50 ? '#C96A1F' : '#e2001a';
         return `<span style="border:1px solid ${col};color:${col};border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;">${label} ${pct}%</span>`;
       }).join(' ')
     : `<span class="hinweis">No KPI data yet — fills up with new session logs</span>`;
@@ -4531,7 +4540,7 @@ function renderMonTrick() {
     ${monHeaderHtml(trick, name, true)}
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;">
       <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
-        ${stKey === 'ready' ? '<span style="border:1px solid #34d399;color:#34d399;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;background:rgba(52,211,153,0.08);">Comp Ready</span>' : `<span style="border:1px solid ${SB_MON_STATUS[stKey].color};color:${SB_MON_STATUS[stKey].color};border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;">${SB_MON_STATUS[stKey].label}</span>`}
+        ${stKey === 'ready' ? '<span style="border:1px solid #3E8E5A;color:#3E8E5A;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;background:rgba(62,142,90,0.08);">Comp Ready</span>' : `<span style="border:1px solid ${SB_MON_STATUS[stKey].color};color:${SB_MON_STATUS[stKey].color};border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;">${SB_MON_STATUS[stKey].label}</span>`}
       </div>
       <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
         <div style="position:relative;flex-shrink:0;">
@@ -4542,8 +4551,8 @@ function renderMonTrick() {
           </div>
         </div>
         <div style="flex:1;min-width:170px;font-size:12px;">
-          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#34d399;margin-right:6px;"></span>Stomped (5/5 KPI's)</span><b>${s}</b></div>
-          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#4a7dd6;margin-right:6px;"></span>Landed</span><b>${l}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#3E8E5A;margin-right:6px;"></span>Stomped (5/5 KPI's)</span><b>${s}</b></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#396FA8;margin-right:6px;"></span>Landed</span><b>${l}</b></div>
           <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#e2001a;margin-right:6px;"></span>Failed</span><b>${f}</b></div>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;"><span>Landed rate <span class="gedaempft-10">(Landed+Stomped)</span></span><span style="white-space:nowrap;"><b class="gut">${landedRate}%</b>${trendLanded ? ' ' + sbMonTrendHtml(trendLanded) : ''}</span></div>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 0;"><span>Stomp rate</span><span style="white-space:nowrap;"><b style="color:${SB_MON_STATUS[stKey].color};">${rate}%</b>${trend ? ' ' + sbMonTrendHtml(trend) : ''}</span></div>
@@ -4560,9 +4569,9 @@ function renderMonTrick() {
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;">
       <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Progress over sessions</div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:8px;">
-        <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Volume (attempts)</span>
-        <span><span style="display:inline-block;width:14px;height:2px;background:#34d399;vertical-align:3px;"></span> Landed rate (Landed+Stomped)</span>
-        <span><span style="display:inline-block;width:14px;height:2px;background:#f59e0b;vertical-align:3px;border-bottom:2px dashed #f59e0b;background:none;"></span> Stomp rate</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#396FA8;border-radius:2px;vertical-align:-1px;"></span> Volume (attempts)</span>
+        <span><span style="display:inline-block;width:14px;height:2px;background:#3E8E5A;vertical-align:3px;"></span> Landed rate (Landed+Stomped)</span>
+        <span><span style="display:inline-block;width:14px;height:2px;background:#C96A1F;vertical-align:3px;border-bottom:2px dashed #C96A1F;background:none;"></span> Stomp rate</span>
       </div>
       ${sbMonTimeChart(rows)}
       <div style="font-size:12px;color:var(--muted);margin-top:8px;">⚠ Sessions with fewer than 5 attempts — rates are statistically weak.</div>
@@ -4586,7 +4595,7 @@ function sbMonTimeChart(rows) {
   let grid = '';
   [0, 25, 50, 75, 100].forEach(p => {
     grid += `<line x1="${PAD}" y1="${yOf(p).toFixed(1)}" x2="${PAD + chartW}" y2="${yOf(p).toFixed(1)}" stroke="var(--border)" stroke-width="1" ${p ? 'stroke-dasharray="2 4"' : ''}/>`;
-    grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="11" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
+    grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="11" fill="#5c5c61" font-family="Poppins,sans-serif">${p}%</text>`;
   });
   const sPts = [], stPts = [];
   let bars = '', labels = '';
@@ -4599,18 +4608,18 @@ function sbMonTimeChart(rows) {
     const cx = PAD + i * slot + slot/2;
     sPts.push([cx, (H - succ * (H - 12)).toFixed(1)]);
     stPts.push([cx, (H - st * (H - 12)).toFixed(1)]);
-    bars += `<rect x="${x}" y="${(H - h).toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" rx="3" fill="#4a7dd6" opacity="${(0.35 + 0.65 * nn / maxN).toFixed(2)}" style="cursor:pointer;" onclick="sbMonTimeSel('${d}')"/>`;
-    bars += `<text x="${cx}" y="${(H - h - 3).toFixed(1)}" text-anchor="middle" font-size="11" fill="#4a7dd6" font-family="Poppins,sans-serif">${nn}</text>`;
+    bars += `<rect x="${x}" y="${(H - h).toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" rx="3" fill="#396FA8" opacity="${(0.35 + 0.65 * nn / maxN).toFixed(2)}" style="cursor:pointer;" onclick="sbMonTimeSel('${d}')"/>`;
+    bars += `<text x="${cx}" y="${(H - h - 3).toFixed(1)}" text-anchor="middle" font-size="11" fill="#396FA8" font-family="Poppins,sans-serif">${nn}</text>`;
     const lbl = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' : d;
-    labels += `<text x="${cx}" y="${H + 15}" text-anchor="middle" font-size="11" fill="${nn < 5 ? '#f59e0b' : '#6b8299'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
+    labels += `<text x="${cx}" y="${H + 15}" text-anchor="middle" font-size="11" fill="${nn < 5 ? '#C96A1F' : '#5c5c61'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
   });
   const line = pts => pts.map(p => p.join(',')).join(' ');
-  const axisTitle = `<text x="${PAD + chartW/2}" y="${H + 30}" text-anchor="middle" font-size="11" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Sessions</text>`;
+  const axisTitle = `<text x="${PAD + chartW/2}" y="${H + 30}" text-anchor="middle" font-size="11" fill="#5c5c61" font-family="Poppins,sans-serif" font-weight="600">Sessions</text>`;
   return `<div style="overflow-x:auto;"><svg width="${PAD + chartW}" height="${H + 36}" style="display:block;">
     ${grid}
     ${bars}
-    ${dates.length > 1 ? `<polyline points="${line(sPts)}" fill="none" stroke="#34d399" stroke-width="2"/>
-    <polyline points="${line(stPts)}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 3"/>` : ''}
+    ${dates.length > 1 ? `<polyline points="${line(sPts)}" fill="none" stroke="#3E8E5A" stroke-width="2"/>
+    <polyline points="${line(stPts)}" fill="none" stroke="#C96A1F" stroke-width="2" stroke-dasharray="4 3"/>` : ''}
     ${labels}
     ${axisTitle}
   </svg></div>`;
@@ -4625,7 +4634,7 @@ const MON_PLATEAU_TOL = 5; // Prozentpunkte über 3 Sessions — offener Paramet
 
 
 function sbMonCoachingHtml(rows) {
-  const GREY = '#6b8299', AMBER = '#f59e0b', RED = '#e2001a';
+  const GREY = '#5c5c61', AMBER = '#C96A1F', RED = '#e2001a';
   const sessions = sbMonSessions(rows);
   const nS = sessions.length;
   const srOf = s => s.rows.filter(x => sbMonOutcome(x) === 'stomped').length / s.rows.length;
@@ -4708,14 +4717,14 @@ function sbMonCoachingHtml(rows) {
     <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;">
         <span style="font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:600;">Coach comment · Current status</span>
-        <span id="mon-cmt-ai-tag" style="font-size:12px;color:#4a7dd6;font-weight:600;display:none;">AI summary</span>
-        <a href="#" id="mon-cmt-hist-link" onclick="sbMonToggleHistory();return false;" style="font-size:12px;color:#39c3d4;display:none;">History</a>
+        <span id="mon-cmt-ai-tag" style="font-size:12px;color:#396FA8;font-weight:600;display:none;">AI summary</span>
+        <a href="#" id="mon-cmt-hist-link" onclick="sbMonToggleHistory();return false;" style="font-size:12px;color:#148FA0;display:none;">History</a>
       </div>
       <div id="mon-cmt-status" style="font-size:14px;color:var(--text);min-height:18px;">Loading…</div>
       <div id="mon-cmt-history" style="display:none;margin-top:8px;"></div>
       <div style="display:flex;gap:8px;margin-top:10px;align-items:flex-start;">
         <textarea id="mon-cmt-input" rows="2" placeholder="Add new comment" style="flex:1;resize:vertical;"></textarea>
-        <button onclick="sbMonSaveComment()" style="padding:9px 16px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Save</button>
+        <button onclick="sbMonSaveComment()" style="padding:9px 16px;border-radius:8px;border:1px solid #148FA0;background:rgba(20,143,160,0.15);color:#148FA0;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Save</button>
       </div>
     </div>
   </div>`;
@@ -4735,7 +4744,7 @@ function sbMonTimeSel(d) {
     <span class="gut">${l} landed</span> ·
     <span class="schlecht">${f} failed</span> ·
     <b>${n ? Math.round(s/n*100) : 0}%</b> stomp rate
-    <button onclick="sbMonOpenTrickReport('${d}')" style="margin-left:8px;padding:3px 10px;border-radius:6px;border:1px solid #39c3d4;background:rgba(57,195,212,0.12);color:#39c3d4;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">Open session view →</button>`;
+    <button onclick="sbMonOpenTrickReport('${d}')" style="margin-left:8px;padding:3px 10px;border-radius:6px;border:1px solid #148FA0;background:rgba(20,143,160,0.12);color:#148FA0;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">Open session view →</button>`;
 }
 
 // Fokussierte Session-Ansicht: NUR dieser Trick dieser Athlet:in aus dieser Session
@@ -4773,12 +4782,12 @@ function sbMonOpenTrickReport(d) {
         <div class="wert-gross">${g.trick}</div>
         <div class="hinweis-gross">${sbMonView.athlete} · Session ${fmt}</div>
       </div>
-      <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
+      <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(20,143,160,0.15);border:1px solid #148FA0;color:#148FA0;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
     </div>
     <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:10px;">
-      <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Landed/Stomped (height = stars)</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#396FA8;border-radius:2px;vertical-align:-1px;"></span> Landed/Stomped (height = stars)</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#e2001a;border-radius:2px;vertical-align:-1px;"></span> Failed</span>
-      <span><span style="display:inline-block;width:14px;height:2px;background:#9aa8b8;vertical-align:3px;"></span> running stomp rate (0–100%)</span>
+      <span><span style="display:inline-block;width:14px;height:2px;background:#8a8a8f;vertical-align:3px;"></span> running stomp rate (0–100%)</span>
     </div>
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;">
       <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
@@ -4865,13 +4874,13 @@ const fragments = {
   dirRadar: `      <div class="card">
         <div class="card-title">🔄 Direction Balance</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">
-          <span style="color:#34d399;font-weight:600;">— Learned</span> &nbsp;&nbsp;
-          <span style="color:#f59e0b;font-weight:600;">- - Goals</span>
+          <span style="color:#3E8E5A;font-weight:600;">— Learned</span> &nbsp;&nbsp;
+          <span style="color:#C96A1F;font-weight:600;">- - Goals</span>
         </div>
       </div>`,
   dbRankings: `  <div class="card" style="margin-bottom:20px;display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;">
     <div class="hinweis-gross">Compare assessment with actual session data</div>
-    <button onclick="realityCheck()" style="padding:8px 16px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
+    <button onclick="realityCheck()" style="padding:8px 16px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:1px solid #C96A1F;background:rgba(201,106,31,0.15);color:#C96A1F;">🔍 Reality Check</button>
   </div>`,
   grabBlock: `        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:12px;color:var(--muted);font-weight:400;">(1× click = ✓ Learned · 2× = 🎯 Goal · 3× = off)</span></label>
           <div id="sb-grab-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;">

@@ -24,8 +24,9 @@
     calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
     fire:'<path d="M12 3c1 4 5 5 5 10a5 5 0 01-10 0c0-3 2-4 2-7 1 1 2 2 3 4 0-3 0-5 0-7z"/>',
     snow:'<path d="M12 2v20M4 6l16 12M20 6L4 18"/>',
+    mountain:'<path d="M2 20l7-12 4 6 3-4 6 10z"/>',
   };
-  const MAP = {'🎯':'target','⭐':'star','🌟':'star','📄':'file','📋':'note','🗑':'trash','⏳':'clock','⌛':'clock','⏱':'clock','✅':'checkc','📥':'inbox','🔍':'search','💬':'msg','⬆':'upload','✏':'pencil','✎':'pencil','⚠':'alert','🏆':'trophy','📝':'note','▶':'play','📊':'chart','📈':'chart','💾':'save','📅':'calendar','🗓':'calendar','🔥':'fire','❄':'snow'};
+  const MAP = {'🎯':'target','⭐':'star','🌟':'star','📄':'file','📋':'note','🗑':'trash','⏳':'clock','⌛':'clock','⏱':'clock','✅':'checkc','📥':'inbox','🔍':'search','💬':'msg','⬆':'upload','✏':'pencil','✎':'pencil','⚠':'alert','🏆':'trophy','📝':'note','▶':'play','📊':'chart','📈':'chart','💾':'save','📅':'calendar','🗓':'calendar','🔥':'fire','❄':'snow','🏔':'mountain','⛰':'mountain'};
   const RX = new RegExp('(' + Object.keys(MAP).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')\\uFE0F?', 'g');
   const ico = k => `<svg class="ico ico-${k}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[k]}</svg>`;
   const SKIP = 'svg,option,select,textarea,input,script,style,title,[data-noicon],[contenteditable]';
