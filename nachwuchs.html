@@ -372,6 +372,7 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)
 
 /* Untere Tab-Leiste auf dem Handy (wie Freeski) */
 .bottom-nav{display:none}
+.mode-sw{display:none}
 @media (max-width:768px){
   /* Team-Tabellen als Karten statt horizontal scrollen */
   .team-tbl,.staff-tbl{min-width:0!important;width:100%}
@@ -404,6 +405,11 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)
   .bn-sep{width:1px;align-self:stretch;margin:6px 1px;background:var(--line);flex-shrink:0}
   .bn-badge{position:absolute;top:1px;right:calc(50% - 20px);background:var(--red);color:#fff;border-radius:99px;font-size:9px;font-style:normal;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px}
   .tabs{display:none}
+  /* Handy: Modus-Umschalter für Staff (Skills-Check ↔ Monitoring), unten nur die Tabs des Modus */
+  .mode-sw:not([hidden]){display:flex;position:sticky;top:0;z-index:60;gap:4px;margin:10px 16px 0;padding:4px;background:#efe9e7;border-radius:12px}
+  .mode-sw button{flex:1;border:0;background:none;padding:9px 6px;border-radius:9px;font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);cursor:pointer}
+  .mode-sw button.on{background:#fff;color:var(--red);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  main.wrap{padding-top:16px}
   main.wrap{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
   .toast{bottom:calc(84px + env(safe-area-inset-bottom))}
 }
@@ -452,6 +458,7 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)
     <div class="tabs-in" id="tabs"></div>
     <div class="dropdown" id="notif-dd" hidden></div>
   </nav>
+  <div class="mode-sw" id="mode-sw" hidden></div>
   <main class="wrap">
     <section class="page" id="page-assessment"></section>
     <section class="page" id="page-skills"></section>
@@ -1572,6 +1579,13 @@ const NAV_ICONS = (() => {
     team: i('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3.2-5.5 6.5-5.5s6 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.5c2 .6 3.3 2.6 3.5 5.5"/>'),
   };
 })();
+// Modus nur fürs Handy: welche Tabs unten erscheinen (Assessment ist in beiden)
+const MODE_PAGES = {skills:['assessment','skills','reviews','team'], monitoring:['assessment','session','reports','monitoring']};
+ST.mode = (() => { try { const m = localStorage.getItem('nw-mode'); if (MODE_PAGES[m]) return m; } catch {} return 'skills'; })();
+function setMode(m){
+  ST.mode = m; try { localStorage.setItem('nw-mode', m); } catch {}
+  if (!MODE_PAGES[m].includes(ST.page)) go(m); else renderChrome();
+}
 function renderChrome(){
   const unread = ST.notes.filter(n => !n.read_at).length;
   $('#who').innerHTML = `
@@ -1584,7 +1598,16 @@ function renderChrome(){
   if (isStaff()) tabs.push(['reviews','Reviews'], ['team','Team'], ['|'], ['session','Session'], ['reports','Reports'], ['monitoring','Monitoring']);
   const pend = isStaff() ? pendingForMe().length : 0;
   const bn = $('#bottom-nav'); bn.hidden = false;
-  bn.innerHTML = tabs.map(([k, l]) => k==='|' ? '<i class="bn-sep"></i>' : `<button class="${ST.page===k?'on':''}" onclick="go('${k}')">${NAV_ICONS[k]}<span>${({assessment:'Assess', skills:'Skills', monitoring:'Monitor'})[k] || l}</span>${k==='reviews'&&pend?`<i class="bn-badge">${pend}</i>`:''}</button>`).join('');
+  const ms = $('#mode-sw');
+  let bnTabs = tabs;
+  if (isStaff()){
+    // Seite ausserhalb des Modus geöffnet (z.B. über einen Link) → Modus mitwechseln
+    if (ST.page !== 'assessment' && !MODE_PAGES[ST.mode].includes(ST.page)) ST.mode = ST.mode==='skills' ? 'monitoring' : 'skills';
+    bnTabs = tabs.filter(([k]) => MODE_PAGES[ST.mode].includes(k));
+    ms.hidden = false;
+    ms.innerHTML = [['skills','Skills-Check'], ['monitoring','Monitoring']].map(([m, l]) => `<button class="${ST.mode===m?'on':''}" onclick="setMode('${m}')">${l}</button>`).join('');
+  } else ms.hidden = true;
+  bn.innerHTML = bnTabs.map(([k, l]) => k==='|' ? '<i class="bn-sep"></i>' : `<button class="${ST.page===k?'on':''}" onclick="go('${k}')">${NAV_ICONS[k]}<span>${isStaff() ? l : (({assessment:'Assess', skills:'Skills', monitoring:'Monitor'})[k] || l)}</span>${k==='reviews'&&pend?`<i class="bn-badge">${pend}</i>`:''}</button>`).join('');
   $('#tabs').innerHTML = tabs.map(([k, l]) => k==='|' ? '<span class="tab-sep"></span>' : `<button class="tab-btn ${ST.page===k?'on':''}" onclick="go('${k}')">${l}${k==='reviews'&&pend?`<span class="cnt">${pend}</span>`:''}</button>`).join('');
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.id===`page-${ST.page}`));
 }
