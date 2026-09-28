@@ -1909,9 +1909,9 @@ function sbTrickChartSvg(g, ai, ti) {
     return `<rect x="${x}" y="${H-h}" width="${barW}" height="${h}" rx="3" fill="${isFail?'#e2001a':'#396FA8'}" style="cursor:pointer;" onclick="sbRVShowDetail(${ai},${ti},${i})"/>`;
   }).join('');
   const line = pts.map((p,i) => `${PADL + i*(barW+gap)+barW/2},${(H - p*PH).toFixed(1)}`).join(' ');
-  const w = PADL + Math.max(chartW, 40) + PADR;
-  const axisTitle = `<text x="${PADL + chartW/2}" y="${H + 24}" text-anchor="middle" font-size="11" fill="#5c5c61" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
-  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${(w*TRICK_CHART_SCALE).toFixed(0)}" height="${((H+28)*TRICK_CHART_SCALE).toFixed(0)}" viewBox="0 0 ${w} ${H+28}" style="display:block;">${grid}${bars}
+  const w = PADL + Math.max(chartW, 70) + PADR;
+  const axisTitle = `<text x="${PADL + chartW/2}" y="${H + 30}" text-anchor="middle" font-size="11" fill="#5c5c61" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
+  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${(w*TRICK_CHART_SCALE).toFixed(0)}" height="${((H+34)*TRICK_CHART_SCALE).toFixed(0)}" viewBox="0 0 ${w} ${H+34}" style="display:block;">${grid}${bars}
     ${n>1?`<polyline points="${line}" fill="none" stroke="#8a8a8f" stroke-width="1.5" opacity="0.75"/>`:''}
     ${labels}${axisTitle}
   </svg></div>`;
@@ -1952,18 +1952,14 @@ function sbRVShowDetail(ai, ti, i) {
   } else if (a.kpis) {
     const met = SB_KPIS.filter(([k])=>a.kpis[k]).map(([,l])=>l);
     const open = SB_KPIS.filter(([k])=>!a.kpis[k]).map(([,l])=>l);
-    txt = `<span style="color:${a.outcome==='stomped'?'#148FA0':'#3E8E5A'};font-weight:600;">Attempt ${i+1} — ${a.outcome==='stomped'?'Stomped ⭐ 5/5':'Landed '+(a.sterne??'?')+'/5'}</span>`
-      + (met.length ? ` <span class="gut">✓ ${met.join(', ')}</span>` : '')
-      + (open.length ? ` <span class="gedaempft">✗ ${open.join(', ')}</span>` : '');
+    txt = `<div class="att-h"><b style="color:${a.outcome==='stomped'?'#148FA0':'#2F7A4A'};">Attempt ${i+1}: ${a.outcome==='stomped'?'Stomped ⭐ 5/5':'Landed '+(a.sterne??'?')+'/5'}</b></div>`
+      + `<ul class="att-cats">${SB_KPIS.map(([k,l]) => `<li><span>${l}</span><b style="color:${a.kpis[k]?'#2F7A4A':'#8a8a8f'};">${a.kpis[k]?'✓':'✗'}</b></li>`).join('')}</ul>`;
   } else {
     txt = `<span style="color:#3E8E5A;font-weight:600;">Attempt ${i+1} — ${a.outcome==='stomped'?'Stomped':'Landed'}</span> <span class="gedaempft">(no detail data)</span>`;
   }
-  if (a.comment) txt += ` <span class="gedaempft">— ${a.comment}</span>`;
-  if (a.time) txt += ` <span class="gedaempft-10">${a.time}</span>`;
-  if (_sbRVEditable && _sbRV.report && _sbRV.report.id && a.dbId) {
-    txt += ` <button onclick="sbRVEditStart(${ai},${ti},${i})" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:1px 7px;font-size:12px;">✏️ Edit</button>`;
-  }
-  el.innerHTML = txt;
+  if (a.comment) txt += `<div class="att-c">${a.comment}</div>`;
+  const meta = [a.time ? `<span class="att-t">${a.time}</span>` : '', (_sbRVEditable && _sbRV.report && _sbRV.report.id && a.dbId) ? `<button class="att-edit" onclick="sbRVEditStart(${ai},${ti},${i})">✏️ Edit</button>` : ''].join('');
+  el.innerHTML = `<div class="att-det">${txt}${meta ? `<div class="att-h" style="margin-top:6px">${meta}</div>` : ''}</div>`;
 }
 
 // Inline onclick handlers run in global scope and can't see _sbRV — go through this instead.

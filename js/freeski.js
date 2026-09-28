@@ -4272,13 +4272,13 @@ function fsTrickChartSvg(g, ai, ti) {
     labels += `<text x="${gx + groupW/2}" y="${H + 12}" text-anchor="middle" font-size="11" font-weight="${isMiss?'700':'400'}" fill="${isMiss?'#e2001a':'#5c5c61'}" font-family="Poppins,sans-serif">${i+1}</text>`;
     hits += `<rect x="${gx-3}" y="0" width="${slot}" height="${H+14}" fill="transparent" style="cursor:pointer;" onclick="sbRVShowDetail(${ai},${ti},${i})"/>`;
   });
-  const w = PAD + Math.max(n*slot, 40);
-  const axisTitle = `<text x="${PAD + (w-PAD)/2}" y="${H + 24}" text-anchor="middle" font-size="11" fill="#5c5c61" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
+  const w = PAD + Math.max(n*slot, 70);   // Mindestbreite: Achsentitel «Attempts» passt
+  const axisTitle = `<text x="${PAD + (w-PAD)/2}" y="${H + 30}" text-anchor="middle" font-size="11" fill="#5c5c61" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
   const lineDots = pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#2c2c2e" stroke="#ffffff" stroke-width="1"/>`).join('');
-  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${(w*TRICK_CHART_SCALE).toFixed(0)}" height="${((H+28)*TRICK_CHART_SCALE).toFixed(0)}" viewBox="0 0 ${w} ${H+28}" style="display:block;">${grid}${marks}${bars}
+  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${(w*TRICK_CHART_SCALE).toFixed(0)}" height="${((H+34)*TRICK_CHART_SCALE).toFixed(0)}" viewBox="0 0 ${w} ${H+34}" style="display:block;">${grid}${marks}${bars}
     ${n>1?`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#2c2c2e" stroke-width="2"/>`:''}
     ${lineDots}
-    <rect id="sbrv-sel-${ai}-${ti}" x="0" y="1" width="${groupW+6}" height="${H+18}" fill="none" stroke="#148FA0" stroke-width="1.5" rx="4" style="display:none;"/>
+    <rect id="sbrv-sel-${ai}-${ti}" x="0" y="1" width="${groupW+6}" height="${H+16}" fill="none" stroke="#148FA0" stroke-width="1.5" rx="4" style="display:none;"/>
     ${labels}${axisTitle}${hits}
   </svg></div>`;
 }
@@ -4326,15 +4326,12 @@ function sbRVShowDetail(ai, ti, i) {
   const resCol = a.result==='miss' ? '#e2001a' : a.result==='perfect' ? '#148FA0' : '#3E8E5A';
   const resLbl = a.result==='miss' ? 'Miss' : a.result==='perfect' ? 'Perfect' : 'Landed';
   const catCol = {perfect:'#148FA0', okay:'#3E8E5A', miss:'#e2001a'};
-  const catStr = FS_RV_CATS.map(([c,l]) => a[c] ? `${l} <b style="color:${catCol[a[c]]};">${FS_RV_ICON[a[c]]}</b>` : null).filter(Boolean).join(' · ');
-  let txt = `<span style="color:${resCol};font-weight:600;">Attempt ${i+1} — ${resLbl} · QoE ${q}%</span>`
-    + (catStr ? ` <span class="gedaempft">${catStr}</span>` : ' <span class="gedaempft">(no category data)</span>');
-  if (a.comment) txt += ` <span class="gedaempft">— ${a.comment}</span>`;
-  if (a.time) txt += ` <span class="gedaempft-10">${a.time}</span>`;
-  if (_sbRVEditable && _sbRV.report && _sbRV.report.id && a.dbId) {
-    txt += ` <button onclick="sbRVEditStart(${ai},${ti},${i})" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:1px 7px;font-size:12px;">✏️ Edit</button>`;
-  }
-  el.innerHTML = txt;
+  // Details untereinander: Kopfzeile, dann eine Zeile pro Kategorie
+  const cats = FS_RV_CATS.filter(([c]) => a[c]).map(([c,l]) => `<li><span>${l}</span><b style="color:${catCol[a[c]]};">${FS_RV_ICON[a[c]]} ${a[c]==='perfect'?'Perfect':a[c]==='okay'?'Okay':'Miss'}</b></li>`).join('');
+  const edit = (_sbRVEditable && _sbRV.report && _sbRV.report.id && a.dbId) ? `<button class="att-edit" onclick="sbRVEditStart(${ai},${ti},${i})">✏️ Edit</button>` : '';
+  el.innerHTML = `<div class="att-det"><div class="att-h"><b style="color:${resCol};">Attempt ${i+1}: ${resLbl}</b><span>QoE ${q}%</span>${a.time ? `<span class="att-t">${a.time}</span>` : ''}${edit}</div>
+    ${cats ? `<ul class="att-cats">${cats}</ul>` : '<div class="gedaempft">(no category data)</div>'}
+    ${a.comment ? `<div class="att-c">${a.comment}</div>` : ''}</div>`;
 }
 
 function sbRVEditStart(ai, ti, i) {
