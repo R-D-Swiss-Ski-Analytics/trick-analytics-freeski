@@ -405,6 +405,16 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)
   .bn-sep{width:1px;align-self:stretch;margin:6px 1px;background:var(--line);flex-shrink:0}
   .bn-badge{position:absolute;top:1px;right:calc(50% - 20px);background:var(--red);color:#fff;border-radius:99px;font-size:9px;font-style:normal;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px}
   .tabs{display:none}
+  /* Lesbarkeit Handy (Richtwerte iOS/Android: Fliesstext ≥16px, Nebentexte ≥12–13px) */
+  body{font-size:16px}
+  .small{font-size:14px} .tiny{font-size:13px} .lead{font-size:15px}
+  .chip{font-size:13px} .legend{font-size:13px}
+  label.f,.form-group > label{font-size:12px}
+  .kpi .k{font-size:12px}
+  main svg text{font-size:12.5px}
+  .bottom-nav button{font-size:10.5px}
+  .team-tbl td[data-l]::before,.staff-tbl td[data-l]::before{font-size:10px}
+  :root{--muted:#5c5c61}
   /* Handy: Modus-Umschalter für Staff (Skills-Check ↔ Monitoring), unten nur die Tabs des Modus */
   .mode-sw:not([hidden]){display:flex;position:sticky;top:0;z-index:60;gap:4px;margin:10px 16px 0;padding:4px;background:#efe9e7;border-radius:12px}
   .mode-sw button{flex:1;border:0;background:none;padding:9px 6px;border-radius:9px;font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);cursor:pointer}
@@ -1675,7 +1685,7 @@ function renderChrome(){
   const unread = ST.notes.filter(n => !n.read_at).length;
   $('#who').innerHTML = `
     ${langSelect()}
-    <button class="iconbtn" onclick="toggleNotifs(event)" title="Notifications">🔔${unread?`<span class="badge">${unread}</span>`:''}</button>
+    ${isStaff() ? '' : `<button class="iconbtn" onclick="toggleNotifs(event)" title="Notifications"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg>${unread?`<span class="badge">${unread}</span>`:''}</button>`}
     <span class="chip">${ADMIN_IDS.includes(ST.me.id) ? 'Admin' : `${esc(ST.me.name)} · ${roleLabel(ST.me)}`}</span>
     <button class="iconbtn logout-btn" onclick="logout()" title="Log out"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Log out</span></button>`;
   const tabs = [['assessment','Assessment'], ['skills','Skills-Check']];
