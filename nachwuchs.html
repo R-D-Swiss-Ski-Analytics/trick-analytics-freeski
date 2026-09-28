@@ -652,6 +652,8 @@ const I18N = {
   'At least 8 characters.':['Mindestens 8 Zeichen.','Au moins 8 caractères.','Almeno 8 caratteri.'], 'Passwords do not match.':['Die Passwörter stimmen nicht überein.','Les mots de passe ne correspondent pas.','Le password non coincidono.'],
   'Save password':['Passwort speichern','Enregistrer le mot de passe','Salva password'], 'Code':['Code','Code','Codice'],
   'Attempts (dashed = running Ø)':['Versuche (gestrichelt = laufender Ø)','Tentatives (pointillé = Ø courant)','Tentativi (tratteggio = Ø progressivo)'], 'Height = criteria met (Jumps/Rails max. 4, Halfpipe max. 5)':['Höhe = erfüllte Kriterien (Jumps/Rails max. 4, Halfpipe max. 5)','Hauteur = critères remplis (Jumps/Rails max. 4, Halfpipe max. 5)','Altezza = criteri soddisfatti (Jumps/Rails max. 4, Halfpipe max. 5)'], 'Criteria':['Kriterien','Critères','Criteri'],
+  'Demo mode: accounts are fixed demo users.':['Demo-Modus: Die Konten sind feste Demo-Benutzer.','Mode démo : les comptes sont des utilisateurs démo fixes.','Modalità demo: gli account sono utenti demo fissi.'],
+  'Points: best coach rating per requirement (Jumps/Rails max. 4, Halfpipe max. 5)':['Punkte: beste Coach-Bewertung pro Anforderung (Jumps/Rails max. 4, Halfpipe max. 5)','Points : meilleure évaluation du coach par exigence (Jumps/Rails max. 4, Halfpipe max. 5)','Punti: migliore valutazione del coach per requisito (Jumps/Rails max. 4, Halfpipe max. 5)'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
@@ -906,6 +908,14 @@ const I18N_PHR = [
   ['New: tube or rail','Neu: Tube oder Rail','Nouveau: tube ou rail','Nuovo: tube o rail','New: tube or rail'],
   ['(simple rail)','(einfaches Rail)','(rail simple)','(rail semplice)','(simple rail)'],
   ['(demanding rail)','(anspruchsvolles Rail)','(rail exigeant)','(rail impegnativo)','(demanding rail)'],
+  ['Foundation for doubles: broad range of directions and axes','Basis für Doubles: breites Spektrum an Richtungen und Achsen','Base pour les doubles : large éventail de directions et d’axes','Base per i double: ampia varietà di direzioni e assi','Foundation for doubles: broad range of directions and axes'],
+  ['Simple rail / tube or rail','Einfaches Rail / Tube oder Rail','Rail simple / tube ou rail','Rail semplice / tube o rail','Simple rail / tube or rail'],
+  ['Demanding rail / simple rail','Anspruchsvolles Rail / einfaches Rail','Rail exigeant / rail simple','Rail impegnativo / rail semplice','Demanding rail / simple rail'],
+  ['Tube or rail','Tube oder Rail','Tube ou rail','Tube o rail','Tube or rail'],
+  ['Simple rail','Einfaches Rail','Rail simple','Rail semplice','Simple rail'],
+  ['Demanding rail','Anspruchsvolles Rail','Rail exigeant','Rail impegnativo','Demanding rail'],
+  ['Obstacle: ','Obstacle: ','Obstacle : ','Obstacle: ','Obstacle: '],
+  ['air height','Airhöhe','hauteur','altezza','air height'],
   ['Wiederholung: ','Wiederholung: ','Répétition: ','Ripetizione: ','Repeat: '],
 ];
 // Zahlen-Satzteile irgendwo im Text (z.B. «14 att. · Ø 75% · 86% landed»)
@@ -975,7 +985,7 @@ function i18nNode(root){
     if (n.nodeType === 3){ const v = n.nodeValue, t = trString(v); if (t !== v) n.nodeValue = t; iconizeText(n); return; }
     if (n.nodeType !== 1 || n.tagName === 'SCRIPT' || n.tagName === 'STYLE' || n.hasAttribute?.('data-noi18n')) return;
     for (const a of I18N_ATTRS){ const v = n.getAttribute(a); if (v){ const t = stripEmoji(trString(v)); if (t !== v) n.setAttribute(a, t); } }
-    n.childNodes.forEach(walk);
+    [...n.childNodes].forEach(walk);   // Kopie: iconizeText ersetzt Knoten während des Durchlaufs
   };
   walk(root);
 }
@@ -1738,7 +1748,7 @@ function setMode(m){
 }
 // Längere Hinweise als Aufzählung (ein Satz pro Punkt)
 function noteHtml(note){
-  const parts = note.split(/(?<=\.)\s+(?=[A-ZÄÖÜ0-9])/).map(x => x.trim()).filter(Boolean);
+  const parts = note.split(/(?<=\.)(?<!bzw\.)(?<!z\.B\.)\s+(?=[A-ZÄÖÜ0-9])/).map(x => x.trim()).filter(Boolean);
   return parts.length > 1 ? `<ul class="hints sec-note">${parts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : `<div class="sec-note">${esc(note)}</div>`;
 }
 function renderChrome(){
@@ -2236,7 +2246,7 @@ function renderSkills(){
     <div class="card">
       <h2>${DISC_LABEL[disc]} · ${level} ${ath.gender==='W'?'Women':'Men'}<span class="rt">${ev.pts} / ${ev.max} pts</span></h2>
       <div class="meta">${ev.def.meta.map(m => `<span class="chip">${esc(m)}</span>`).join('')}</div>
-      <div class="legend"><span><i class="ic done">✓</i>all criteria achieved</span><span><i class="ic partial">½</i>rated, not yet full points</span><span><i class="ic pending">⏳</i>waiting for coach</span><span><i class="ic goal">🎯</i>goal</span><span><i class="ic open"></i>open</span></div>
+      <div class="legend"><span><i class="ic done">✓</i>all criteria achieved</span><span><i class="ic partial">½</i>rated, not yet full points</span><span><i class="ic pending">⏳</i>waiting for coach</span><span><i class="ic goal">🎯</i>goal</span><span><i class="ic open"></i>open</span></div><div class="tiny muted" style="margin-top:6px">Points: best coach rating per requirement (Jumps/Rails max. 4, Halfpipe max. 5)</div>
       ${ev.def.sections.map(sec => {
         const sp = sec.slots.reduce((a, s) => { const o = ev.out[s.id]; if (o.applicable){ a.p += o.pts; a.m += maxFor(disc); } return a; }, {p:0, m:0});
         return `<div class="sec" style="margin-top:22px"><div class="sec-h">${esc(sec.title)}<span class="rt">${sp.p} / ${sp.m}</span></div>
@@ -2247,7 +2257,7 @@ function renderSkills(){
               <div class="pts">${o.state==='na' ? '' : e && e.status==='reviewed' ? stars(e.score, maxFor(disc)) : o.state==='pending' ? '<span class="muted small">⏳</span>' : '<span class="muted">0</span>'}</div></div>`; }).join('')}
         </div>`; }).join('')}
       ${ev.rules.map(r => `<div class="rule">${r.ok ? '✅' : '⚠️'} <b>${esc(r.text)}</b><span class="muted">${esc(r.detail)}</span></div>`).join('')}
-      <ul class="hints" style="margin-top:14px"><li>Points = best coach rating per requirement</li><li>Jumps/Rails 0–4, Halfpipe 0–5 (incl. Amplitude)</li><li>Achieved = full points</li><li>Tricks waiting for the coach count once rated</li></ul>
+
     </div>`;
 }
 
