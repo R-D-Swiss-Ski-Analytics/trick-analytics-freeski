@@ -520,6 +520,8 @@ const I18N = {
   'Your coach can now watch it.':['Dein Coach kann es jetzt anschauen.','Ton coach peut maintenant la regarder.','Il tuo coach ora può guardarlo.'],
   'The video is attached to the trick.':['Das Video ist beim Trick gespeichert.','La vidéo est enregistrée avec le trick.','Il video è salvato con il trick.'],
   '✓ Video uploaded':['✓ Video hochgeladen','✓ Vidéo téléchargée','✓ Video caricato'], 'Replace video':['Video ersetzen','Remplacer la vidéo','Sostituisci video'], 'OK':['OK','OK','OK'],
+  'This video was recorded directly in the upload dialog and its quality is too low (below 720p). Please film with the camera app and choose the video from your photo library.':['Dieses Video wurde direkt im Upload-Dialog aufgenommen und hat zu tiefe Qualität (unter 720p). Bitte mit der Kamera-App filmen und das Video aus der Fotomediathek wählen.','Cette vidéo a été filmée directement dans la fenêtre de téléchargement et sa qualité est trop faible (moins de 720p). Merci de filmer avec l’app Appareil photo et de choisir la vidéo dans la photothèque.','Questo video è stato registrato direttamente nella finestra di caricamento e la qualità è troppo bassa (sotto 720p). Filma con l’app Fotocamera e scegli il video dalla libreria foto.'],
+  'Choose the video from your photo library (film with the camera app first).':['Video aus der Fotomediathek wählen (vorher mit der Kamera-App filmen).','Choisir la vidéo dans la photothèque (filmer d’abord avec l’app Appareil photo).','Scegli il video dalla libreria foto (prima filma con l’app Fotocamera).'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned — in the review inbox':['Zu «gelernt» verschoben — in der Review-Inbox','Déplacé vers acquis — dans la boîte d’évaluation','Spostato in imparati — nella casella valutazioni'],
@@ -751,6 +753,7 @@ new MutationObserver(ms => { for (const m of ms){ if (m.type==='characterData') 
 const _confirm = window.confirm.bind(window), _prompt = window.prompt.bind(window);
 window.confirm = m => _confirm(trString(String(m)));
 window.prompt = (m, d) => _prompt(trString(String(m)), d);
+const _alert = window.alert.bind(window); window.alert = m => _alert(trString(String(m)));
 function langSelect(){
   return `<select class="lang-sel" data-noi18n onchange="setLang(this.value)" aria-label="Language">${LANGS.map(l => `<option value="${l}" ${l===LANG?'selected':''}>${l.toUpperCase()}</option>`).join('')}</select>`;
 }
@@ -1696,9 +1699,9 @@ function formCard(){
     <div class="form-grid" style="margin-top:12px">
       <div class="form-group full"><label>Video ${staff ? '(optional)' : 'for your coach'}</label>
         <div class="filebox">
-          <input type="file" accept="video/*" id="f-video" onchange="ST.pendingFile=this.files[0]||null;$('#f-vname').textContent=ST.pendingFile?ST.pendingFile.name+' · '+(ST.pendingFile.size/1048576).toFixed(1)+' MB':''">
+          <input type="file" accept="video/*" id="f-video" onchange="onFormVideo(this)">
           <span class="muted small" id="f-vname">${hasVideo ? 'A video is already attached — choose a file to replace it.' : ''}</span>
-        </div></div>
+        </div><div class="tiny muted" style="margin-top:6px">Choose the video from your photo library (film with the camera app first).</div></div>
       <div class="form-group full"><label>Note (optional)</label><textarea id="f-note" placeholder="${staff ? 'Note for the athlete' : 'Anything your coach should know?'}">${esc(fm.note)}</textarea></div>
     </div>
     <div id="f-progress" hidden><div class="progress"><i></i></div><div class="tiny muted" id="f-progress-t">Uploading video…</div></div>
@@ -1760,6 +1763,25 @@ async function submitGoal(id){
   catch (err){ toast('Could not send: ' + (err.message||err), true); }
 }
 // Upload-Status als Dialog: gut sichtbar, auch wenn das Formular lang ist
+// Direkt im Upload-Dialog aufgenommene Videos (iOS «Video aufnehmen») sind nur 480×360 → sperren.
+// Das Menü selbst lässt sich im Browser nicht einschränken, darum Prüfung der Auflösung.
+function videoIsLow(file){
+  return new Promise(res => {
+    const v = document.createElement('video'), url = URL.createObjectURL(file);
+    let fin = false; const done = low => { if (fin) return; fin = true; URL.revokeObjectURL(url); res(low); };
+    v.preload = 'metadata'; v.muted = true;
+    v.onloadedmetadata = () => done(v.videoWidth > 0 && Math.min(v.videoWidth, v.videoHeight) < 720);
+    v.onerror = () => done(false); setTimeout(() => done(false), 5000);
+    v.src = url;
+  });
+}
+async function videoOk(file){ if (await videoIsLow(file)) { alert('This video was recorded directly in the upload dialog and its quality is too low (below 720p). Please film with the camera app and choose the video from your photo library.'); return false; } return true; }
+async function onFormVideo(inp){
+  let f = inp.files[0] || null;
+  if (f && !(await videoOk(f))) { inp.value = ''; f = null; }
+  ST.pendingFile = f;
+  $('#f-vname').textContent = f ? f.name + ' · ' + (f.size/1048576).toFixed(1) + ' MB' : '';
+}
 function uploadModal(pct){
   const box = $('#up-pct');
   if (!box) modal(`<h3>Uploading video…</h3><div class="progress" style="height:10px;margin-top:14px"><i id="up-bar"></i></div>
@@ -1774,6 +1796,7 @@ function pickVideo(id){
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
   inp.onchange = async () => {
     const file = inp.files[0]; if (!file) return;
+    if (!(await videoOk(file))) return;
     const e = ST.entries.find(x => x.id===id);
     uploadModal(0);
     try {
