@@ -273,6 +273,9 @@ textarea{min-height:64px;resize:vertical}
 .rbtn.s.on{background:var(--cyan);border-color:var(--cyan);color:#fff}
 .contest-row{padding:8px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
 
+.rc-row{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-size:13px;cursor:pointer}
+.tl-row{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.tl-row:first-of-type{border-top:0}
 /* Monitoring (wie Snowboard) */
 .mon-head .mon-title{font-size:21px;font-weight:800;color:var(--char)}
 .typechips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
@@ -451,6 +454,8 @@ const TAKEOFFS = ['Carved','Blender','Hand-Drag','Inside Edge','Nosebutter','Tai
 const CREATIVE = ['Nosebutter','Tailbutter',"N'Ollie"];
 const OBST = {'Tube':1, 'Simple rail':2, 'Demanding rail':3};   // wie Skills-Check (keine Box)
 const obstLevel = o => OBST[o] || (o==='Tube / Box' ? 1 : 0);   // Altwert
+// Freeski-Rail-Typ → Skills-Check-Stufe: Box/Tube = Tube, Rail = einfaches Rail, alles andere = anspruchsvolles Rail
+const railLevel = rt => ['Box','Tube'].includes(rt) ? 'Tube' : rt==='Rail' ? 'Simple rail' : 'Demanding rail';
 const RAIL_ON = ['50-50','Skislide','Lipslide','270','Lip 270','450','Lip 450'];
 const RAIL_SWAP = ['Frontswap','Backswap','K-Fed','Britney','Super-Fed','Front 360 Swap','Back 360 Swap','Switch-Up'];
 const RAIL_OUT = ['to normal','to switch','270 out','450 out','630 out','810 out','Pretzel 270','Pretzel 450'];
@@ -482,9 +487,10 @@ function trickLabel(disc, t){
   if (disc === 'Rail'){
     let s = `${SIDE[t.side]||''} ${railOnName(t)}`;
     if (t.swap) s += ` → ${t.swap}`;
+    if (t.transfer) s += ` → ${t.transfer}`;
     s += ` → ${t.out}`;
     if (railSpinOut(t)) s += ` (${t.outSide}, ${String(t.foot||'').toLowerCase()} foot fwd${t.outStyle==='flip'?', flip/cork':''})`;
-    return s.trim() + ` · ${t.obstacle}`;
+    return s.trim() + ` · ${t.railType || t.obstacle}`;
   }
   if (t.kind === 'basic') return `${t.basic}${/drop in/i.test(t.basic) ? ' '+(SIDE[t.side]||'') : ''}`.trim();
   const fl = ['Cork','Bio/Misty','Rodeo','Flat Spin'].includes(t.axis) && +t.flips >= 2 ? FLIPN[t.flips] : '';
@@ -954,6 +960,10 @@ const DemoStore = {
   async deleteSession(id){ this.data.sessions = this.data.sessions.filter(s => s.id!==id); this.data.attempts = this.data.attempts.filter(a => a.session_id!==id); this.save(); },
   async saveAttempt(me, a){ return this._upsert(this.data.attempts, {...a}, me); },
   async deleteAttempt(id){ this.data.attempts = this.data.attempts.filter(a => a.id!==id); this.save(); },
+  async listComments(athId, key){ return (this.data.comments || []).filter(c => c.athlete_id===athId && c.trick_key===key).sort((a,b) => b.created_at.localeCompare(a.created_at)); },
+  async addComment(me, athId, key, text){ (this.data.comments ||= []).push({id:Date.now(), athlete_id:athId, trick_key:key, comment:text, created_by:me.id, created_at:nowIso()}); this.save(); },
+  async trickStatus(){ return null; },
+  async refreshStatus(){ return null; },   // Demo: keine KI
   notify(user_id, entry, kind, text){ this.data.notes.push({id:this.data.nextNote++, user_id, entry_id:entry.id, kind, text, created_at:nowIso(), read_at:null}); },
   _afterStatus(me, e, prev){
     const ath = this.data.profiles.find(p => p.id===e.athlete_id);
@@ -1033,14 +1043,20 @@ const SupaStore = {
   async deleteSession(id){ const { error } = await db.from('sessions').delete().eq('id', id); if (error) throw error; },
   async saveAttempt(me, a){ return this._upsert('attempts', ST.attempts, a); },
   async deleteAttempt(id){ const { error } = await db.from('attempts').delete().eq('id', id); if (error) throw error; },
+  async listComments(athId, key){ const { data, error } = await db.from('trick_comments').select('*').eq('athlete_id', athId).eq('trick_key', key).order('created_at', {ascending:false}); if (error) throw error; return data; },
+  async addComment(me, athId, key, text){ const { error } = await db.from('trick_comments').insert({athlete_id:athId, trick_key:key, comment:text}); if (error) throw error; },
+  async trickStatus(athId, key){ const { data } = await db.from('trick_status').select('status_text,updated_at').eq('athlete_id', athId).eq('trick_key', key).maybeSingle(); return data; },
+  async refreshStatus(athId, key){ const { data, error } = await db.functions.invoke('trick-status', {body:{athlete_id:athId, trick_key:key}}); if (error) throw error; return data; },
   async saveEntry(me, e){
     const row = {athlete_id:e.athlete_id, discipline:e.discipline, trick:e.trick, label:e.label, status:e.status, note:e.note||null, video_path:e.video_path||null};
     if (e.created_at) row.created_at = e.created_at;
     if (e.crit !== undefined && me.role !== 'athlete'){ row.crit = e.crit; row.score = e.score; }
-    const q = e.id && ST.entries.some(x => x.id===e.id)
-      ? db.from('entries').update(row).eq('id', e.id).select().single()
-      : db.from('entries').insert({...row, id:e.id||undefined}).select().single();
-    const { data, error } = await q; if (error) throw error; return data;
+    if (e.achieved_at !== undefined) row.achieved_at = e.achieved_at;
+    const exists = e.id && ST.entries.some(x => x.id===e.id);
+    const run = r => exists ? db.from('entries').update(r).eq('id', e.id).select().single() : db.from('entries').insert({...r, id:e.id||undefined}).select().single();
+    let { data, error } = await run(row);
+    if (error && 'achieved_at' in row && /column|schema cache/i.test(error.message || '')){ delete row.achieved_at; ({ data, error } = await run(row)); }
+    if (error) throw error; return data;
   },
   async deleteEntry(id){
     const e = ST.entries.find(x => x.id===id);
@@ -1087,7 +1103,7 @@ const Store = DEMO ? DemoStore : SupaStore;
    ZUSTAND & ROLLEN
    athlete: sieht nur sich · coach: seine Gruppe · dvlp: alle
    ══════════════════════════════════════════════════════════════════════ */
-const ST = {me:null, profiles:[], groups:[], entries:[], notes:[], sessions:[], attempts:[], rep:{sel:null, type:'', athlete:'', period:'season'}, mon:{view:'team', athleteId:null, key:null, period:'season', typ:'', from:'', to:''}, page:'assessment', athleteId:null, level:null, disc:'Jump', groupFilter:'', entryFilter:'all', form:null, pendingFile:null};
+const ST = {me:null, profiles:[], groups:[], entries:[], notes:[], sessions:[], attempts:[], rep:{sel:null, type:'', athlete:'', period:'season', raw:''}, mon:{view:'team', athleteId:null, key:null, period:'season', typ:'', from:'', to:''}, page:'assessment', athleteId:null, level:null, disc:'Jump', groupFilter:'', entryFilter:'all', form:null, pendingFile:null};
 
 function visibleAthleteIds(me, profiles){
   const ath = profiles.filter(p => p.role==='athlete');
@@ -1208,7 +1224,7 @@ function render(){
    ══════════════════════════════════════════════════════════════════════ */
 const FORM_DEFAULTS = {
   Jump: {axis:'Upright', dir:'L', flips:'1', rot:'360', grab:'', takeoff:'', bringback:'', style:''},
-  Rail: {obstacle:'Tube', side:'L', approach:'F', on:'Skislide', swap:'', out:'to normal', outSide:'FS', foot:'Right', outStyle:''},
+  Rail: {railType:'Tube', obstacle:'Tube', side:'L', approach:'F', on:'Skislide', swap:'', transfer:'', out:'to normal', outSide:'FS', foot:'Right', outStyle:''},
   Halfpipe: {kind:'air', basic:'Drop in', side:'L', dir:'L', sw:'', ao:'', axis:'Upright', flips:'1', rot:'360', grab:'', height:'', bringback:'', style:''},
 };
 const opts = (list, v) => list.map(o => {
@@ -1238,15 +1254,19 @@ function formFields(disc, F, fn='formSet'){
     add('style', 'Style Element', [['','–'],'Tweak/Bone','Poke']);
   } else if (disc==='Rail'){
     f.push('<div class="section-divider">Rail</div>');
-    add('obstacle', 'Obstacle', Object.keys(OBST));
-    add('side', 'Side', [['L','Left'],['R','Right']]);
-    add('approach', 'Approach', [['F','Forward'],['S','Switch']]);
-    add('on', 'On', RAIL_ON.map(o => [o, railOnName({approach:F.approach, on:o})]));
+    // Vokabular wie Freeski-Assessment; die Skills-Check-Stufe (Tube / einfaches / anspruchsvolles Rail) ergibt sich aus dem Rail Type
+    const customRail = [...new Set(ST.entries.map(e => e.trick?.railType).filter(Boolean))].filter(t => !RAIL_TYPES.includes(t));
+    const transfers = [...new Set(ST.entries.map(e => e.trick?.transfer).filter(Boolean))];
+    f.push(`<div class="form-group"><label>Rail Type <span class="lbl-hint">(Skills-Check: ${esc(railLevel(F.railType))})</span></label><select onchange="${fn}('railType', this.value==='__add__' ? (prompt('New rail type:')||'${esc(F.railType)}') : this.value)">${opts([...RAIL_TYPES, ...customRail, ...(F.railType && !RAIL_TYPES.includes(F.railType) && !customRail.includes(F.railType) ? [F.railType] : []), ['__add__','＋ Add new…']], F.railType)}</select></div>`);
+    add('side', 'Direction', [['L','Left'],['R','Right']]);
+    add('approach', 'Stance', [['F','Forward'],['S','Switch']]);
+    add('on', 'In-Spin / Slide Form', RAIL_ON.map(o => [o, railOnName({approach:F.approach, on:o})]));
     add('swap', 'Swap', [['','–'], ...RAIL_SWAP]);
-    add('out', 'Out', RAIL_OUT);
+    f.push(`<div class="form-group"><label>Transfer</label><select onchange="${fn}('transfer', this.value==='__add__' ? (prompt('New transfer:')||'') : this.value)">${opts([['','–'], ...transfers, ...(F.transfer && !transfers.includes(F.transfer) ? [F.transfer] : []), ['__add__','＋ Add new…']], F.transfer)}</select></div>`);
+    add('out', 'Out-Spin', RAIL_OUT);
     const so = railSpinOut(F);
     add('outSide', 'Out Side', [['FS','Frontside'],['BS','Backside']], so);
-    add('foot', 'Foot Forward', ['Right','Left'], so);
+    add('foot', 'Foot', [['Right','Right Foot'],['Left','Left Foot']], so);
     add('outStyle', 'Out Style', [['','Spin'],['flip','Flip / Cork']], so);
   } else {
     f.push('<div class="section-divider">Halfpipe</div>');
@@ -1280,7 +1300,7 @@ function normTrick(disc, F){
   }
   if (disc==='Rail'){
     const so = railSpinOut(F);
-    return {obstacle:F.obstacle, side:F.side, approach:F.approach, on:F.on, swap:F.swap||'', out:F.out, outSide:so?F.outSide:'', foot:so?F.foot:'', outStyle:so?F.outStyle:''};
+    return {railType:F.railType, obstacle:railLevel(F.railType), transfer:F.transfer||'', side:F.side, approach:F.approach, on:F.on, swap:F.swap||'', out:F.out, outSide:so?F.outSide:'', foot:so?F.foot:'', outStyle:so?F.outStyle:''};
   }
   if (F.kind==='basic') return {kind:'basic', basic:F.basic, side:/drop in/i.test(F.basic) ? F.side : ''};
   return {kind:'air', dir:F.dir, sw:!!F.sw, ao:!!F.ao, axis:F.axis, flips:['Cork','Bio/Misty','Flat Spin','Rodeo'].includes(F.axis) ? +F.flips||1 : null, rot:+F.rot||0, grab:F.grab||'', height:F.height===''?null:+F.height, bringback:F.bringback||'', style:F.style||''};
@@ -1289,6 +1309,7 @@ function trickToForm(disc, t){
   const F = {...FORM_DEFAULTS[disc]};
   for (const [k, v] of Object.entries(t||{})) F[k] = v === true ? '1' : v === false || v == null ? '' : String(v);
   if (disc==='Jump' && !F.flips) F.flips = '1';
+  if (disc==='Rail' && !(t||{}).railType) F.railType = ({'Tube':'Tube', 'Tube / Box':'Tube', 'Simple rail':'Rail', 'Demanding rail':'Down Rail'})[t?.obstacle] || 'Tube';
   if (disc==='Halfpipe' && !F.flips) F.flips = '1';
   return F;
 }
@@ -1408,7 +1429,7 @@ async function deleteEntry(id){
 }
 async function submitGoal(id){
   const e = ST.entries.find(x => x.id===id);
-  try { upsertLocal(await Store.saveEntry(ST.me, {...e, status:'pending'})); toast('Sent to your coach 👍'); render(); }
+  try { upsertLocal(await Store.saveEntry(ST.me, {...e, status:'pending', ...(e.status==='goal' ? {achieved_at:nowIso()} : {})})); toast(isStaff() ? 'Moved to learned — in the review inbox' : 'Sent to your coach'); render(); }
   catch (err){ toast('Could not send: ' + (err.message||err), true); }
 }
 function pickVideo(id){
@@ -1476,7 +1497,7 @@ function asRow(e){
     <div class="sb-trick-name">
       <div style="font-weight:600;color:var(--char)">${esc(e.label)}</div>
       <div class="row" style="gap:6px;margin-top:4px">
-        <span class="tiny muted">📅 ${fmtDate(e.created_at)}</span>${e.status!=='goal' ? statusChip(e) : ''}
+        <span class="tiny muted">📅 ${fmtDate(e.created_at)}</span>${e.status!=='goal' ? statusChip(e) : goalLandedHint(e)}
         ${mine.map(x => `<span class="chip dark">✓ ${x.level} · ${esc(x.text)}</span>`).join('')}${!mine.length && m.some(x => x.level===ath?.level) ? `<span class="chip">${ath.level} · already covered</span>` : ''}${!m.length ? '<span class="chip">Free trick</span>' : ''}
         ${e.video_path ? `<a class="tiny" href="#" onclick="playVideo('${e.id}');return false" style="color:var(--cyan);font-weight:700">▶ Video</a>` : ''}
       </div>
@@ -1525,7 +1546,8 @@ function renderAssessment(){
         <div class="sb-col-body mastered">${asList(learned, staff ? 'No entries yet' : 'No tricks yet — add your first one!')}</div></div>
       <div><div class="sb-col-header goal">🎯 GOALS / IN PROGRESS <span style="opacity:.6;font-size:13px">(${goals.length})</span></div>
         <div class="sb-col-body goal">${asList(goals, 'No goals yet')}</div></div>
-    </div>`;
+    </div>
+    ${goalsTimelineCard(ath.id)}`;
   if (ST.form) renderFormInner();
 }
 
@@ -2309,7 +2331,8 @@ function renderReports(){
       <select style="width:auto" onchange="ST.rep.period=this.value;renderReports()">${opts(PERIODS, f.period)}</select>
     </div>
     <div class="card"><h2>Session reports <span class="muted" style="letter-spacing:0;font-weight:600">${list.length}</span></h2>
-      <div class="list">${list.length ? list.map(sessionListRow).join('') : '<div class="empty">No sessions in this filter. Start one in the Session tab.</div>'}</div></div>`;
+      <div class="list">${list.length ? list.map(sessionListRow).join('') : '<div class="empty">No sessions in this filter. Start one in the Session tab.</div>'}</div></div>
+    ${rawEntriesCard()}`;
 }
 function trickBlock(list, o={}){
   const disc = list[0].discipline;
@@ -2332,7 +2355,7 @@ function renderReport(root, s){
   const ids = s.athlete_ids.filter(id => vis.has(id) && (!ST.rep.athlete || ST.rep.athlete===id));
   root.innerHTML = `
     <div class="row noprint" style="margin-bottom:18px"><button class="btn ghost sm" onclick="ST.rep.sel=null;renderReports()">← All reports</button><span class="grow"></span>
-      <button class="btn ghost sm" onclick="window.print()">🖨 Print / PDF</button><button class="btn ghost sm" onclick="deleteReport('${s.id}')">🗑 Delete report</button></div>
+      <button class="btn ghost sm" onclick="reportPdf('${s.id}')">📄 PDF</button><button class="btn ghost sm" onclick="deleteReport('${s.id}')">🗑 Delete report</button></div>
     <div class="card"><h2>${fmtDate(s.date)} · ${esc(normType(s.type))}<span class="rt muted">${[s.location, s.jump_size ? 'Jump size ' + s.jump_size : ''].filter(Boolean).map(esc).join(' · ')}</span></h2>
       <div class="kpis" style="margin-bottom:0">
         <div class="kpi"><div class="k">Attempts</div><div class="v">${atts.length}</div></div>
@@ -2476,6 +2499,9 @@ function renderMonTeam(root, all){
     <div class="tiny muted" style="margin:14px 0 4px">Trick status: ≥70% stomp rate = <b>Ready</b> · 40–69% = <b>Building</b> · &lt;40% = <b>Critical</b> · fewer than 5 attempts = Low data. Stomped = all criteria met.</div>
     ${groups.map(g => { const list = aths.filter(a => (a.group_id || null)===g.id);
       return `<div class="sec-lbl">${esc(g.name)}</div><div class="mon-tiles">${list.map(tile).join('')}</div>`; }).join('') || '<div class="empty">No athletes.</div>'}
+    <div class="row" style="justify-content:center;gap:10px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)">
+      <button class="btn ghost sm" style="border-color:#C96A1F;color:#C96A1F;background:#FAEEDF" onclick="realityCheck()">🔍 Reality Check</button>
+      <button class="btn ghost sm" onclick="teamPdf()">📄 Team PDF</button></div>
   </div>`;
 }
 
@@ -2500,6 +2526,7 @@ function renderMonAthlete(root, all){
       <div class="legend" style="margin-top:8px">${dirs.map(d => `<span><i class="dot" style="background:${MON_DIR_COL[d]}"></i>${esc(d)} <b style="color:${MON_DIR_COL[d]}">${pctR(byDir[d], c.n)}%</b></span>`).join('')}</div></div>` : '<div class="empty">No session data in this period.</div>'}
     ${MON_DIR_ORDER.map(d => { const ts = tricks.filter(t => t.dir===d).sort((a,b) => b.rot - a.rot || b.list.length - a.list.length); if (!ts.length) return '';
       return `<div class="sec-lbl" style="color:${MON_DIR_COL[d]}">${esc(d)}</div><div class="mon-cards">${ts.map(card).join('')}</div>`; }).join('')}
+    <div class="row" style="justify-content:center;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)"><button class="btn ghost sm" onclick="athletePdf('${ath.id}')">📄 Athlete Report (PDF)</button></div>
   </div>`;
 }
 
@@ -2555,7 +2582,9 @@ function renderMonTrick(root, all){
       <div class="tiny muted" style="margin-top:6px">⚠ Sessions with fewer than 5 attempts — rates are statistically weak.</div>
       <div id="mon-time-detail" class="small muted" style="margin-top:8px">Tap a bar for session details.</div>
     </div>
-    <div class="card"><h2>Coaching Analysis</h2>${monCoaching(list, disc)}</div>`;
+    <div class="card"><h2>Coaching Analysis</h2>${monCoaching(list, disc)}</div>
+    ${monCommentsCard()}`;
+  MONC.hist = false; loadMonComments();
 }
 
 function monTimeChart(list){
@@ -2653,6 +2682,164 @@ function monCoaching(list, disc){
   }
   return `<div class="coach-grid">${items.map(([l, t, col]) => `<div style="border-left:3px solid ${col};padding-left:10px"><div class="tiny muted" style="font-weight:700;letter-spacing:.6px;text-transform:uppercase">${esc(l)}</div><div style="font-weight:600;color:var(--char);font-size:14px">${esc(t)}</div></div>`).join('')}</div>
     <div class="tiny muted" style="margin-top:12px">Basis: sessions = training days in the selected period. Comp-readiness = every criterion ≥ 80% in the last 3 sessions (landed attempts). Plateau tolerance ±${MON_PLATEAU_TOL}%.</div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   PDF-EXPORTE (wie Freeski: eigenes Fenster → «Print / Save as PDF»)
+   ══════════════════════════════════════════════════════════════════════ */
+function openPrintWindow(title, sub, html){
+  const w = window.open('', '_blank');
+  if (!w){ toast('Please allow pop-ups to create the PDF.', true); return; }
+  const css = document.querySelector('style').outerHTML, logo = document.querySelector('.brand svg')?.outerHTML || '';
+  w.document.write(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>${esc(title)}</title>${css}
+    <style>body{background:#fff}.noprint,.btn,.icon-btn,details,select{display:none!important}.card{break-inside:avoid;border-color:#ddd}
+      .pdfbar{position:sticky;top:0;background:#fff;padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:14px;display:flex;gap:10px;align-items:center}
+      .pdfbar button{display:inline-block!important;background:var(--char);color:#fff;border:0;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer}
+      .pdf-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:18px}.pdf-head svg{width:130px}
+      .pdf-foot{margin-top:24px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+      @media print{.pdfbar{display:none}}</style></head>
+    <body><div class="wrap" style="padding-top:16px">
+      <div class="pdfbar"><button onclick="window.print()">Print / Save as PDF</button><span class="muted small">Tip: choose «Save as PDF» as the printer.</span></div>
+      <div class="pdf-head"><div><h1>${esc(title)}<span class="dot">.</span></h1><div class="sub">${sub}</div></div><div>${logo}</div></div>
+      ${html}
+      <div class="pdf-foot">Skills-Check Freeski · Trick Analyses Youth · Swiss-Ski · created ${fmtDate(nowIso())}</div>
+    </div></body></html>`);
+  w.document.close();
+}
+function reportPdf(id){
+  const s = sessById(id); if (!s) return;
+  const html = [...document.querySelectorAll('#page-reports > .card')].map(c => c.outerHTML).join('');
+  openPrintWindow(`Session Report ${fmtDate(s.date)}`, `${esc(normType(s.type))}${s.location ? ' · ' + esc(s.location) : ''}${s.jump_size ? ' · Jump size ' + esc(s.jump_size) : ''}${s.conditions ? ' · Conditions ' + s.conditions + '/5' : ''} · ${s.athlete_ids.map(i => esc(prof(i)?.name || '')).join(', ')}`, html);
+}
+
+/* ── Raw Entries (wie Freeski: alle Versuche einer Athlet:in, bearbeitbar) ── */
+function rawEntriesCard(){
+  const aths = visibleAthletes();
+  const id = ST.rep.raw && aths.some(a => a.id===ST.rep.raw) ? ST.rep.raw : '';
+  const list = id ? ST.attempts.filter(a => a.athlete_id===id).sort((a,b) => b.created_at.localeCompare(a.created_at)) : [];
+  return `<div class="card noprint"><h2>Raw Entries</h2>
+    <div class="row" style="margin-bottom:10px"><select style="width:auto;max-width:280px" onchange="ST.rep.raw=this.value;renderReports()"><option value="">— select athlete —</option>${opts(aths.map(a => [a.id, a.name]), id)}</select>
+      ${id ? `<span class="muted small">${list.length} attempts</span>` : ''}</div>
+    ${id ? `<details open><summary>All attempts</summary><div class="list">${list.slice(0, 300).map(a => attemptRow(a, {noName:true, withDate:true})).join('') || '<div class="empty">No attempts.</div>'}</div></details>` : ''}
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MONITORING-ERGÄNZUNGEN: Coach-Kommentar + KI-Status, Reality Check, PDFs
+   ══════════════════════════════════════════════════════════════════════ */
+function monCommentsCard(){
+  return `<div class="card"><div class="row" style="gap:10px"><div class="tiny muted" style="font-weight:800;letter-spacing:1px;text-transform:uppercase">Coach comment · current status</div>
+      <span class="chip blue" id="mon-cmt-ai" hidden>AI summary</span><span class="grow"></span><a href="#" class="tiny" id="mon-cmt-hl" style="color:var(--cyan);font-weight:700" onclick="MONC.hist=!MONC.hist;renderMonComments();return false"></a></div>
+    <div id="mon-cmt-status" class="small" style="margin-top:8px">Loading…</div>
+    <div id="mon-cmt-hist"></div>
+    <div class="row" style="margin-top:12px;flex-wrap:nowrap"><textarea id="mon-cmt-input" placeholder="Add new comment" style="min-height:44px"></textarea><button class="btn red sm" onclick="addMonComment()">Save</button></div>
+  </div>`;
+}
+let MONC = {list:[], status:null, hist:false};
+async function loadMonComments(){
+  const ath = ST.mon.athleteId, key = ST.mon.key;
+  try {
+    const [list, status] = await Promise.all([Store.listComments(ath, key), Store.trickStatus(ath, key)]);
+    if (ST.mon.athleteId!==ath || ST.mon.key!==key) return;
+    MONC = {...MONC, list, status};
+  } catch (err){ MONC = {...MONC, list:[], status:null}; console.warn(err); }
+  renderMonComments();
+}
+function renderMonComments(){
+  const st = $('#mon-cmt-status'); if (!st) return;
+  const {list, status, hist} = MONC;
+  $('#mon-cmt-ai').hidden = !status?.status_text;
+  st.innerHTML = status?.status_text ? `${esc(status.status_text)} <span class="tiny muted">(${fmtDate(status.updated_at)})</span>`
+    : list[0] ? `${esc(list[0].comment)} <span class="tiny muted">(${fmtDate(list[0].created_at)})</span>` : '<span class="muted">No comments yet.</span>';
+  $('#mon-cmt-hl').textContent = list.length ? (hist ? `Hide history (${list.length})` : `History (${list.length})`) : '';
+  $('#mon-cmt-hist').innerHTML = hist ? list.map(c => `<div style="border-top:1px solid var(--line);padding:6px 0;margin-top:6px"><div class="tiny muted">${fmtDate(c.created_at)} · ${esc(prof(c.created_by)?.name || '')}</div><div class="small">${esc(c.comment)}</div></div>`).join('') : '';
+}
+async function addMonComment(){
+  const t = $('#mon-cmt-input').value.trim(); if (!t) return;
+  const ath = ST.mon.athleteId, key = ST.mon.key;
+  try {
+    await Store.addComment(ST.me, ath, key, t);
+    $('#mon-cmt-input').value = ''; toast('Comment saved');
+    await loadMonComments();
+    // KI-Zusammenfassung im Hintergrund aktualisieren (falls die Function eingerichtet ist)
+    Store.refreshStatus(ath, key).then(r => { if (r?.status_text) loadMonComments(); }).catch(err => console.warn('trick-status:', err));
+  } catch (err){ toast('Could not save comment: ' + (err.message||err), true); }
+}
+
+// Reality Check: Assessment ↔ Session-Daten (Ø Qualität) wie in der Freeski-App
+let RC = null;
+function realityCheck(){
+  const all = monAttempts(), vis = [...visibleAthleteIds(ST.me, ST.profiles)].map(prof).filter(Boolean).sort((a,b) => a.name.localeCompare(b.name));
+  const items = [];
+  for (const ath of vis){
+    for (const e of entriesOf(ath.id)){
+      if (e.status==='rework') continue;
+      const key = coreOf(e).key, l = all.filter(a => a.athlete_id===ath.id && coreOf(a).key===key), q = avg(l.map(qa));
+      if (e.status!=='goal' && l.length >= 5 && q < 70) items.push({e, ath, dir:'down', n:l.length, q});
+      if (e.status==='goal' && l.length >= 3 && q >= 70) items.push({e, ath, dir:'up', n:l.length, q});
+    }
+  }
+  RC = {items, sel:new Set(items.map((_, i) => i)), q:''};
+  renderRealityCheck();
+}
+function renderRealityCheck(){
+  const shown = RC.items.map((it, i) => ({...it, i})).filter(it => !RC.q || it.ath.name.toLowerCase().includes(RC.q.toLowerCase()));
+  const by = {}; shown.forEach(it => (by[it.ath.id] ||= []).push(it));
+  modal(`<h3>Reality Check</h3><p class="lead" style="margin-top:6px">Assessment vs. session data (${monPeriodLabel()}). <b>↓ Goal</b>: learned trick with Ø quality below 70% (≥5 attempts). <b>↑ Learned</b>: goal with Ø quality 70%+ (≥3 attempts) — goes to the review inbox.</p>
+    <div class="row" style="margin-bottom:10px"><input type="text" placeholder="Search athlete…" value="${esc(RC.q)}" oninput="RC.q=this.value;renderRealityCheck();setTimeout(()=>{const i=document.querySelector('.modal input[type=text]');i.focus();i.setSelectionRange(i.value.length,i.value.length)},0)" style="max-width:240px">
+      <button class="btn ghost sm" onclick="RC.items.forEach((_, i) => RC.sel.add(i));renderRealityCheck()">✓ All</button><button class="btn ghost sm" onclick="RC.sel.clear();renderRealityCheck()">✗ None</button></div>
+    ${Object.values(by).map(list => `<div class="sub-h">${esc(list[0].ath.name)}</div>${list.map(it => `<label class="rc-row"><input type="checkbox" ${RC.sel.has(it.i)?'checked':''} onchange="this.checked?RC.sel.add(${it.i}):RC.sel.delete(${it.i})">
+        <span class="grow">${esc(it.e.label)}</span><span class="chip ${it.dir==='up'?'green':'gold'}">${it.dir==='up' ? '↑ Learned' : '↓ Goal'}</span><span class="tiny muted">Ø ${it.q}% · ${it.n} att.</span></label>`).join('')}`).join('') || '<div class="empty">Everything matches — no suggestions.</div>'}
+    <div class="btnrow"><button class="btn red" ${RC.items.length ? '' : 'disabled'} onclick="applyRealityCheck()">Apply selected (${RC.sel.size})</button><button class="btn ghost" onclick="closeModal()">Close</button></div>`);
+}
+async function applyRealityCheck(){
+  let n = 0;
+  try {
+    for (const i of RC.sel){
+      const {e, dir} = RC.items[i];
+      const next = dir==='up' ? {...e, status:'pending', achieved_at:nowIso()} : {...e, status:'goal'};
+      upsertLocal(await Store.saveEntry(ST.me, next)); n++;
+    }
+    closeModal(); toast(`${n} entr${n===1?'y':'ies'} updated`); render();
+  } catch (err){ toast('Could not apply: ' + (err.message||err), true); }
+}
+
+// Team- und Athlet:innen-PDF
+function monStatsRows(list){
+  return monTrickAgg(list).sort((a,b) => b.list.length - a.list.length).map(t => { const k = monCounts(t.list), st = monStatus(k.n, k.s);
+    return `<tr><td>${esc(t.label)}</td><td class="num">${k.n}</td><td class="num">${pctR(k.s, k.n)}%</td><td class="num">${pctR(k.s + k.l, k.n)}%</td><td class="num">${avg(t.list.map(qa))}%</td><td style="color:${MON_ST[st].c};font-weight:700">${MON_ST[st].l}</td></tr>`; }).join('');
+}
+function teamPdf(){
+  const all = monAttempts(), aths = [...visibleAthleteIds(ST.me, ST.profiles)].map(prof).filter(Boolean).sort((a,b) => (groupName(a.group_id)).localeCompare(groupName(b.group_id)) || a.name.localeCompare(b.name));
+  const rows = aths.map(a => { const l = all.filter(x => x.athlete_id===a.id), c = monCounts(l), t = a.gender && a.level ? levelTotals(a, a.level) : null;
+    return `<tr><td><b>${esc(a.name)}</b><div class="tiny muted">${esc(groupName(a.group_id))}</div></td><td>${a.level || '–'}</td><td class="num">${t ? t.pct + '%' : '–'}</td><td class="num">${new Set(l.map(sessDate)).size}</td><td class="num">${c.n}</td><td class="num">${c.n ? pctR(c.s, c.n) + '%' : '–'}</td><td class="num">${c.n ? pctR(c.s + c.l, c.n) + '%' : '–'}</td><td class="num">${c.n ? avg(l.map(qa)) + '%' : '–'}</td></tr>`; }).join('');
+  openPrintWindow('Team Report', `${monPeriodLabel()} · ${aths.length} athletes`,
+    `<div class="card"><table class="tbl"><thead><tr><th>Athlete</th><th>Level</th><th class="num">Skills-Check</th><th class="num">Sessions</th><th class="num">Attempts</th><th class="num">Stomp</th><th class="num">Landed</th><th class="num">Ø Quality</th></tr></thead><tbody>${rows}</tbody></table></div>`);
+}
+function athletePdf(id){
+  const a = prof(id), l = monAttempts().filter(x => x.athlete_id===id), c = monCounts(l);
+  const t = a.gender && a.level ? levelTotals(a, a.level) : null;
+  const ents = entriesOf(id), learned = ents.filter(e => e.status!=='goal'), goals = ents.filter(e => e.status==='goal');
+  const entryLi = e => `<li>${esc(e.label)} ${e.status==='reviewed' ? `<b>${e.score}/${maxFor(e.discipline)}</b>` : `<span class="muted">(${e.status})</span>`}</li>`;
+  openPrintWindow(`Athlete Report — ${a.name}`, `${esc(groupName(a.group_id))} · Level ${a.level || '–'} · ${monPeriodLabel()}`, `
+    <div class="card"><h2>Skills-Check ${a.level || ''}</h2>${t ? `<div class="kpis" style="margin:0"><div class="kpi"><div class="k">Total</div><div class="v">${t.pct}<small>%</small></div></div>${DISCS.filter(d => t.by[d]).map(d => `<div class="kpi"><div class="k">${DISC_LABEL[d]}${t.incl.includes(d) ? '' : ' (not in focus)'}</div><div class="v">${pctR(t.by[d].pts, t.by[d].max)}<small>% · ${t.by[d].pts}/${t.by[d].max}</small></div></div>`).join('')}</div>` : '<div class="muted">Sex/level not set.</div>'}</div>
+    <div class="card"><h2>Session summary</h2><div class="kpis" style="margin:0"><div class="kpi"><div class="k">Sessions</div><div class="v">${new Set(l.map(sessDate)).size}</div></div><div class="kpi"><div class="k">Attempts</div><div class="v">${c.n}</div></div><div class="kpi"><div class="k">Stomp rate</div><div class="v">${pctR(c.s, c.n)}<small>%</small></div></div><div class="kpi"><div class="k">Landed</div><div class="v">${pctR(c.s + c.l, c.n)}<small>%</small></div></div></div>
+      ${c.n ? `<table class="tbl" style="margin-top:14px"><thead><tr><th>Trick</th><th class="num">Att.</th><th class="num">Stomp</th><th class="num">Landed</th><th class="num">Ø Quality</th><th>Status</th></tr></thead><tbody>${monStatsRows(l)}</tbody></table>` : ''}</div>
+    <div class="card"><h2>Assessment</h2><div class="sb-columns"><div><b>Learned tricks (${learned.length})</b><ul class="small">${learned.map(entryLi).join('')}</ul></div><div><b>Goals (${goals.length})</b><ul class="small">${goals.map(entryLi).join('')}</ul></div></div></div>`);
+}
+
+/* ── Assessment: Timeline «Progress — Goals Achieved» (wie Freeski) ── */
+function goalsTimelineCard(athId){
+  const list = entriesOf(athId).filter(e => e.achieved_at).sort((a,b) => b.achieved_at.localeCompare(a.achieved_at));
+  if (!list.length) return '';
+  return `<div class="card" style="margin-top:16px"><div class="card-title">Progress — Goals Achieved</div>
+    ${list.map(e => `<div class="tl-row"><span class="chip green">✓ Achieved</span><div class="grow"><div style="font-weight:600;color:var(--char)">${esc(e.label)}</div><div class="tiny muted">${fmtDate(e.achieved_at)} · goal since ${fmtDate(e.created_at)}</div></div>${statusChip(e)}</div>`).join('')}
+  </div>`;
+}
+// Goal schon in einer Session gelandet?
+function goalLandedHint(e){
+  const key = coreOf(e).key, l = ST.attempts.filter(a => a.athlete_id===e.athlete_id && !a.fell && coreOf(a).key===key).sort((a,b) => b.created_at.localeCompare(a.created_at));
+  return l.length ? `<span class="chip green">✓ landed in session ${fmtDate(sessDate(l[0]))}</span>` : '';
 }
 
 /* ══════════════════════════════════════════════════════════════════════
