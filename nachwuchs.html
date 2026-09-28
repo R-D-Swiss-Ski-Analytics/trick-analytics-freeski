@@ -516,6 +516,10 @@ const I18N = {
   'Video':['Video','Vidéo','Video'], 'New video':['Neues Video','Nouvelle vidéo','Nuovo video'], 'Upload video':['Video hochladen','Télécharger une vidéo','Carica video'], '▶ Video':['▶ Video','▶ Vidéo','▶ Video'],
   'Edit':['Bearbeiten','Modifier','Modifica'], 'Remove':['Entfernen','Supprimer','Rimuovi'], 'Delete':['Löschen','Supprimer','Elimina'], 'Close':['Schliessen','Fermer','Chiudi'],
   'Coach:':['Coach:','Coach :','Coach:'], 'Progress — Goals Achieved':['Fortschritt — erreichte Ziele','Progrès — objectifs atteints','Progressi — obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
+  'Please keep the app open until the upload is finished.':['Bitte die App offen lassen, bis der Upload fertig ist.','Merci de laisser l’app ouverte jusqu’à la fin du téléchargement.','Tieni aperta l’app finché il caricamento non è terminato.'],
+  'Your coach can now watch it.':['Dein Coach kann es jetzt anschauen.','Ton coach peut maintenant la regarder.','Il tuo coach ora può guardarlo.'],
+  'The video is attached to the trick.':['Das Video ist beim Trick gespeichert.','La vidéo est enregistrée avec le trick.','Il video è salvato con il trick.'],
+  '✓ Video uploaded':['✓ Video hochgeladen','✓ Vidéo téléchargée','✓ Video caricato'], 'Replace video':['Video ersetzen','Remplacer la vidéo','Sostituisci video'], 'OK':['OK','OK','OK'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned — in the review inbox':['Zu «gelernt» verschoben — in der Review-Inbox','Déplacé vers acquis — dans la boîte d’évaluation','Spostato in imparati — nella casella valutazioni'],
@@ -1722,21 +1726,21 @@ async function submitForm(mode){
   if (!staff && (status==='pending' || status==='goal')){ delete e.crit; delete e.score; }
   const btns = document.querySelectorAll('#form-card .btn'); btns.forEach(b => b.disabled = true);
   try {
-    let saved = await Store.saveEntry(ST.me, e);
+    let saved = await Store.saveEntry(ST.me, e), uploaded = false;
     upsertLocal(saved);
     if (ST.pendingFile){
-      $('#f-progress').hidden = false;
+      uploadModal(0);
       try {
-        const path = await Store.uploadVideo(ST.me, saved, ST.pendingFile, p => { $('#f-progress i').style.width = p + '%'; $('#f-progress-t').textContent = `Uploading video… ${p}%`; });
+        const path = await Store.uploadVideo(ST.me, saved, ST.pendingFile, p => uploadModal(p));
         saved = await Store.saveEntry(ST.me, {...saved, video_path:path});
-        upsertLocal(saved);
+        upsertLocal(saved); uploaded = true;
       } catch (err){
-        console.error(err); toast('Trick saved, but the video upload failed — try again via «Upload video».', true);
+        console.error(err); closeModal(); toast('Trick saved, but the video upload failed — try again via «Upload video».', true);
       }
     }
     ST.form = null; ST.pendingFile = null;
     if (mode==='rate'){ renderAssessment(); openReview(saved.id); }
-    else { toast(status==='goal' ? 'Saved as goal' : staff ? 'Saved to review inbox' : 'Sent to your coach 👍'); render(); }
+    else { render(); if (uploaded) uploadDone(staff); else toast(status==='goal' ? 'Saved as goal' : staff ? 'Saved to review inbox' : 'Sent to your coach'); }
   } catch (err){
     console.error(err); toast('Could not save: ' + (err.message || err), true);
     btns.forEach(b => b.disabled = false);
@@ -1755,18 +1759,29 @@ async function submitGoal(id){
   try { upsertLocal(await Store.saveEntry(ST.me, {...e, status:'pending', ...(e.status==='goal' ? {achieved_at:nowIso()} : {})})); toast(isStaff() ? 'Moved to learned — in the review inbox' : 'Sent to your coach'); render(); }
   catch (err){ toast('Could not send: ' + (err.message||err), true); }
 }
+// Upload-Status als Dialog: gut sichtbar, auch wenn das Formular lang ist
+function uploadModal(pct){
+  const box = $('#up-pct');
+  if (!box) modal(`<h3>Uploading video…</h3><div class="progress" style="height:10px;margin-top:14px"><i id="up-bar"></i></div>
+    <div class="row" style="justify-content:space-between;margin-top:8px"><span class="tiny muted">Please keep the app open until the upload is finished.</span><b id="up-pct">0%</b></div>`);
+  $('#up-bar').style.width = pct + '%'; $('#up-pct').textContent = pct + '%';
+}
+function uploadDone(staff){
+  modal(`<h3>✓ Video uploaded</h3><p class="muted" style="margin:8px 0 0">${staff ? 'The video is attached to the trick.' : 'Your coach can now watch it.'}</p>
+    <div class="btnrow"><button class="btn red" onclick="closeModal()">OK</button></div>`);
+}
 function pickVideo(id){
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
   inp.onchange = async () => {
     const file = inp.files[0]; if (!file) return;
     const e = ST.entries.find(x => x.id===id);
-    toast('Uploading video…');
+    uploadModal(0);
     try {
-      const path = await Store.uploadVideo(ST.me, e, file, p => { $('#toast').textContent = `Uploading video… ${p}%`; });
+      const path = await Store.uploadVideo(ST.me, e, file, p => uploadModal(p));
       const next = {...e, video_path:path};
       if (!isStaff() && e.status==='rework') next.status = 'pending';
-      upsertLocal(await Store.saveEntry(ST.me, next)); toast(next.status==='pending' && e.status==='rework' ? 'New video sent to your coach 👍' : 'Video uploaded'); render();
-    } catch (err){ console.error(err); toast('Upload failed: ' + (err.message||err), true); }
+      upsertLocal(await Store.saveEntry(ST.me, next)); render(); uploadDone(isStaff());
+    } catch (err){ console.error(err); closeModal(); toast('Upload failed: ' + (err.message||err), true); }
   };
   inp.click();
 }
@@ -1822,7 +1837,7 @@ function asRow(e){
       <div class="row" style="gap:6px;margin-top:4px">
         <span class="tiny muted">${fmtDate(e.created_at)}</span>${e.status!=='goal' ? statusChip(e) : goalLandedHint(e)}
         ${mine.map(x => `<span class="chip dark">✓ ${x.level} · ${esc(x.text)}</span>`).join('')}${!mine.length && m.some(x => x.level===ath?.level) ? `<span class="chip">${ath.level} · already covered</span>` : ''}${!m.length ? '<span class="chip">Free trick</span>' : ''}
-        ${e.video_path ? `<a class="tiny" href="#" onclick="playVideo('${e.id}');return false" style="color:var(--cyan);font-weight:700">▶ Video</a>` : ''}
+        ${e.video_path ? `<button class="chip" style="cursor:pointer;background:#e6f6ec;color:#1f7a3f;border-color:#bfe5cc" onclick="playVideo('${e.id}')"><span>✓ Video uploaded</span> ▶</button>` : ''}
       </div>
       ${e.note ? `<div class="tiny" style="margin-top:4px">💬 ${esc(e.note)}</div>` : ''}
       ${e.review_note ? `<div class="tiny" style="margin-top:4px;color:#C96A1F"><b>Coach:</b> ${esc(e.review_note)}</div>` : ''}
@@ -1830,7 +1845,7 @@ function asRow(e){
         ${staff && e.status!=='goal' ? `<button class="btn ${e.status==='pending'?'red':'ghost'} xs" onclick="openReview('${e.id}')">${e.status==='reviewed'?'Edit rating':'Rate'}</button>` : ''}
         ${!staff && e.status==='goal' ? `<button class="btn red xs" onclick="submitGoal('${e.id}')">✓ Learned · submit</button>` : ''}
         ${staff && e.status==='goal' ? `<button class="btn ghost xs" onclick="submitGoal('${e.id}')">Move to learned</button>` : ''}
-        ${(!e.video_path || e.status==='rework') && (staff || e.status!=='reviewed') ? `<button class="btn ${!staff && e.status==='rework'?'red':'ghost'} xs" onclick="pickVideo('${e.id}')">⬆ ${e.video_path?'New video':'Video'}</button>` : ''}
+        ${(!e.video_path || e.status==='rework') && (staff || e.status!=='reviewed') ? `<button class="btn ${!staff && e.status==='rework'?'red':'ghost'} xs" onclick="pickVideo('${e.id}')">⬆ ${e.video_path?'Replace video':'Video'}</button>` : ''}
       </div>
     </div>
     ${canEdit ? `<button class="icon-btn" onclick="openForm('${e.id}')" title="Edit">✏️</button><button class="icon-btn del" onclick="deleteEntry('${e.id}')" title="Remove">✕</button>` : ''}
