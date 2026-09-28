@@ -524,6 +524,11 @@ const I18N = {
   'Choose the video from your photo library (film with the camera app first).':['Video aus der Fotomediathek wählen (vorher mit der Kamera-App filmen).','Choisir la vidéo dans la photothèque (filmer d’abord avec l’app Appareil photo).','Scegli il video dalla libreria foto (prima filma con l’app Fotocamera).'],
   'Skills-Check requirement at another level':['Skills-Check-Anforderung einer anderen Stufe','Exigence Skills-Check d’un autre niveau','Requisito Skills-Check di un altro livello'],
   'More':['Weitere','Autres','Altri'], 'New':['Neu','Nouveau','Nuovo'],
+  'All sexes':['Alle Geschlechter','Tous les sexes','Tutti i sessi'], 'Women only':['Nur Frauen','Femmes uniquement','Solo donne'], 'Men only':['Nur Männer','Hommes uniquement','Solo uomini'],
+  'All levels':['Alle Stufen','Tous les niveaux','Tutti i livelli'], 'Sort: name A–Z':['Sortierung: Name A–Z','Tri : nom A–Z','Ordine: nome A–Z'],
+  'Total: strongest first':['Total: Stärkste zuerst','Total : les plus forts d’abord','Totale: i più forti prima'], 'Total: weakest first':['Total: Schwächste zuerst','Total : les plus faibles d’abord','Totale: i più deboli prima'],
+  'Jumps: strongest first':['Jumps: Stärkste zuerst','Jumps : les plus forts d’abord','Jumps: i più forti prima'], 'Rails: strongest first':['Rails: Stärkste zuerst','Rails : les plus forts d’abord','Rails: i più forti prima'], 'Halfpipe: strongest first':['Halfpipe: Stärkste zuerst','Halfpipe : les plus forts d’abord','Halfpipe: i più forti prima'],
+  'Reset filters':['Filter zurücksetzen','Réinitialiser les filtres','Azzera filtri'], 'No athletes match the filter.':['Keine Athlet:innen passen zum Filter.','Aucun·e athlète ne correspond au filtre.','Nessun atleta corrisponde al filtro.'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned — in the review inbox':['Zu «gelernt» verschoben — in der Review-Inbox','Déplacé vers acquis — dans la boîte d’évaluation','Spostato in imparati — nella casella valutazioni'],
@@ -2106,9 +2111,19 @@ async function saveReview(kind){
 function renderTeam(){
   const root = $('#page-team');
   const dv = ST.me.role==='dvlp';
-  const aths = visibleAthletes();
-  const rows = aths.map(a => {
-    const t = a.gender && a.level ? levelTotals(a, a.level) : null;
+  const TF = ST.teamFilter || (ST.teamFilter = {sex:'', level:'', sort:'name'});
+  const all = visibleAthletes();
+  // Filter (Geschlecht, Stufe) und Sortierung (Name oder Stärke)
+  const withT = all.map(a => ({a, t: a.gender && a.level ? levelTotals(a, a.level) : null}))
+    .filter(({a}) => (!TF.sex || a.gender===TF.sex) && (!TF.level || a.level===TF.level));
+  const discPct = (t, d) => t && t.incl.includes(d) ? pct(t.by[d].pts, t.by[d].max) : -1;
+  const key = ({t}) => TF.sort==='total_desc' || TF.sort==='total_asc' ? (t ? t.pct : -1) : TF.sort==='jump' ? discPct(t,'Jump') : TF.sort==='rail' ? discPct(t,'Rail') : TF.sort==='hp' ? discPct(t,'Halfpipe') : 0;
+  withT.sort((x, y) => TF.sort==='name' ? x.a.name.localeCompare(y.a.name)
+    : TF.sort==='total_asc' ? (key(x) < 0) - (key(y) < 0) || key(x) - key(y) || x.a.name.localeCompare(y.a.name)
+    : key(y) - key(x) || x.a.name.localeCompare(y.a.name));
+  const aths = withT.map(x => x.a);
+  const filtered = TF.sex || TF.level;
+  const rows = withT.map(({a, t}) => {
     const pend = entriesOf(a.id).filter(e => e.status==='pending').length;
     const cell = d => !t ? '–' : t.incl.includes(d) ? `${pct(t.by[d].pts, t.by[d].max)}% <span class="tiny muted">${t.by[d].pts}/${t.by[d].max}</span>` : '<span class="tiny muted">not in focus</span>';
     return `<tr class="click" onclick="if(event.target.closest('select,input'))return;ST.athleteId='${a.id}';ST.level=null;go('skills')">
@@ -2124,11 +2139,16 @@ function renderTeam(){
   }).join('');
   const staffList = dv ? ST.profiles.filter(p => p.role!=='athlete').sort((a,b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name)) : [];
   root.innerHTML = `
-    <div class="row" style="margin-bottom:18px">${dv ? groupFilterSelect() : ''}<span class="grow"></span><button class="btn red" onclick="openAddAthlete()">+ Add athlete</button></div>
-    <div class="card"><h2>${dv ? 'All athletes' : esc(groupName(ST.me.group_id))} <span class="muted" style="letter-spacing:0;font-weight:600">${aths.length}</span></h2>
+    <div class="row" style="margin-bottom:18px;flex-wrap:wrap;gap:8px">${dv ? groupFilterSelect() : ''}
+      <select onchange="setTeamFilter('sex',this.value)">${opts([['','All sexes'],['W','Women only'],['M','Men only']], TF.sex)}</select>
+      <select onchange="setTeamFilter('level',this.value)">${opts([['','All levels'], ...LEVELS.map(l => [l, l])], TF.level)}</select>
+      <select onchange="setTeamFilter('sort',this.value)">${opts([['name','Sort: name A–Z'],['total_desc','Total: strongest first'],['total_asc','Total: weakest first'],['jump','Jumps: strongest first'],['rail','Rails: strongest first'],['hp','Halfpipe: strongest first']], TF.sort)}</select>
+      ${filtered || TF.sort!=='name' ? `<button class="btn ghost sm" onclick="ST.teamFilter=null;renderTeam()">Reset filters</button>` : ''}
+      <span class="grow"></span><button class="btn red" onclick="openAddAthlete()">+ Add athlete</button></div>
+    <div class="card"><h2>${dv ? 'All athletes' : esc(groupName(ST.me.group_id))} <span class="muted" style="letter-spacing:0;font-weight:600">${filtered ? `${aths.length} / ${all.length}` : aths.length}</span></h2>
       <ul class="hints"><li>Skills-Check at each athlete's own level</li><li>Total = Jumps, Rails and Halfpipe, ⅓ each</li><li>From T4: focus possible (Halfpipe only, or Jumps & Rails only)</li><li>Click a row to open the Skills-Check</li></ul>
       <div class="scroll-x"><table class="tbl"><thead><tr><th>Athlete</th><th>Sex</th><th>Level</th><th>Focus</th>${dv?'<th>Group</th>':''}<th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th><th></th></tr></thead>
-      <tbody>${rows || `<tr><td colspan="10" class="empty">No athletes.</td></tr>`}</tbody></table></div></div>
+      <tbody>${rows || `<tr><td colspan="10" class="empty">${filtered ? 'No athletes match the filter.' : 'No athletes.'}</td></tr>`}</tbody></table></div></div>
     ${dv ? `<div class="card"><h2>Coaches & staff</h2><div class="scroll-x"><table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Group</th></tr></thead><tbody>
       ${staffList.map(p => `<tr><td><input type="text" class="name-in" value="${esc(p.name)}" onchange="setProfile('${p.id}','name',this.value.trim())" title="Edit name"><div class="tiny muted">${esc(p.email||'')}</div></td>
         <td><select onchange="setProfile('${p.id}','role',this.value)" ${p.id===ST.me.id?'disabled':''}>${opts([['athlete','Athlete'],['coach','Coach'],['dvlp', ADMIN_IDS.includes(p.id) ? 'Admin' : 'DVLP']], p.role)}</select></td>
@@ -2136,6 +2156,7 @@ function renderTeam(){
       </tbody></table></div>
       <p class="tiny muted" style="margin-top:12px">${DEMO ? 'Demo mode: accounts are fixed demo users.' : 'Logins: enter the e-mail here first, then create the account in Supabase → Authentication → Users → «Create new user» with the same e-mail — it links automatically. Staff without a profile appear here after their first login.'}</p></div>` : ''}`;
 }
+function setTeamFilter(k, v){ (ST.teamFilter ||= {sex:'', level:'', sort:'name'})[k] = v; renderTeam(); }
 function openAddAthlete(){
   const dv = ST.me.role==='dvlp';
   modal(`<h3>Add athlete</h3><p class="lead" style="margin-top:6px">The athlete can be tracked right away; a login can be added later via the e-mail.</p>
