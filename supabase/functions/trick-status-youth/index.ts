@@ -25,7 +25,10 @@ function json(body: unknown, status = 200): Response {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   try {
-    const { athlete_id, trick_key } = await req.json();
+    const { athlete_id, trick_key, lang } = await req.json();
+    // Sprache der App (de/fr/it/en) — pro Sprache ein eigener Cache-Eintrag «<trick_key>@<lang>»
+    const LANG_NAMES: Record<string, string> = { de: "German (Swiss standard German, use «ss» instead of «ß»)", fr: "French", it: "Italian", en: "English" };
+    const l = LANG_NAMES[lang] ? lang : "en";
     if (!athlete_id || !trick_key) return json({ error: "athlete_id/trick_key fehlen" }, 400);
 
     // Lesen mit den Rechten der aufrufenden Person (RLS) — sieht nur, wer den Trick sehen darf.
@@ -56,8 +59,9 @@ Deno.serve(async (req) => {
       system:
         "You are an assistant coach on the Swiss-Ski freestyle youth team. Synthesize the " +
         "chronological coach comments about one athlete's trick into a single current " +
-        "status: 1–2 sentences, English, most recent state first, older observations " +
-        "only if still relevant. No preamble — output only the status text.",
+        `status: 1–2 sentences in ${LANG_NAMES[l]}, most recent state first, older observations ` +
+        "only if still relevant. Keep freestyle sport terms (trick names, grabs, axis, take-off, " +
+        "landing, stomped/landed/failed) in English. No preamble — output only the status text.",
       messages: [{
         role: "user",
         content: `Trick: ${trick}\nComments (chronological):\n${list}`,
@@ -76,7 +80,7 @@ Deno.serve(async (req) => {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { error: upErr } = await admin.from("trick_status").upsert({
       athlete_id,
-      trick_key,
+      trick_key: `${trick_key}@${l}`,
       status_text: text,
       updated_at: new Date().toISOString(),
     });

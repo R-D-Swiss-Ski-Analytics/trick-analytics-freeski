@@ -582,6 +582,12 @@ const I18N = {
   '⚠ Sessions with fewer than 5 attempts — rates are statistically weak.':['⚠ Sessions mit weniger als 5 Versuchen — Quoten statistisch schwach.','⚠ Sessions avec moins de 5 essais — taux statistiquement faibles.','⚠ Sessioni con meno di 5 tentativi — percentuali statisticamente deboli.'],
   'Tap a bar for session details.':['Balken antippen für Session-Details.','Touche une barre pour les détails de la session.','Tocca una barra per i dettagli della sessione.'], 'Open session view →':['Session-Ansicht öffnen →','Ouvrir la vue de session →','Apri vista sessione →'],
   'Most common fail reason:':['Häufigster Fail-Grund:','Raison d’échec la plus fréquente :','Motivo di errore più frequente:'],
+  'Comp-readiness':['Wettkampfbereitschaft','Préparation compétition','Prontezza gara'], 'Efficiency trend':['Effizienz-Trend','Tendance d’efficacité','Tendenza efficienza'],
+  'Volume effect':['Volumen-Effekt','Effet du volume','Effetto volume'], 'Plateau':['Plateau','Plateau','Plateau'], 'Consistency':['Konstanz','Régularité','Costanza'], 'Most common fail':['Häufigster Fail','Échec le plus fréquent','Errore più frequente'],
+  'Reached':['Erreicht','Atteinte','Raggiunta'], 'Not reached':['Nicht erreicht','Non atteinte','Non raggiunta'], 'Lost — was reached before':['Verloren — war schon erreicht','Perdue — était déjà atteinte','Persa — era già raggiunta'],
+  'No volume effect':['Kein Volumen-Effekt','Pas d’effet du volume','Nessun effetto volume'], 'None, still moving':['Keines, entwickelt sich noch','Aucun, encore en évolution','Nessuno, ancora in evoluzione'],
+  'Irregular, session to session':['Unregelmässig von Session zu Session','Irrégulier d’une session à l’autre','Irregolare da una sessione all’altra'], 'Consistent':['Konstant','Régulier','Costante'],
+  'No fail pattern':['Kein Fail-Muster','Pas de schéma d’échec','Nessuno schema di errore'],
   'Coaching Analysis':['Coaching-Analyse','Analyse coaching','Analisi coaching'], 'Coach comment · current status':['Coach-Kommentar · aktueller Stand','Commentaire du coach · état actuel','Commento del coach · stato attuale'],
   'AI summary':['KI-Zusammenfassung','Résumé IA','Riepilogo IA'], 'Add new comment':['Neuen Kommentar erfassen','Ajouter un commentaire','Aggiungi un commento'], 'No comments yet.':['Noch keine Kommentare.','Pas encore de commentaires.','Ancora nessun commento.'],
   'Comment saved':['Kommentar gespeichert','Commentaire enregistré','Commento salvato'], 'Loading…':['Lädt…','Chargement…','Caricamento…'], '🔍 Reality Check':['🔍 Realitäts-Check','🔍 Contrôle de réalité','🔍 Verifica realtà'],
@@ -602,6 +608,17 @@ const I18N_DE = {
 };
 // Texte mit Zahlen/Namen
 const I18N_PAT = [
+  [/^Not enough data \((\d+)\/(\d+) sessions\)$/, (m, i) => [`Zu wenig Daten (${m[1]}/${m[2]} Sessions)`, `Pas assez de données (${m[1]}/${m[2]} sessions)`, `Dati insufficienti (${m[1]}/${m[2]} sessioni)`][i]],
+  [/^Falling, (-\d+)% \(3 sessions\)$/, (m, i) => [`Sinkend, ${m[1]}% (3 Sessions)`, `En baisse, ${m[1]}% (3 sessions)`, `In calo, ${m[1]}% (3 sessioni)`][i]],
+  [/^Rising, (\+\d+)% \(3 sessions\)$/, (m, i) => [`Steigend, ${m[1]}% (3 Sessions)`, `En hausse, ${m[1]}% (3 sessions)`, `In crescita, ${m[1]}% (3 sessioni)`][i]],
+  [/^Stable \(3 sessions\)$/, (m, i) => ['Stabil (3 Sessions)', 'Stable (3 sessions)', 'Stabile (3 sessioni)'][i]],
+  [/^Drops at high volume, cause unclear \((\d+)×\)$/, (m, i) => [`Einbruch bei hohem Volumen, Ursache unklar (${m[1]}×)`, `Baisse à volume élevé, cause incertaine (${m[1]}×)`, `Calo con volume elevato, causa incerta (${m[1]}×)`][i]],
+  [/^Flat over last 3 sessions \(±(\d+)%\)$/, (m, i) => [`Flach über die letzten 3 Sessions (±${m[1]}%)`, `Stagnation sur les 3 dernières sessions (±${m[1]}%)`, `Piatto nelle ultime 3 sessioni (±${m[1]}%)`][i]],
+  [/^(.+) \((\d+)×\), (increasing|decreasing|stable)$/, (m, i) => `${m[1]} (${m[2]}×), ${({increasing:['zunehmend','en hausse','in aumento'], decreasing:['abnehmend','en baisse','in calo'], stable:['stabil','stable','stabile']})[m[3]][i]}`],
+  [/^Basis: sessions = training days in the selected period\. Comp-readiness = every criterion ≥ 80% in the last 3 sessions \(landed attempts\)\. Plateau tolerance ±(\d+)%\.$/, (m, i) => [
+    `Basis: Sessions = Trainingstage im gewählten Zeitraum. Wettkampfbereit = jedes Kriterium ≥ 80 % in den letzten 3 Sessions (gelandete Versuche). Plateau-Toleranz ±${m[1]} %.`,
+    `Base : sessions = jours d’entraînement de la période choisie. Prêt pour la compétition = chaque critère ≥ 80 % sur les 3 dernières sessions (essais landed). Tolérance plateau ±${m[1]} %.`,
+    `Base: sessioni = giorni di allenamento nel periodo scelto. Pronto per la gara = ogni criterio ≥ 80 % nelle ultime 3 sessioni (tentativi landed). Tolleranza plateau ±${m[1]} %.`][i]],
   [/^(\d+) failed attempts? without reason$/, (m, i) => [`${m[1]} gescheiterte Versuche ohne Grund`, `${m[1]} essai(s) failed sans raison`, `${m[1]} tentativi failed senza motivo`][i]],
   [/^\(([\d]+)×\) · $/, (m, i) => null],
   [/^(\d+) attempts · (.+)$/, (m, i) => `${m[1]} ${['Versuche','essais','tentativi'][i]} · ${I18N_PERIOD(m[2], i)}`],
@@ -1310,8 +1327,8 @@ const SupaStore = {
   async deleteAttempt(id){ const { error } = await db.from('attempts').delete().eq('id', id); if (error) throw error; },
   async listComments(athId, key){ const { data, error } = await db.from('trick_comments').select('*').eq('athlete_id', athId).eq('trick_key', key).order('created_at', {ascending:false}); if (error) throw error; return data; },
   async addComment(me, athId, key, text){ const { error } = await db.from('trick_comments').insert({athlete_id:athId, trick_key:key, comment:text}); if (error) throw error; },
-  async trickStatus(athId, key){ const { data } = await db.from('trick_status').select('status_text,updated_at').eq('athlete_id', athId).eq('trick_key', key).maybeSingle(); return data; },
-  async refreshStatus(athId, key){ const { data, error } = await db.functions.invoke('trick-status', {body:{athlete_id:athId, trick_key:key}}); if (error) throw error; return data; },
+  async trickStatus(athId, key){ const { data } = await db.from('trick_status').select('status_text,updated_at').eq('athlete_id', athId).eq('trick_key', `${key}@${LANG}`).maybeSingle(); return data; },
+  async refreshStatus(athId, key){ const { data, error } = await db.functions.invoke('trick-status', {body:{athlete_id:athId, trick_key:key, lang:LANG}}); if (error) throw error; return data; },
   async saveEntry(me, e){
     const row = {athlete_id:e.athlete_id, discipline:e.discipline, trick:e.trick, label:e.label, status:e.status, note:e.note||null, video_path:e.video_path||null};
     if (e.created_at) row.created_at = e.created_at;
@@ -3007,6 +3024,10 @@ async function loadMonComments(){
     const [list, status] = await Promise.all([Store.listComments(ath, key), Store.trickStatus(ath, key)]);
     if (ST.mon.athleteId!==ath || ST.mon.key!==key) return;
     MONC = {...MONC, list, status};
+    if (list.length && !status?.status_text && !MONC.asked?.[ath + key + LANG]){
+      (MONC.asked ||= {})[ath + key + LANG] = true;
+      Store.refreshStatus(ath, key).then(r => { if (r?.status_text) loadMonComments(); }).catch(err => console.warn('trick-status:', err));
+    }
   } catch (err){ MONC = {...MONC, list:[], status:null}; console.warn(err); }
   renderMonComments();
 }
