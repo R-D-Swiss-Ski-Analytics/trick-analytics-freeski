@@ -1,0 +1,2070 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f4efed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Skills-Check Freeski</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/tus-js-client@4/dist/tus.min.js"></script>
+<style>
+/* Trick Analyses Nachwuchs — Aussehen nach dem Dashboard «Auswertung Wettkampfdaten» (Swiss-Ski CI). */
+:root{
+  --red:#E2001A; --char:#3E3E3F; --blue:#004877; --redd:#8B0E13; --cyan:#148FA0;
+  --bg:#faf7f6; --paper:#ffffff; --ink:#2c2c2e; --muted:#6b6b70; --line:#e7e3e1; --soft:#f4efed;
+  --green:#3E8E5A; --green-bg:#EAF4EE; --gold:#B08D1E; --gold-bg:#F8F1DC;
+  --cblue:#396FA8; --cblue-bg:#E8F0F8; --cred:#D64545; --cred-bg:#FBE9E9;
+  --teal:#1F9E93; --teal-bg:#E4F4F2;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+[hidden]{display:none!important}
+
+/* Header wie Wettkampfdaten-Dashboard */
+header{position:relative;overflow:hidden;background:var(--soft);border-bottom:1px solid var(--line)}
+header::after{content:"";position:absolute;right:-12%;top:-60%;width:60%;height:240%;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(226,0,26,.55),rgba(226,0,26,.12),transparent 70%);transform:rotate(8deg)}
+.hd{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding:30px 24px 22px;max-width:1180px;margin:0 auto}
+h1{font-size:36px;font-weight:800;letter-spacing:-.5px;color:var(--char);margin:0;line-height:1.1}
+h1 .dot{color:var(--red)}
+.sub{margin-top:8px;font-size:16px;color:var(--muted);font-weight:500}
+.brand{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.brand svg{width:150px;height:auto;display:block}
+.who{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.who .chip{background:rgba(255,255,255,.85)}
+.iconbtn{position:relative;border:1px solid var(--line);background:rgba(255,255,255,.85);border-radius:999px;height:34px;min-width:34px;padding:0 12px;cursor:pointer;font-size:13px;font-weight:600;color:var(--char);display:inline-flex;align-items:center;gap:6px}
+.iconbtn:hover{border-color:#cfc8c5}
+.badge{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;border-radius:999px;font-size:11px;font-weight:800;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.tabs{position:sticky;top:0;z-index:60;background:rgba(250,247,246,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.tabs-in{max-width:1180px;margin:0 auto;padding:0 24px;display:flex;gap:26px;overflow-x:auto;scrollbar-width:none}
+.tabs-in::-webkit-scrollbar{display:none}
+.tab-btn{background:none;border:0;padding:15px 0 12px;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;position:relative}
+.tab-btn.on{color:var(--char);border-bottom-color:var(--red)}
+.tab-btn .cnt{display:inline-block;margin-left:6px;background:var(--red);color:#fff;border-radius:999px;font-size:10px;padding:1px 6px;letter-spacing:0;vertical-align:1px}
+.demo-bar{background:var(--char);color:#fff;font-size:12px;text-align:center;padding:6px 12px}
+.demo-bar button{background:none;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:999px;padding:2px 10px;margin-left:8px;cursor:pointer;font-size:12px}
+
+main{padding:28px 0 80px}
+.page{display:none}
+.page.on{display:block}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px}
+.card h2{font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--char);margin:0 0 14px;display:flex;align-items:center;gap:10px}
+.card h2 .rt{margin-left:auto;letter-spacing:0;text-transform:none;font-weight:600}
+.lead{font-size:14px;color:var(--muted);margin:-6px 0 14px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.grow{flex:1}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.tiny{font-size:12px}
+
+label.f{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+select,input[type=text],input[type=date],input[type=email],input[type=password],input[type=number],textarea{background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:15px;width:100%;outline:none;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)}
+select:focus,input:focus,textarea:focus{border-color:var(--char)}
+textarea{min-height:64px;resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.btn{border:1px solid var(--char);background:var(--char);color:#fff;border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer}
+.btn:hover{opacity:.92}
+.btn.red{background:var(--red);border-color:var(--red)}
+.btn.ghost{background:#fff;color:var(--char);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--char)}
+.btn.sm{padding:6px 12px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:#fff;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--char);color:#fff}
+
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;color:var(--char);background:#fff;white-space:nowrap}
+.chip.green{background:var(--green-bg);border-color:transparent;color:var(--green)}
+.chip.gold{background:var(--gold-bg);border-color:transparent;color:var(--gold)}
+.chip.blue{background:var(--cblue-bg);border-color:transparent;color:var(--cblue)}
+.chip.red{background:var(--cred-bg);border-color:transparent;color:var(--cred)}
+.chip.teal{background:var(--teal-bg);border-color:transparent;color:var(--teal)}
+.chip.dark{background:var(--char);border-color:var(--char);color:#fff}
+.stars{letter-spacing:1px;color:var(--gold);font-size:14px;white-space:nowrap}
+.stars .off{color:#d9d3d0}
+
+/* Listen */
+.list{display:flex;flex-direction:column}
+.item{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item .main{flex:1;min-width:0}
+.item .t{font-weight:700;color:var(--char)}
+.item .m{font-size:12px;color:var(--muted);margin-top:2px}
+.item .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.item .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.empty{padding:22px;text-align:center;color:var(--muted);font-size:14px}
+
+/* Skills-Check */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;cursor:default}
+.kpi.click{cursor:pointer}
+.kpi.sel{border-color:var(--char);box-shadow:inset 0 0 0 1px var(--char)}
+.kpi .k{font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-size:30px;font-weight:800;color:var(--char);margin-top:4px;line-height:1.1}
+.kpi .v small{font-size:15px;color:var(--muted);font-weight:600}
+.bar{height:8px;background:#efebe9;border-radius:99px;overflow:hidden;margin-top:10px;display:flex}
+.bar i{display:block;height:100%}
+.bar .b-done{background:var(--green)}
+.bar .b-part{background:var(--gold)}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.sec{margin-top:18px}
+.sec:first-child{margin-top:0}
+.sec-h{display:flex;align-items:baseline;gap:10px;font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--char);padding-bottom:6px;border-bottom:2px solid var(--char)}
+.sec-h .rt{margin-left:auto;font-weight:700;letter-spacing:0;text-transform:none;color:var(--muted);font-size:12px}
+.sec-note{font-size:13px;color:var(--muted);margin:8px 0 2px}
+.slot{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.slot .ic{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.ic.done{background:var(--green);color:#fff}
+.ic.partial{background:var(--gold-bg);color:var(--gold)}
+.ic.pending{background:var(--cblue-bg);color:var(--cblue)}
+.ic.goal{background:var(--soft);color:var(--muted)}
+.ic.open{border:2px solid #dcd6d3}
+.ic.na{background:#f3f1f0;color:#b5b0ad}
+.slot .st{font-weight:600;color:var(--char);font-size:14px}
+.slot .sm{font-size:12px;color:var(--muted);margin-top:1px}
+.slot.na .st{color:#aaa4a1;text-decoration:line-through}
+.slot .pts{font-weight:800;font-size:14px;color:var(--char);text-align:right;white-space:nowrap}
+.rule{display:flex;gap:10px;align-items:center;font-size:13px;margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--soft)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .ic{width:16px;height:16px;font-size:10px}
+
+/* Formular */
+.preview{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--soft);font-size:13px}
+.preview .lbl{font-size:17px;font-weight:800;color:var(--char);margin-bottom:6px}
+.preview .chips{display:flex;gap:6px;flex-wrap:wrap}
+.filebox{border:1.5px dashed #d4ccc9;border-radius:10px;padding:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff}
+.progress{height:6px;border-radius:99px;background:#eee;overflow:hidden;margin-top:6px}
+.progress i{display:block;height:100%;background:var(--red);width:0;transition:width .2s}
+
+/* Tabelle */
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:800;padding:8px 8px;border-bottom:2px solid var(--char);white-space:nowrap}
+.tbl td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr.click{cursor:pointer}
+.tbl tr.click:hover td{background:#fbf9f8}
+.tbl select{padding:5px 8px;font-size:13px;width:auto}
+.name-in{border-color:transparent!important;background:transparent!important;font-weight:700;padding:4px 6px!important;min-width:150px}
+.name-in:hover,.name-in:focus{border-color:var(--line)!important;background:#fff!important}
+.tbl .num{text-align:right;white-space:nowrap}
+.minibar{width:90px;height:6px;background:#efebe9;border-radius:99px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:8px}
+.minibar i{display:block;height:100%;background:var(--green)}
+.scroll-x{overflow-x:auto}
+
+/* Modal, Toast, Dropdown */
+.modal-bg{position:fixed;inset:0;background:rgba(30,28,28,.45);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto}
+.modal{background:#fff;border-radius:14px;max-width:760px;width:100%;padding:22px 24px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal h3{margin:0 0 4px;font-size:22px;font-weight:800;color:var(--char)}
+.modal video{width:100%;max-height:60vh;background:#111;border-radius:10px;margin:12px 0}
+.crit{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.crit .tog{width:48px;height:48px;border-radius:12px;border:2px solid var(--line);background:#fff;font-size:22px;cursor:pointer;color:#cfc8c5}
+.crit .tog.yes{background:var(--green);border-color:var(--green);color:#fff}
+.crit .tog.no{background:var(--cred-bg);border-color:var(--cred);color:var(--cred)}
+.crit .cn{font-weight:800;color:var(--char)}
+.crit ul{margin:4px 0 0;padding-left:18px;font-size:12.5px;color:var(--muted)}
+.score-big{font-size:34px;font-weight:800;color:var(--char)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--char);color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;font-weight:600;opacity:0;transition:all .25s;z-index:300;pointer-events:none;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--red)}
+.dropdown{position:absolute;right:24px;top:100%;margin-top:6px;width:360px;max-width:calc(100vw - 32px);background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.15);z-index:150;max-height:70vh;overflow-y:auto}
+.dropdown .n{padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}
+.dropdown .n:hover{background:#fbf9f8}
+.dropdown .n.unread{border-left:3px solid var(--red)}
+.dropdown .n .d{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* Login */
+.gate{min-height:100vh;display:flex;flex-direction:column}
+.gate .box{max-width:420px;width:100%;margin:40px auto;padding:0 16px}
+.demo-users{display:grid;gap:10px}
+.demo-user{display:flex;gap:12px;align-items:center;text-align:left;border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer}
+.demo-user:hover{border-color:var(--char)}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--char);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
+.avatar.r-coach{background:var(--blue)}
+.avatar.r-dvlp{background:var(--red)}
+
+/* Session / Reports / Monitoring */
+.f-lbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;display:flex;align-items:center;gap:10px}
+.linkbtn{background:none;border:0;color:var(--red);font-weight:700;font-size:12px;cursor:pointer;letter-spacing:0;text-transform:none;padding:0}
+.athchips,.trickchips{display:flex;gap:8px;flex-wrap:wrap}
+.athchip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-weight:700;font-size:14px;color:var(--char);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.athchip small{font-size:11px;font-weight:700;color:var(--muted);background:var(--soft);border-radius:99px;padding:1px 7px}
+.athchip.on{background:var(--char);border-color:var(--char);color:#fff}
+.athchip.on small{background:rgba(255,255,255,.18);color:#fff}
+.tchip{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;font-weight:600;font-size:14px;color:var(--char);cursor:pointer;text-align:left}
+.tchip.on{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red);background:#fff6f6}
+.tchip.add{border-style:dashed;color:var(--muted)}
+.tchip .src{font-style:normal;color:var(--red);margin-right:6px;font-size:11px}
+.sess-title{font-size:22px;font-weight:800;color:var(--char);display:flex;align-items:center;gap:10px}
+.critgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.critbtn{border:2px solid var(--green);background:var(--green-bg);color:var(--green);border-radius:12px;padding:14px 12px;font-weight:800;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:10px;text-align:left;min-height:62px}
+.critbtn span{font-size:22px;width:26px;text-align:center}
+.critbtn.no{border-color:var(--cred);background:var(--cred-bg);color:var(--cred)}
+.btn.big{padding:15px 22px;font-size:16px;flex:1;min-width:180px}
+.item.click{cursor:pointer}
+.item.click:hover{background:#fbf9f8}
+.chart{overflow-x:auto;margin-top:8px}
+.chart svg{display:block}
+.trick-block{padding:14px 0;border-top:1px solid var(--line)}
+.trick-block:first-of-type{border-top:0;padding-top:0}
+details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted);margin-top:6px}
+.crumbs{font-size:14px;margin:-4px 0 16px;color:var(--muted)}
+.crumbs a{color:var(--char);font-weight:600}
+.crumbs span{margin:0 4px}
+.legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+@media print{
+  header,.tabs,.demo-bar,.noprint,.btn{display:none!important}
+  body{background:#fff}
+  .card{break-inside:avoid;border-color:#ccc}
+  details{display:none}
+}
+
+@media (max-width:700px){
+  .critgrid{grid-template-columns:1fr 1fr}
+  .btn.big{min-width:0}
+  .wrap,.hd,.tabs-in{padding-left:16px;padding-right:16px}
+  .hd{padding-top:20px;padding-bottom:16px;gap:12px}
+  h1{font-size:24px}
+  .sub{font-size:13px;margin-top:4px}
+  .brand svg{width:92px}
+  .card{padding:16px}
+  .grid{grid-template-columns:1fr 1fr}
+  .item{flex-direction:column;gap:8px}
+  .item .acts{justify-content:flex-start}
+  .modal{padding:18px 16px}
+  .dropdown{right:16px}
+  main{padding-top:20px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpis .kpi:first-child{grid-column:1/-1}
+  .kpi .v{font-size:24px}
+}
+</style>
+</head>
+<body>
+
+<div id="demo-bar" class="demo-bar" hidden></div>
+<div id="gate" class="gate" hidden></div>
+
+<div id="app" hidden>
+  <header>
+    <div class="hd">
+      <div>
+        <h1>Skills-Check Freeski<span class="dot">.</span></h1>
+        <div class="sub">Trick Analyses Nachwuchs | Jumps, Rails, Halfpipe</div>
+      </div>
+      <div class="brand" aria-label="Swiss-Ski">
+        <svg viewBox="0 0 88.62 19.26" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img"><title>Swiss-Ski</title><path d="M51.94 6.25C50.64 5.72 49.3 5.5 47.81 5.5 44.59 5.5 42.26 7.16 42.26 10.31 42.26 11.97 43.46 12.88 44.5 13.55 45.58 14.25 46.07 14.56 46.07 15.09 46.07 15.79 45.37 16.08 44.43 16.08 43.49 16.08 42.53 15.74 41.81 15.29L40.58 18.51C41.9 19.09 43.35 19.26 44.84 19.26 47.7 19.28 50.66 17.86 50.66 14.45 50.66 12.67 49.33 11.71 48.23 11.01 47.39 10.48 46.67 10.1 46.67 9.49 46.67 9.01 47.08 8.55 48.14 8.55 49.1 8.55 50.04 8.89 50.74 9.35L51.97 6.25ZM40.88 6.35C39.79 5.75 38.6 5.5 37.19 5.5 34.03 5.5 32.16 7.32 32.16 9.92 32.16 11.72 33.42 12.61 34.54 13.35 35.78 14.18 36.29 14.64 36.29 15.34 36.29 16.39 35.29 16.73 34.32 16.73 33.35 16.73 32.3 16.36 31.55 15.85L30.38 18.38C31.48 19.04 33.05 19.26 34.42 19.26 36.97 19.26 39.57 17.68 39.57 14.74 39.57 12.82 38.16 11.87 36.94 11.12 36.26 10.68 35.31 10.1 35.31 9.25 35.31 8.69 35.75 7.99 37.13 7.99 38.13 7.99 39.05 8.28 39.76 8.77L40.88 6.36ZM8.34 7.57C7.82 6.66 6.91 6.33 5.87 6.33 4.35 6.33 3.03 7.26 3.03 8.88 3.03 10.11 3.79 10.77 4.98 11.68 5.3 11.92 5.62 12.16 5.93 12.42 6.24 12.68 6.54 12.95 6.79 13.26 7.31 13.87 7.67 14.6 7.67 15.52 7.67 17.84 5.62 19.26 3.54 19.26 2.21 19.26 0.85 18.86 0.06 17.62L-0.01 17.52 0.74 16.9 0.82 17.05C1.37 18.05 2.42 18.41 3.53 18.41 5.17 18.41 6.66 17.38 6.66 15.61 6.66 14.86 6.41 14.31 6 13.83 5.79 13.58 5.55 13.36 5.27 13.13 4.99 12.9 4.69 12.67 4.37 12.43 3.24 11.59 2.04 10.58 2.04 8.98 2.04 6.82 3.94 5.5 5.86 5.5 7.09 5.5 8.36 5.87 9.07 7.02L9.14 7.12 8.41 7.71 8.33 7.57ZM20.86 14.03 24.42 5.77 25.97 5.77 20.08 19.01 18.49 19.01 17.97 10.4C17.89 9.36 17.86 8.39 17.86 7.78 17.59 8.4 17.16 9.37 16.62 10.44L12.35 19.02 10.81 19.02 10.63 5.78 12.14 5.78 12.12 14.08C12.12 15.16 12.11 16.28 12.09 16.93 12.37 16.28 12.88 15.15 13.4 14.08L17.51 5.77 19.17 5.77 19.62 14.09C19.68 15.21 19.71 16.28 19.72 16.89 19.96 16.28 20.38 15.23 20.89 14.03M30.4 5.76 28.12 5.76 25.32 19 27.6 19 30.4 5.76ZM31.61 1.1C31.61 0.45 31.11 0 30.44 0 29.51 0 28.76 0.8 28.76 1.78 28.76 2.46 29.29 2.88 29.94 2.88 30.86 2.88 31.62 2.08 31.62 1.1" fill="#E2001A"/><path d="M66.01 0.5 66.01 19.01 71.51 19.01 71.51 15.38 72.29 14.3 74.04 19.01 80.8 19.01 76.72 10.99 80.67 5.5 74.16 5.5 71.51 10.12 71.51 0.5 66.01 0.5Z" fill="#E2001A"/><g><path d="M53.68 15.1C54.57 15.43 55.63 15.67 56.64 15.67 57.48 15.67 57.96 15.36 57.96 14.88 57.96 14.32 57.42 14.09 56.88 13.92L55.94 13.62C54.5 13.16 53.09 12.05 53.09 10.05 53.09 7.26 55.3 5.25 59.38 5.25 60.7 5.25 62.19 5.43 63.68 5.75L63.06 9.17C62.13 8.88 61.1 8.66 60.06 8.66 59.3 8.66 58.97 8.94 58.97 9.38 58.97 9.79 59.38 10 59.85 10.16L60.69 10.44C62.58 11.06 64.16 11.91 64.16 14.16 64.16 17.53 61.41 19.26 57.5 19.26 56.03 19.26 54.5 19.1 53.03 18.74L53.7 15.1Z" fill="#E2001A"/><path d="M85.54 4.67C83.65 4.67 82.41 3.76 82.41 2.35 82.41 1.16 83.38 0 85.54 0 87.52 0 88.62 0.96 88.62 2.35 88.62 3.81 87.38 4.67 85.54 4.67" fill="#E2001A"/></g><path d="M82.52 5.5 82.52 19.01 88.51 19.01 88.51 14.51 87.76 14.51 87.76 16.26 86.26 16.26 86.26 14.51 84.51 14.51 84.51 13 86.26 13 86.26 11.25 87.76 11.25 87.76 13 88.51 13 88.51 5.5 82.52 5.5Z" fill="#E2001A"/></svg>
+        <div class="who" id="who"></div>
+      </div>
+    </div>
+  </header>
+  <nav class="tabs" style="position:sticky">
+    <div class="tabs-in" id="tabs"></div>
+    <div class="dropdown" id="notif-dd" hidden></div>
+  </nav>
+  <main class="wrap">
+    <section class="page" id="page-assessment"></section>
+    <section class="page" id="page-skills"></section>
+    <section class="page" id="page-session"></section>
+    <section class="page" id="page-reports"></section>
+    <section class="page" id="page-monitoring"></section>
+    <section class="page" id="page-reviews"></section>
+    <section class="page" id="page-team"></section>
+  </main>
+</div>
+
+<div id="modal-root"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ══════════════════════════════════════════════════════════════════════
+   KONFIGURATION
+   Leere SUPABASE_URL = Demo-Modus (Daten nur im Browser, localStorage).
+   Mit ?demo in der URL wird auch bei gesetzter URL der Demo-Modus erzwungen.
+   ══════════════════════════════════════════════════════════════════════ */
+const SUPABASE_URL = '';
+const SUPABASE_KEY = '';
+const VIDEO_BUCKET = 'skills-videos';
+const DEMO = !SUPABASE_URL || new URLSearchParams(location.search).has('demo');
+const DEMO_KEY = 'nw-demo-v3';
+
+/* ══════════════════════════════════════════════════════════════════════
+   TRICK-VOKABULAR
+   ══════════════════════════════════════════════════════════════════════ */
+const DIRN = {L:'Left', R:'Right', SL:'Switch Left', SR:'Switch Right', F:'Forward', S:'Switch'};
+const D4 = ['L','R','SL','SR'];
+const SIDE = {L:'Left', R:'Right'};
+const OFFAX = ['Cork','Bio/Misty','Flat Spin','Rodeo'];
+const NOROT = ['Zero Spin','Frontflip','Backflip','Sideflip'];
+const FLIPN = {1:'Single', 2:'Double', 3:'Triple', 4:'Quad'};
+const GRABS = ['Blunt','Bow and Arrow','Broken Arrow','Critical','Cuban','Double Grab (both hands)','Double Japan','Esco','Guitar','High Mute','In and out','Indi-Truck','Inside Tail','Japan','Mute','Nose','Octo','Rocket','Safety',"Screamin' Seamen",'Seatbelt','Seatbelt Japan','Stale','Stink Bug','Tail','Truckdriver','Venom'];
+const BOTH_HANDS = ['Double Grab (both hands)','Double Japan','Truckdriver'];
+const TAKEOFFS = ['Carved','Blender','Hand-Drag','Inside Edge','Nosebutter','Tailbutter',"N'Ollie"];
+const CREATIVE = ['Nosebutter','Tailbutter',"N'Ollie"];
+const OBST = {'Tube / Box':1, 'Simple rail':2, 'Demanding rail':3};
+const RAIL_ON = ['50-50','Skislide','Lipslide','270','Lip 270','450','Lip 450'];
+const RAIL_SWAP = ['Frontswap','Backswap','K-Fed','Britney','Super-Fed','Front 360 Swap','Back 360 Swap','Switch-Up'];
+const RAIL_OUT = ['to normal','to switch','270 out','450 out','630 out','810 out','Pretzel 270','Pretzel 450'];
+const HP_BASICS = ['Drop in','Switch drop in','Riding on the edges','Straight air','Straight air over coping','Waltz','Banana','Slash'];
+const HP_AXES = ['Upright','Cork','Flat Spin','Flair','Bio/Misty','Rodeo'];
+const LEVELS = ['T1','T2','T3','T4'];
+const DISCS = ['Jump','Rail','Halfpipe'];
+const DISC_LABEL = {Jump:'Jumps', Rail:'Rails', Halfpipe:'Halfpipe'};
+
+const isSw = t => t.dir==='SL' || t.dir==='SR' || t.dir==='S';
+const isOff = t => OFFAX.includes(t.axis);
+const isFlip = t => ['Frontflip','Backflip','Sideflip','Rodeo','Bio/Misty'].includes(t.axis) || (+t.flips||1) >= 2;
+const railOnName = t => {
+  const sw = t.approach === 'S';
+  return ({'50-50': sw?'Switch 50-50':'50-50', 'Skislide': sw?'Switch Tails on':'Skislide', 'Lipslide': sw?'Switch Lip on':'Lipslide',
+    '270': sw?'Switch Tail 270 on':'270 on', 'Lip 270': sw?'Switch Lip 270 on':'Lip 270 on',
+    '450': sw?'Switch Tail 450 on':'450 on', 'Lip 450': sw?'Switch Lip 450 on':'Lip 450 on'})[t.on] || t.on;
+};
+const railSpinOut = t => /out$|^Pretzel/.test(t.out || '');
+
+function trickLabel(disc, t){
+  if (disc === 'Jump'){
+    if (NOROT.includes(t.axis)) return [t.dir==='S'?'Switch':'', t.axis, t.grab].filter(Boolean).join(' ') + (t.takeoff?` · ${t.takeoff}`:'');
+    const fl = isOff(t) && +t.flips >= 2 ? FLIPN[t.flips] : '';
+    const ax = t.axis && t.axis !== 'Upright' ? (t.axis==='Flat Spin' ? 'Flat' : t.axis) : '';
+    return [DIRN[t.dir], fl, ax, t.rot, t.grab].filter(Boolean).join(' ') + (t.takeoff?` · ${t.takeoff}`:'');
+  }
+  if (disc === 'Rail'){
+    let s = `${SIDE[t.side]||''} ${railOnName(t)}`;
+    if (t.swap) s += ` → ${t.swap}`;
+    s += ` → ${t.out}`;
+    if (railSpinOut(t)) s += ` (${t.outSide}, ${String(t.foot||'').toLowerCase()} foot fwd${t.outStyle==='flip'?', flip/cork':''})`;
+    return s.trim() + ` · ${t.obstacle}`;
+  }
+  if (t.kind === 'basic') return `${t.basic}${/drop in/i.test(t.basic) ? ' '+(SIDE[t.side]||'') : ''}`.trim();
+  const fl = ['Cork','Bio/Misty','Rodeo','Flat Spin'].includes(t.axis) && +t.flips >= 2 ? FLIPN[t.flips] : '';
+  const ax = t.axis && t.axis !== 'Upright' ? (t.axis==='Flat Spin'?'Flat':t.axis) : '';
+  return [t.sw?'Switch':'', t.ao?'Alley-oop':'', SIDE[t.dir], fl, ax, +t.rot ? t.rot : '', t.grab].filter(Boolean).join(' ') + (+t.height ? ` · ${t.height} m` : '');
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SKILLS-CHECK-KATALOG (Quelle: SkillsCheck_Freeski_{Jumps,Rails,Halfpipe}.svg)
+   Jede Vorgabe = ein «Slot» mit Prüffunktion auf das Trick-Objekt.
+   Rotationen matchen exakt; nur «mindestens»-Vorgaben zählen aufwärts.
+   grp: Slots, die je eine ANDERE Drehrichtung (key 'dir') bzw. einen
+   anderen Eintrag (key 'id') brauchen — beste Zuordnung wird gesucht.
+   ══════════════════════════════════════════════════════════════════════ */
+const slot = (id, text, match, o={}) => ({id, text, match, ...o});
+
+function jumpCatalog(g){
+  const P = `J${g}`;
+  const rotDir = (lv, deg, dirs) => dirs.map(d => slot(`${P}${lv}-${deg}-${d}`, `${DIRN[d]} ${deg}`, t => t.dir===d && +t.rot===deg));
+  const grabs = lv => [...['Japan','Mute','Tail','Safety','Nose'].map(x => slot(`${P}${lv}-g-${x}`, `Grab: ${x}`, t => t.grab===x)),
+    slot(`${P}${lv}-g-both`, 'Grab with both hands', t => BOTH_HANDS.includes(t.grab))];
+  const ranked = (lv, specs, grp='rk') => specs.map((s,i) => slot(`${P}${lv}-${grp}${i}`, s[0], s[1], {grp:`${P}${lv}${grp}`, key:'dir'}));
+  const flip = lv => slot(`${P}${lv}-flip`, 'At least one flip', isFlip);
+  const swCork540 = lv => slot(`${P}${lv}-swc540`, 'Switch Cork 540', t => isSw(t) && t.axis==='Cork' && +t.rot===540);
+  const cork360 = lv => slot(`${P}${lv}-c360`, 'Cork 360', t => t.axis==='Cork' && +t.rot===360);
+  const swZero = lv => slot(`${P}${lv}-swzero`, 'Switch Zero Spin', t => t.axis==='Zero Spin' && isSw(t));
+  const ax = (lv, dirs, axis, deg, pre='') => dirs.map(d => slot(`${P}${lv}-${axis}${deg}-${d}`, `${DIRN[d]} ${axis==='Bio/Misty'?'Misty/Bio':axis} ${deg}`, t => t.dir===d && t.axis===axis && +t.rot===deg));
+  const grabRule = {id:'grabvar', text:'Every trick varied with a different grab'};
+  const RANK_NOTE = 'Die vier Drehrichtungen werden pro Athlet:in von der stärksten bis zur schwächsten geordnet — die App sucht automatisch die beste Zuordnung.';
+
+  if (g === 'M') return {
+    T1:{meta:['Kicker S–M'], sections:[
+      {title:'Rotation', slots:[...rotDir(1,180,D4), ...rotDir(1,360,D4)]},
+      {title:'Axis & flips', slots:[flip(1)]},
+      {title:'Grabs', slots:grabs(1)}]},
+    T2:{meta:['Kicker M–L'], sections:[
+      {title:'Rotation — ranked directions', note:'720 in the three strongest directions (at least two off-axis), 540 in the weakest. '+RANK_NOTE, slots:ranked(2,[
+        ['720 off-axis · strongest direction', t => +t.rot===720 && isOff(t)],
+        ['720 off-axis · 2nd direction', t => +t.rot===720 && isOff(t)],
+        ['720 · 3rd direction', t => +t.rot===720],
+        ['540 · weakest direction', t => +t.rot===540]])},
+      {title:'Axis & flips', slots:[swCork540(2), cork360(2), swZero(2)]}]},
+    T3:{meta:['Kicker L–XL','Foundation for doubles: broad range of directions and axes'], sections:[
+      {title:'Rotation — all directions up to 900', slots:[...rotDir(3,540,D4), ...rotDir(3,720,D4)]},
+      {title:'Axis & flips', slots:[...ax(3,['L','R'],'Cork',900), ...ax(3,['L','R'],'Bio/Misty',720), ...ax(3,['SL','SR'],'Cork',900), ...ax(3,['SL','SR'],'Bio/Misty',900)]},
+      {title:'Take-off', note:'Tricks können X oder gecarved werden — anzustreben ist beides.', slots:[slot(`${P}3-carve`, 'Carved take-off', t => t.takeoff==='Carved')]}],
+      rules:[grabRule]},
+    T4:{meta:['Kicker XL','Develop according to individual strengths'], sections:[
+      {title:'Rotation — ranked directions', note:'1620/1800/1980 in the two strongest directions, at least 1440 in the third, at least 1080 in the weakest. '+RANK_NOTE, slots:ranked(4,[
+        ['≥ 1620 · strongest direction', t => +t.rot>=1620],
+        ['≥ 1620 · 2nd direction', t => +t.rot>=1620],
+        ['≥ 1440 · 3rd direction', t => +t.rot>=1440],
+        ['≥ 1080 · weakest direction', t => +t.rot>=1080]])},
+      {title:'Take-off', slots:[slot(`${P}4-creative`, "Creative take-off (nose-/tailbutter, N'Ollie)", t => CREATIVE.includes(t.takeoff)), slot(`${P}4-carve`, 'Carved take-off', t => t.takeoff==='Carved')]}],
+      rules:[grabRule]},
+  };
+  return {
+    T1:{meta:['Kicker S–M'], sections:[
+      {title:'Rotation', slots:[...rotDir(1,180,D4), ...rotDir(1,360,['L','R'])]},
+      {title:'Grabs', slots:grabs(1)}]},
+    T2:{meta:['Kicker M'], sections:[
+      {title:'Rotation — ranked directions', note:'At least 720 in the strongest, 540 in the 2nd and 3rd, 360 in the weakest direction. '+RANK_NOTE, slots:ranked(2,[
+        ['≥ 720 · strongest direction', t => +t.rot>=720],
+        ['≥ 540 · 2nd direction', t => +t.rot>=540],
+        ['≥ 540 · 3rd direction', t => +t.rot>=540],
+        ['≥ 360 · weakest direction', t => +t.rot>=360]])},
+      {title:'Axis & flips', slots:[flip(2), swCork540(2), swZero(2)]}]},
+    T3:{meta:['Kicker L','Foundation for doubles: broad range of directions and axes'], sections:[
+      {title:'Rotation', slots:[
+        slot(`${P}3-720-L`, 'Left 720 off-axis', t => t.dir==='L' && +t.rot===720 && isOff(t)),
+        slot(`${P}3-720-R`, 'Right 720 off-axis', t => t.dir==='R' && +t.rot===720 && isOff(t)),
+        ...ranked(3,[
+          ['Switch 720 off-axis · stronger switch direction', t => isSw(t) && +t.rot===720 && isOff(t)],
+          ['Switch 540 · weaker switch direction (upright ok)', t => isSw(t) && +t.rot===540]], 'sw')]},
+      {title:'Axis & flips', slots:[
+        slot(`${P}3-cond540`, 'Misty/Bio or Flat 540 — required if the forward 720s are Cork', t => ['Bio/Misty','Flat Spin'].includes(t.axis) && +t.rot===540,
+          {cond: res => [res[`${P}3-720-L`], res[`${P}3-720-R`]].some(e => e && e.trick.axis==='Cork')}),
+        cork360(3)]}],
+      rules:[grabRule]},
+    T4:{meta:['Kicker L–XL','Develop according to individual strengths'], sections:[
+      {title:'Rotation — ranked directions', note:'At least a Double 1260 in the strongest, 900 in the 2nd and 3rd, 720 in the weakest direction. '+RANK_NOTE, slots:ranked(4,[
+        ['Double ≥ 1260 · strongest direction', t => +t.flips>=2 && +t.rot>=1260],
+        ['≥ 900 · 2nd direction', t => +t.rot>=900],
+        ['≥ 900 · 3rd direction', t => +t.rot>=900],
+        ['≥ 720 · weakest direction', t => +t.rot>=720]])}],
+      rules:[grabRule]},
+  };
+}
+
+function railCatalog(g){
+  const P = `R${g}`;
+  const LR = ['L','R'];
+  const ob = n => t => (OBST[t.obstacle]||0) >= n;
+  const mk = (id, text, min, m, o) => slot(id, text, t => ob(min)(t) && m(t), o);
+  const slides = (p, min, ap) => {
+    const r = [];
+    const defs = ap==='F' ? [['Skislide','Skislide'],['Lipslide','Lipslide']] : [['Skislide','Switch Tails on'],['Lipslide','Switch Lip on']];
+    for (const [on, nm] of defs) for (const s of LR) for (const o of ['to normal','to switch'])
+      r.push(mk(`${p}-sl${ap}-${on}-${s}-${o}`, `${SIDE[s]} ${nm} ${o}`, min, t => t.side===s && t.approach===ap && t.on===on && t.out===o));
+    return r;
+  };
+  const spinOut = (p, min, deg) => {
+    const r = [];
+    for (const sd of ['FS','BS']) for (const f of ['Right','Left'])
+      r.push(mk(`${p}-o${deg}-${sd}-${f}`, `${sd} ${deg} out (${f.toLowerCase()} foot forward)`, min, t => t.out===`${deg} out` && t.outSide===sd && t.foot===f));
+    return r;
+  };
+  const ON270 = [['270','F','270 on'],['Lip 270','F','Lip 270 on'],['270','S','Switch Tail 270 on'],['Lip 270','S','Switch Lip 270 on']];
+  const ons = (p, min) => ON270.flatMap(([on,ap,nm]) => LR.map(s => mk(`${p}-on-${on}${ap}-${s}`, `${SIDE[s]} ${nm}`, min, t => t.side===s && t.approach===ap && t.on===on)));
+  const onOut = (p, min, pretzel) => ON270.flatMap(([on,ap,nm]) => LR.map(s => mk(`${p}-${pretzel?'pz':'oo'}-${on}${ap}-${s}`,
+    pretzel ? `${SIDE[s]} ${nm.replace(' on','')} pretzel 270` : `${SIDE[s]} ${nm} 270 out`, min,
+    t => t.side===s && t.approach===ap && t.on===on && t.out===(pretzel?'Pretzel 270':'270 out'))));
+  const swaps = (p, min) => {
+    const r = [];
+    for (const sw of ['Backswap','Frontswap']) for (const s of LR) for (const o of ['to normal','to switch'])
+      r.push(mk(`${p}-sw-${sw}-${s}-${o}`, `${SIDE[s]} ${sw} ${o}`, min, t => t.side===s && t.swap===sw && t.out===o));
+    for (const sw of ['K-Fed','Britney']) for (const s of LR) r.push(mk(`${p}-sw-${sw}-${s}`, `${sw} ${SIDE[s]}`, min, t => t.side===s && t.swap===sw));
+    return r;
+  };
+  const distinct = (p, n, text, min, m, ext=[]) => [...ext.map((x,i) => mk(`${p}-${i}x`, x[0], min, x[1], {grp:p, key:'id'})),
+    ...Array.from({length:n}, (_,i) => mk(`${p}-${i}`, text, min, m, {grp:p, key:'id'}))];
+  const on270any = t => ['270','Lip 270'].includes(t.on);
+
+  const T1 = {meta:['Obstacle: Tube'], sections:[
+    {title:'Slides', slots:slides(`${P}1`,1,'F')},
+    {title:'Switch on', slots:slides(`${P}1`,1,'S')},
+    {title:'Out', slots:spinOut(`${P}1`,1,270)}]};
+  const RN = 'Wiederholung = Tricks aus früheren Phasen auf dem schwierigeren Obstacle.';
+  if (g === 'M') return {
+    T1,
+    T2:{meta:['Obstacle: Tube or rail'], sections:[
+      {title:'On', slots:ons(`${P}2`,1)},
+      {title:'Swaps', note:'Back- & Frontswap to switch and to normal (bzw. Switch-Up).', slots:swaps(`${P}2`,1)},
+      {title:'Out', slots:spinOut(`${P}2`,1,450)}]},
+    T3:{meta:['Obstacle: Simple rail'], sections:[
+      {title:'On – Out', slots:onOut(`${P}3`,2,false)},
+      {title:'Pretzel', slots:onOut(`${P}3`,2,true)},
+      {title:'More', slots:[...LR.map(s => mk(`${P}3-sf-${s}`, `Super-Fed ${SIDE[s]}`, 2, t => t.side===s && t.swap==='Super-Fed')),
+        mk(`${P}3-flipout`, 'At least one flip/cork out', 2, t => railSpinOut(t) && t.outStyle==='flip')]}]},
+    T4:{meta:['Obstacle: Demanding rail', RN], sections:[
+      {title:'New', slots:[
+        ...distinct(`${P}4-in450`, 3, '450 in', 3, t => ['450','Lip 450'].includes(t.on)),
+        ...distinct(`${P}4-sw360`, 2, '360 swap', 3, t => ['Front 360 Swap','Back 360 Swap'].includes(t.swap)),
+        mk(`${P}4-o630`, 'Spin/flip out 630', 3, t => t.out==='630 out'),
+        mk(`${P}4-o810`, 'Spin out 810', 3, t => t.out==='810 out')]},
+      {title:'Wiederholung — On – Out', slots:onOut(`${P}4`,3,false)},
+      {title:'Wiederholung — Pretzel', slots:onOut(`${P}4`,3,true)}]},
+  };
+  return {
+    T1,
+    T2:{meta:['Obstacle: Tube or rail'], sections:[
+      {title:'Swaps', note:'Back- & Frontswap to switch and to normal (bzw. Switch-Up).', slots:swaps(`${P}2`,1)}]},
+    T3:{meta:['Obstacle: Simple rail / tube or rail', RN], sections:[
+      {title:'New — simple rail', slots:distinct(`${P}3-o450`, 2, '450 out', 2, t => t.out==='450 out')},
+      {title:'New — tube or rail', note:'At least two 270 on, at least one of them switch.', slots:distinct(`${P}3-on270`, 1, '270 on', 1, on270any, [['Switch 270 on', t => on270any(t) && t.approach==='S']])},
+      {title:'Wiederholung — slides (simple rail)', slots:[...slides(`${P}3`,2,'F'), ...slides(`${P}3`,2,'S')]},
+      {title:'Wiederholung — swaps (simple rail)', slots:swaps(`${P}3`,2)}]},
+    T4:{meta:['Obstacle: Demanding rail / simple rail', RN], sections:[
+      {title:'New — simple rail', note:'At least one of each pair switch.', slots:[
+        ...distinct(`${P}4-oo`, 1, '270 on 270 out', 2, t => on270any(t) && t.out==='270 out', [['Switch 270 on 270 out', t => on270any(t) && t.approach==='S' && t.out==='270 out']]),
+        ...distinct(`${P}4-pz`, 1, '270 pretzel 270', 2, t => on270any(t) && t.out==='Pretzel 270', [['Switch 270 pretzel 270', t => on270any(t) && t.approach==='S' && t.out==='Pretzel 270']])]},
+      {title:'Wiederholung — slides (demanding rail)', slots:[...slides(`${P}4`,3,'F'), ...slides(`${P}4`,3,'S')]},
+      {title:'Wiederholung — out & swaps (demanding rail)', slots:[...spinOut(`${P}4`,3,270), ...swaps(`${P}4`,3), ...distinct(`${P}4-o450`, 2, '450 out', 3, t => t.out==='450 out')]}]},
+  };
+}
+
+function hpCatalog(g){
+  const P = `H${g}`;
+  const LR = ['L','R'];
+  const b = (id, text, m) => slot(`${P}${id}`, text, t => t.kind==='basic' && m(t));
+  const air = (id, text, o) => slot(`${P}${id}`, text, t => t.kind==='air'
+    && (o.rot == null || +t.rot===o.rot)
+    && !!t.sw === !!o.sw && !!t.ao === !!o.ao
+    && (!o.axis || t.axis===o.axis) && (!o.flips || +t.flips>=o.flips) && (!o.dir || t.dir===o.dir));
+  const both = (id, text, o) => LR.map(d => air(`${id}-${d}`, `${text} ${SIDE[d]}`, {...o, dir:d}));
+  const height = (lv, m) => slot(`${P}${lv}-h`, `Air height ≥ ${m} m (focus)`, t => t.kind==='air' && +t.height >= m);
+  const hM = {T1:2.5, T2:3.5, T3:4, T4:5}, hW = {T1:1.5, T2:2, T3:3, T4:3.5};
+  const H = g==='M' ? hM : hW;
+  const T1 = {meta:[`Focus: air height ${H.T1} m`], sections:[
+    {title:'Basics', slots:[
+      ...LR.map(s => b(`1-drop-${s}`, `Drop in ${SIDE[s]} (in the wall, not transition)`, t => t.basic==='Drop in' && t.side===s)),
+      b('1-edges', 'Riding on the good edges', t => t.basic==='Riding on the edges'),
+      b('1-straight', 'Straight air (flat skis, no edges)', t => t.basic==='Straight air'),
+      b('1-waltz', 'Waltz — every direction (360 on snow)', t => t.basic==='Waltz'),
+      b('1-banana', 'Banana straight to switch — every direction', t => t.basic==='Banana'),
+      b('1-slash', 'Slash at the coping', t => t.basic==='Slash')]},
+    {title:'Focus', slots:[height(1, H.T1)]}]};
+  const T2 = {meta:[`Focus: air height ${H.T2} m`], sections:[
+    {title:'Basics', slots:[b('2-coping', 'Straight air over coping', t => t.basic==='Straight air over coping')]},
+    {title:'Forward', slots:[...both('2-360', '360 down the pipe', {rot:360}), air('2-540', '540 down the pipe (L or R)', {rot:540})]},
+    {title:'Switch', slots:both('2-sw360', 'Switch 360 down the pipe', {rot:360, sw:true})},
+    {title:'Alley-oop', slots:[...both('2-ao180', 'Alley-oop 180', {rot:180, ao:true}), ...both('2-ao360', 'Alley-oop 360', {rot:360, ao:true}), ...both('2-swao360', 'Switch Alley-oop 360', {rot:360, ao:true, sw:true})]},
+    {title:'Focus', slots:[height(2, H.T2)]}]};
+  if (g === 'M') return {
+    T1, T2,
+    T3:{meta:[`Focus: air height ${H.T3} m`], sections:[
+      {title:'Forward', slots:[...both('3-540', '540 down the pipe', {rot:540}), air('3-720', '720 down the pipe (L or R)', {rot:720})]},
+      {title:'Switch', slots:[...both('3-sw540', 'Switch 540 down the pipe', {rot:540, sw:true}), ...LR.map(s => b(`3-swdrop-${s}`, `Switch drop in ${SIDE[s]}`, t => t.basic==='Switch drop in' && t.side===s))]},
+      {title:'Alley-oop', slots:both('3-ao540', 'Alley-oop 540', {rot:540, ao:true})},
+      {title:'Off-axis', slots:[...both('3-flair', 'Flair', {axis:'Flair'}), air('3-c900', 'Cork 900 (L or R)', {rot:900, axis:'Cork'}),
+        air('3-swc720', 'Switch Cork 720 (L or R)', {rot:720, axis:'Cork', sw:true}), air('3-aof540', 'Alley-oop Flat 540 (L or R)', {rot:540, axis:'Flat Spin', ao:true})]},
+      {title:'Focus', slots:[height(3, H.T3)]}]},
+    T4:{meta:[`Focus: air height ${H.T4} m`], sections:[
+      {title:'Off-axis', slots:[...both('4-c900', 'Cork 900', {rot:900, axis:'Cork'}), air('4-c1080', 'Cork 1080 (L or R)', {rot:1080, axis:'Cork'}),
+        slot(`${P}4-d1260`, 'Double 1260 (L or R)', t => t.kind==='air' && !t.ao && !t.sw && +t.flips>=2 && +t.rot===1260),
+        slot(`${P}4-d1620`, 'Double 1620 (L or R)', t => t.kind==='air' && !t.ao && !t.sw && +t.flips>=2 && +t.rot===1620),
+        slot(`${P}4-swd1080`, 'Switch Double 1080 (L or R)', t => t.kind==='air' && t.sw && +t.flips>=2 && +t.rot===1080),
+        air('4-aof720', 'Alley-oop Flat 720', {rot:720, axis:'Flat Spin', ao:true})]},
+      {title:'Focus', slots:[height(4, H.T4)]}]},
+  };
+  return {
+    T1, T2,
+    T3:{meta:[`Focus: air height ${H.T3} m`], sections:[
+      {title:'Forward', slots:[...both('3-540', '540 down the pipe', {rot:540}), air('3-720', '720 down the pipe (L or R)', {rot:720})]},
+      {title:'Switch', slots:[...both('3-sw540', 'Switch 540 down the pipe', {rot:540, sw:true}), air('3-sw720', 'Switch 720 (L or R)', {rot:720, sw:true})]},
+      {title:'Alley-oop', slots:both('3-ao540', 'Alley-oop 540', {rot:540, ao:true})},
+      {title:'Focus', slots:[height(3, H.T3)]}]},
+    T4:{meta:[`Focus: air height ${H.T4} m`], sections:[
+      {title:'Off-axis', slots:[air('4-flair', 'Flair (L or R)', {axis:'Flair'}), air('4-c900', 'Cork 900 (L or R)', {rot:900, axis:'Cork'}),
+        air('4-swc720', 'Switch Cork 720 (L or R)', {rot:720, axis:'Cork', sw:true}), air('4-aof540', 'Alley-oop Flat 540 (L or R)', {rot:540, axis:'Flat Spin', ao:true})]},
+      {title:'Focus', slots:[height(4, H.T4)]}]},
+  };
+}
+
+const CATALOG = {
+  Jump: {M: jumpCatalog('M'), W: jumpCatalog('W')},
+  Rail: {M: railCatalog('M'), W: railCatalog('W')},
+  Halfpipe: {M: hpCatalog('M'), W: hpCatalog('W')},
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   BEWERTUNGSKRITERIEN (Coach) — 1 Punkt je Kriterium: Jumps/Rails max. 4, Halfpipe max. 5 (+ Amplitude).
+   Checkpunkte abgeleitet aus FIS Judges Handbook (SB/FK, 8.1 Execution):
+   Take-off, Control, Grabs, Landing.
+   ══════════════════════════════════════════════════════════════════════ */
+const CRIT = {
+  jump: [
+    {k:'takeoff', name:'Take-Off', hints:['Timing & pop on the lip — uses the whole kicker','No rushed take-off or rotation started early on the lip (butter/blender intended = ok)','Centred stance, speed fits the jump']},
+    {k:'trick', name:'Trick (Axis / Control)', hints:['Clean, recognisable axis — as declared','Rotation completed before landing, not finished on the snow','Controlled body position throughout, no insecurity or flailing']},
+    {k:'grab', name:'Grab', hints:['Grab on the ski — not boot, binding or knee','Held through most of the rotation, clearly visible','Tweak / bone is a plus; free hand calm and controlled']},
+    {k:'landing', name:'Landing', hints:['Lands in the sweet spot — not on the knuckle, not flat','Centred on both skis, not in the backseat','No hand drag, butt check or washout — rides away clean']},
+  ],
+  // Halfpipe = gleiche Kriterien wie Jumps + Amplitude (FIS JH 8.3.1) → max. 5 Punkte
+  hp: [
+    {k:'takeoff', name:'Take-Off', hints:['Takes off high on the wall at the coping','Timing & pop, no early rotation','Line keeps speed for the next hit']},
+    {k:'trick', name:'Trick (Axis / Control)', hints:['Clean, recognisable axis — as declared','Rotation completed before landing','Controlled body position throughout']},
+    {k:'grab', name:'Grab', hints:['Grab on the ski — not boot, binding or knee','Held through most of the trick','Tweak / bone is a plus']},
+    {k:'landing', name:'Landing', hints:['Lands high in the wall, not on the deck or flat bottom','Centred, no backseat','No hand drag, butt check or washout']},
+    {k:'amplitude', name:'Amplitude', hints:['Height above the coping fits the level (Skills-Check focus)','Keeps amplitude from hit to hit — no loss of height','Distance down the pipe in proportion to the height']},
+  ],
+  rail: [
+    {k:'takeon', name:'Take-On', hints:['Clean pop onto the feature','Spin-in fully rotated, no sketch or ski-cross on the way on']},
+    {k:'control', name:'Trick (Control on rail)', hints:['Stable, centred position on the feature','Slides the full length, no correcting','Swap / press clearly shown']},
+    {k:'out', name:'Out', hints:['Clean pop off the end','Spin-out / pretzel fully rotated as declared']},
+    {k:'landing', name:'Landing', hints:['Centred landing, rides away clean','No hand drag, butt check or washout']},
+  ],
+};
+const critSetFor = disc => disc==='Rail' ? CRIT.rail : disc==='Halfpipe' ? CRIT.hp : CRIT.jump;
+const critSet = e => critSetFor(e.discipline);
+const maxFor = disc => critSetFor(disc).length;
+
+/* ══════════════════════════════════════════════════════════════════════
+   ABGLEICH-ENGINE
+   ══════════════════════════════════════════════════════════════════════ */
+const safeMatch = (s, t) => { try { return !!s.match(t); } catch { return false; } };
+const entryVal = e => !e ? 0 : e.status==='reviewed' ? 100 + Math.round((e.score||0) / maxFor(e.discipline) * 40) : (e.status==='pending'||e.status==='rework') ? 5 : 1;
+const bestOf = list => list.reduce((b, e) => (!b || entryVal(e) > entryVal(b) || (entryVal(e)===entryVal(b) && e.created_at > b.created_at)) ? e : b, null);
+
+function assignGroup(slots, cand, res){
+  const keyOf = e => slots[0].key==='id' ? e.id : e.trick.dir;
+  const lists = slots.map(s => {
+    const m = new Map();
+    for (const e of cand) if (safeMatch(s, e.trick)) { const k = keyOf(e); if (!m.has(k) || entryVal(e) > entryVal(m.get(k))) m.set(k, e); }
+    return [...m.values()].sort((a,b) => entryVal(b) - entryVal(a)).slice(0, 6);
+  });
+  let bestSum = -1, bestPick = [];
+  const pick = [], used = new Set();
+  (function rec(i, sum){
+    if (i === slots.length){ if (sum > bestSum){ bestSum = sum; bestPick = [...pick]; } return; }
+    for (const e of lists[i]){
+      const k = keyOf(e); if (used.has(k)) continue;
+      used.add(k); pick[i] = e; rec(i+1, sum + entryVal(e)); used.delete(k);
+    }
+    pick[i] = null; rec(i+1, sum);
+  })(0, 0);
+  slots.forEach((s, i) => res[s.id] = bestPick[i] || null);
+}
+
+function slotState(e){
+  if (!e) return 'open';
+  if (e.status==='reviewed') return e.score===maxFor(e.discipline) ? 'done' : 'partial';
+  if (e.status==='pending' || e.status==='rework') return 'pending';
+  return 'goal';
+}
+
+// Wertet eine Stufe (Disziplin × Geschlecht × Level) für die Einträge einer Athlet:in aus.
+function evaluate(disc, gender, level, entries){
+  const def = CATALOG[disc]?.[gender]?.[level];
+  if (!def) return null;
+  const cand = entries.filter(e => e.discipline===disc);
+  const slots = def.sections.flatMap(s => s.slots);
+  const res = {}, groups = {};
+  for (const s of slots){
+    if (s.grp) (groups[s.grp] ||= []).push(s);
+    else res[s.id] = bestOf(cand.filter(e => safeMatch(s, e.trick)));
+  }
+  for (const ss of Object.values(groups)) assignGroup(ss, cand, res);
+  let pts = 0, max = 0, done = 0, n = 0, pending = 0;
+  const out = {};
+  for (const s of slots){
+    const applicable = s.cond ? s.cond(res) : true;
+    const e = res[s.id];
+    const st = applicable ? slotState(e) : 'na';
+    const p = applicable && e && e.status==='reviewed' ? (e.score||0) : 0;
+    out[s.id] = {entry:e, state:st, pts:p, applicable};
+    if (!applicable) continue;
+    n++; max += maxFor(disc); pts += p;
+    if (st==='done') done++;
+    if (st==='pending') pending++;
+  }
+  // Regel: jeder Trick mit einem anderen Grab
+  const rules = (def.rules||[]).map(r => {
+    const used = [...new Set(Object.values(out).map(o => o.entry).filter(Boolean))];
+    const grabs = used.map(e => e.trick.grab).filter(Boolean);
+    const distinct = new Set(grabs).size;
+    return {...r, ok: used.length > 0 && distinct === used.length, detail: used.length ? `${distinct} different grab${distinct===1?'':'s'} in ${used.length} matched trick${used.length===1?'':'s'}` : 'no tricks matched yet'};
+  });
+  return {def, out, pts, max, done, n, pending, rules};
+}
+
+// Direkte Treffer (ohne Zuordnung) — für Vorschau und Chips.
+function directMatches(disc, gender, trick){
+  const r = [];
+  for (const lv of LEVELS){
+    const def = CATALOG[disc]?.[gender]?.[lv]; if (!def) continue;
+    const seen = new Set();
+    for (const sec of def.sections) for (const s of sec.slots){
+      if (s.grp && seen.has(s.grp)) continue;
+      if (safeMatch(s, trick)){ r.push({level:lv, text:s.text, id:s.id}); if (s.grp) seen.add(s.grp); }
+    }
+  }
+  return r;
+}
+
+// Welche Vorgaben der eigenen Stufe dieser Eintrag nach der Zuordnung tatsächlich abdeckt.
+const _evalCache = new Map();
+function assignedSlots(e){
+  const ath = prof(e.athlete_id); if (!ath?.gender || !ath?.level) return [];
+  const key = `${ath.id}|${ath.level}|${e.discipline}|${ST.entries.length}|${ST._rev||0}`;
+  let ev = _evalCache.get(key);
+  if (!ev){ ev = evaluate(e.discipline, ath.gender, ath.level, entriesOf(ath.id)); _evalCache.set(key, ev); }
+  if (!ev) return [];
+  const r = [];
+  for (const sec of ev.def.sections) for (const s of sec.slots) if (ev.out[s.id]?.entry?.id === e.id && ev.out[s.id].applicable) r.push({level:ath.level, text:s.text, id:s.id});
+  return r;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DATENSCHICHT — Demo (localStorage) und Supabase mit gleicher Schnittstelle
+   ══════════════════════════════════════════════════════════════════════ */
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36));
+const nowIso = () => new Date().toISOString();
+
+function demoSeed(){
+  const g1 = 'g-a', g2 = 'g-b';
+  const P = (id, name, role, group_id, gender, level) => ({id, name, email:`${id}@demo.ch`, role, group_id, gender, level});
+  const profiles = [
+    P('u-lena','Lena Muster','athlete',g1,'W','T2'), P('u-noah','Noah Beispiel','athlete',g1,'M','T1'),
+    P('u-luca','Luca Demo','athlete',g1,'M','T2'), P('u-mia','Mia Test','athlete',g2,'W','T3'),
+    {...P('u-elia','Elia Probe','athlete',g2,'M','T4'), focus:'hp'},
+    P('u-coach-a','Coach Gruppe A','coach',g1,null,null), P('u-coach-b','Coach Gruppe B','coach',g2,null,null),
+    P('u-dvlp','Nachwuchs-Chefin','dvlp',null,null,null),
+  ];
+  const groups = [{id:g1, name:'Demo TG Nachwuchs A'}, {id:g2, name:'Demo TG Nachwuchs B'}];
+  const d = n => new Date(Date.now() - n*86400000).toISOString();
+  const E = (athlete_id, discipline, trick, status, crit, daysAgo, extra={}) => {
+    const e = {id:uid(), athlete_id, created_by:athlete_id, discipline, trick, label:trickLabel(discipline, trick), status, note:'', video_path:null,
+      crit:crit||null, score:crit ? Object.values(crit).filter(Boolean).length : null, review_note:null, reviewed_by:null, reviewed_at:null, created_at:d(daysAgo), ...extra};
+    if (crit){ e.reviewed_by = athlete_id==='u-mia'||athlete_id==='u-elia' ? 'u-coach-b' : 'u-coach-a'; e.reviewed_at = d(daysAgo-1); }
+    return e;
+  };
+  const C4 = {takeoff:true, trick:true, grab:true, landing:true};
+  const J = (dir, axis, rot, grab, o={}) => ({dir, axis, rot, grab, flips:OFFAX.includes(axis)?1:null, takeoff:'', ...o});
+  const entries = [
+    E('u-lena','Jump',J('L','Cork',720,'Safety'),'reviewed',C4,20),
+    E('u-lena','Jump',J('R','Upright',540,'Mute'),'reviewed',{...C4, grab:false},18),
+    E('u-lena','Jump',J('SL','Upright',540,'Japan'),'reviewed',{...C4, landing:false},15, {review_note:'Landung noch etwas im Rücklage — Hüfte nach vorne.'}),
+    E('u-lena','Jump',J('SR','Upright',360,'Tail'),'reviewed',C4,12),
+    E('u-lena','Jump',J('S','Zero Spin',null,'Safety'),'pending',null,1, {note:'Zweiter Versuch, diesmal sauber gestanden!'}),
+    E('u-lena','Jump',J('SL','Cork',540,'Mute'),'goal',null,3),
+    E('u-lena','Rail',{obstacle:'Tube / Box', side:'L', approach:'F', on:'Skislide', swap:'', out:'to normal', outSide:'FS', foot:'Right', outStyle:''},'reviewed',{takeon:true, control:true, out:true, landing:true},10),
+    E('u-noah','Jump',J('L','Upright',360,'Japan'),'reviewed',C4,9),
+    E('u-noah','Jump',J('R','Upright',180,'Mute'),'pending',null,0),
+    E('u-luca','Jump',J('L','Cork',720,'Safety'),'pending',null,2),
+    E('u-mia','Jump',J('L','Cork',720,'Safety'),'reviewed',C4,14),
+    E('u-mia','Jump',J('R','Cork',720,'Mute'),'reviewed',{...C4, trick:false},14),
+    E('u-mia','Jump',J('SL','Bio/Misty',720,'Japan'),'rework',null,5, {review_note:'Video zu weit weg — bitte nochmals näher filmen.'}),
+    E('u-elia','Halfpipe',{kind:'air', dir:'L', sw:false, ao:false, axis:'Upright', flips:null, rot:540, grab:'Safety', height:3.5},'pending',null,1),
+  ];
+  const notes = [
+    {id:1, user_id:'u-coach-a', entry_id:entries[4].id, kind:'submitted', text:`Lena Muster: ${entries[4].label}`, created_at:d(1), read_at:null},
+    {id:2, user_id:'u-coach-a', entry_id:entries[8].id, kind:'submitted', text:`Noah Beispiel: ${entries[8].label}`, created_at:d(0), read_at:null},
+    {id:3, user_id:'u-coach-a', entry_id:entries[9].id, kind:'submitted', text:`Luca Demo: ${entries[9].label}`, created_at:d(2), read_at:null},
+    {id:4, user_id:'u-coach-b', entry_id:entries[13].id, kind:'submitted', text:`Elia Probe: ${entries[13].label}`, created_at:d(1), read_at:null},
+    {id:5, user_id:'u-lena', entry_id:entries[2].id, kind:'reviewed', text:`Rated 3/4: ${entries[2].label}`, created_at:d(14), read_at:null},
+    {id:6, user_id:'u-mia', entry_id:entries[12].id, kind:'rework', text:`New video requested: ${entries[12].label}`, created_at:d(4), read_at:null},
+  ];
+  return {profiles, groups, entries, notes, nextNote:7, ...demoSessions()};
+}
+
+// Demo-Sessions mit Versuchen (deterministischer Zufall, Qualität steigt über die Sessions)
+function demoSessions(){
+  let r = 7; const rnd = () => { r = (r * 16807) % 2147483647; return (r - 1) / 2147483646; };
+  const J = (dir, axis, rot, grab) => ['Jump', {dir, axis, rot, grab, flips:OFFAX.includes(axis)?1:null, takeoff:''}];
+  const TR = {
+    'u-lena': [J('L','Cork',720,'Safety'), J('SL','Upright',540,'Japan'), J('S','Zero Spin',null,'Safety')],
+    'u-noah': [J('L','Upright',360,'Japan'), J('R','Upright',180,'Mute'), J('F','Backflip',null,'')],
+    'u-luca': [J('L','Cork',720,'Safety'), J('R','Cork',720,'Mute'), J('SL','Upright',540,'Tail')],
+    'u-mia':  [J('L','Cork',720,'Safety'), J('R','Cork',720,'Mute')],
+    'u-elia': [['Halfpipe', {kind:'air', dir:'L', sw:false, ao:false, axis:'Upright', flips:null, rot:540, grab:'Safety', height:3.5}], ['Halfpipe', {kind:'air', dir:'R', sw:false, ao:true, axis:'Upright', flips:null, rot:360, grab:'Mute', height:3}]],
+  };
+  const plan = [
+    ['g-a', ['u-lena','u-noah','u-luca'], [[24,'Landing Bag','Laax'], [17,'Jump Training','Laax'], [10,'Jump Training','Laax'], [3,'Jump Training','Laax']], 'u-coach-a'],
+    ['g-b', ['u-mia','u-elia'], [[12,'Jump Training','Saas-Fee'], [5,'Halfpipe Training','Saas-Fee']], 'u-coach-b'],
+  ];
+  const sessions = [], attempts = [];
+  for (const [gid, aths, days, coach] of plan) days.forEach(([ago, type, loc], si) => {
+    const start = new Date(Date.now() - ago*86400000); start.setHours(9, 30, 0, 0);
+    const s = {id:uid(), created_by:coach, group_id:gid, date:start.toISOString().slice(0,10), type, location:loc, duration_min:180, conditions:3 + (si % 3), comments:si===days.length-1 ? 'Gute Bedingungen, Kicker frisch geshapt.' : null,
+      athlete_ids:aths, athlete_notes:{}, started_at:start.toISOString(), ended_at:new Date(start.getTime() + 3*3600000).toISOString()};
+    sessions.push(s);
+    let t = start.getTime();
+    for (const aid of aths) for (const [disc, trick] of TR[aid]){
+      if (typeDisc(type) !== disc && type !== 'Landing Bag') continue;
+      const n = 3 + Math.floor(rnd()*4), p = 0.42 + 0.13*si;
+      const set = critSetFor(disc);
+      for (let k = 0; k < n; k++){
+        t += 60000 * (2 + Math.floor(rnd()*5));
+        const fell = rnd() < 0.2 - 0.04*si;
+        const crit = Object.fromEntries(set.map(c => [c.k, !fell && rnd() < p + 0.08*k/n]));
+        attempts.push({id:uid(), session_id:s.id, athlete_id:aid, discipline:disc, trick, label:trickLabel(disc, trick), crit, score:Object.values(crit).filter(Boolean).length, max:set.length, fell, note:null, entry_id:null, created_by:coach, created_at:new Date(t).toISOString()});
+      }
+    }
+  });
+  return {sessions, attempts};
+}
+
+const DemoStore = {
+  data:null, videos:{},
+  load(){ try { this.data = JSON.parse(localStorage.getItem(DEMO_KEY)); } catch { this.data = null; } if (!this.data) { this.data = demoSeed(); this.save(); } },
+  save(){ try { localStorage.setItem(DEMO_KEY, JSON.stringify(this.data)); } catch {} },
+  reset(){ try { localStorage.removeItem(DEMO_KEY); } catch {} this.load(); },
+  async currentUser(){ let id = null; try { id = sessionStorage.getItem('nw-demo-user'); } catch {} return this.data.profiles.find(p => p.id===id) || null; },
+  async login(id){ try { sessionStorage.setItem('nw-demo-user', id); } catch {} },
+  async logout(){ try { sessionStorage.removeItem('nw-demo-user'); } catch {} },
+  async loadAll(me){
+    const d = this.data;
+    const vis = visibleAthleteIds(me, d.profiles);
+    const staff = me.role !== 'athlete';
+    return {profiles:d.profiles, groups:d.groups, entries:d.entries.filter(e => vis.has(e.athlete_id)), notes:d.notes.filter(n => n.user_id===me.id),
+      sessions:(d.sessions||[]).filter(s => s.created_by===me.id || s.athlete_ids.some(id => vis.has(id)) && (staff || s.athlete_ids.includes(me.id))),
+      attempts:(d.attempts||[]).filter(a => vis.has(a.athlete_id))};
+  },
+  _upsert(list, row, me){ const i = list.findIndex(x => x.id===row.id); if (i >= 0) list[i] = row; else { row.id ||= uid(); row.created_at ||= nowIso(); row.created_by ||= me.id; list.push(row); } this.save(); return row; },
+  async saveSession(me, s){ return this._upsert(this.data.sessions, {...s}, me); },
+  async deleteSession(id){ this.data.sessions = this.data.sessions.filter(s => s.id!==id); this.data.attempts = this.data.attempts.filter(a => a.session_id!==id); this.save(); },
+  async saveAttempt(me, a){ return this._upsert(this.data.attempts, {...a}, me); },
+  async deleteAttempt(id){ this.data.attempts = this.data.attempts.filter(a => a.id!==id); this.save(); },
+  notify(user_id, entry, kind, text){ this.data.notes.push({id:this.data.nextNote++, user_id, entry_id:entry.id, kind, text, created_at:nowIso(), read_at:null}); },
+  _afterStatus(me, e, prev){
+    const ath = this.data.profiles.find(p => p.id===e.athlete_id);
+    if (e.status==='pending' && prev!=='pending')
+      this.data.profiles.filter(p => p.role==='coach' && p.group_id===ath?.group_id && p.id!==me.id).forEach(c => this.notify(c.id, e, 'submitted', `${ath.name}: ${e.label}`));
+  },
+  async saveEntry(me, e){
+    const list = this.data.entries, i = list.findIndex(x => x.id===e.id);
+    const prev = i >= 0 ? list[i].status : null;
+    const row = {...e, updated_at:nowIso()};
+    if (i >= 0) list[i] = row; else { row.id ||= uid(); row.created_at ||= nowIso(); row.created_by = me.id; list.push(row); }
+    this._afterStatus(me, row, prev); this.save(); return row;
+  },
+  async deleteEntry(id){ this.data.entries = this.data.entries.filter(e => e.id!==id); this.data.notes = this.data.notes.filter(n => n.entry_id!==id); this.save(); },
+  async review(me, id, patch){
+    const e = this.data.entries.find(x => x.id===id); Object.assign(e, patch, {reviewed_by:me.id, reviewed_at:nowIso()});
+    if (e.athlete_id !== me.id) this.notify(e.athlete_id, e, patch.status==='rework' ? 'rework' : 'reviewed', patch.status==='rework' ? `New video requested: ${e.label}` : `Rated ${patch.score}/${maxFor(e.discipline)}: ${e.label}`);
+    this.save(); return e;
+  },
+  async uploadVideo(me, e, file, onProgress){
+    // Demo: Video lebt nur in diesem Browser-Tab (objectURL).
+    const path = `${e.athlete_id}/${e.id}-${Date.now()}.${(file.name.split('.').pop()||'mp4').toLowerCase()}`;
+    this.videos[path] = URL.createObjectURL(file);
+    for (let p = 0; p <= 100; p += 25){ onProgress?.(p); await new Promise(r => setTimeout(r, 60)); }
+    return path;
+  },
+  async videoUrl(path){ return this.videos[path] || null; },
+  async markRead(ids){ this.data.notes.forEach(n => { if (ids.includes(n.id)) n.read_at = nowIso(); }); this.save(); },
+  async updateProfile(id, patch){ Object.assign(this.data.profiles.find(p => p.id===id), patch); this.save(); },
+};
+
+let db = null;
+const SupaStore = {
+  async currentUser(){
+    const { data:{ session } } = await db.auth.getSession();
+    if (!session) return null;
+    const { data, error } = await db.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+  async login(email, password){ const { error } = await db.auth.signInWithPassword({email, password}); if (error) throw error; },
+  async logout(){ await db.auth.signOut(); },
+  async loadAll(me){
+    const [p, g, e, n] = await Promise.all([
+      db.from('profiles').select('*').order('name'),
+      db.from('groups').select('*').order('name'),
+      db.from('entries').select('*').order('created_at', {ascending:false}),
+      db.from('notifications').select('*').eq('user_id', me.id).order('created_at', {ascending:false}).limit(100),
+    ]);
+    for (const r of [p, g, e, n]) if (r.error) throw r.error;
+    let sessions = [], attempts = [];
+    if (me.role !== 'athlete'){
+      const [s, a] = await Promise.all([
+        db.from('sessions').select('*').order('date', {ascending:false}),
+        db.from('attempts').select('*').order('created_at', {ascending:true}),
+      ]);
+      for (const r of [s, a]) if (r.error) throw r.error;
+      sessions = s.data; attempts = a.data;
+    }
+    return {profiles:p.data, groups:g.data, entries:e.data, notes:n.data, sessions, attempts};
+  },
+  async _upsert(table, list, row){
+    const exists = list.some(x => x.id===row.id);
+    const { created_at, created_by, ...rest } = row;
+    const q = exists ? db.from(table).update(rest).eq('id', row.id).select().single() : db.from(table).insert(rest).select().single();
+    const { data, error } = await q; if (error) throw error; return data;
+  },
+  async saveSession(me, s){ return this._upsert('sessions', ST.sessions, s); },
+  async deleteSession(id){ const { error } = await db.from('sessions').delete().eq('id', id); if (error) throw error; },
+  async saveAttempt(me, a){ return this._upsert('attempts', ST.attempts, a); },
+  async deleteAttempt(id){ const { error } = await db.from('attempts').delete().eq('id', id); if (error) throw error; },
+  async saveEntry(me, e){
+    const row = {athlete_id:e.athlete_id, discipline:e.discipline, trick:e.trick, label:e.label, status:e.status, note:e.note||null, video_path:e.video_path||null};
+    if (e.crit !== undefined && me.role !== 'athlete'){ row.crit = e.crit; row.score = e.score; }
+    const q = e.id && ST.entries.some(x => x.id===e.id)
+      ? db.from('entries').update(row).eq('id', e.id).select().single()
+      : db.from('entries').insert({...row, id:e.id||undefined}).select().single();
+    const { data, error } = await q; if (error) throw error; return data;
+  },
+  async deleteEntry(id){
+    const e = ST.entries.find(x => x.id===id);
+    const { error } = await db.from('entries').delete().eq('id', id); if (error) throw error;
+    if (e?.video_path) await db.storage.from(VIDEO_BUCKET).remove([e.video_path]);
+  },
+  async review(me, id, patch){
+    const { data, error } = await db.from('entries').update({...patch, reviewed_by:me.id, reviewed_at:nowIso()}).eq('id', id).select().single();
+    if (error) throw error; return data;
+  },
+  async uploadVideo(me, e, file, onProgress){
+    const ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
+    const path = `${e.athlete_id}/${e.id}-${Date.now()}.${ext}`;
+    const { data:{ session } } = await db.auth.getSession();
+    if (window.tus){
+      // Resumable Upload (TUS) — hält auch bei wackligem Netz am Berg durch.
+      await new Promise((resolve, reject) => {
+        const up = new tus.Upload(file, {
+          endpoint: `${SUPABASE_URL}/storage/v1/upload/resumable`,
+          retryDelays: [0, 2000, 5000, 10000, 20000],
+          headers: { authorization: `Bearer ${session.access_token}`, 'x-upsert': 'false' },
+          uploadDataDuringCreation: true, removeFingerprintOnSuccess: true, chunkSize: 6*1024*1024,
+          metadata: { bucketName: VIDEO_BUCKET, objectName: path, contentType: file.type || 'video/mp4', cacheControl: '3600' },
+          onError: reject,
+          onProgress: (a, b) => onProgress?.(Math.round(a / b * 100)),
+          onSuccess: resolve,
+        });
+        up.findPreviousUploads().then(prev => { if (prev.length) up.resumeFromPreviousUpload(prev[0]); up.start(); });
+      });
+    } else {
+      const { error } = await db.storage.from(VIDEO_BUCKET).upload(path, file, {contentType:file.type || 'video/mp4'});
+      if (error) throw error; onProgress?.(100);
+    }
+    return path;
+  },
+  async videoUrl(path){ const { data, error } = await db.storage.from(VIDEO_BUCKET).createSignedUrl(path, 3600); if (error) throw error; return data.signedUrl; },
+  async markRead(ids){ if (ids.length) await db.from('notifications').update({read_at:nowIso()}).in('id', ids); },
+  async updateProfile(id, patch){ const { error } = await db.from('profiles').update(patch).eq('id', id); if (error) throw error; },
+};
+const Store = DEMO ? DemoStore : SupaStore;
+
+/* ══════════════════════════════════════════════════════════════════════
+   ZUSTAND & ROLLEN
+   athlete: sieht nur sich · coach: seine Gruppe · dvlp: alle
+   ══════════════════════════════════════════════════════════════════════ */
+const ST = {me:null, profiles:[], groups:[], entries:[], notes:[], sessions:[], attempts:[], rep:{sel:null, type:'', athlete:'', period:'season'}, mon:{view:'team', athleteId:null, key:null, period:'season'}, page:'assessment', athleteId:null, level:null, disc:'Jump', groupFilter:'', entryFilter:'all', form:null, pendingFile:null};
+
+function visibleAthleteIds(me, profiles){
+  const ath = profiles.filter(p => p.role==='athlete');
+  if (me.role==='dvlp') return new Set(ath.map(p => p.id));
+  if (me.role==='coach') return new Set(ath.filter(p => p.group_id && p.group_id===me.group_id).map(p => p.id));
+  return new Set([me.id]);
+}
+const isStaff = () => ST.me && ST.me.role !== 'athlete';
+const prof = id => ST.profiles.find(p => p.id===id);
+const groupName = id => ST.groups.find(g => g.id===id)?.name || '—';
+function visibleAthletes(){
+  const ids = visibleAthleteIds(ST.me, ST.profiles);
+  return ST.profiles.filter(p => ids.has(p.id) && (!ST.groupFilter || p.group_id===ST.groupFilter)).sort((a,b) => a.name.localeCompare(b.name));
+}
+const entriesOf = id => ST.entries.filter(e => e.athlete_id===id);
+const ROLE_LABEL = {athlete:'Athlete', coach:'Coach', dvlp:'DVLP / Nachwuchs'};
+
+/* ══════════════════════════════════════════════════════════════════════
+   HILFSFUNKTIONEN UI
+   ══════════════════════════════════════════════════════════════════════ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+const initials = n => String(n||'?').split(/\s+/).map(x => x[0]).slice(0,2).join('').toUpperCase();
+const fmtDate = iso => iso ? new Date(iso).toLocaleDateString('de-CH', {day:'2-digit', month:'2-digit', year:'numeric'}) : '';
+const fmtAgo = iso => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m/60)} h ago` : fmtDate(iso); };
+const stars = (n, max=4) => `<span class="stars" title="${n}/${max}">${'★'.repeat(n)}<span class="off">${'★'.repeat(Math.max(0, max-n))}</span></span>`;
+let toastT;
+function toast(msg, err){ const t = $('#toast'); t.textContent = msg; t.className = 'toast show' + (err?' err':''); clearTimeout(toastT); toastT = setTimeout(() => t.className = 'toast', 2800); }
+function statusChip(e){
+  if (e.status==='reviewed'){ const mx = maxFor(e.discipline); return `<span class="chip ${e.score===mx?'green':e.score/mx>=.5?'gold':'red'}">${stars(e.score||0, mx)} ${e.score}/${mx}</span>`; }
+  if (e.status==='pending') return `<span class="chip blue">⏳ Waiting for coach</span>`;
+  if (e.status==='rework') return `<span class="chip red">↺ New video requested</span>`;
+  return `<span class="chip">🎯 Goal</span>`;
+}
+const ICON = {done:'✓', partial:'½', pending:'⏳', goal:'🎯', open:'', na:'–'};
+function athleteSelect(onchangeFn){
+  const aths = visibleAthletes();
+  if (!aths.length) return '<span class="muted small">No athletes in this group yet.</span>';
+  const byGroup = {};
+  aths.forEach(a => (byGroup[a.group_id||''] ||= []).push(a));
+  return `<select id="ath-sel" onchange="${onchangeFn}(this.value)" style="max-width:320px">${Object.entries(byGroup).map(([gid, list]) =>
+    `<optgroup label="${esc(gid?groupName(gid):'No group')}">${list.map(a => `<option value="${a.id}" ${a.id===ST.athleteId?'selected':''}>${esc(a.name)} · ${a.level||'–'}</option>`).join('')}</optgroup>`).join('')}</select>`;
+}
+function groupFilterSelect(){
+  if (ST.me.role !== 'dvlp') return '';
+  return `<select onchange="setGroupFilter(this.value)" style="max-width:240px"><option value="">All groups</option>${ST.groups.map(g => `<option value="${g.id}" ${ST.groupFilter===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>`;
+}
+function setGroupFilter(v){ ST.groupFilter = v; const a = visibleAthletes(); if (!a.some(x => x.id===ST.athleteId)) ST.athleteId = a[0]?.id || null; render(); }
+function pickAthlete(id){ ST.athleteId = id; ST.level = null; ST.form = null; render(); }
+
+/* ══════════════════════════════════════════════════════════════════════
+   GRUNDGERÜST: Header, Tabs, Benachrichtigungen
+   ══════════════════════════════════════════════════════════════════════ */
+function pendingForMe(){ const ids = visibleAthleteIds(ST.me, ST.profiles); return ST.entries.filter(e => e.status==='pending' && ids.has(e.athlete_id)); }
+function renderChrome(){
+  const unread = ST.notes.filter(n => !n.read_at).length;
+  $('#who').innerHTML = `
+    <button class="iconbtn" onclick="toggleNotifs(event)" title="Notifications">🔔${unread?`<span class="badge">${unread}</span>`:''}</button>
+    <span class="chip">${esc(ST.me.name)} · ${ROLE_LABEL[ST.me.role]}</span>
+    <button class="iconbtn" onclick="logout()">Log out</button>`;
+  const tabs = [['assessment','Assessment'], ['skills','Skills-Check']];
+  if (isStaff()) tabs.push(['session','Session'], ['reports','Reports'], ['monitoring','Monitoring'], ['reviews','Reviews'], ['team','Team']);
+  const pend = isStaff() ? pendingForMe().length : 0;
+  $('#tabs').innerHTML = tabs.map(([k, l]) => `<button class="tab-btn ${ST.page===k?'on':''}" onclick="go('${k}')">${l}${k==='reviews'&&pend?`<span class="cnt">${pend}</span>`:''}</button>`).join('');
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.id===`page-${ST.page}`));
+}
+function go(page){ ST.page = page; document.querySelectorAll('.page').forEach(p => { if (p.id !== 'page-' + page) p.innerHTML = ''; }); render(); window.scrollTo({top:0}); }
+function toggleNotifs(ev){
+  ev?.stopPropagation();
+  const dd = $('#notif-dd');
+  if (!dd.hidden){ dd.hidden = true; return; }
+  dd.innerHTML = ST.notes.length ? ST.notes.slice().sort((a,b) => b.created_at.localeCompare(a.created_at)).map(n => `
+    <div class="n ${n.read_at?'':'unread'}" onclick="openNotif(${JSON.stringify(n.id)})">
+      <div>${n.kind==='submitted'?'📥 New trick to review':n.kind==='rework'?'↺ Coach asks for a new video':'⭐ Your trick was rated'}</div>
+      <div style="font-weight:600;color:var(--char)">${esc(n.text)}</div><div class="d">${fmtAgo(n.created_at)}</div></div>`).join('')
+    : '<div class="empty">No notifications</div>';
+  dd.hidden = false;
+  const ids = ST.notes.filter(n => !n.read_at).map(n => n.id);
+  if (ids.length) Store.markRead(ids).then(() => { ST.notes.forEach(n => { if (ids.includes(n.id)) n.read_at = nowIso(); }); renderChrome(); }).catch(() => {});
+}
+document.addEventListener('click', e => { const dd = $('#notif-dd'); if (dd && !dd.hidden && !dd.contains(e.target)) dd.hidden = true; });
+function openNotif(id){
+  $('#notif-dd').hidden = true;
+  const n = ST.notes.find(x => x.id===id); const e = n && ST.entries.find(x => x.id===n.entry_id);
+  if (!e){ toast('This trick no longer exists.', true); return; }
+  ST.athleteId = e.athlete_id;
+  if (isStaff() && e.status==='pending'){ go('reviews'); openReview(e.id); }
+  else { go('assessment'); setTimeout(() => document.getElementById('en-'+e.id)?.scrollIntoView({behavior:'smooth', block:'center'}), 50); }
+}
+
+function render(){
+  renderChrome();
+  if (ST.page==='assessment') renderAssessment();
+  else if (ST.page==='skills') renderSkills();
+  else if (ST.page==='reviews') renderReviews();
+  else if (ST.page==='team') renderTeam();
+  else if (ST.page==='session') renderSession();
+  else if (ST.page==='reports') renderReports();
+  else if (ST.page==='monitoring') renderMonitoring();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   ASSESSMENT — Tricks erfassen (+ Video), eigene Liste
+   ══════════════════════════════════════════════════════════════════════ */
+const FORM_DEFAULTS = {
+  Jump: {axis:'Upright', dir:'L', flips:'1', rot:'360', grab:'', takeoff:''},
+  Rail: {obstacle:'Tube / Box', side:'L', approach:'F', on:'Skislide', swap:'', out:'to normal', outSide:'FS', foot:'Right', outStyle:''},
+  Halfpipe: {kind:'air', basic:'Drop in', side:'L', dir:'L', sw:'', ao:'', axis:'Upright', flips:'1', rot:'360', grab:'', height:''},
+};
+const opts = (list, v) => list.map(o => { const [val, lab] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(val)}" ${String(val)===String(v)?'selected':''}>${esc(lab)}</option>`; }).join('');
+const rotList = (from, to) => { const r = []; for (let x = from; x <= to; x += 180) r.push([String(x), String(x)]); return r; };
+
+function formFields(disc, F, fn='formSet'){
+  const f = [];
+  const add = (k, label, list, show=true) => { if (show) f.push(`<label class="f">${label}<select onchange="${fn}('${k}', this.value)">${opts(list, F[k])}</select></label>`); };
+  if (disc==='Jump'){
+    add('axis', 'Axis', [['Upright','Upright spin'],['Cork','Cork'],['Bio/Misty','Misty / Bio'],['Flat Spin','Flat spin'],['Rodeo','Rodeo'],['Zero Spin','Zero spin'],['Frontflip','Frontflip'],['Backflip','Backflip'],['Sideflip','Sideflip']]);
+    const noRot = NOROT.includes(F.axis);
+    add('dir', 'Direction', noRot ? [['F','Forward'],['S','Switch']] : D4.map(d => [d, DIRN[d]]));
+    add('flips', 'Flips', [['1','Single'],['2','Double'],['3','Triple'],['4','Quad']], OFFAX.includes(F.axis));
+    add('rot', 'Rotation', rotList(180, 2160), !noRot);
+    add('grab', 'Grab', [['','— no grab —'], ...GRABS]);
+    add('takeoff', 'Take-off', [['','Standard (X)'], ...TAKEOFFS]);
+  } else if (disc==='Rail'){
+    add('obstacle', 'Obstacle', Object.keys(OBST));
+    add('side', 'Side', [['L','Left'],['R','Right']]);
+    add('approach', 'Approach', [['F','Forward'],['S','Switch']]);
+    add('on', 'On', RAIL_ON.map(o => [o, railOnName({approach:F.approach, on:o})]));
+    add('swap', 'Swap', [['','— none —'], ...RAIL_SWAP]);
+    add('out', 'Out', RAIL_OUT);
+    const so = railSpinOut(F);
+    add('outSide', 'Out side', [['FS','Frontside'],['BS','Backside']], so);
+    add('foot', 'Foot forward', ['Right','Left'], so);
+    add('outStyle', 'Out style', [['','Spin'],['flip','Flip / cork']], so);
+  } else {
+    add('kind', 'Type', [['air','Air / spin'],['basic','Basics']]);
+    if (F.kind==='basic'){
+      add('basic', 'Basic', HP_BASICS);
+      add('side', 'Side', [['L','Left'],['R','Right']], /drop in/i.test(F.basic));
+    } else {
+      add('sw', 'Stance', [['','Forward'],['1','Switch']]);
+      add('ao', 'Rotation', [['','Down the pipe'],['1','Alley-oop']]);
+      add('dir', 'Direction', [['L','Left'],['R','Right']]);
+      add('axis', 'Axis', HP_AXES.map(a => [a, a==='Upright'?'Upright spin':a]));
+      add('flips', 'Flips', [['1','Single'],['2','Double'],['3','Triple']], ['Cork','Bio/Misty','Flat Spin','Rodeo'].includes(F.axis));
+      add('rot', 'Rotation', [['0','— (straight / flair)'], ...rotList(180, 1620)]);
+      add('grab', 'Grab', [['','— no grab —'], ...GRABS]);
+      f.push(`<label class="f">Air height (m)<input type="number" step="0.5" min="0" max="8" value="${esc(F.height)}" oninput="${fn}('height', this.value, true)" placeholder="e.g. 3.5"></label>`);
+    }
+  }
+  return f.join('');
+}
+
+function normTrick(disc, F){
+  if (disc==='Jump'){
+    const noRot = NOROT.includes(F.axis);
+    return {axis:F.axis, dir:F.dir, flips:OFFAX.includes(F.axis) ? +F.flips||1 : null, rot:noRot ? null : +F.rot, grab:F.grab||'', takeoff:F.takeoff||''};
+  }
+  if (disc==='Rail'){
+    const so = railSpinOut(F);
+    return {obstacle:F.obstacle, side:F.side, approach:F.approach, on:F.on, swap:F.swap||'', out:F.out, outSide:so?F.outSide:'', foot:so?F.foot:'', outStyle:so?F.outStyle:''};
+  }
+  if (F.kind==='basic') return {kind:'basic', basic:F.basic, side:/drop in/i.test(F.basic) ? F.side : ''};
+  return {kind:'air', dir:F.dir, sw:!!F.sw, ao:!!F.ao, axis:F.axis, flips:['Cork','Bio/Misty','Flat Spin','Rodeo'].includes(F.axis) ? +F.flips||1 : null, rot:+F.rot||0, grab:F.grab||'', height:F.height===''?null:+F.height};
+}
+function trickToForm(disc, t){
+  const F = {...FORM_DEFAULTS[disc]};
+  for (const [k, v] of Object.entries(t||{})) F[k] = v === true ? '1' : v === false || v == null ? '' : String(v);
+  if (disc==='Jump' && !F.flips) F.flips = '1';
+  if (disc==='Halfpipe' && !F.flips) F.flips = '1';
+  return F;
+}
+
+function openForm(entryId){
+  const e = entryId && ST.entries.find(x => x.id===entryId);
+  ST.form = e ? {id:e.id, disc:e.discipline, F:trickToForm(e.discipline, e.trick), note:e.note||'', status:e.status}
+              : {id:null, disc:ST.disc||'Jump', F:{...FORM_DEFAULTS[ST.disc||'Jump']}, note:'', status:null};
+  ST.pendingFile = null;
+  renderAssessment();
+  document.getElementById('form-card')?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function closeForm(){ ST.form = null; ST.pendingFile = null; renderAssessment(); }
+function formDisc(d){ ST.form.disc = d; ST.disc = d; ST.form.F = {...FORM_DEFAULTS[d]}; renderFormInner(); }
+function applyFormValue(disc, F, k, v){
+  F[k] = v;
+  if (disc==='Jump' && k==='axis'){
+    const noRot = NOROT.includes(v);
+    if (noRot && !['F','S'].includes(F.dir)) F.dir = isSw(F) ? 'S' : 'F';
+    if (!noRot && !D4.includes(F.dir)) F.dir = F.dir==='S' ? 'SL' : 'L';
+  }
+}
+function formSet(k, v, noRerender){
+  applyFormValue(ST.form.disc, ST.form.F, k, v);
+  if (noRerender) renderFormPreview(); else renderFormInner();
+}
+function renderFormPreview(){
+  const box = $('#f-preview'); if (!box) return;
+  const ath = prof(ST.athleteId); const disc = ST.form.disc;
+  const t = normTrick(disc, ST.form.F);
+  const all = ath?.gender ? directMatches(disc, ath.gender, t) : [];
+  const m = isStaff() ? all : all.filter(x => x.level===ath.level);   // Athlet:innen: nur eigene Stufe
+  const mine = m.filter(x => x.level===ath.level), other = m.filter(x => x.level!==ath.level);
+  box.innerHTML = `<div class="lbl">${esc(trickLabel(disc, t))}</div>
+    ${!ath?.gender ? '<div class="muted">Set gender & level for this athlete (Team tab) to see the Skills-Check match.</div>'
+      : m.length ? `<div class="muted tiny" style="margin-bottom:6px">SKILLS-CHECK MATCH</div><div class="chips">${mine.map(x => `<span class="chip dark">${x.level} · ${esc(x.text)}</span>`).join('')}${other.map(x => `<span class="chip">${x.level} · ${esc(x.text)}</span>`).join('')}</div>`
+      : '<div class="muted">No Skills-Check requirement matches this trick — it is still saved as a free trick.</div>'}`;
+}
+function renderFormInner(){
+  const card = $('#form-card'); if (!card) return;
+  const fm = ST.form;
+  $('#f-disc').innerHTML = DISCS.map(d => `<button class="${fm.disc===d?'on':''}" onclick="formDisc('${d}')" ${fm.id?'disabled':''}>${DISC_LABEL[d]}</button>`).join('');
+  $('#f-fields').innerHTML = formFields(fm.disc, fm.F);
+  renderFormPreview();
+}
+function formCard(){
+  const fm = ST.form; const staff = isStaff();
+  const ath = prof(ST.athleteId);
+  const hasVideo = fm.id && ST.entries.find(e => e.id===fm.id)?.video_path;
+  return `<div class="card" id="form-card">
+    <h2>${fm.id ? 'Edit trick' : 'New trick'}${staff ? ` <span class="chip">${esc(ath?.name)}</span>` : ''}<span class="rt"><button class="btn ghost sm" onclick="closeForm()">Cancel</button></span></h2>
+    <div class="seg" id="f-disc" style="margin-bottom:14px"></div>
+    <div class="grid" id="f-fields"></div>
+    <div class="preview" id="f-preview"></div>
+    <div class="grid" style="margin-top:14px;grid-template-columns:1fr">
+      <label class="f">Video ${staff?'(optional)':'for your coach'}
+        <div class="filebox">
+          <input type="file" accept="video/*" id="f-video" onchange="ST.pendingFile=this.files[0]||null;$('#f-vname').textContent=ST.pendingFile?ST.pendingFile.name+' · '+(ST.pendingFile.size/1048576).toFixed(1)+' MB':''">
+          <span class="muted small" id="f-vname">${hasVideo ? 'A video is already attached — choose a file to replace it.' : ''}</span>
+        </div>
+      </label>
+      <label class="f">Note (optional)<textarea id="f-note" placeholder="${staff ? 'Note for the athlete' : 'Anything your coach should know?'}">${esc(fm.note)}</textarea></label>
+    </div>
+    <div id="f-progress" hidden><div class="progress"><i></i></div><div class="tiny muted" id="f-progress-t">Uploading video…</div></div>
+    <div class="btnrow">
+      ${staff
+        ? `<button class="btn red" onclick="submitForm('rate')">Save & rate now</button><button class="btn ghost" onclick="submitForm('pending')">Save to review inbox</button>`
+        : `<button class="btn red" onclick="submitForm('pending')">Submit for coach review</button>`}
+      <button class="btn ghost" onclick="submitForm('goal')">Save as goal</button>
+    </div>
+    ${!staff ? '<div class="tiny muted" style="margin-top:8px">Your coach gets a notification and rates the trick (Take-off, Trick, Grab, Landing — max. 4 points; Halfpipe + Amplitude = max. 5).</div>' : ''}
+  </div>`;
+}
+
+async function submitForm(mode){
+  const fm = ST.form; const staff = isStaff();
+  const note = $('#f-note').value.trim();
+  const trick = normTrick(fm.disc, fm.F);
+  const prev = fm.id ? ST.entries.find(e => e.id===fm.id) : null;
+  if (prev && prev.status==='reviewed' && !staff){ toast('Rated tricks can only be changed by your coach.', true); return; }
+  const status = mode==='goal' ? 'goal' : (mode==='rate' ? (prev?.status==='reviewed' ? 'reviewed' : 'pending') : 'pending');
+  const trickChanged = prev && JSON.stringify(prev.trick) !== JSON.stringify(trick);
+  const e = {...(prev||{}), id:prev?.id || uid(), athlete_id:ST.athleteId, discipline:fm.disc, trick, label:trickLabel(fm.disc, trick), status, note};
+  if (!prev || trickChanged || status !== 'reviewed'){ e.crit = null; e.score = null; }
+  if (!staff && (status==='pending' || status==='goal')){ delete e.crit; delete e.score; }
+  const btns = document.querySelectorAll('#form-card .btn'); btns.forEach(b => b.disabled = true);
+  try {
+    let saved = await Store.saveEntry(ST.me, e);
+    upsertLocal(saved);
+    if (ST.pendingFile){
+      $('#f-progress').hidden = false;
+      try {
+        const path = await Store.uploadVideo(ST.me, saved, ST.pendingFile, p => { $('#f-progress i').style.width = p + '%'; $('#f-progress-t').textContent = `Uploading video… ${p}%`; });
+        saved = await Store.saveEntry(ST.me, {...saved, video_path:path});
+        upsertLocal(saved);
+      } catch (err){
+        console.error(err); toast('Trick saved, but the video upload failed — try again via «Upload video».', true);
+      }
+    }
+    ST.form = null; ST.pendingFile = null;
+    if (mode==='rate'){ renderAssessment(); openReview(saved.id); }
+    else { toast(status==='goal' ? 'Saved as goal' : staff ? 'Saved to review inbox' : 'Sent to your coach 👍'); render(); }
+  } catch (err){
+    console.error(err); toast('Could not save: ' + (err.message || err), true);
+    btns.forEach(b => b.disabled = false);
+  }
+}
+function upsertLocal(row){ ST._rev = (ST._rev||0) + 1; _evalCache.clear(); const i = ST.entries.findIndex(x => x.id===row.id); if (i >= 0) ST.entries[i] = row; else ST.entries.unshift(row); }
+
+async function deleteEntry(id){
+  const e = ST.entries.find(x => x.id===id);
+  if (!confirm(`Delete «${e.label}»?`)) return;
+  try { await Store.deleteEntry(id); ST.entries = ST.entries.filter(x => x.id!==id); toast('Deleted'); render(); }
+  catch (err){ toast('Could not delete: ' + (err.message||err), true); }
+}
+async function submitGoal(id){
+  const e = ST.entries.find(x => x.id===id);
+  try { upsertLocal(await Store.saveEntry(ST.me, {...e, status:'pending'})); toast('Sent to your coach 👍'); render(); }
+  catch (err){ toast('Could not send: ' + (err.message||err), true); }
+}
+function pickVideo(id){
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
+  inp.onchange = async () => {
+    const file = inp.files[0]; if (!file) return;
+    const e = ST.entries.find(x => x.id===id);
+    toast('Uploading video…');
+    try {
+      const path = await Store.uploadVideo(ST.me, e, file, p => { $('#toast').textContent = `Uploading video… ${p}%`; });
+      const next = {...e, video_path:path};
+      if (!isStaff() && e.status==='rework') next.status = 'pending';
+      upsertLocal(await Store.saveEntry(ST.me, next)); toast(next.status==='pending' && e.status==='rework' ? 'New video sent to your coach 👍' : 'Video uploaded'); render();
+    } catch (err){ console.error(err); toast('Upload failed: ' + (err.message||err), true); }
+  };
+  inp.click();
+}
+async function playVideo(id){
+  const e = ST.entries.find(x => x.id===id);
+  try {
+    const url = await Store.videoUrl(e.video_path);
+    if (!url){ toast(DEMO ? 'Demo mode: videos only live until the page is reloaded.' : 'Video not found', true); return; }
+    modal(`<h3>${esc(e.label)}</h3><div class="muted small">${esc(prof(e.athlete_id)?.name)} · ${fmtDate(e.created_at)}</div>
+      <video src="${esc(url)}" controls playsinline autoplay></video><div class="btnrow"><button class="btn ghost" onclick="closeModal()">Close</button></div>`);
+  } catch (err){ toast('Could not load video: ' + (err.message||err), true); }
+}
+
+function entryRow(e, opts2={}){
+  const ath = prof(e.athlete_id); const staff = isStaff();
+  const m = ath?.gender ? directMatches(e.discipline, ath.gender, e.trick) : [];
+  const mine = assignedSlots(e);
+  const others = staff ? m.filter(x => x.level!==ath.level).length : 0;
+  const ownMatch = m.some(x => x.level===ath.level);
+  const covered = !mine.length && m.some(x => x.level===ath.level);
+  const canEdit = staff || e.status!=='reviewed';
+  const reviewer = e.reviewed_by ? prof(e.reviewed_by)?.name : null;
+  return `<div class="item" id="en-${e.id}">
+    <div class="main">
+      <div class="t">${esc(e.label)}</div>
+      <div class="m">${opts2.showName ? esc(ath?.name) + ' · ' : ''}${DISC_LABEL[e.discipline]} · ${fmtDate(e.created_at)}${e.status==='reviewed' && reviewer ? ` · rated by ${esc(reviewer)}` : ''}</div>
+      <div class="chips">${statusChip(e)}${e.video_path ? `<button class="chip" style="cursor:pointer" onclick="playVideo('${e.id}')">▶ Video</button>` : ''}
+        ${mine.map(x => `<span class="chip dark">✓ ${x.level} · ${esc(x.text)}</span>`).join('')}${covered ? `<span class="chip">${ath.level} · already covered by another trick</span>` : ''}${others ? `<span class="chip">+${others} in other levels</span>` : ''}${!(staff ? m.length : ownMatch) ? '<span class="chip">Free trick</span>' : ''}</div>
+      ${e.note ? `<div class="small" style="margin-top:6px">💬 ${esc(e.note)}</div>` : ''}
+      ${e.review_note ? `<div class="small" style="margin-top:6px;color:var(--char)">🧑‍🏫 ${esc(e.review_note)}</div>` : ''}
+    </div>
+    <div class="acts">
+      ${staff ? `<button class="btn ${e.status==='pending'?'red':'ghost'} sm" onclick="openReview('${e.id}')">${e.status==='reviewed'?'Edit rating':'Rate'}</button>` : ''}
+      ${!staff && e.status==='goal' ? `<button class="btn red sm" onclick="submitGoal('${e.id}')">Submit for review</button>` : ''}
+      ${(!e.video_path || e.status==='rework') && (staff || e.status!=='reviewed') ? `<button class="btn ${!staff && e.status==='rework'?'red':'ghost'} sm" onclick="pickVideo('${e.id}')">⬆ ${e.video_path?'New video':'Upload video'}</button>` : ''}
+      ${canEdit ? `<button class="btn ghost sm" onclick="openForm('${e.id}')">Edit</button><button class="btn ghost sm" onclick="deleteEntry('${e.id}')" title="Delete">🗑</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderAssessment(){
+  const root = $('#page-assessment');
+  const staff = isStaff();
+  const ath = prof(ST.athleteId);
+  if (!ath){ root.innerHTML = `<div class="card"><div class="empty">${staff ? 'No athletes visible yet. Assign athletes to your group in the Team tab.' : 'Your profile is not set up yet — please contact your coach.'}</div></div>`; return; }
+  const list = entriesOf(ath.id).sort((a,b) => b.created_at.localeCompare(a.created_at));
+  const F = ST.entryFilter;
+  const shown = list.filter(e => F==='all' || (F==='open' ? ['pending','rework'].includes(e.status) : e.status===F));
+  const cnt = s => list.filter(e => s==='open' ? ['pending','rework'].includes(e.status) : e.status===s).length;
+  root.innerHTML = `
+    <div class="row" style="margin-bottom:18px">
+      ${staff ? `${groupFilterSelect()}${athleteSelect('pickAthlete')}` : `<div><div style="font-size:22px;font-weight:800;color:var(--char)">Hi ${esc(ath.name.split(' ')[0])} 👋</div><div class="muted small">Level ${ath.level||'–'} · ${esc(groupName(ath.group_id))}</div></div>`}
+      <span class="grow"></span>
+      ${!ST.form ? `<button class="btn red" onclick="openForm()">+ Add trick</button>` : ''}
+    </div>
+    ${ST.form ? formCard() : ''}
+    <div class="card">
+      <h2>Tricks <span class="muted" style="letter-spacing:0;font-weight:600">${list.length}</span>
+        <span class="rt"><div class="seg">${[['all','All'],['reviewed','Rated'],['open','Open'],['goal','Goals']].map(([k,l]) => `<button class="${F===k?'on':''}" onclick="ST.entryFilter='${k}';renderAssessment()">${l}${k!=='all'?` ${cnt(k)}`:''}</button>`).join('')}</div></span></h2>
+      <div class="list">${shown.length ? shown.map(e => entryRow(e)).join('') : `<div class="empty">${list.length ? 'Nothing in this filter.' : staff ? 'No tricks yet.' : 'No tricks yet — add your first one!'}</div>`}</div>
+    </div>`;
+  if (ST.form) renderFormInner();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SKILLS-CHECK
+   ══════════════════════════════════════════════════════════════════════ */
+// Fokus ab T4: nur Halfpipe ('hp') oder nur Jumps + Rails ('park'); darunter zählen immer alle drei.
+const FOCUS = {'':'All disciplines', park:'Jumps & Rails only', hp:'Halfpipe only'};
+const FOCUS_DISCS = {park:['Jump','Rail'], hp:['Halfpipe']};
+const focusDiscs = (ath, level) => level==='T4' && FOCUS_DISCS[ath.focus] ? FOCUS_DISCS[ath.focus] : DISCS;
+function levelTotals(ath, level){
+  const ents = entriesOf(ath.id);
+  const incl = focusDiscs(ath, level);
+  const r = {pts:0, max:0, done:0, n:0, pending:0, by:{}, incl};
+  for (const d of DISCS){
+    const ev = evaluate(d, ath.gender, level, ents); if (!ev) continue;
+    r.by[d] = ev;
+    if (!incl.includes(d)) continue;
+    r.pts += ev.pts; r.max += ev.max; r.done += ev.done; r.n += ev.n; r.pending += ev.pending;
+  }
+  // Total: jede zählende Disziplin gleich gewichtet (⅓ bzw. ½ bzw. ganz) — unabhängig von der Anzahl Vorgaben
+  const parts = incl.map(d => r.by[d]).filter(ev => ev && ev.max > 0).map(ev => ev.pts / ev.max);
+  r.pct = parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length * 100) : 0;
+  return r;
+}
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+function progressBar(ev){
+  const part = Object.values(ev.out).filter(o => o.state==='partial').reduce((s, o) => s + o.pts, 0);
+  const full = ev.pts - part;
+  return `<div class="bar"><i class="b-done" style="width:${pct(full, ev.max)}%"></i><i class="b-part" style="width:${pct(part, ev.max)}%"></i></div>`;
+}
+function renderSkills(){
+  const root = $('#page-skills');
+  const staff = isStaff();
+  const ath = prof(ST.athleteId);
+  if (!ath){ root.innerHTML = '<div class="card"><div class="empty">No athlete selected.</div></div>'; return; }
+  if (!ath.gender || !ath.level){
+    root.innerHTML = `${staff ? `<div class="row" style="margin-bottom:18px">${groupFilterSelect()}${athleteSelect('pickAthlete')}</div>` : ''}<div class="card"><div class="empty">Gender and level (T1–T4) are not set for ${esc(ath.name)} yet. ${staff ? 'Set them in the Team tab.' : 'Your coach sets them.'}</div></div>`;
+    return;
+  }
+  const level = staff ? (ST.level || ath.level) : ath.level;
+  const tot = levelTotals(ath, level);
+  const disc = ST.disc;
+  const ev = tot.by[disc];
+  root.innerHTML = `
+    <div class="row" style="margin-bottom:18px">
+      ${staff ? `${groupFilterSelect()}${athleteSelect('pickAthlete')}` : ''}
+      ${staff ? `<div class="seg">${LEVELS.map(l => `<button class="${level===l?'on':''}" onclick="ST.level='${l}';renderSkills()">${l}${l===ath.level?' ●':''}</button>`).join('')}</div>
+      <span class="muted small">${ath.gender==='W'?'Women':'Men'} · own level ${ath.level}</span>`
+      : `<div><div style="font-size:22px;font-weight:800;color:var(--char)">Your Skills-Check ${ath.level}</div><div class="muted small">${ath.gender==='W'?'Women':'Men'} · ${esc(groupName(ath.group_id))}</div></div>`}
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="k">Total ${level}</div><div class="v">${tot.pct}<small>%</small></div>
+        <div class="bar"><i class="b-done" style="width:${tot.pct}%"></i></div>
+        <div class="tiny muted" style="margin-top:6px">${tot.incl.length===3 ? 'Jumps, Rails & Halfpipe count ⅓ each' : `Focus: ${FOCUS[ath.focus]}`} · ${tot.done} of ${tot.n} fully achieved${tot.pending?` · ${tot.pending} waiting`:''}</div></div>
+      ${DISCS.map(d => { const e2 = tot.by[d], on = tot.incl.includes(d); return `<div class="kpi click ${d===disc?'sel':''}" style="${on?'':'opacity:.45'}" onclick="ST.disc='${d}';renderSkills()">
+        <div class="k">${DISC_LABEL[d]} · ${on ? ['','1','½','⅓'][tot.incl.length] : 'not in focus'}</div><div class="v">${pct(e2.pts, e2.max)}<small>% · ${e2.pts}/${e2.max} pts</small></div>${progressBar(e2)}
+        <div class="tiny muted" style="margin-top:6px">${e2.done}/${e2.n} achieved${e2.pending?` · ${e2.pending} ⏳`:''}</div></div>`; }).join('')}
+    </div>
+    <div class="card">
+      <h2>${DISC_LABEL[disc]} · ${level} ${ath.gender==='W'?'Women':'Men'}<span class="rt">${ev.pts} / ${ev.max} pts</span></h2>
+      <div class="meta">${ev.def.meta.map(m => `<span class="chip">${esc(m)}</span>`).join('')}</div>
+      <div class="legend"><span><i class="ic done">✓</i>all criteria achieved</span><span><i class="ic partial">½</i>rated, not yet full points</span><span><i class="ic pending">⏳</i>waiting for coach</span><span><i class="ic goal">🎯</i>goal</span><span><i class="ic open"></i>open</span></div>
+      ${ev.def.sections.map(sec => {
+        const sp = sec.slots.reduce((a, s) => { const o = ev.out[s.id]; if (o.applicable){ a.p += o.pts; a.m += maxFor(disc); } return a; }, {p:0, m:0});
+        return `<div class="sec" style="margin-top:22px"><div class="sec-h">${esc(sec.title)}<span class="rt">${sp.p} / ${sp.m}</span></div>
+          ${sec.note ? `<div class="sec-note">${esc(sec.note)}</div>` : ''}
+          ${sec.slots.map(s => { const o = ev.out[s.id]; const e = o.entry;
+            return `<div class="slot ${o.state==='na'?'na':''}"><div class="ic ${o.state}">${ICON[o.state]}</div>
+              <div><div class="st">${esc(s.text)}</div><div class="sm">${o.state==='na' ? 'not required (condition not met)' : e ? `${esc(e.label)}${e.video_path?` · <a href="#" onclick="playVideo('${e.id}');return false">▶ video</a>`:''}` : 'open'}</div></div>
+              <div class="pts">${o.state==='na' ? '' : e && e.status==='reviewed' ? stars(e.score, maxFor(disc)) : o.state==='pending' ? '<span class="muted small">⏳</span>' : '<span class="muted">0</span>'}</div></div>`; }).join('')}
+        </div>`; }).join('')}
+      ${ev.rules.map(r => `<div class="rule">${r.ok ? '✅' : '⚠️'} <b>${esc(r.text)}</b><span class="muted">${esc(r.detail)}</span></div>`).join('')}
+      <div class="tiny muted" style="margin-top:14px">Points = best coach rating per requirement (Jumps/Rails 0–4, Halfpipe 0–5 incl. Amplitude). A requirement counts as achieved with full points. Pending tricks count once the coach has rated them.</div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   REVIEWS — Inbox für Coach / DVLP, Bewertungsdialog
+   ══════════════════════════════════════════════════════════════════════ */
+function renderReviews(){
+  const root = $('#page-reviews');
+  const ids = visibleAthleteIds(ST.me, ST.profiles);
+  const inGroup = e => ids.has(e.athlete_id) && (!ST.groupFilter || prof(e.athlete_id)?.group_id===ST.groupFilter);
+  const pend = ST.entries.filter(e => e.status==='pending' && inGroup(e)).sort((a,b) => a.created_at.localeCompare(b.created_at));
+  const rework = ST.entries.filter(e => e.status==='rework' && inGroup(e));
+  const recent = ST.entries.filter(e => e.status==='reviewed' && inGroup(e)).sort((a,b) => (b.reviewed_at||'').localeCompare(a.reviewed_at||'')).slice(0, 15);
+  root.innerHTML = `
+    ${ST.me.role==='dvlp' ? `<div class="row" style="margin-bottom:18px">${groupFilterSelect()}</div>` : ''}
+    <div class="card"><h2>Review inbox <span class="chip ${pend.length?'red':''}">${pend.length}</span></h2>
+      <p class="lead">Tricks your athletes submitted — oldest first. Rate Take-off, Trick, Grab and Landing (1 point each, max. 4) — Halfpipe additionally Amplitude (max. 5).</p>
+      <div class="list">${pend.length ? pend.map(e => entryRow(e, {showName:true})).join('') : '<div class="empty">🎉 Nothing to review right now.</div>'}</div></div>
+    ${rework.length ? `<div class="card"><h2>Waiting for a new video <span class="chip">${rework.length}</span></h2><div class="list">${rework.map(e => entryRow(e, {showName:true})).join('')}</div></div>` : ''}
+    <div class="card"><h2>Recently rated</h2><div class="list">${recent.length ? recent.map(e => entryRow(e, {showName:true})).join('') : '<div class="empty">No ratings yet.</div>'}</div></div>`;
+}
+
+let RV = null;
+async function openReview(id){
+  const e = ST.entries.find(x => x.id===id); if (!e) return;
+  const set = critSet(e);
+  RV = {id, crit:Object.fromEntries(set.map(c => [c.k, e.crit ? !!e.crit[c.k] : null]))};
+  const ath = prof(e.athlete_id);
+  const m = ath?.gender ? directMatches(e.discipline, ath.gender, e.trick) : [];
+  modal(`<div class="muted small">${esc(ath?.name)} · ${ath?.level||'–'} · ${DISC_LABEL[e.discipline]} · submitted ${fmtAgo(e.created_at)}</div>
+    <h3>${esc(e.label)}</h3>
+    <div class="chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${m.map(x => `<span class="chip ${x.level===ath.level?'dark':''}">${x.level} · ${esc(x.text)}</span>`).join('') || '<span class="chip">Free trick</span>'}</div>
+    <div id="rv-video">${e.video_path ? '<div class="empty">Loading video…</div>' : '<div class="rule" style="margin:14px 0">📵 No video attached. You can still rate from what you saw on the hill — or request a video.</div>'}</div>
+    ${e.note ? `<div class="small" style="margin-bottom:6px">💬 <b>Athlete:</b> ${esc(e.note)}</div>` : ''}
+    <div id="rv-crit"></div>
+    <label class="f" style="margin-top:12px">Feedback for the athlete<textarea id="rv-note" placeholder="What was good, what to work on?">${esc(e.review_note||'')}</textarea></label>
+    <div class="btnrow" style="align-items:center">
+      <button class="btn red" id="rv-save" onclick="saveReview()">Save rating</button>
+      <button class="btn ghost" onclick="saveReview('rework')">Request new video</button>
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <span class="grow"></span><div class="score-big" id="rv-score"></div>
+    </div>`);
+  renderCrit();
+  if (e.video_path){
+    try { const url = await Store.videoUrl(e.video_path);
+      $('#rv-video').innerHTML = url ? `<video src="${esc(url)}" controls playsinline></video>` : `<div class="rule" style="margin:14px 0">${DEMO ? 'Demo mode: the video was uploaded in another session and is no longer available.' : 'Video not found.'}</div>`; }
+    catch (err){ $('#rv-video').innerHTML = `<div class="rule" style="margin:14px 0">Could not load video: ${esc(err.message||err)}</div>`; }
+  }
+}
+function renderCrit(){
+  const e = ST.entries.find(x => x.id===RV.id);
+  const set = critSet(e);
+  $('#rv-crit').innerHTML = set.map(c => { const v = RV.crit[c.k];
+    return `<div class="crit"><button class="tog ${v===true?'yes':v===false?'no':''}" onclick="toggleCrit('${c.k}')" aria-label="${esc(c.name)}">${v===true?'✓':v===false?'✗':'?'}</button>
+      <div><div class="cn">${esc(c.name)}</div><ul>${c.hints.map(h => `<li>${esc(h)}</li>`).join('')}</ul></div></div>`; }).join('');
+  const vals = Object.values(RV.crit);
+  const score = vals.filter(v => v===true).length;
+  $('#rv-score').innerHTML = vals.some(v => v===null) ? `<span class="muted small">${vals.filter(v => v!==null).length}/${vals.length} rated</span>` : `${stars(score, vals.length)} ${score}/${vals.length}`;
+  $('#rv-save').disabled = vals.some(v => v===null);
+}
+function toggleCrit(k){ const v = RV.crit[k]; RV.crit[k] = v===null ? true : v===true ? false : true; renderCrit(); }
+async function saveReview(kind){
+  const note = $('#rv-note').value.trim();
+  const patch = kind==='rework'
+    ? {status:'rework', crit:null, score:null, review_note:note || 'Please upload a new video.'}
+    : {status:'reviewed', crit:{...RV.crit}, score:Object.values(RV.crit).filter(v => v===true).length, review_note:note || null};
+  try {
+    upsertLocal(await Store.review(ST.me, RV.id, patch));
+    closeModal(); toast(kind==='rework' ? 'Athlete asked for a new video' : `Rated ${patch.score}/${Object.keys(patch.crit).length} — athlete notified`); render();
+  } catch (err){ console.error(err); toast('Could not save: ' + (err.message||err), true); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TEAM — Übersicht Gruppe (Coach) bzw. alle (DVLP), Level/Geschlecht pflegen
+   ══════════════════════════════════════════════════════════════════════ */
+function renderTeam(){
+  const root = $('#page-team');
+  const dv = ST.me.role==='dvlp';
+  const aths = visibleAthletes();
+  const rows = aths.map(a => {
+    const t = a.gender && a.level ? levelTotals(a, a.level) : null;
+    const pend = entriesOf(a.id).filter(e => e.status==='pending').length;
+    const cell = d => !t ? '–' : t.incl.includes(d) ? `${pct(t.by[d].pts, t.by[d].max)}% <span class="tiny muted">${t.by[d].pts}/${t.by[d].max}</span>` : '<span class="tiny muted">not in focus</span>';
+    return `<tr class="click" onclick="if(event.target.closest('select,input'))return;ST.athleteId='${a.id}';ST.level=null;go('skills')">
+      <td><input type="text" class="name-in" value="${esc(a.name)}" onchange="setProfile('${a.id}','name',this.value.trim())" title="Edit name">${dv ? `<div class="tiny muted">${esc(groupName(a.group_id))}${a.email?' · '+esc(a.email):''}</div>` : ''}</td>
+      <td><select onchange="setProfile('${a.id}','gender',this.value)"><option value="">–</option>${opts([['W','W'],['M','M']], a.gender)}</select></td>
+      <td><select onchange="setProfile('${a.id}','level',this.value)"><option value="">–</option>${opts(LEVELS, a.level)}</select></td>
+      <td>${a.level==='T4' ? `<select onchange="setProfile('${a.id}','focus',this.value)">${opts([['','All'],['park','Jumps & Rails'],['hp','Halfpipe']], a.focus||'')}</select>` : '<span class="tiny muted">all (T1–T3)</span>'}</td>
+      ${dv ? `<td><select onchange="setProfile('${a.id}','group_id',this.value)"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${a.group_id===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select></td>` : ''}
+      <td class="num">${cell('Jump')}</td><td class="num">${cell('Rail')}</td><td class="num">${cell('Halfpipe')}</td>
+      <td class="num"><b>${t ? `${t.pct}%` : '–'}</b>${t ? `<span class="minibar"><i style="width:${t.pct}%"></i></span>` : ''}</td>
+      <td class="num">${pend ? `<span class="chip blue">${pend} ⏳</span>` : ''}</td></tr>`;
+  }).join('');
+  const staffList = dv ? ST.profiles.filter(p => p.role!=='athlete').sort((a,b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name)) : [];
+  root.innerHTML = `
+    ${dv ? `<div class="row" style="margin-bottom:18px">${groupFilterSelect()}</div>` : ''}
+    <div class="card"><h2>${dv ? 'All athletes' : esc(groupName(ST.me.group_id))} <span class="muted" style="letter-spacing:0;font-weight:600">${aths.length}</span></h2>
+      <p class="lead">Skills-Check at each athlete's own level. Total = Jumps, Rails and Halfpipe weighted ⅓ each; from T4 a focus (Halfpipe only, or Jumps & Rails only) can be set. Click a row to open the Skills-Check.</p>
+      <div class="scroll-x"><table class="tbl"><thead><tr><th>Athlete</th><th>Sex</th><th>Level</th><th>Focus</th>${dv?'<th>Group</th>':''}<th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th><th></th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="10" class="empty">No athletes.</td></tr>`}</tbody></table></div></div>
+    ${dv ? `<div class="card"><h2>Coaches & staff</h2><div class="scroll-x"><table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Group</th></tr></thead><tbody>
+      ${staffList.map(p => `<tr><td><input type="text" class="name-in" value="${esc(p.name)}" onchange="setProfile('${p.id}','name',this.value.trim())" title="Edit name"><div class="tiny muted">${esc(p.email||'')}</div></td>
+        <td><select onchange="setProfile('${p.id}','role',this.value)" ${p.id===ST.me.id?'disabled':''}>${opts([['athlete','Athlete'],['coach','Coach'],['dvlp','DVLP / Nachwuchs']], p.role)}</select></td>
+        <td>${p.role==='coach' ? `<select onchange="setProfile('${p.id}','group_id',this.value)"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${p.group_id===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>` : '<span class="muted">all</span>'}</td></tr>`).join('')}
+      </tbody></table></div>
+      <p class="tiny muted" style="margin-top:12px">${DEMO ? 'Demo mode: accounts are fixed demo users.' : 'New accounts: invite them in Supabase → Authentication → «Invite user». They appear here as athletes — then assign role, group, sex and level.'}</p></div>` : ''}`;
+}
+async function setProfile(id, k, v){
+  try { await Store.updateProfile(id, {[k]:v || null}); Object.assign(prof(id), {[k]:v || null}); toast('Saved'); render(); }
+  catch (err){ toast('Could not save: ' + (err.message||err), true); render(); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   GEMEINSAMES FÜR SESSION / REPORTS / MONITORING
+   Qualität eines Versuchs = erfüllte Kriterien / max (in %), Sturz = 0 %.
+   Status wie Freeski-Monitoring: ≥70 Ready · 50–69 Building · <50 Critical · <5 Versuche Low data
+   ══════════════════════════════════════════════════════════════════════ */
+const SESS_TYPES = [['Landing Bag','Jump'], ['Jump Training','Jump'], ['Rail Training','Rail'], ['Halfpipe Training','Halfpipe'], ['Slopestyle Training','Jump'], ['Competition','Jump']];
+const typeDisc = t => (SESS_TYPES.find(x => x[0]===t) || [])[1] || 'Jump';
+const todayIso = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
+const qa = a => a.fell ? 0 : Math.round((a.score||0) / (a.max || maxFor(a.discipline)) * 100);
+const avg = arr => arr.length ? Math.round(arr.reduce((s, x) => s + x, 0) / arr.length) : null;
+const landedPct = list => list.length ? Math.round(list.filter(a => !a.fell).length / list.length * 100) : null;
+const qChip = v => v==null ? '<span class="chip">–</span>' : `<span class="chip ${v>=70?'green':v>=50?'gold':'red'}">${v}%</span>`;
+const fmtShort = iso => iso ? new Date(iso).toLocaleDateString('de-CH', {day:'2-digit', month:'2-digit'}) : '';
+const sessById = id => ST.sessions.find(s => s.id===id);
+const sessDate = a => sessById(a.session_id)?.date || a.created_at.slice(0,10);
+const sessAttempts = id => ST.attempts.filter(a => a.session_id===id);
+function activeSession(){ return ST.sessions.find(s => !s.ended_at && s.created_by===ST.me.id) || null; }
+function upsertIn(list, row){ const i = list.findIndex(x => x.id===row.id); if (i >= 0) list[i] = row; else list.unshift(row); }
+function statusOf(n, v){
+  if (n < 5) return {k:'low', label:'Low data', cls:''};
+  if (v >= 70) return {k:'ready', label:'Ready', cls:'green'};
+  if (v >= 50) return {k:'building', label:'Building', cls:'gold'};
+  return {k:'critical', label:'Critical', cls:'red'};
+}
+const statusChipOf = (n, v) => { const s = statusOf(n, v); return `<span class="chip ${s.cls}">${s.label}</span>`; };
+// Kern-Trick ohne Grab (Grab-Varianten werden im Monitoring zusammengefasst)
+function coreOf(a){
+  const label = a.discipline==='Rail' ? a.label : trickLabel(a.discipline, {...a.trick, grab:''});
+  return {key:`${a.discipline}|${label}`, label};
+}
+// Ø der letzten 3 Sessions (Basis für den Status)
+function recentAvg(list, nSess=3){
+  const ids = [...new Set(list.map(a => a.session_id))].sort((x, y) => (sessById(x)?.date||'').localeCompare(sessById(y)?.date||''));
+  const keep = new Set(ids.slice(-nSess));
+  return avg(list.filter(a => keep.has(a.session_id)).map(qa));
+}
+function critRates(list, disc){
+  return critSetFor(disc).map(c => ({k:c.k, name:c.name, pct: list.length ? Math.round(list.filter(a => !a.fell && a.crit?.[c.k]).length / list.length * 100) : null}));
+}
+const CRIT_COLORS = ['#396FA8','#8E5BB8','#C96A1F','#1F9E93','#B08D1E'];
+const PERIODS = [['season','Season'], ['30','Last 30 days'], ['all','All time']];
+function periodStart(p){
+  if (p==='all') return '';
+  if (p==='30') return new Date(Date.now() - 30*86400000).toISOString().slice(0,10);
+  const d = new Date(); const y = d.getMonth() >= 4 ? d.getFullYear() : d.getFullYear() - 1;   // Saison 1. Mai – 30. April
+  return `${y}-05-01`;
+}
+const visGroupAthleteIds = () => new Set(visibleAthletes().map(a => a.id));
+
+/* ── Diagramme: SVG in der tatsächlichen Containerbreite, alle mit Achsenbeschriftung ── */
+const CHARTS = [];
+function chartSlot(draw){ const id = 'ch' + CHARTS.length + '-' + Math.random().toString(36).slice(2,6); CHARTS.push({id, draw}); return `<div class="chart" id="${id}"></div>`; }
+function drawCharts(){ for (const c of CHARTS){ const el = document.getElementById(c.id); if (el) el.innerHTML = c.draw(Math.max(el.clientWidth, 280)); } }
+let _rsT; window.addEventListener('resize', () => { clearTimeout(_rsT); _rsT = setTimeout(drawCharts, 150); });
+function axes(W, H, pad, yTitle, xTitle){
+  const ih = H - pad.t - pad.b; let s = '';
+  for (const t of [0, 25, 50, 75, 100]){
+    const y = pad.t + ih * (1 - t/100);
+    s += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y}" y2="${y}" stroke="${t===0?'#bdb6b3':'#ece8e6'}"/><text x="${pad.l - 6}" y="${y + 3.5}" text-anchor="end" font-size="11" fill="#6b6b70">${t}%</text>`;
+  }
+  s += `<text transform="translate(13 ${pad.t + ih/2}) rotate(-90)" text-anchor="middle" font-size="11" fill="#6b6b70">${esc(yTitle)}</text>`;
+  s += `<text x="${pad.l + (W - pad.l - pad.r)/2}" y="${H - 5}" text-anchor="middle" font-size="11" fill="#6b6b70">${esc(xTitle)}</text>`;
+  return s;
+}
+// bars: [{v (0–100), label, top, red, title}] · o.line: laufender Durchschnitt
+function barChart(bars, o={}){
+  return chartSlot(W0 => {
+    const H = o.h || 200, pad = {l:46, r:12, t:20, b:42};
+    const n = Math.max(bars.length, 1);
+    const slotW = Math.max(14, Math.min(64, (W0 - pad.l - pad.r) / n));
+    const W = Math.max(W0, pad.l + pad.r + slotW * n);
+    const ih = H - pad.t - pad.b, y = v => pad.t + ih * (1 - v/100);
+    const bw = Math.min(slotW * 0.68, 34), every = slotW < 26 ? Math.ceil(26 / slotW) : 1;
+    const x0 = pad.l + Math.max(0, (W - pad.l - pad.r - slotW * n) / 2);
+    let s = axes(W, H, pad, o.yTitle || 'Quality', o.xTitle || 'Attempts');
+    const run = []; let sum = 0;
+    bars.forEach((b, i) => {
+      const x = x0 + i * slotW + (slotW - bw)/2, v = Math.max(0, Math.min(100, b.v||0));
+      const col = b.red ? '#D64545' : v >= 70 ? '#3E8E5A' : v >= 50 ? '#B08D1E' : '#D64545';
+      s += `<g><title>${esc(b.title || '')}</title>`;
+      if (b.red) s += `<text x="${x + bw/2}" y="${y(0) - 5}" text-anchor="middle" font-size="13" font-weight="800" fill="#D64545">✗</text>`;
+      else s += `<rect x="${x}" y="${y(v)}" width="${bw}" height="${Math.max(ih * v/100, 2)}" rx="3" fill="${col}" opacity="${b.fade?0.55:1}"/>`;
+      if (b.top != null) s += `<text x="${x + bw/2}" y="${(b.red ? y(0) - 20 : y(v) - 5)}" text-anchor="middle" font-size="10.5" fill="#3E3E3F">${esc(b.top)}</text>`;
+      if (b.label && i % every === 0) s += `<text x="${x + bw/2}" y="${H - pad.b + 15}" text-anchor="middle" font-size="10.5" fill="#6b6b70">${esc(b.label)}</text>`;
+      s += '</g>';
+      sum += v; run.push([x + bw/2, y(sum / (i + 1))]);
+    });
+    if (o.line && run.length > 1) s += `<polyline fill="none" stroke="#3E3E3F" stroke-width="2" stroke-dasharray="4 3" points="${run.map(p => p.join(',')).join(' ')}"/>`;
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">${s}</svg>`;
+  });
+}
+// series: [{name, color, values:[v|null]}]
+function lineChart(series, xlabels, o={}){
+  const legend = `<div class="legend" style="margin-top:6px">${series.map(se => `<span><i class="dot" style="background:${se.color}"></i>${esc(se.name)}</span>`).join('')}</div>`;
+  return chartSlot(W0 => {
+    const H = o.h || 210, pad = {l:46, r:16, t:14, b:42};
+    const n = xlabels.length, step = Math.max(34, (W0 - pad.l - pad.r - 24) / Math.max(n - 1, 1));
+    const W = Math.max(W0, pad.l + pad.r + 24 + step * (n - 1));
+    const ih = H - pad.t - pad.b, y = v => pad.t + ih * (1 - v/100);
+    const x = i => n === 1 ? pad.l + (W - pad.l - pad.r)/2 : pad.l + 12 + i * step;
+    let s = axes(W, H, pad, o.yTitle || 'Criteria achieved', o.xTitle || 'Sessions');
+    xlabels.forEach((l, i) => s += `<text x="${x(i)}" y="${H - pad.b + 15}" text-anchor="middle" font-size="10.5" fill="#6b6b70">${esc(l)}</text>`);
+    series.forEach((se, si) => {
+      const off = (si - (series.length - 1)/2) * 2.5;
+      const pts = se.values.map((v, i) => v == null ? null : [x(i) + off, y(v), v]).filter(Boolean);
+      if (pts.length > 1) s += `<polyline fill="none" stroke="${se.color}" stroke-width="2" points="${pts.map(p => p[0]+','+p[1]).join(' ')}"/>`;
+      s += pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${se.color}"><title>${esc(se.name)}: ${p[2]}%</title></circle>`).join('');
+    });
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">${s}</svg>`;
+  }) + legend;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SESSION — Live-Erfassung im Training (Coach / DVLP)
+   Jeder Versuch wird sofort gespeichert; die laufende Session liegt in der
+   DB (ended_at leer) und wird nach Reload / auf anderem Gerät fortgesetzt.
+   ══════════════════════════════════════════════════════════════════════ */
+let SX = {setup:null, athleteId:null, pick:null, crit:null, form:null, cands:[], editAth:false};
+
+function renderSession(){
+  const root = $('#page-session');
+  const s = activeSession();
+  if (!s) return renderSessionSetup(root);
+  renderSessionActive(root, s);
+}
+function renderSessionSetup(root){
+  SX.setup ||= {date:todayIso(), type:'Jump Training', location:'', ath:new Set()};
+  const su = SX.setup, aths = visibleAthletes();
+  const locs = [...new Set(ST.sessions.map(s => s.location).filter(Boolean))];
+  const recent = ST.sessions.filter(s => s.ended_at).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 3);
+  root.innerHTML = `
+    ${ST.me.role==='dvlp' ? `<div class="row" style="margin-bottom:18px">${groupFilterSelect()}</div>` : ''}
+    <div class="card"><h2>New session</h2>
+      <div class="grid">
+        <label class="f">Date<input type="date" value="${su.date}" max="${todayIso()}" onchange="SX.setup.date=this.value"></label>
+        <label class="f">Location<input type="text" list="loc-list" value="${esc(su.location)}" oninput="SX.setup.location=this.value" placeholder="e.g. Laax"><datalist id="loc-list">${locs.map(l => `<option value="${esc(l)}">`).join('')}</datalist></label>
+      </div>
+      <div class="f-lbl">Session type</div>
+      <div class="seg">${SESS_TYPES.map(([t]) => `<button class="${su.type===t?'on':''}" onclick="SX.setup.type='${t}';renderSession()">${t}</button>`).join('')}</div>
+      <div class="f-lbl">Athletes <button class="linkbtn" onclick="sxSetupAll()">${aths.every(a => su.ath.has(a.id)) && aths.length ? 'None' : 'All'}</button></div>
+      <div class="athchips">${aths.map(a => `<button class="athchip ${su.ath.has(a.id)?'on':''}" onclick="sxSetupAth('${a.id}')">${esc(a.name)}<small>${a.level||''}</small></button>`).join('') || '<span class="muted small">No athletes in your group yet.</span>'}</div>
+      <div class="btnrow"><button class="btn red" ${su.ath.size?'':'disabled'} onclick="startSession()">Start session${su.ath.size?` (${su.ath.size})`:''}</button></div>
+    </div>
+    ${recent.length ? `<div class="card"><h2>Last sessions</h2><div class="list">${recent.map(sessionListRow).join('')}</div></div>` : ''}`;
+}
+function sxSetupAth(id){ const a = SX.setup.ath; a.has(id) ? a.delete(id) : a.add(id); renderSession(); }
+function sxSetupAll(){ const aths = visibleAthletes(), a = SX.setup.ath; if (aths.every(x => a.has(x.id))) a.clear(); else aths.forEach(x => a.add(x.id)); renderSession(); }
+
+async function startSession(){
+  const su = SX.setup, ids = [...su.ath];
+  const gid = ST.me.role==='coach' ? ST.me.group_id : (ST.groupFilter || prof(ids[0])?.group_id || null);
+  const s = {id:uid(), group_id:gid, date:su.date, type:su.type, location:su.location.trim() || null, athlete_ids:ids, athlete_notes:{}, started_at:nowIso(), ended_at:null, created_by:ST.me.id};
+  try {
+    upsertIn(ST.sessions, await Store.saveSession(ST.me, s));
+    SX = {setup:null, athleteId:ids[0], pick:null, crit:null, form:null, cands:[], editAth:false};
+    renderChrome(); renderSession();
+  } catch (err){ console.error(err); toast('Could not start: ' + (err.message||err), true); }
+}
+
+function renderSessionActive(root, s){
+  const atts = sessAttempts(s.id).sort((a,b) => b.created_at.localeCompare(a.created_at));
+  if (!s.athlete_ids.includes(SX.athleteId)) SX.athleteId = s.athlete_ids[0];
+  const ath = prof(SX.athleteId);
+  // Trick-Vorschläge: zuerst in dieser Session geloggt, dann Assessment (Goals markiert)
+  const cands = [], seen = new Set();
+  const push = (src, disc, trick, label) => { const k = disc + '|' + label; if (seen.has(k)) return; seen.add(k); cands.push({src, disc, trick, label}); };
+  atts.filter(a => a.athlete_id===SX.athleteId).forEach(a => push('session', a.discipline, a.trick, a.label));
+  const d0 = typeDisc(s.type);
+  entriesOf(SX.athleteId).sort((a,b) => (a.discipline===d0 ? 0 : 1) - (b.discipline===d0 ? 0 : 1) || b.created_at.localeCompare(a.created_at))
+    .forEach(e => push(e.status==='goal' ? 'goal' : 'assessment', e.discipline, e.trick, e.label));
+  SX.cands = cands;
+  const pk = SX.pick, set = pk ? critSetFor(pk.disc) : null;
+  if (pk && (!SX.crit || Object.keys(SX.crit).length !== set.length)) SX.crit = Object.fromEntries(set.map(c => [c.k, true]));
+  const score = pk ? Object.values(SX.crit).filter(Boolean).length : 0;
+  const mins = Math.max(0, Math.round((Date.now() - new Date(s.started_at)) / 60000));
+  const others = visibleAthletes().filter(a => !s.athlete_ids.includes(a.id));
+  root.innerHTML = `
+    <div class="card sess-head">
+      <div class="row">
+        <div><div class="sess-title">${esc(s.type)} <span class="chip red">● LIVE</span></div>
+          <div class="muted small">${fmtDate(s.date)}${s.location ? ' · ' + esc(s.location) : ''} · ${mins} min · ${atts.length} attempt${atts.length===1?'':'s'}</div></div>
+        <span class="grow"></span>
+        <button class="btn ghost sm" onclick="SX.editAth=!SX.editAth;renderSession()">± Athletes</button>
+        <button class="btn ghost sm" onclick="cancelSession()">Discard</button>
+        <button class="btn red sm" onclick="openEndSession()">End session</button>
+      </div>
+      ${SX.editAth ? `<div class="athchips" style="margin-top:12px">${s.athlete_ids.map(id => `<button class="athchip on" onclick="sxSessAth('${id}')">${esc(prof(id)?.name)} ✕</button>`).join('')}${others.map(a => `<button class="athchip" onclick="sxSessAth('${a.id}')">+ ${esc(a.name)}</button>`).join('')}</div>` : ''}
+    </div>
+    <div class="athchips" style="margin-bottom:16px">${s.athlete_ids.map(id => { const n = atts.filter(a => a.athlete_id===id).length;
+      return `<button class="athchip ${id===SX.athleteId?'on':''}" onclick="sxAth('${id}')">${esc(prof(id)?.name || '?')}<small>${n}</small></button>`; }).join('')}</div>
+    <div class="card"><h2>${esc(ath?.name)} · trick</h2>
+      ${SX.form ? `<div class="seg" style="margin-bottom:12px">${DISCS.map(d => `<button class="${SX.form.disc===d?'on':''}" onclick="sxFormDisc('${d}')">${DISC_LABEL[d]}</button>`).join('')}</div>
+          <div class="grid">${formFields(SX.form.disc, SX.form.F, 'sxFormSet')}</div>
+          <div class="preview"><div class="lbl" id="sx-lbl">${esc(trickLabel(SX.form.disc, normTrick(SX.form.disc, SX.form.F)))}</div></div>
+          <div class="btnrow"><button class="btn red" onclick="sxUseForm()">Use this trick</button><button class="btn ghost" onclick="SX.form=null;renderSession()">Cancel</button></div>`
+        : `<div class="trickchips">${cands.map((c, i) => `<button class="tchip ${pk && pk.label===c.label && pk.disc===c.disc ? 'on' : ''}" onclick="sxPick(${i})">${c.src==='session' ? '<i class="src">●</i>' : c.src==='goal' ? '<i class="src">🎯</i>' : ''}${esc(c.label)}</button>`).join('')}
+            <button class="tchip add" onclick="sxOpenForm()">+ Other trick</button></div>
+          ${cands.length ? '<div class="tiny muted" style="margin-top:8px">● already logged today · 🎯 goal in the assessment</div>' : '<div class="tiny muted" style="margin-top:8px">No tricks in the assessment yet — add one with «+ Other trick».</div>'}`}
+    </div>
+    ${pk && !SX.form ? `<div class="card rate-card"><h2>Rate attempt<span class="rt">${stars(score, set.length)} <b>${score}/${set.length}</b></span></h2>
+        <div class="lead"><b style="color:var(--char)">${esc(pk.label)}</b> — tap what was <b>not</b> fulfilled.</div>
+        <div class="critgrid">${set.map(c => `<button class="critbtn ${SX.crit[c.k]?'yes':'no'}" onclick="SX.crit['${c.k}']=!SX.crit['${c.k}'];renderSession()"><span>${SX.crit[c.k]?'✓':'✗'}</span>${esc(c.name)}</button>`).join('')}</div>
+        <div class="btnrow"><button class="btn red big" onclick="logAttempt(false)">✓ Log attempt · ${score}/${set.length}</button><button class="btn ghost big" onclick="logAttempt(true)">✗ Fall / miss</button></div>
+      </div>` : ''}
+    <div class="card"><h2>Session log <span class="muted" style="letter-spacing:0;font-weight:600">${atts.length}</span></h2>
+      <div class="list">${atts.length ? atts.map(a => attemptRow(a)).join('') : '<div class="empty">No attempts yet.</div>'}</div></div>`;
+}
+function sxAth(id){ SX.athleteId = id; SX.pick = null; SX.crit = null; SX.form = null; renderSession(); }
+function sxPick(i){ SX.pick = {...SX.cands[i]}; SX.crit = null; SX.form = null; renderSession(); }
+function sxOpenForm(){ const d = SX.pick?.disc || typeDisc(activeSession().type); SX.form = {disc:d, F:{...FORM_DEFAULTS[d]}}; renderSession(); }
+function sxFormDisc(d){ SX.form = {disc:d, F:{...FORM_DEFAULTS[d]}}; renderSession(); }
+function sxFormSet(k, v, noRerender){
+  applyFormValue(SX.form.disc, SX.form.F, k, v);
+  if (noRerender){ const l = $('#sx-lbl'); if (l) l.textContent = trickLabel(SX.form.disc, normTrick(SX.form.disc, SX.form.F)); }
+  else renderSession();
+}
+function sxUseForm(){ const t = normTrick(SX.form.disc, SX.form.F); SX.pick = {src:'new', disc:SX.form.disc, trick:t, label:trickLabel(SX.form.disc, t)}; SX.form = null; SX.crit = null; renderSession(); }
+async function sxSessAth(id){
+  const s = activeSession(); let ids = [...s.athlete_ids];
+  if (ids.includes(id)){
+    if (sessAttempts(s.id).some(a => a.athlete_id===id)){ toast('This athlete already has attempts in this session.', true); return; }
+    if (ids.length === 1){ toast('A session needs at least one athlete.', true); return; }
+    ids = ids.filter(x => x!==id);
+  } else ids.push(id);
+  try { upsertIn(ST.sessions, await Store.saveSession(ST.me, {...s, athlete_ids:ids})); renderSession(); }
+  catch (err){ toast('Could not save: ' + (err.message||err), true); }
+}
+async function logAttempt(fell){
+  const s = activeSession(), pk = SX.pick, set = critSetFor(pk.disc);
+  const crit = fell ? Object.fromEntries(set.map(c => [c.k, false])) : {...SX.crit};
+  const a = {id:uid(), session_id:s.id, athlete_id:SX.athleteId, discipline:pk.disc, trick:pk.trick, label:pk.label, crit,
+    score: fell ? 0 : Object.values(crit).filter(Boolean).length, max:set.length, fell, note:null, entry_id:null, created_at:nowIso(), created_by:ST.me.id};
+  try {
+    upsertIn(ST.attempts, await Store.saveAttempt(ST.me, a));
+    SX.crit = null; toast(fell ? 'Fall logged' : `Logged ${a.score}/${a.max}`); renderSession();
+  } catch (err){ console.error(err); toast('Could not save attempt: ' + (err.message||err), true); }
+}
+function attemptRow(a, o={}){
+  const mx = a.max || maxFor(a.discipline);
+  const missed = a.crit && !a.fell ? critSetFor(a.discipline).filter(c => a.crit[c.k] === false) : [];
+  return `<div class="item">
+    <div class="main"><div class="t">${esc(a.label)}</div>
+      <div class="m">${o.noName ? '' : esc(prof(a.athlete_id)?.name) + ' · '}${o.withDate ? fmtDate(sessDate(a)) + ' · ' : ''}${new Date(a.created_at).toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'})}</div>
+      <div class="chips">${a.fell ? '<span class="chip red">✗ Fall / miss</span>' : `<span class="chip ${a.score===mx?'green':a.score/mx>=.5?'gold':'red'}">${stars(a.score, mx)} ${a.score}/${mx}</span>`}
+        ${missed.map(c => `<span class="chip">✗ ${esc(c.name)}</span>`).join('')}${a.entry_id ? '<span class="chip dark">✓ in Skills-Check</span>' : ''}</div></div>
+    <div class="acts noprint">${!a.fell && !a.entry_id ? `<button class="btn ghost sm" onclick="attemptToSkills('${a.id}')" title="Use this rating in the athlete's Skills-Check">→ Skills-Check</button>` : ''}<button class="btn ghost sm" onclick="deleteAttempt('${a.id}')" title="Delete attempt">🗑</button></div>
+  </div>`;
+}
+async function deleteAttempt(id){
+  if (!confirm('Delete this attempt?')) return;
+  try { await Store.deleteAttempt(id); ST.attempts = ST.attempts.filter(a => a.id!==id); toast('Attempt deleted'); render(); }
+  catch (err){ toast('Could not delete: ' + (err.message||err), true); }
+}
+// Ein im Training bewerteter Versuch zählt direkt im Skills-Check der Athlet:in.
+async function attemptToSkills(id){
+  const a = ST.attempts.find(x => x.id===id);
+  if (!confirm(`Add «${a.label}» with ${a.score}/${a.max} to ${prof(a.athlete_id)?.name}'s Skills-Check?`)) return;
+  try {
+    let e = await Store.saveEntry(ST.me, {id:uid(), athlete_id:a.athlete_id, discipline:a.discipline, trick:a.trick, label:a.label, status:'goal', note:null});
+    upsertLocal(e);
+    e = await Store.review(ST.me, e.id, {status:'reviewed', crit:a.crit, score:a.score, review_note:`Rated in the session of ${fmtDate(sessDate(a))}`});
+    upsertLocal(e);
+    upsertIn(ST.attempts, await Store.saveAttempt(ST.me, {...a, entry_id:e.id}));
+    toast('Added to the Skills-Check — athlete notified'); render();
+  } catch (err){ console.error(err); toast('Could not add: ' + (err.message||err), true); }
+}
+async function cancelSession(){
+  const s = activeSession(), n = sessAttempts(s.id).length;
+  if (!confirm(n ? `Discard this session and all ${n} attempts?` : 'Discard this session?')) return;
+  try { await Store.deleteSession(s.id); ST.sessions = ST.sessions.filter(x => x.id!==s.id); ST.attempts = ST.attempts.filter(a => a.session_id!==s.id); SX = {setup:null}; toast('Session discarded'); render(); }
+  catch (err){ toast('Could not discard: ' + (err.message||err), true); }
+}
+function openEndSession(){
+  const s = activeSession(), atts = sessAttempts(s.id);
+  const mins = Math.max(5, Math.round((Date.now() - new Date(s.started_at)) / 300000) * 5);
+  modal(`<h3>End session</h3><div class="muted small">${esc(s.type)} · ${fmtDate(s.date)} · ${atts.length} attempts</div>
+    <div class="grid" style="margin-top:14px">
+      <label class="f">Duration (min)<input type="number" id="es-dur" min="5" step="5" value="${mins}"></label>
+      <label class="f">Location<input type="text" id="es-loc" value="${esc(s.location||'')}"></label>
+      <label class="f">Conditions<select id="es-cond"><option value="">–</option>${opts([['1','1 · poor'],['2','2'],['3','3 · ok'],['4','4'],['5','5 · perfect']], s.conditions||'')}</select></label>
+    </div>
+    <label class="f" style="margin-top:12px">Session comment<textarea id="es-com" placeholder="Conditions, focus of the day …">${esc(s.comments||'')}</textarea></label>
+    <div class="f-lbl">Athlete notes</div>
+    ${s.athlete_ids.map(id => `<label class="f" style="margin-top:8px">${esc(prof(id)?.name)}<input type="text" id="es-note-${id}" value="${esc(s.athlete_notes?.[id]||'')}" placeholder="optional"></label>`).join('')}
+    <div class="btnrow"><button class="btn red" onclick="endSession()">Save report</button><button class="btn ghost" onclick="closeModal()">Back to session</button></div>`);
+}
+async function endSession(){
+  const s = activeSession(), atts = sessAttempts(s.id);
+  try {
+    if (!atts.length){
+      await Store.deleteSession(s.id); ST.sessions = ST.sessions.filter(x => x.id!==s.id);
+      closeModal(); SX = {setup:null}; toast('Empty session discarded'); render(); return;
+    }
+    const notes = {};
+    s.athlete_ids.forEach(id => { const v = document.getElementById('es-note-' + id)?.value.trim(); if (v) notes[id] = v; });
+    const row = {...s, duration_min:+$('#es-dur').value || null, location:$('#es-loc').value.trim() || null, conditions:+$('#es-cond').value || null,
+      comments:$('#es-com').value.trim() || null, athlete_notes:notes, ended_at:nowIso()};
+    upsertIn(ST.sessions, await Store.saveSession(ST.me, row));
+    closeModal(); SX = {setup:null}; ST.rep.sel = s.id; go('reports'); toast('Session saved');
+  } catch (err){ console.error(err); toast('Could not save: ' + (err.message||err), true); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   REPORTS — Session-Berichte (Liste → Bericht pro Athlet:in und Trick)
+   ══════════════════════════════════════════════════════════════════════ */
+function reportSessions(){
+  const vis = visGroupAthleteIds(), f = ST.rep, from = periodStart(f.period);
+  return ST.sessions.filter(s => s.ended_at && s.athlete_ids.some(id => vis.has(id))
+    && (!f.type || s.type===f.type) && (!f.athlete || s.athlete_ids.includes(f.athlete)) && (!from || s.date >= from))
+    .sort((a,b) => b.date.localeCompare(a.date) || b.started_at.localeCompare(a.started_at));
+}
+function sessionListRow(s){
+  const atts = sessAttempts(s.id);
+  return `<div class="item click" onclick="ST.rep.sel='${s.id}';go('reports')">
+    <div class="main"><div class="t">${fmtDate(s.date)} · ${esc(s.type)}</div>
+      <div class="m">${s.location ? esc(s.location) + ' · ' : ''}${s.duration_min ? s.duration_min + ' min · ' : ''}${s.athlete_ids.map(id => esc(prof(id)?.name?.split(' ')[0] || '?')).join(', ')}</div></div>
+    <div class="acts">${qChip(avg(atts.map(qa)))}<span class="chip">${atts.length} att.</span><span class="chip">${landedPct(atts) ?? '–'}% landed</span></div></div>`;
+}
+function renderReports(){
+  CHARTS.length = 0;
+  const root = $('#page-reports');
+  if (ST.rep.sel && sessById(ST.rep.sel)){ renderReport(root, sessById(ST.rep.sel)); drawCharts(); return; }
+  ST.rep.sel = null;
+  const list = reportSessions(), f = ST.rep;
+  const aths = visibleAthletes();
+  root.innerHTML = `
+    <div class="row noprint" style="margin-bottom:18px">${groupFilterSelect()}
+      <select style="width:auto" onchange="ST.rep.type=this.value;renderReports()"><option value="">All types</option>${opts(SESS_TYPES.map(t => t[0]), f.type)}</select>
+      <select style="width:auto;max-width:240px" onchange="ST.rep.athlete=this.value;renderReports()"><option value="">All athletes</option>${opts(aths.map(a => [a.id, a.name]), f.athlete)}</select>
+      <select style="width:auto" onchange="ST.rep.period=this.value;renderReports()">${opts(PERIODS, f.period)}</select>
+    </div>
+    <div class="card"><h2>Session reports <span class="muted" style="letter-spacing:0;font-weight:600">${list.length}</span></h2>
+      <div class="list">${list.length ? list.map(sessionListRow).join('') : '<div class="empty">No sessions in this filter. Start one in the Session tab.</div>'}</div></div>`;
+}
+function trickBlock(list, o={}){
+  const disc = list[0].discipline;
+  const rates = critRates(list, disc);
+  const bars = list.map((a, i) => ({v:qa(a), red:a.fell, label:String(i + 1), title:`#${i + 1} · ${a.fell ? 'fall / miss' : a.score + '/' + a.max} · ${new Date(a.created_at).toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'})}`}));
+  return `<div class="trick-block">
+    <div class="row" style="gap:8px"><b style="color:var(--char)">${esc(o.title || list[0].label)}</b><span class="grow"></span>
+      <span class="chip">${list.length} att.</span>${qChip(avg(list.map(qa)))}<span class="chip">${landedPct(list)}% landed</span></div>
+    <div class="chips" style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 2px">${rates.map(r => `<span class="chip ${r.pct>=70?'green':r.pct>=50?'gold':'red'}">${esc(r.name.replace(/ \(.*\)/,''))} ${r.pct}%</span>`).join('')}</div>
+    ${barChart(bars, {line:true, h:170, xTitle:'Attempts (dashed = running Ø)'})}
+    <details class="noprint"><summary>Attempts</summary><div class="list">${list.slice().reverse().map(a => attemptRow(a, {noName:true})).join('')}</div></details>
+  </div>`;
+}
+function renderReport(root, s){
+  const atts = sessAttempts(s.id).sort((a,b) => a.created_at.localeCompare(b.created_at));
+  const vis = visGroupAthleteIds();
+  const ids = s.athlete_ids.filter(id => vis.has(id) && (!ST.rep.athlete || ST.rep.athlete===id));
+  root.innerHTML = `
+    <div class="row noprint" style="margin-bottom:18px"><button class="btn ghost sm" onclick="ST.rep.sel=null;renderReports()">← All reports</button><span class="grow"></span>
+      <button class="btn ghost sm" onclick="window.print()">🖨 Print / PDF</button><button class="btn ghost sm" onclick="deleteReport('${s.id}')">🗑 Delete report</button></div>
+    <div class="card"><h2>${fmtDate(s.date)} · ${esc(s.type)}<span class="rt muted">${s.location ? esc(s.location) : ''}</span></h2>
+      <div class="kpis" style="margin-bottom:0">
+        <div class="kpi"><div class="k">Attempts</div><div class="v">${atts.length}</div></div>
+        <div class="kpi"><div class="k">Ø Quality</div><div class="v">${avg(atts.map(qa)) ?? '–'}<small>%</small></div></div>
+        <div class="kpi"><div class="k">Landed</div><div class="v">${landedPct(atts) ?? '–'}<small>%</small></div></div>
+        <div class="kpi"><div class="k">Duration</div><div class="v">${s.duration_min || '–'}<small> min</small></div><div class="tiny muted" style="margin-top:4px">Conditions ${s.conditions ? '★'.repeat(s.conditions) + '<span style="color:#d9d3d0">' + '★'.repeat(5 - s.conditions) + '</span>' : '–'}</div></div>
+      </div>
+      ${s.comments ? `<div class="rule" style="margin-top:14px">💬 ${esc(s.comments)}</div>` : ''}
+    </div>
+    ${ids.map(id => {
+      const a = prof(id), mine = atts.filter(x => x.athlete_id===id);
+      const groups = {};
+      mine.forEach(x => (groups[x.discipline + '|' + x.label] ||= []).push(x));
+      return `<div class="card"><h2>${esc(a?.name)} <span class="chip">${a?.level || '–'}</span><span class="rt">${mine.length} att. · Ø ${avg(mine.map(qa)) ?? '–'}% · ${landedPct(mine) ?? '–'}% landed</span></h2>
+        ${s.athlete_notes?.[id] ? `<div class="rule" style="margin:0 0 12px">📝 ${esc(s.athlete_notes[id])}</div>` : ''}
+        ${mine.length ? Object.values(groups).map(l => trickBlock(l)).join('') : '<div class="empty">No attempts.</div>'}</div>`;
+    }).join('')}`;
+}
+async function deleteReport(id){
+  const n = sessAttempts(id).length;
+  if (!confirm(`Delete this report and its ${n} attempts?`)) return;
+  try { await Store.deleteSession(id); ST.sessions = ST.sessions.filter(s => s.id!==id); ST.attempts = ST.attempts.filter(a => a.session_id!==id); ST.rep.sel = null; toast('Report deleted'); render(); }
+  catch (err){ toast('Could not delete: ' + (err.message||err), true); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MONITORING — Team → Athlet:in → Trick
+   ══════════════════════════════════════════════════════════════════════ */
+function monAttempts(){
+  const vis = visGroupAthleteIds(), from = periodStart(ST.mon.period);
+  return ST.attempts.filter(a => vis.has(a.athlete_id) && sessById(a.session_id)?.ended_at && (!from || sessDate(a) >= from));
+}
+function perSession(list){
+  const by = {};
+  list.forEach(a => (by[a.session_id] ||= []).push(a));
+  return Object.entries(by).map(([sid, l]) => ({sid, date:sessDate(l[0]), list:l})).sort((a,b) => a.date.localeCompare(b.date));
+}
+function monNav(view, athleteId=null, key=null){ Object.assign(ST.mon, {view, athleteId, key}); renderMonitoring(); window.scrollTo({top:0}); }
+function renderMonitoring(){
+  CHARTS.length = 0;
+  const root = $('#page-monitoring'), m = ST.mon, all = monAttempts();
+  const filters = `<div class="row noprint" style="margin-bottom:18px">${m.view==='team' ? groupFilterSelect() : ''}<select style="width:auto" onchange="ST.mon.period=this.value;renderMonitoring()">${opts(PERIODS, m.period)}</select>
+    <span class="muted small">Status = Ø quality of the last 3 sessions · ≥70% Ready · 50–69% Building · &lt;50% Critical · &lt;5 attempts Low data</span></div>`;
+  const crumbs = (...parts) => `<div class="crumbs">${parts.join(' <span>›</span> ')}</div>`;
+
+  if (m.view==='team' || !prof(m.athleteId)){
+    const rows = visibleAthletes().map(a => {
+      const l = all.filter(x => x.athlete_id===a.id), ps = perSession(l), rv = recentAvg(l);
+      return {a, l, ps, rv};
+    });
+    root.innerHTML = filters + `<div class="card"><h2>Team overview</h2>
+      <div class="scroll-x"><table class="tbl"><thead><tr><th>Athlete</th><th>Level</th><th class="num">Sessions</th><th class="num">Attempts</th><th class="num">Ø Quality</th><th class="num">Landed</th><th>Status</th><th>Last session</th></tr></thead>
+      <tbody>${rows.map(r => `<tr class="click" onclick="monNav('athlete','${r.a.id}')"><td><b>${esc(r.a.name)}</b></td><td>${r.a.level||'–'}</td>
+        <td class="num">${r.ps.length}</td><td class="num">${r.l.length}</td><td class="num">${qChip(r.rv)}</td><td class="num">${landedPct(r.l) ?? '–'}${r.l.length?'%':''}</td>
+        <td>${r.l.length ? statusChipOf(r.l.length, r.rv) : '<span class="muted small">no data</span>'}</td><td>${r.ps.length ? fmtDate(r.ps[r.ps.length-1].date) : '–'}</td></tr>`).join('') || '<tr><td colspan="8" class="empty">No athletes.</td></tr>'}</tbody></table></div></div>`;
+    drawCharts(); return;
+  }
+
+  const ath = prof(m.athleteId), mine = all.filter(a => a.athlete_id===ath.id);
+  const tricks = {};
+  mine.forEach(a => { const c = coreOf(a); (tricks[c.key] ||= {label:c.label, disc:a.discipline, list:[]}).list.push(a); });
+
+  if (m.view==='trick' && tricks[m.key]){
+    const t = tricks[m.key], ps = perSession(t.list), rv = recentAvg(t.list);
+    const set = critSetFor(t.disc);
+    const variants = {};
+    t.list.forEach(a => (variants[a.label] ||= []).push(a));
+    root.innerHTML = filters + crumbs(`<a href="#" onclick="monNav('team');return false">Team</a>`, `<a href="#" onclick="monNav('athlete','${ath.id}');return false">${esc(ath.name)}</a>`, `<b>${esc(t.label)}</b>`) + `
+      <div class="kpis">
+        <div class="kpi"><div class="k">Status</div><div class="v" style="font-size:22px;margin-top:8px">${statusChipOf(t.list.length, rv)}</div></div>
+        <div class="kpi"><div class="k">Ø Quality (last 3)</div><div class="v">${rv ?? '–'}<small>%</small></div></div>
+        <div class="kpi"><div class="k">Landed</div><div class="v">${landedPct(t.list)}<small>%</small></div></div>
+        <div class="kpi"><div class="k">Attempts</div><div class="v">${t.list.length}<small> in ${ps.length} session${ps.length===1?'':'s'}</small></div></div>
+      </div>
+      <div class="card"><h2>Quality per session</h2>
+        ${barChart(ps.map(p => ({v:avg(p.list.map(qa)), top:`n=${p.list.length}`, label:fmtShort(p.date), title:`${fmtDate(p.date)} · Ø ${avg(p.list.map(qa))}% · ${p.list.length} attempts`})), {xTitle:'Sessions', yTitle:'Ø Quality'})}</div>
+      <div class="card"><h2>Criteria per session</h2><p class="lead">Share of attempts in which the criterion was fulfilled (falls count as not fulfilled).</p>
+        ${lineChart(set.map((c, i) => ({name:c.name, color:CRIT_COLORS[i], values:ps.map(p => critRates(p.list, t.disc)[i].pct)})), ps.map(p => fmtShort(p.date)))}</div>
+      <div class="card"><h2>Variants & grabs</h2><table class="tbl"><thead><tr><th>Trick</th><th class="num">Attempts</th><th class="num">Ø Quality</th><th class="num">Landed</th></tr></thead>
+        <tbody>${Object.entries(variants).sort((a,b) => b[1].length - a[1].length).map(([l, v]) => `<tr><td>${esc(l)}</td><td class="num">${v.length}</td><td class="num">${qChip(avg(v.map(qa)))}</td><td class="num">${landedPct(v)}%</td></tr>`).join('')}</tbody></table></div>
+      <div class="card"><h2>Recent attempts</h2><div class="list">${t.list.slice().sort((a,b) => b.created_at.localeCompare(a.created_at)).slice(0, 12).map(a => attemptRow(a, {noName:true, withDate:true})).join('')}</div></div>`;
+    drawCharts(); return;
+  }
+
+  ST.mon.view = 'athlete';
+  const ps = perSession(mine), rv = recentAvg(mine);
+  const rows = Object.entries(tricks).map(([key, t]) => {
+    const r = recentAvg(t.list), rates = critRates(t.list, t.disc).filter(x => x.pct != null).sort((a,b) => a.pct - b.pct);
+    return {key, t, r, weak:rates[0]};
+  }).sort((a,b) => b.t.list.length - a.t.list.length);
+  root.innerHTML = filters + crumbs(`<a href="#" onclick="monNav('team');return false">Team</a>`, `<b>${esc(ath.name)}</b>`) + `
+    <div class="kpis">
+      <div class="kpi"><div class="k">Status</div><div class="v" style="font-size:22px;margin-top:8px">${mine.length ? statusChipOf(mine.length, rv) : '–'}</div></div>
+      <div class="kpi"><div class="k">Ø Quality (last 3)</div><div class="v">${rv ?? '–'}<small>%</small></div></div>
+      <div class="kpi"><div class="k">Landed</div><div class="v">${landedPct(mine) ?? '–'}<small>%</small></div></div>
+      <div class="kpi"><div class="k">Attempts</div><div class="v">${mine.length}<small> in ${ps.length} session${ps.length===1?'':'s'}</small></div></div>
+    </div>
+    ${ps.length ? `<div class="card"><h2>Quality per session</h2>${barChart(ps.map(p => ({v:avg(p.list.map(qa)), top:`n=${p.list.length}`, label:fmtShort(p.date), title:`${fmtDate(p.date)} · ${sessById(p.sid)?.type} · Ø ${avg(p.list.map(qa))}%`})), {xTitle:'Sessions', yTitle:'Ø Quality'})}</div>` : ''}
+    <div class="card"><h2>Tricks</h2><p class="lead">Grab variants are grouped per trick. Click a trick for the details.</p>
+      <div class="scroll-x"><table class="tbl"><thead><tr><th>Trick</th><th class="num">Attempts</th><th class="num">Ø Quality</th><th class="num">Landed</th><th>Weakest criterion</th><th>Status</th></tr></thead>
+      <tbody>${rows.map(r => `<tr class="click" onclick="monNav('trick','${ath.id}',${esc(JSON.stringify(r.key))})"><td><b>${esc(r.t.label)}</b><div class="tiny muted">${DISC_LABEL[r.t.disc]}</div></td>
+        <td class="num">${r.t.list.length}</td><td class="num">${qChip(r.r)}</td><td class="num">${landedPct(r.t.list)}%</td>
+        <td>${r.weak ? `${esc(r.weak.name)} <span class="muted small">${r.weak.pct}%</span>` : '–'}</td><td>${statusChipOf(r.t.list.length, r.r)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">No session data yet.</td></tr>'}</tbody></table></div></div>`;
+  drawCharts();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MODAL
+   ══════════════════════════════════════════════════════════════════════ */
+function modal(html){ $('#modal-root').innerHTML = `<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`; document.body.style.overflow = 'hidden'; }
+function closeModal(){ $('#modal-root').innerHTML = ''; document.body.style.overflow = ''; RV = null; }
+document.addEventListener('keydown', e => { if (e.key==='Escape' && $('#modal-root').innerHTML) closeModal(); });
+
+/* ══════════════════════════════════════════════════════════════════════
+   LOGIN / START
+   ══════════════════════════════════════════════════════════════════════ */
+function gateShell(inner){
+  return `<header><div class="hd"><div><h1>Skills-Check Freeski<span class="dot">.</span></h1><div class="sub">Trick Analyses Nachwuchs</div></div>
+    <div class="brand">${document.querySelector('.brand svg').outerHTML}</div></div></header><div class="box">${inner}</div>`;
+}
+function showDemoGate(){
+  const d = DemoStore.data;
+  const card = p => `<button class="demo-user" onclick="demoLogin('${p.id}')"><span class="avatar r-${p.role}">${initials(p.name)}</span>
+    <span><b>${esc(p.name)}</b><br><span class="muted small">${ROLE_LABEL[p.role]}${p.group_id?` · ${esc(d.groups.find(g => g.id===p.group_id)?.name)}`:''}${p.level?` · ${p.level}`:''}</span></span></button>`;
+  const by = r => d.profiles.filter(p => p.role===r).map(card).join('');
+  $('#gate').innerHTML = gateShell(`
+    <div class="card"><h2>Demo — choose a view</h2><p class="lead">Nothing is saved to a server; data stays in this browser.</p>
+      <div class="muted tiny" style="margin:6px 0">ATHLETES — see only themselves</div><div class="demo-users">${by('athlete')}</div>
+      <div class="muted tiny" style="margin:16px 0 6px">COACHES — see their group</div><div class="demo-users">${by('coach')}</div>
+      <div class="muted tiny" style="margin:16px 0 6px">DVLP / NACHWUCHS — see everyone</div><div class="demo-users">${by('dvlp')}</div>
+      <div class="btnrow"><button class="btn ghost sm" onclick="if(confirm('Reset all demo data?')){DemoStore.reset();showDemoGate();toast('Demo data reset')}">Reset demo data</button></div></div>`);
+  $('#gate').hidden = false; $('#app').hidden = true;
+}
+async function demoLogin(id){ await DemoStore.login(id); await startApp(); }
+
+function showLoginGate(msg){
+  $('#gate').innerHTML = gateShell(`
+    <div class="card"><h2>Log in</h2>
+      <div style="display:grid;gap:12px">
+        <label class="f">E-mail<input type="email" id="lg-mail" autocomplete="username"></label>
+        <label class="f">Password<input type="password" id="lg-pw" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></label>
+      </div>
+      <div class="btnrow"><button class="btn red" onclick="doLogin()">Log in</button><button class="btn ghost" onclick="showResetGate()">Forgot password?</button></div>
+      <div class="small" id="lg-msg" style="margin-top:10px;color:var(--red)">${esc(msg||'')}</div></div>`);
+  $('#gate').hidden = false; $('#app').hidden = true;
+}
+async function doLogin(){
+  try { await SupaStore.login($('#lg-mail').value.trim(), $('#lg-pw').value); await startApp(); }
+  catch (err){ $('#lg-msg').textContent = 'Login failed: ' + (err.message||err); }
+}
+function showResetGate(){
+  $('#gate').innerHTML = gateShell(`
+    <div class="card"><h2>Reset password</h2>
+      <p class="lead">We send you a code by e-mail. Enter it here together with your new password.</p>
+      <div style="display:grid;gap:12px">
+        <label class="f">E-mail<input type="email" id="rs-mail"></label>
+        <button class="btn ghost" onclick="sendResetCode()">Send code</button>
+        <label class="f">Code from the e-mail<input type="text" id="rs-code" inputmode="numeric" maxlength="10"></label>
+        <label class="f">New password<input type="password" id="rs-pw" autocomplete="new-password"></label>
+      </div>
+      <div class="btnrow"><button class="btn red" onclick="doReset()">Set password</button><button class="btn ghost" onclick="showLoginGate()">Back</button></div>
+      <div class="small" id="rs-msg" style="margin-top:10px"></div></div>`);
+}
+async function sendResetCode(){
+  const { error } = await db.auth.resetPasswordForEmail($('#rs-mail').value.trim());
+  $('#rs-msg').textContent = error ? 'Error: ' + error.message : 'Code sent — check your inbox.';
+}
+async function doReset(){
+  const email = $('#rs-mail').value.trim();
+  const v = await db.auth.verifyOtp({email, token:$('#rs-code').value.trim(), type:'recovery'});
+  if (v.error){ $('#rs-msg').textContent = 'Code invalid: ' + v.error.message; return; }
+  const u = await db.auth.updateUser({password:$('#rs-pw').value});
+  if (u.error){ $('#rs-msg').textContent = 'Error: ' + u.error.message; return; }
+  toast('Password saved'); await startApp();
+}
+function showSetPasswordGate(){
+  $('#gate').innerHTML = gateShell(`
+    <div class="card"><h2>Welcome! Choose your password</h2>
+      <label class="f">New password<input type="password" id="sp-pw" autocomplete="new-password"></label>
+      <div class="btnrow"><button class="btn red" onclick="doSetPassword()">Save & continue</button></div>
+      <div class="small" id="sp-msg" style="margin-top:10px;color:var(--red)"></div></div>`);
+  $('#gate').hidden = false; $('#app').hidden = true;
+}
+async function doSetPassword(){
+  const { error } = await db.auth.updateUser({password:$('#sp-pw').value});
+  if (error){ $('#sp-msg').textContent = error.message; return; }
+  history.replaceState(null, '', location.pathname + location.search); await startApp();
+}
+
+async function logout(){ await Store.logout(); location.reload(); }
+
+async function loadData(){
+  const d = await Store.loadAll(ST.me);
+  Object.assign(ST, {profiles:d.profiles, groups:d.groups, entries:d.entries, notes:d.notes, sessions:d.sessions||[], attempts:d.attempts||[]});
+  const me = ST.profiles.find(p => p.id===ST.me.id); if (me) ST.me = me;
+  const vis = visibleAthletes();
+  if (ST.me.role==='athlete') ST.athleteId = ST.me.id;
+  else if (!vis.some(a => a.id===ST.athleteId)) ST.athleteId = vis[0]?.id || null;
+}
+
+async function startApp(){
+  try {
+    ST.me = await Store.currentUser();
+    if (!ST.me){ DEMO ? showDemoGate() : showLoginGate(); return; }
+    await loadData();
+  } catch (err){
+    console.error(err);
+    DEMO ? showDemoGate() : showLoginGate('Could not load your profile: ' + (err.message||err));
+    return;
+  }
+  document.querySelectorAll('.page').forEach(p => p.innerHTML = '');
+  $('#gate').hidden = true; $('#app').hidden = false;
+  if (DEMO){ const b = $('#demo-bar'); b.hidden = false; b.innerHTML = `DEMO MODE — data stays in this browser <button onclick="Store.logout().then(()=>location.reload())">Switch user</button>`; }
+  ST.page = isStaff() && activeSession() ? 'session' : 'assessment';
+  render();
+}
+
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible' || !ST.me || DEMO || ST.form || RV || ST.page==='session') return;
+  try { await loadData(); render(); } catch {}
+});
+
+(async function boot(){
+  if (DEMO){ DemoStore.load(); await startApp(); return; }
+  db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const hash = location.hash;
+  if (/type=(invite|recovery)/.test(hash)){
+    await new Promise(r => setTimeout(r, 300)); // supabase-js liest das Token aus dem Hash
+    showSetPasswordGate(); return;
+  }
+  await startApp();
+})();
+</script>
+</body>
+</html>

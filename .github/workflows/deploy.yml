@@ -42,10 +42,29 @@ jobs:
             }
             console.log('Sanity-Check Moguls OK');
           "
+      - name: Sanity-Check Youth (kein Deploy bei kaputtem nachwuchs.html)
+        id: youth
+        run: |
+          node -e "
+            const fs = require('fs');
+            const html = fs.readFileSync('nachwuchs.html', 'utf8');
+            const m = html.match(/<script>\n([\s\S]*?)\n<\/script>/);
+            if (!m) throw new Error('Youth-Script nicht gefunden');
+            new Function(m[1]);
+            for (const marker of ['SUPABASE_URL', 'const CATALOG', 'function evaluate', 'renderSession', 'renderMonitoring']) {
+              if (!html.includes(marker)) throw new Error('Pflicht-Marker fehlt: ' + marker);
+            }
+            const url = (html.match(/const SUPABASE_URL = '([^']*)'/) || [])[1];
+            // Ohne Supabase-URL liefe die Seite im Demo-Modus — dann noch nicht veröffentlichen.
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'ready=' + (url ? 'true' : 'false') + '\n');
+            console.log('Sanity-Check Youth OK' + (url ? '' : ' — SUPABASE_URL leer, Deploy wird übersprungen'));
+          "
       - name: Stage unified app
         run: mkdir -p stage && cp index.html stil.css manifest-*.webmanifest stage/ && cp -R icons js stage/
       - name: Stage moguls app
         run: mkdir -p stage-moguls && cp moguls.html stage-moguls/index.html
+      - name: Stage youth app
+        run: mkdir -p stage-youth && cp nachwuchs.html stage-youth/index.html
       - name: Deploy Freeski
         run: npx netlify-cli@17 deploy --prod --dir=stage
         env:
@@ -61,3 +80,9 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: 101487f5-ab31-40a0-a50b-18cbdd51c49d
+      - name: Deploy Youth (Skills-Check Freeski)
+        if: steps.youth.outputs.ready == 'true'
+        run: npx netlify-cli@17 deploy --prod --dir=stage-youth
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: 7e8f675b-8b9b-4ba7-b873-ec87ffa1efa7
