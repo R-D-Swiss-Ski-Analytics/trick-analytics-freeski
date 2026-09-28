@@ -2233,7 +2233,7 @@ function monOpenSession(d){
   const k = monCounts(l), mx = maxFor(l[0].discipline);
   const H = 90, slot = 30, PAD = 34, W = PAD + l.length * slot + 10, yOf = v => 8 + (H - 8) * (1 - v);
   let s = '';
-  for (const [v, t] of [[0, '0★'], [.6, '3★'], [1, mx + '★']]) s += `<line x1="${PAD}" x2="${W}" y1="${yOf(v)}" y2="${yOf(v)}" stroke="#e2ddda" ${v ? 'stroke-dasharray="2 4"' : ''}/><text x="${PAD - 5}" y="${yOf(v) + 3}" text-anchor="end" font-size="9" fill="#6b6b70">${t}</text>`;
+  for (const [v, t] of [[0, '0★'], [Math.round(mx / 2) / mx, Math.round(mx / 2) + '★'], [1, mx + '★']]) s += `<line x1="${PAD}" x2="${W}" y1="${yOf(v)}" y2="${yOf(v)}" stroke="#e2ddda" ${v ? 'stroke-dasharray="2 4"' : ''}/><text x="${PAD - 5}" y="${yOf(v) + 3}" text-anchor="end" font-size="9" fill="#6b6b70">${t}</text>`;
   let run = 0; const pts = [];
   l.forEach((a, i) => {
     const cx = PAD + i * slot + slot / 2, o = outcomeOf(a), v = a.fell ? 0 : a.score / (a.max || mx);
