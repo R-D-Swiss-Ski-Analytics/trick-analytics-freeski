@@ -1160,7 +1160,9 @@ const FORM_DEFAULTS = {
   Rail: {obstacle:'Tube', side:'L', approach:'F', on:'Skislide', swap:'', out:'to normal', outSide:'FS', foot:'Right', outStyle:''},
   Halfpipe: {kind:'air', basic:'Drop in', side:'L', dir:'L', sw:'', ao:'', axis:'Upright', flips:'1', rot:'360', grab:'', height:'', bringback:'', style:''},
 };
-const opts = (list, v) => list.map(o => { const [val, lab] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(val)}" ${String(val)===String(v)?'selected':''}>${esc(lab)}</option>`; }).join('');
+const opts = (list, v) => list.map(o => {
+  if (o && o.group) return `<optgroup label="${esc(o.group)}">${opts(o.items, v)}</optgroup>`;
+  const [val, lab] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(val)}" ${String(val)===String(v)?'selected':''}>${esc(lab)}</option>`; }).join('');
 const rotList = (from, to) => { const r = []; for (let x = from; x <= to; x += 180) r.push([String(x), String(x)]); return r; };
 
 function formFields(disc, F, fn='formSet'){
@@ -1174,7 +1176,10 @@ function formFields(disc, F, fn='formSet'){
     const noRot = NOROT.includes(F.axis);
     add('dir', 'Direction', noRot ? [['F','Forward'],['S','Switch']] : D4.map(d => [d, DIRN[d]]));
     add('flips', 'Flips', [['1','Single'],['2','Double'],['3','Triple'],['4','Quad']], OFFAX.includes(F.axis));
-    add('axis', 'Axis', [['Upright','Upright Spins'],['Cork','Cork'],['Bio/Misty','Bio/Misty'],['Flat Spin','Flat Spins'],['Rodeo','Rodeo'],['Zero Spin','Zero Spin'],['Frontflip','Frontflip'],['Backflip','Backflip'],['Sideflip','Sideflip']]);
+    add('axis', 'Axis', [{group:'Off-Axis', items:[['Cork','Cork'],['Bio/Misty','Bio/Misty'],['Flat Spin','Flat Spins'],['Rodeo','Rodeo']]},
+      {group:'Upright Spins (Longitudinal Axis)', items:[['Upright','Upright Spins']]},
+      {group:'Classic Acrobatic Axis (Transverse Axis and Sagittal Axis)', items:['Frontflip','Backflip','Sideflip']},
+      {group:'Straight Air', items:[['Zero Spin','Zero Spin']]}]);
     add('rot', 'Rotation', rotList(180, 2520), !noRot);
     add('takeoff', 'Take-Off', [['','–'], ...TAKEOFFS]);
     grabBlock();
@@ -1203,7 +1208,8 @@ function formFields(disc, F, fn='formSet'){
       add('sw', 'Stance', [['','Forward'],['1','Switch']]);
       add('ao', 'Alley-oop', [['','No (down the pipe)'],['1','Yes']]);
       add('flips', 'Flips', [['1','Single'],['2','Double'],['3','Triple']], ['Cork','Bio/Misty','Flat Spin','Rodeo'].includes(F.axis));
-      add('axis', 'Axis', HP_AXES.map(a => [a, a==='Upright'?'Upright Spins':a]));
+      add('axis', 'Axis', [{group:'Off-Axis', items:[['Cork','Cork'],['Bio/Misty','Bio/Misty'],['Flat Spin','Flat Spins'],['Rodeo','Rodeo'],['Flair','Flair']]},
+        {group:'Upright Spins (Longitudinal Axis)', items:[['Upright','Upright Spins']]}]);
       add('rot', 'Rotation', [['0','– (straight / flair)'], ...rotList(180, 1620)]);
       f.push(`<div class="form-group"><label>Air Height (m)</label><input type="number" step="0.5" min="0" max="8" value="${esc(F.height)}" oninput="${fn}('height', this.value, true)" placeholder="e.g. 3.5"></div>`);
       grabBlock();
