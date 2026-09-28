@@ -63,6 +63,8 @@ main.wrap{padding-top:28px;padding-bottom:80px}
 .card h2{font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--char);margin:0 0 14px;display:flex;align-items:center;gap:10px}
 .card h2 .rt{margin-left:auto;letter-spacing:0;text-transform:none;font-weight:600}
 .lead{font-size:14px;color:var(--muted);margin:-6px 0 14px}
+.hints{margin:-4px 0 14px;padding-left:18px;font-size:13px;color:var(--muted);line-height:1.6}
+.hints li::marker{color:var(--red)}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .grow{flex:1}
 .muted{color:var(--muted)}
@@ -316,7 +318,10 @@ textarea{min-height:64px;resize:vertical}
 .sub-h{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--char);margin:18px 0 8px;display:flex;gap:10px}
 .sub-h .rt{margin-left:auto;font-weight:600;letter-spacing:0;text-transform:none;color:var(--muted)}
 .chips-row{display:flex;gap:6px;flex-wrap:wrap}
-.varrow{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;padding:7px 0;border-top:1px solid var(--line);font-size:12.5px;align-items:center}
+.varrow{display:grid;grid-template-columns:minmax(0,1fr) 80px 150px 90px;gap:12px;padding:7px 0;border-top:1px solid var(--line);font-size:12.5px;align-items:center}
+.varrow > :not(:first-child){text-align:right}
+.varrow.head{border-top:0;padding-top:0;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+@media (max-width:700px){.varrow{grid-template-columns:minmax(0,1fr) 54px 92px 56px;gap:8px}}
 .coach-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px 24px}
 
 /* Session / Reports / Monitoring */
@@ -588,6 +593,21 @@ const I18N = {
   'No volume effect':['Kein Volumen-Effekt','Pas d’effet du volume','Nessun effetto volume'], 'None, still moving':['Keines, entwickelt sich noch','Aucun, encore en évolution','Nessuno, ancora in evoluzione'],
   'Irregular, session to session':['Unregelmässig von Session zu Session','Irrégulier d’une session à l’autre','Irregolare da una sessione all’altra'], 'Consistent':['Konstant','Régulier','Costante'],
   'No fail pattern':['Kein Fail-Muster','Pas de schéma d’échec','Nessuno schema di errore'],
+  'Skills-Check at each athlete\'s own level':['Skills-Check auf der eigenen Stufe jeder Athlet:in','Skills-Check au niveau propre de chaque athlète','Skills-Check al livello di ogni atleta'],
+  'Total = Jumps, Rails and Halfpipe, ⅓ each':['Total = Jumps, Rails und Halfpipe, je ⅓','Total = Jumps, Rails et Halfpipe, ⅓ chacun','Totale = Jumps, Rails e Halfpipe, ⅓ ciascuno'],
+  'From T4: focus possible (Halfpipe only, or Jumps & Rails only)':['Ab T4: Fokus möglich (nur Halfpipe oder nur Jumps & Rails)','Dès T4 : focus possible (seulement Halfpipe ou seulement Jumps & Rails)','Da T4: focus possibile (solo Halfpipe o solo Jumps & Rails)'],
+  'Click a row to open the Skills-Check':['Zeile anklicken öffnet den Skills-Check','Clique sur une ligne pour ouvrir le Skills-Check','Clicca una riga per aprire lo Skills-Check'],
+  'Submitted tricks, oldest first':['Eingereichte Tricks, älteste zuerst','Tricks soumis, les plus anciens d’abord','Trick inviati, prima i più vecchi'],
+  '1 point per criterion: Take-off, Trick, Grab, Landing (max. 4)':['1 Punkt pro Kriterium: Take-off, Trick, Grab, Landing (max. 4)','1 point par critère : Take-off, Trick, Grab, Landing (max. 4)','1 punto per criterio: Take-off, Trick, Grab, Landing (max. 4)'],
+  'Halfpipe: additionally Amplitude (max. 5)':['Halfpipe: zusätzlich Amplitude (max. 5)','Halfpipe : en plus Amplitude (max. 5)','Halfpipe: in più Amplitude (max. 5)'],
+  'Points = best coach rating per requirement':['Punkte = beste Coach-Bewertung pro Vorgabe','Points = meilleure évaluation du coach par exigence','Punti = migliore valutazione del coach per requisito'],
+  'Jumps/Rails 0–4, Halfpipe 0–5 (incl. Amplitude)':['Jumps/Rails 0–4, Halfpipe 0–5 (inkl. Amplitude)','Jumps/Rails 0–4, Halfpipe 0–5 (incl. Amplitude)','Jumps/Rails 0–4, Halfpipe 0–5 (incl. Amplitude)'],
+  'Achieved = full points':['Erreicht = volle Punktzahl','Atteint = maximum de points','Raggiunto = punteggio pieno'],
+  'Tricks waiting for the coach count once rated':['Tricks, die auf den Coach warten, zählen nach der Bewertung','Les tricks en attente du coach comptent une fois évalués','I trick in attesa del coach contano dopo la valutazione'],
+  'Sessions = training days in the selected period':['Sessions = Trainingstage im gewählten Zeitraum','Sessions = jours d’entraînement de la période choisie','Sessioni = giorni di allenamento nel periodo scelto'],
+  'Comp-readiness = every criterion ≥ 80% in the last 3 sessions (landed attempts)':['Wettkampfbereit = jedes Kriterium ≥ 80 % in den letzten 3 Sessions (gelandete Versuche)','Prêt pour la compétition = chaque critère ≥ 80 % sur les 3 dernières sessions (essais landed)','Pronto per la gara = ogni criterio ≥ 80 % nelle ultime 3 sessioni (tentativi landed)'],
+  ': learned trick, Ø quality below 70% (≥5 attempts)':[': gelernter Trick, Ø Qualität unter 70 % (≥5 Versuche)',' : trick acquis, qualité moyenne sous 70 % (≥5 essais)',': trick imparato, qualità media sotto il 70 % (≥5 tentativi)'],
+  ': goal, Ø quality 70% or more (≥3 attempts) → review inbox':[': Ziel, Ø Qualität 70 % oder mehr (≥3 Versuche) → Review-Inbox',' : objectif, qualité moyenne 70 % ou plus (≥3 essais) → boîte d’évaluation',': obiettivo, qualità media 70 % o più (≥3 tentativi) → casella valutazioni'],
   'Coaching Analysis':['Coaching-Analyse','Analyse coaching','Analisi coaching'], 'Coach comment · current status':['Coach-Kommentar · aktueller Stand','Commentaire du coach · état actuel','Commento del coach · stato attuale'],
   'AI summary':['KI-Zusammenfassung','Résumé IA','Riepilogo IA'], 'Add new comment':['Neuen Kommentar erfassen','Ajouter un commentaire','Aggiungi un commento'], 'No comments yet.':['Noch keine Kommentare.','Pas encore de commentaires.','Ancora nessun commento.'],
   'Comment saved':['Kommentar gespeichert','Commentaire enregistré','Commento salvato'], 'Loading…':['Lädt…','Chargement…','Caricamento…'], '🔍 Reality Check':['🔍 Realitäts-Check','🔍 Contrôle de réalité','🔍 Verifica realtà'],
@@ -608,6 +628,12 @@ const I18N_DE = {
 };
 // Texte mit Zahlen/Namen
 const I18N_PAT = [
+  [/^↗ rising, (\+\d+)%$/, (m, i) => [`↗ steigend, ${m[1]}%`, `↗ en hausse, ${m[1]}%`, `↗ in crescita, ${m[1]}%`][i]],
+  [/^↘ falling, (-\d+)%$/, (m, i) => [`↘ sinkend, ${m[1]}%`, `↘ en baisse, ${m[1]}%`, `↘ in calo, ${m[1]}%`][i]],
+  [/^Stomped \(all criteria\)$/, (m, i) => ['Stomped (alle Kriterien)', 'Stomped (tous les critères)', 'Stomped (tutti i criteri)'][i]],
+  [/^Variants & grabs \((\d+)\)$/, (m, i) => [`Varianten & Grabs (${m[1]})`, `Variantes & grabs (${m[1]})`, `Varianti & grab (${m[1]})`][i]],
+  [/^Plateau tolerance ±(\d+)%$/, (m, i) => [`Plateau-Toleranz ±${m[1]} %`, `Tolérance plateau ±${m[1]} %`, `Tolleranza plateau ±${m[1]} %`][i]],
+  [/^Assessment vs\. session data \((.+)\)$/, (m, i) => [`Assessment vs. Session-Daten (${I18N_PERIOD(m[1], i)})`, `Assessment vs données de session (${I18N_PERIOD(m[1], i)})`, `Assessment vs dati di sessione (${I18N_PERIOD(m[1], i)})`][i]],
   [/^Not enough data \((\d+)\/(\d+) sessions\)$/, (m, i) => [`Zu wenig Daten (${m[1]}/${m[2]} Sessions)`, `Pas assez de données (${m[1]}/${m[2]} sessions)`, `Dati insufficienti (${m[1]}/${m[2]} sessioni)`][i]],
   [/^Falling, (-\d+)% \(3 sessions\)$/, (m, i) => [`Sinkend, ${m[1]}% (3 Sessions)`, `En baisse, ${m[1]}% (3 sessions)`, `In calo, ${m[1]}% (3 sessioni)`][i]],
   [/^Rising, (\+\d+)% \(3 sessions\)$/, (m, i) => [`Steigend, ${m[1]}% (3 Sessions)`, `En hausse, ${m[1]}% (3 sessions)`, `In crescita, ${m[1]}% (3 sessioni)`][i]],
@@ -1905,7 +1931,7 @@ function renderSkills(){
               <div class="pts">${o.state==='na' ? '' : e && e.status==='reviewed' ? stars(e.score, maxFor(disc)) : o.state==='pending' ? '<span class="muted small">⏳</span>' : '<span class="muted">0</span>'}</div></div>`; }).join('')}
         </div>`; }).join('')}
       ${ev.rules.map(r => `<div class="rule">${r.ok ? '✅' : '⚠️'} <b>${esc(r.text)}</b><span class="muted">${esc(r.detail)}</span></div>`).join('')}
-      <div class="tiny muted" style="margin-top:14px">Points = best coach rating per requirement (Jumps/Rails 0–4, Halfpipe 0–5 incl. Amplitude). A requirement counts as achieved with full points. Pending tricks count once the coach has rated them.</div>
+      <ul class="hints" style="margin-top:14px"><li>Points = best coach rating per requirement</li><li>Jumps/Rails 0–4, Halfpipe 0–5 (incl. Amplitude)</li><li>Achieved = full points</li><li>Tricks waiting for the coach count once rated</li></ul>
     </div>`;
 }
 
@@ -1922,7 +1948,7 @@ function renderReviews(){
   root.innerHTML = `
     ${ST.me.role==='dvlp' ? `<div class="row" style="margin-bottom:18px">${groupFilterSelect()}</div>` : ''}
     <div class="card"><h2>Review inbox <span class="chip ${pend.length?'red':''}">${pend.length}</span></h2>
-      <p class="lead">Tricks your athletes submitted — oldest first. Rate Take-off, Trick, Grab and Landing (1 point each, max. 4) — Halfpipe additionally Amplitude (max. 5).</p>
+      <ul class="hints"><li>Submitted tricks, oldest first</li><li>1 point per criterion: Take-off, Trick, Grab, Landing (max. 4)</li><li>Halfpipe: additionally Amplitude (max. 5)</li></ul>
       <div class="list">${pend.length ? pend.map(e => entryRow(e, {showName:true})).join('') : '<div class="empty">Nothing to review right now.</div>'}</div></div>
     ${rework.length ? `<div class="card"><h2>Waiting for a new video <span class="chip">${rework.length}</span></h2><div class="list">${rework.map(e => entryRow(e, {showName:true})).join('')}</div></div>` : ''}
     <div class="card"><h2>Recently rated</h2><div class="list">${recent.length ? recent.map(e => entryRow(e, {showName:true})).join('') : '<div class="empty">No ratings yet.</div>'}</div></div>`;
@@ -2004,7 +2030,7 @@ function renderTeam(){
   root.innerHTML = `
     <div class="row" style="margin-bottom:18px">${dv ? groupFilterSelect() : ''}<span class="grow"></span><button class="btn red" onclick="openAddAthlete()">+ Add athlete</button></div>
     <div class="card"><h2>${dv ? 'All athletes' : esc(groupName(ST.me.group_id))} <span class="muted" style="letter-spacing:0;font-weight:600">${aths.length}</span></h2>
-      <p class="lead">Skills-Check at each athlete's own level. Total = Jumps, Rails and Halfpipe weighted ⅓ each; from T4 a focus (Halfpipe only, or Jumps & Rails only) can be set. Click a row to open the Skills-Check.</p>
+      <ul class="hints"><li>Skills-Check at each athlete's own level</li><li>Total = Jumps, Rails and Halfpipe, ⅓ each</li><li>From T4: focus possible (Halfpipe only, or Jumps & Rails only)</li><li>Click a row to open the Skills-Check</li></ul>
       <div class="scroll-x"><table class="tbl"><thead><tr><th>Athlete</th><th>Sex</th><th>Level</th><th>Focus</th>${dv?'<th>Group</th>':''}<th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th><th></th></tr></thead>
       <tbody>${rows || `<tr><td colspan="10" class="empty">No athletes.</td></tr>`}</tbody></table></div></div>
     ${dv ? `<div class="card"><h2>Coaches & staff</h2><div class="scroll-x"><table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Group</th></tr></thead><tbody>
@@ -2854,7 +2880,8 @@ function renderMonTrick(root, all){
       <div class="sub-h">Criteria fulfillment (Landed + Stomped)</div>
       <div class="chips-row">${cr.n ? cr.rates.map(r => { const col = r.pct >= 80 ? MON_ST.ready.c : r.pct >= 50 ? '#C96A1F' : MON_ST.critical.c; return `<span class="pill" style="border-color:${col};color:${col}">${esc(r.name.replace(/ \(.*\)/, ''))} ${r.pct}%</span>`; }).join('') : '<span class="muted small">No landed attempts yet.</span>'}</div>
       <div class="small" style="margin-top:12px">${top ? `Most common fail reason: <b>${esc(top[0])}</b> (${top[1]}×)${failTrend}` : fails.length ? `${fails.length} failed attempt${fails.length>1?'s':''} without reason` : 'No failed attempts.'}</div>
-      ${varRows.length > 1 || (varRows[0] && list[0].trick?.grab) ? `<div class="sub-h">Variants & grabs (${varRows.length})<span class="rt">Stomped/Landed/Failed · stomp rate</span></div>
+      ${varRows.length > 1 || (varRows[0] && list[0].trick?.grab) ? `<div class="sub-h">Variants & grabs (${varRows.length})</div>
+        <div class="varrow head"><span>Grab</span><span>Attempts</span><span title="Stomped / Landed / Failed">S / L / F</span><span>Stomp rate</span></div>
         ${varRows.map(([l, v]) => { const k = monCounts(v), r = pctR(k.s, k.n), col = k.n < 5 ? '#8a8a8f' : r >= 70 ? MON_ST.ready.c : r >= 40 ? '#C96A1F' : MON_ST.critical.c;
           return `<div class="varrow"><span title="${esc(l)}">${esc(grabOf(v[0]))}</span><span class="muted">${k.n} att.</span><span><b style="color:${OC.stomped}">${k.s}</b>/<b style="color:${OC.landed}">${k.l}</b>/<b style="color:${OC.failed}">${k.f}</b></span><b style="color:${col}">${r}%</b></div>`; }).join('')}` : ''}
     </div>
@@ -2963,7 +2990,7 @@ function monCoaching(list, disc){
     items.push(['Most common fail', `${top[0]} (${top[1]}×)${tr}`, col]);
   }
   return `<div class="coach-grid">${items.map(([l, t, col]) => `<div style="border-left:3px solid ${col};padding-left:10px"><div class="tiny muted" style="font-weight:700;letter-spacing:.6px;text-transform:uppercase">${esc(l)}</div><div style="font-weight:600;color:var(--char);font-size:14px">${esc(t)}</div></div>`).join('')}</div>
-    <div class="tiny muted" style="margin-top:12px">Basis: sessions = training days in the selected period. Comp-readiness = every criterion ≥ 80% in the last 3 sessions (landed attempts). Plateau tolerance ±${MON_PLATEAU_TOL}%.</div>`;
+    <ul class="hints" style="margin-top:12px"><li>Sessions = training days in the selected period</li><li>Comp-readiness = every criterion ≥ 80% in the last 3 sessions (landed attempts)</li><li>Plateau tolerance ±${MON_PLATEAU_TOL}%</li></ul>`;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -3071,7 +3098,7 @@ function realityCheck(){
 function renderRealityCheck(){
   const shown = RC.items.map((it, i) => ({...it, i})).filter(it => !RC.q || it.ath.name.toLowerCase().includes(RC.q.toLowerCase()));
   const by = {}; shown.forEach(it => (by[it.ath.id] ||= []).push(it));
-  modal(`<h3>Reality Check</h3><p class="lead" style="margin-top:6px">Assessment vs. session data (${monPeriodLabel()}). <b>↓ Goal</b>: learned trick with Ø quality below 70% (≥5 attempts). <b>↑ Learned</b>: goal with Ø quality 70%+ (≥3 attempts) — goes to the review inbox.</p>
+  modal(`<h3>Reality Check</h3><ul class="hints" style="margin-top:8px"><li>Assessment vs. session data (${monPeriodLabel()})</li><li><b>↓ Goal</b>: learned trick, Ø quality below 70% (≥5 attempts)</li><li><b>↑ Learned</b>: goal, Ø quality 70% or more (≥3 attempts) → review inbox</li></ul>
     <div class="row" style="margin-bottom:10px"><input type="text" placeholder="Search athlete…" value="${esc(RC.q)}" oninput="RC.q=this.value;renderRealityCheck();setTimeout(()=>{const i=document.querySelector('.modal input[type=text]');i.focus();i.setSelectionRange(i.value.length,i.value.length)},0)" style="max-width:240px">
       <button class="btn ghost sm" onclick="RC.items.forEach((_, i) => RC.sel.add(i));renderRealityCheck()">✓ All</button><button class="btn ghost sm" onclick="RC.sel.clear();renderRealityCheck()">✗ None</button></div>
     ${Object.values(by).map(list => `<div class="sub-h">${esc(list[0].ath.name)}</div>${list.map(it => `<label class="rc-row"><input type="checkbox" ${RC.sel.has(it.i)?'checked':''} onchange="this.checked?RC.sel.add(${it.i}):RC.sel.delete(${it.i})">
