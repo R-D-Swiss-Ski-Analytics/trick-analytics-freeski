@@ -319,7 +319,7 @@ const SUPABASE_URL = 'https://yoeqjlonyyuwrojvlcqm.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_oLwde7BCOv-KpTHegncZTQ_-gMz_otw';
 const VIDEO_BUCKET = 'skills-videos';
 const DEMO = !SUPABASE_URL || new URLSearchParams(location.search).has('demo');
-const DEMO_KEY = 'nw-demo-v4';
+const DEMO_KEY = 'nw-demo-v5';
 
 /* ══════════════════════════════════════════════════════════════════════
    TRICK-VOKABULAR
@@ -334,7 +334,8 @@ const GRABS = ['Blunt','Bow and Arrow','Broken Arrow','Critical','Cuban','Double
 const BOTH_HANDS = ['Double Grab (both hands)','Double Japan','Truckdriver'];
 const TAKEOFFS = ['Carved','Blender','Hand-Drag','Inside Edge','Nosebutter','Tailbutter',"N'Ollie"];
 const CREATIVE = ['Nosebutter','Tailbutter',"N'Ollie"];
-const OBST = {'Tube / Box':1, 'Simple rail':2, 'Demanding rail':3};
+const OBST = {'Tube':1, 'Simple rail':2, 'Demanding rail':3};   // wie Skills-Check (keine Box)
+const obstLevel = o => OBST[o] || (o==='Tube / Box' ? 1 : 0);   // Altwert
 const RAIL_ON = ['50-50','Skislide','Lipslide','270','Lip 270','450','Lip 450'];
 const RAIL_SWAP = ['Frontswap','Backswap','K-Fed','Britney','Super-Fed','Front 360 Swap','Back 360 Swap','Switch-Up'];
 const RAIL_OUT = ['to normal','to switch','270 out','450 out','630 out','810 out','Pretzel 270','Pretzel 450'];
@@ -460,7 +461,7 @@ function jumpCatalog(g){
 function railCatalog(g){
   const P = `R${g}`;
   const LR = ['L','R'];
-  const ob = n => t => (OBST[t.obstacle]||0) >= n;
+  const ob = n => t => obstLevel(t.obstacle) >= n;
   const mk = (id, text, min, m, o) => slot(id, text, t => ob(min)(t) && m(t), o);
   const slides = (p, min, ap) => {
     const r = [];
@@ -758,7 +759,7 @@ function demoSeed(){
     E('u-lena','Jump',J('SR','Upright',360,'Tail'),'reviewed',C4,12),
     E('u-lena','Jump',J('S','Zero Spin',null,'Safety'),'pending',null,1, {note:'Zweiter Versuch, diesmal sauber gestanden!'}),
     E('u-lena','Jump',J('SL','Cork',540,'Mute'),'goal',null,3),
-    E('u-lena','Rail',{obstacle:'Tube / Box', side:'L', approach:'F', on:'Skislide', swap:'', out:'to normal', outSide:'FS', foot:'Right', outStyle:''},'reviewed',{takeon:true, control:true, out:true, landing:true},10),
+    E('u-lena','Rail',{obstacle:'Tube', side:'L', approach:'F', on:'Skislide', swap:'', out:'to normal', outSide:'FS', foot:'Right', outStyle:''},'reviewed',{takeon:true, control:true, out:true, landing:true},10),
     E('u-noah','Jump',J('L','Upright',360,'Japan'),'reviewed',C4,9),
     E('u-noah','Jump',J('R','Upright',180,'Mute'),'pending',null,0),
     E('u-luca','Jump',J('L','Cork',720,'Safety'),'pending',null,2),
@@ -1069,7 +1070,7 @@ function render(){
    ══════════════════════════════════════════════════════════════════════ */
 const FORM_DEFAULTS = {
   Jump: {axis:'Upright', dir:'L', flips:'1', rot:'360', grab:'', takeoff:''},
-  Rail: {obstacle:'Tube / Box', side:'L', approach:'F', on:'Skislide', swap:'', out:'to normal', outSide:'FS', foot:'Right', outStyle:''},
+  Rail: {obstacle:'Tube', side:'L', approach:'F', on:'Skislide', swap:'', out:'to normal', outSide:'FS', foot:'Right', outStyle:''},
   Halfpipe: {kind:'air', basic:'Drop in', side:'L', dir:'L', sw:'', ao:'', axis:'Upright', flips:'1', rot:'360', grab:'', height:''},
 };
 const opts = (list, v) => list.map(o => { const [val, lab] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(val)}" ${String(val)===String(v)?'selected':''}>${esc(lab)}</option>`; }).join('');
