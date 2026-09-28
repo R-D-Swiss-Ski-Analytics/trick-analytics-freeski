@@ -238,8 +238,9 @@ textarea{min-height:64px;resize:vertical}
 .disc-h .n{margin-left:auto;font-size:12px;font-weight:700;letter-spacing:0;color:var(--muted)}
 .disc-h:not(:first-child){margin-top:10px}
 .dir-group:last-child{border-bottom:none}
-.dir-h{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#fff!important;border-top:1px solid rgba(0,0,0,.06)}
-.dir-h .n{margin-left:auto;font-size:12px;font-weight:700;letter-spacing:0;background:rgba(255,255,255,.25);border-radius:99px;padding:1px 9px}
+.dir-h{display:flex;align-items:center;gap:9px;padding:9px 14px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#fff;background:#4a4a4c;border-top:1px solid rgba(255,255,255,.08)}
+.dir-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,.85)}
+.dir-h .n{margin-left:auto;font-size:12px;font-weight:700;letter-spacing:0;background:rgba(255,255,255,.18);border-radius:99px;padding:1px 9px}
 .sb-trick-row{display:flex;align-items:flex-start;gap:8px;padding:10px 14px;border-top:1px solid var(--line);font-size:13px}
 .dir-h + .sb-trick-row{border-top:none}
 .sb-trick-name{flex:1;min-width:0}
@@ -2127,7 +2128,7 @@ function asList(items, emptyMsg){
     const disc = discOf(d), n = items.filter(e => discOf(asDir(e))===disc).length;
     const title = disc !== lastDisc ? `<div class="disc-h">${DISC_LABEL[disc]}<span class="n">${n}</span></div>` : '';
     lastDisc = disc;
-    const bar = disc==='Jump' ? `<div class="dir-h" style="background:${AS_DIR_COL[d]}">${d}<span class="n">${groups[d].length}</span></div>` : '';
+    const bar = disc==='Jump' ? `<div class="dir-h"><i class="dir-dot" style="background:${AS_DIR_COL[d]}"></i>${d}<span class="n">${groups[d].length}</span></div>` : '';
     return `${title}<div class="dir-group">${bar}${groups[d].map(asRow).join('')}</div>`;
   }).join('');
 }
