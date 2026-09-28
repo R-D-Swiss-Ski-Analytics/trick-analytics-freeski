@@ -520,3 +520,10 @@ header{padding-top:calc(14px + env(safe-area-inset-top, 0px)) !important}
 .att-c{margin-top:6px;color:var(--muted)}
 @media (max-width:768px){.att-cats{grid-template-columns:1fr}}
 header h1 .dot{color:#E2001A}
+
+/* Trick-Status-Legende untereinander: eine Zeile pro Status */
+.status-key{display:flex !important;flex-direction:column;align-items:stretch !important;gap:6px !important}
+.status-key-t{margin:0 0 2px !important}
+.status-pill{display:flex !important;align-items:center;gap:8px;border:0 !important;border-left:4px solid var(--c) !important;border-radius:8px !important;background:#fff !important;padding:7px 12px !important}
+.status-pill span{margin-left:auto}
+.status-key-n{margin-top:2px}
