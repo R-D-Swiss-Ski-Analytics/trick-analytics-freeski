@@ -1911,7 +1911,7 @@ function sbTrickChartSvg(g, ai, ti) {
   const line = pts.map((p,i) => `${PADL + i*(barW+gap)+barW/2},${(H - p*PH).toFixed(1)}`).join(' ');
   const w = PADL + Math.max(chartW, 40) + PADR;
   const axisTitle = `<text x="${PADL + chartW/2}" y="${H + 24}" text-anchor="middle" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
-  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+28}" style="display:block;">${grid}${bars}
+  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${(w*TRICK_CHART_SCALE).toFixed(0)}" height="${((H+28)*TRICK_CHART_SCALE).toFixed(0)}" viewBox="0 0 ${w} ${H+28}" style="display:block;">${grid}${bars}
     ${n>1?`<polyline points="${line}" fill="none" stroke="#9aa8b8" stroke-width="1.5" opacity="0.75"/>`:''}
     ${labels}${axisTitle}
   </svg></div>`;

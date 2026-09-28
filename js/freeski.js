@@ -4265,7 +4265,7 @@ function fsTrickChartSvg(g, ai, ti) {
   const w = PAD + Math.max(n*slot, 40);
   const axisTitle = `<text x="${PAD + (w-PAD)/2}" y="${H + 24}" text-anchor="middle" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
   const lineDots = pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#e8edf2" stroke="#0c1a2b" stroke-width="1"/>`).join('');
-  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${w}" height="${H+28}" style="display:block;">${grid}${marks}${bars}
+  return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${(w*TRICK_CHART_SCALE).toFixed(0)}" height="${((H+28)*TRICK_CHART_SCALE).toFixed(0)}" viewBox="0 0 ${w} ${H+28}" style="display:block;">${grid}${marks}${bars}
     ${n>1?`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#e8edf2" stroke-width="2"/>`:''}
     ${lineDots}
     <rect id="sbrv-sel-${ai}-${ti}" x="0" y="1" width="${groupW+6}" height="${H+18}" fill="none" stroke="#39c3d4" stroke-width="1.5" rx="4" style="display:none;"/>
