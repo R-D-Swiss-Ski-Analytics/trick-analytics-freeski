@@ -2,7 +2,7 @@
 // ═══════════════ SPORT BOOT ═══════════════
 document.addEventListener('DOMContentLoaded', async function bootSport(){
   document.title = CFG.title;
-  const h1 = document.querySelector('header h1'); if (h1) h1.textContent = CFG.title;
+  const h1 = document.querySelector('header h1'); if (h1) h1.innerHTML = CFG.title + '<span class="dot">.</span>';   // roter Punkt wie Youth
   if (!(await initAuth())) return;   // not signed in → login gate, stop booting
   applyGroupFilter();
   updateSessTypeButtons();
