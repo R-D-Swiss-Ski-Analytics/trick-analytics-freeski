@@ -677,6 +677,9 @@ const I18N = {
   'Does not come off early':['Springt nicht zu früh ab','Ne sort pas trop tôt','Non esce troppo presto'],
   'Energy off the rail':['Energie beim Absprung vom Rail','Énergie à la sortie du rail','Energia in uscita dal rail'],
   'Based on the FIS Park & Pipe Judges Handbook, ch. 8.1 Execution and 8.3 Amplitude':['Nach FIS Park & Pipe Judges Handbook, Kap. 8.1 Execution und 8.3 Amplitude','Selon le FIS Park & Pipe Judges Handbook, chap. 8.1 Execution et 8.3 Amplitude','Secondo il FIS Park & Pipe Judges Handbook, cap. 8.1 Execution e 8.3 Amplitude'],
+  'A video is required: learned tricks only count with a video. Please add a video (from your photo library).':['Ein Video ist Pflicht: Gelernte Tricks zählen nur mit Video. Bitte ein Video hinzufügen (aus der Fotomediathek).','Une vidéo est obligatoire : les tricks appris ne comptent qu’avec une vidéo. Ajoute une vidéo (depuis ta photothèque).','Un video è obbligatorio: i trick imparati contano solo con un video. Aggiungi un video (dalla libreria foto).'],
+  'Choose a video: the trick is submitted after the upload':['Video wählen: Der Trick wird nach dem Upload eingereicht','Choisis une vidéo : le trick sera envoyé après le téléchargement','Scegli un video: il trick viene inviato dopo il caricamento'],
+  'Video (optional)':['Video (optional)','Vidéo (facultative)','Video (facoltativo)'], 'Video (required for learned tricks)':['Video (Pflicht für gelernte Tricks)','Vidéo (obligatoire pour les tricks appris)','Video (obbligatorio per i trick imparati)'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
@@ -1984,7 +1987,7 @@ function formCard(){
     <div class="form-grid" id="f-fields"></div>
     <div class="preview" id="f-preview"></div>
     <div class="form-grid" style="margin-top:12px">
-      <div class="form-group full"><label>Video ${staff ? '(optional)' : 'for your coach'}</label>
+      <div class="form-group full"><label>${staff ? 'Video (optional)' : 'Video (required for learned tricks)'}</label>
         <div class="filebox">
           <input type="file" accept="video/*" id="f-video" onchange="onFormVideo(this)">
           <span class="muted small" id="f-vname">${hasVideo ? 'A video is already attached: choose a file to replace it.' : ''}</span>
@@ -2008,6 +2011,8 @@ async function submitForm(mode){
   const prev = fm.id ? ST.entries.find(e => e.id===fm.id) : null;
   if (prev && prev.status==='reviewed' && !staff){ toast('Rated tricks can only be changed by your coach.', true); return; }
   const status = mode==='goal' ? 'goal' : (mode==='rate' ? (prev?.status==='reviewed' ? 'reviewed' : 'pending') : 'pending');
+  // Video-Pflicht: Athlet:innen können einen Trick nur mit Video als gelernt einreichen
+  if (!staff && status==='pending' && !ST.pendingFile && !prev?.video_path){ alert('A video is required: learned tricks only count with a video. Please add a video (from your photo library).'); return; }
   const trickChanged = prev && JSON.stringify(prev.trick) !== JSON.stringify(trick);
   const e = {...(prev||{}), id:prev?.id || uid(), athlete_id:ST.athleteId, discipline:fm.disc, trick, label:trickLabel(fm.disc, trick), status, note};
   const d = $('#f-date')?.value || todayIso();
@@ -2046,6 +2051,8 @@ async function deleteEntry(id){
 }
 async function submitGoal(id){
   const e = ST.entries.find(x => x.id===id);
+  // Video-Pflicht: ohne Video zuerst Video wählen, danach automatisch einreichen
+  if (!isStaff() && !e.video_path){ toast('Choose a video: the trick is submitted after the upload'); pickVideo(id, true); return; }
   try { upsertLocal(await Store.saveEntry(ST.me, {...e, status:'pending', ...(e.status==='goal' ? {achieved_at:nowIso()} : {})})); toast(isStaff() ? 'Moved to learned: in the review inbox' : 'Sent to your coach'); render(); }
   catch (err){ toast('Could not send: ' + (err.message||err), true); }
 }
@@ -2079,7 +2086,7 @@ function uploadDone(staff){
   modal(`<h3>✓ Video uploaded</h3><p class="muted" style="margin:8px 0 0">${staff ? 'The video is attached to the trick.' : 'Your coach can now watch it.'}</p>
     <div class="btnrow"><button class="btn red" onclick="closeModal()">OK</button></div>`);
 }
-function pickVideo(id){
+function pickVideo(id, submit){
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
   inp.onchange = async () => {
     const file = inp.files[0]; if (!file) return;
@@ -2090,6 +2097,7 @@ function pickVideo(id){
       const path = await Store.uploadVideo(ST.me, e, file, p => uploadModal(p));
       const next = {...e, video_path:path};
       if (!isStaff() && e.status==='rework') next.status = 'pending';
+      if (submit){ next.status = 'pending'; if (e.status==='goal') next.achieved_at = nowIso(); }
       upsertLocal(await Store.saveEntry(ST.me, next)); render(); uploadDone(isStaff());
     } catch (err){ console.error(err); closeModal(); toast('Upload failed: ' + (err.message||err), true); }
   };
