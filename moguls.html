@@ -196,7 +196,7 @@ header h1 .dot{color:#E2001A}
       <option value="">— select —</option>
     </select>
   </div>
-  <div id="st-content"><div class="empty-state"><div class="icon">🏔</div>Select athlete</div></div>
+  <div id="st-content"><div class="empty-state"><div style="font-size:22px;letter-spacing:0.5px;margin-bottom:8px;">Assessment</div><div style="font-size:14px;">Select an athlete to view the overview.</div></div></div>
 </div>
 
 <!-- ══════════════════════════════════════════ SESSION -->
@@ -485,7 +485,7 @@ let stRows = [];   // standort-Einträge der gewählten Athlet:in
 async function loadStandort() {
   const el = document.getElementById('st-content');
   const ath = document.getElementById('st-athlet').value;
-  if (!ath) { el.innerHTML = '<div class="empty-state"><div class="icon">🏔</div>Select athlete</div>'; return; }
+  if (!ath) { el.innerHTML = '<div class="empty-state"><div style="font-size:22px;letter-spacing:0.5px;margin-bottom:8px;">Assessment</div><div style="font-size:14px;">Select an athlete to view the overview.</div></div>'; return; }
   if (!db) { el.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div>Supabase not configured.</div>'; return; }
   el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading…</div>';
   const {data, error} = await db.from('standort').select('*').eq('athlet', ath).order('jump');
