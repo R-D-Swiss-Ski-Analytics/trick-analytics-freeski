@@ -478,8 +478,72 @@ function stRowHtml(r) {
   return `<div class="sb-row">
     <span style="flex:1;font-weight:600;">${r.jump}</span>${grabBadge}
     <button onclick="setStandortStatus(${r.id},'${other}')" title="Move to ${other}" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 8px;font-size:11px;">${r.status === 'mastered' ? '→ 🎯' : '→ ✓'}</button>
+    ${moVideoBtn(r)}
     <button onclick="deleteStandort(${r.id})" class="btn-del">🗑</button>
   </div>`;
+}
+
+// ═══════════════ VIDEOS IM ASSESSMENT ═══════════════
+// Bucket «trick-videos» + Spalte standort.video_path (SQL: supabase/video_migration_moguls.sql).
+const MO_VIDEO_BUCKET = 'trick-videos';
+function moVideoIsLow(file) {
+  return new Promise(res => {
+    const v = document.createElement('video'), url = URL.createObjectURL(file);
+    let fin = false; const done = low => { if (fin) return; fin = true; URL.revokeObjectURL(url); res(low); };
+    v.preload = 'metadata'; v.muted = true;
+    v.onloadedmetadata = () => done(v.videoWidth > 0 && Math.min(v.videoWidth, v.videoHeight) < 720);
+    v.onerror = () => done(false); setTimeout(() => done(false), 5000);
+    v.src = url;
+  });
+}
+function moOverlay(html, closable = true) {
+  document.getElementById('mov-modal')?.remove();
+  const m = document.createElement('div');
+  m.id = 'mov-modal';
+  m.style.cssText = 'position:fixed;inset:0;z-index:6000;background:rgba(0,10,20,.78);display:flex;align-items:center;justify-content:center;padding:16px;';
+  m.innerHTML = `<div style="width:100%;max-width:560px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;color:var(--text);">${html}</div>`;
+  if (closable) m.addEventListener('click', ev => { if (ev.target === m) m.remove(); });
+  document.body.appendChild(m);
+}
+function moVideoBtn(r) {
+  const st = 'border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-right:4px;';
+  return r.video_path
+    ? `<button onclick="moPlayVideo(${r.id})" style="${st}background:rgba(52,211,153,.15);border:1px solid #34d399;color:#34d399;">▶ Video</button>`
+    : `<button onclick="moPickVideo(${r.id})" style="${st}background:none;border:1px solid var(--border);color:var(--muted);">⬆ Video</button>`;
+}
+function moPickVideo(id) {
+  const r = stRows.find(x => x.id === id); if (!r || !db) return;
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
+  inp.onchange = async () => {
+    const file = inp.files[0]; if (!file) return;
+    if (await moVideoIsLow(file)) { alert('This video was recorded directly in the upload dialog and its quality is too low (below 720p). Please film with the camera app and choose the video from your photo library.'); return; }
+    moOverlay(`<div style="font-weight:700;font-size:16px;">Uploading video…</div><div style="margin-top:8px;font-size:14px;color:var(--muted);">Please keep the app open until the upload is finished.</div>`, false);
+    try {
+      const ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
+      const path = `${(r.athlet || 'athlete').replace(/[^\w-]+/g, '_')}/${r.id}-${Date.now()}.${ext}`;
+      const up = await db.storage.from(MO_VIDEO_BUCKET).upload(path, file, { contentType: file.type || 'video/mp4' });
+      if (up.error) throw up.error;
+      const old = r.video_path;
+      const { error } = await db.from('standort').update({ video_path: path }).eq('id', id);
+      if (error) throw error;
+      if (old) db.storage.from(MO_VIDEO_BUCKET).remove([old]);
+      r.video_path = path;
+      moOverlay(`<div style="font-weight:700;font-size:16px;">✓ Video uploaded</div><div style="margin-top:14px;text-align:right;"><button class="btn-primary" onclick="document.getElementById('mov-modal').remove()">OK</button></div>`);
+      renderStandort();
+    } catch (err) {
+      console.error(err); document.getElementById('mov-modal')?.remove();
+      showToast(/video_path|column/i.test(err.message || '') ? 'Video column missing: please run the video SQL in Supabase' : 'Upload failed: ' + (err.message || err), 'error');
+    }
+  };
+  inp.click();
+}
+async function moPlayVideo(id) {
+  const r = stRows.find(x => x.id === id); if (!r?.video_path) return;
+  const { data, error } = await db.storage.from(MO_VIDEO_BUCKET).createSignedUrl(r.video_path, 3600);
+  if (error) { showToast('Could not load video: ' + error.message, 'error'); return; }
+  moOverlay(`<div style="font-weight:700;font-size:16px;margin-bottom:10px;">${r.jump || ''}</div>
+    <video src="${data.signedUrl}" controls playsinline autoplay style="width:100%;max-height:70vh;border-radius:10px;background:#000;"></video>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;"><button onclick="document.getElementById('mov-modal').remove();moPickVideo(${id})" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--text);cursor:pointer;">Replace video</button><button onclick="document.getElementById('mov-modal').remove()" style="padding:8px 14px;border-radius:8px;border:0;background:#39c3d4;color:#06281c;font-weight:700;cursor:pointer;">Close</button></div>`);
 }
 
 function renderStandort() {
@@ -535,7 +599,9 @@ async function setStandortStatus(id, status) {
 }
 
 async function deleteStandort(id) {
+  const vp = stRows.find(r => r.id === id)?.video_path;
   const {error} = await db.from('standort').delete().eq('id', id);
+  if (!error && vp) db.storage.from(MO_VIDEO_BUCKET).remove([vp]);
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
   stRows = stRows.filter(r => r.id !== id);
   renderStandort();

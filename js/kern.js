@@ -780,8 +780,10 @@ function renderAthleteDirBalance(wrap, dirs, colors, dirOf) {
 
 async function deleteSbEntry(id) {
   if (!confirm('Remove entry?')) return;
+  const vp = sbData.find(e => e.id === id)?.video_path;
   const { error } = await db.from('standort').delete().eq('id', id);
   if (error) { showToast('Error', 'error'); return; }
+  if (vp) db.storage.from(TRICK_VIDEO_BUCKET).remove([vp]);
   sbData = sbData.filter(e => e.id !== id);
   renderStandort();
   showToast('Removed', 'success');
@@ -1626,4 +1628,92 @@ function updateSeasonLabels() {
 function sbMonToggleHistory() {
   _monCmtHistOpen = !_monCmtHistOpen;
   sbMonRenderComments();
+}
+
+// ═══════════════ VIDEOS IM ASSESSMENT ═══════════════
+// Bucket «trick-videos» (privat) + Spalte standort.video_path (SQL: supabase/video_migration_fs_sb.sql).
+// Filmen mit der Kamera-App, aus der Mediathek wählen; unter 720p (Aufnahme im Upload-Dialog) wird abgelehnt.
+const TRICK_VIDEO_BUCKET = 'trick-videos';
+function sbVideoIsLow(file) {
+  return new Promise(res => {
+    const v = document.createElement('video'), url = URL.createObjectURL(file);
+    let fin = false; const done = low => { if (fin) return; fin = true; URL.revokeObjectURL(url); res(low); };
+    v.preload = 'metadata'; v.muted = true;
+    v.onloadedmetadata = () => done(v.videoWidth > 0 && Math.min(v.videoWidth, v.videoHeight) < 720);
+    v.onerror = () => done(false); setTimeout(() => done(false), 5000);
+    v.src = url;
+  });
+}
+function sbVideoOverlay(html, closable = true) {
+  document.getElementById('sbv-modal')?.remove();
+  const m = document.createElement('div');
+  m.id = 'sbv-modal';
+  m.style.cssText = 'position:fixed;inset:0;z-index:6000;background:rgba(0,10,20,.78);display:flex;align-items:center;justify-content:center;padding:16px;';
+  m.innerHTML = `<div style="width:100%;max-width:560px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;color:var(--text);">${html}</div>`;
+  if (closable) m.addEventListener('click', ev => { if (ev.target === m) m.remove(); });
+  document.body.appendChild(m);
+}
+function sbVideoProgress(p) {
+  if (!document.getElementById('sbv-pct')) sbVideoOverlay(`<div style="font-weight:700;font-size:16px;">Uploading video…</div>
+    <div style="height:10px;border-radius:99px;background:var(--surface2);overflow:hidden;margin-top:14px;"><i id="sbv-bar" style="display:block;height:100%;width:0;background:#39c3d4;transition:width .2s;"></i></div>
+    <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:14px;color:var(--muted);"><span>Please keep the app open until the upload is finished.</span><b id="sbv-pct">0%</b></div>`, false);
+  document.getElementById('sbv-bar').style.width = p + '%';
+  document.getElementById('sbv-pct').textContent = p + '%';
+}
+function sbPickVideo(id) {
+  const e = (typeof sbData !== 'undefined' ? sbData : []).find(x => x.id === id);
+  if (!e) return;
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
+  inp.onchange = async () => {
+    const file = inp.files[0]; if (!file) return;
+    if (await sbVideoIsLow(file)) { alert('This video was recorded directly in the upload dialog and its quality is too low (below 720p). Please film with the camera app and choose the video from your photo library.'); return; }
+    const ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
+    const path = `${(e.athlet || 'athlete').replace(/[^\w-]+/g, '_')}/${e.id}-${Date.now()}.${ext}`;
+    sbVideoProgress(0);
+    try {
+      const { data:{ session } } = await db.auth.getSession();
+      if (window.tus && session) {
+        await new Promise((resolve, reject) => {
+          const up = new tus.Upload(file, {
+            endpoint: `${SUPABASE_URL}/storage/v1/upload/resumable`,
+            retryDelays: [0, 2000, 5000, 10000, 20000],
+            headers: { authorization: `Bearer ${session.access_token}`, 'x-upsert': 'false' },
+            uploadDataDuringCreation: true, removeFingerprintOnSuccess: true, chunkSize: 6 * 1024 * 1024,
+            metadata: { bucketName: TRICK_VIDEO_BUCKET, objectName: path, contentType: file.type || 'video/mp4', cacheControl: '3600' },
+            onError: reject, onProgress: (a, b) => sbVideoProgress(Math.round(a / b * 100)), onSuccess: resolve,
+          });
+          up.findPreviousUploads().then(prev => { if (prev.length) up.resumeFromPreviousUpload(prev[0]); up.start(); });
+        });
+      } else {
+        const { error } = await db.storage.from(TRICK_VIDEO_BUCKET).upload(path, file, { contentType: file.type || 'video/mp4' });
+        if (error) throw error;
+      }
+      const old = e.video_path;
+      const { error } = await db.from('standort').update({ video_path: path }).eq('id', id);
+      if (error) throw error;
+      if (old) db.storage.from(TRICK_VIDEO_BUCKET).remove([old]);
+      e.video_path = path;
+      sbVideoOverlay(`<div style="font-weight:700;font-size:16px;">✓ Video uploaded</div><div style="margin-top:14px;text-align:right;"><button class="btn btn-primary" onclick="document.getElementById('sbv-modal').remove()">OK</button></div>`);
+      renderStandort();
+    } catch (err) {
+      console.error(err); document.getElementById('sbv-modal')?.remove();
+      showToast(/video_path|column/i.test(err.message || '') ? 'Video column missing: please run the video SQL in Supabase' : 'Upload failed: ' + (err.message || err), 'error');
+    }
+  };
+  inp.click();
+}
+async function sbPlayVideo(id) {
+  const e = (typeof sbData !== 'undefined' ? sbData : []).find(x => x.id === id);
+  if (!e?.video_path) return;
+  const { data, error } = await db.storage.from(TRICK_VIDEO_BUCKET).createSignedUrl(e.video_path, 3600);
+  if (error) { showToast('Could not load video: ' + error.message, 'error'); return; }
+  sbVideoOverlay(`<div style="font-weight:700;font-size:16px;margin-bottom:10px;">${e.trick_label || ''}</div>
+    <video src="${data.signedUrl}" controls playsinline autoplay style="width:100%;max-height:70vh;border-radius:10px;background:#000;"></video>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;"><button class="btn btn-secondary" onclick="document.getElementById('sbv-modal').remove();sbPickVideo(${id})">Replace video</button><button class="btn btn-primary" onclick="document.getElementById('sbv-modal').remove()">Close</button></div>`);
+}
+function sbVideoBtn(e) {
+  const st = 'border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;';
+  return e.video_path
+    ? `<button onclick="sbPlayVideo(${e.id})" style="${st}background:rgba(52,211,153,.15);border:1px solid #34d399;color:#34d399;">▶ Video</button>`
+    : `<button onclick="sbPickVideo(${e.id})" style="${st}background:none;border:1px solid #1a3450;color:#6b8299;">⬆ Video</button>`;
 }

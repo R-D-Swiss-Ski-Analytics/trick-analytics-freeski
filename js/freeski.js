@@ -2046,6 +2046,7 @@ function renderStandort() {
         </span>
         ${grabChipsHtml(e)}
       </span>
+      <span style="margin-right:6px;flex-shrink:0;">${sbVideoBtn(e)}</span>
       <button style="background:none;border:1px solid #1a3450;border-radius:5px;color:#6b8299;cursor:pointer;padding:2px 7px;font-size:11px;margin-right:2px;" onclick="openSbEdit(${e.id})" title="Edit">✏️</button>
       <button class="btn-del" onclick="deleteSbEntry(${e.id})" title="Remove">✕</button>
     </div>`;
