@@ -284,11 +284,11 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)
 'use strict';
 /* ══════════════════════════════════════════════════════════════════════
    KONFIGURATION
-   Leere SUPABASE_URL = Demo-Modus (Daten nur im Browser, localStorage).
+   Projekt «Trick Analyses Youth» (Org Swiss-Ski Freestyle). Leere SUPABASE_URL = Demo-Modus.
    Mit ?demo in der URL wird auch bei gesetzter URL der Demo-Modus erzwungen.
    ══════════════════════════════════════════════════════════════════════ */
-const SUPABASE_URL = '';
-const SUPABASE_KEY = '';
+const SUPABASE_URL = 'https://yoeqjlonyyuwrojvlcqm.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_oLwde7BCOv-KpTHegncZTQ_-gMz_otw';
 const VIDEO_BUCKET = 'skills-videos';
 const DEMO = !SUPABASE_URL || new URLSearchParams(location.search).has('demo');
 const DEMO_KEY = 'nw-demo-v3';
