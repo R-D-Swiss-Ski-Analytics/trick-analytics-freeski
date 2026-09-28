@@ -120,6 +120,13 @@
   .nb-cat-General     { background:rgba(107,130,153,0.15);color:#6b8299;border:1px solid #6b8299; }
   .sess-type-btn { padding:10px 18px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s; }
   .sess-type-btn.active { background:rgba(57,195,212,0.15);border-color:#39c3d4;color:#39c3d4; }
+  /* Session-Typen nach Disziplin gruppiert: Landing Bag | Big Air / Slopestyle / Halfpipe je Training + Competition */
+  .sess-type-grid { display:grid; gap:8px; max-width:560px; }
+  .sess-type-row { display:grid; grid-template-columns:110px 1fr 1fr; gap:8px; align-items:center; }
+  .sess-type-row.single { grid-template-columns:1fr; }
+  .sess-type-lbl { font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--muted); }
+  .sess-type-row .sess-type-btn { width:100%; }
+  @media (max-width:500px) { .sess-type-row { grid-template-columns:84px 1fr 1fr; } }
   .sess-trick-btn { padding:8px 14px;background:var(--surface2);border:2px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap; }
   .sess-trick-btn.active { background:rgba(57,195,212,0.15);border-color:#39c3d4;color:#39c3d4; }
   .loading { text-align: center; padding: 40px; color: var(--muted); }

@@ -60,14 +60,11 @@
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <div class="card-title" style="margin:0;">Step 1 — Session Type</div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;" id="sess-type-btns">
-        <button onclick="selectSessType(this,'Landing Bag')"       class="sess-type-btn">Landing Bag</button>
-        <button onclick="selectSessType(this,'Big Air Training')"     class="sess-type-btn">Big Air Training</button>
-        <button onclick="selectSessType(this,'Big Air Competition')" class="sess-type-btn">Big Air Competition</button>
-        <button onclick="selectSessType(this,'Slopestyle Training')" class="sess-type-btn">Slopestyle Training</button>
-        <button onclick="selectSessType(this,'Slopestyle Competition')" class="sess-type-btn">Slopestyle Competition</button>
-        <button onclick="selectSessType(this,'Halfpipe Training')" class="sess-type-btn">Halfpipe Training</button>
-        <button onclick="selectSessType(this,'Halfpipe Competition')" class="sess-type-btn">Halfpipe Competition</button>
+      <div class="sess-type-grid" id="sess-type-btns">
+        <div class="sess-type-row single"><button data-type="Landing Bag" onclick="selectSessType(this,'Landing Bag')" class="sess-type-btn">Landing Bag</button></div>
+        <div class="sess-type-row"><span class="sess-type-lbl">Big Air</span><button data-type="Big Air Training" onclick="selectSessType(this,'Big Air Training')" class="sess-type-btn">Training</button><button data-type="Big Air Competition" onclick="selectSessType(this,'Big Air Competition')" class="sess-type-btn">Competition</button></div>
+        <div class="sess-type-row"><span class="sess-type-lbl">Slopestyle</span><button data-type="Slopestyle Training" onclick="selectSessType(this,'Slopestyle Training')" class="sess-type-btn">Training</button><button data-type="Slopestyle Competition" onclick="selectSessType(this,'Slopestyle Competition')" class="sess-type-btn">Competition</button></div>
+        <div class="sess-type-row"><span class="sess-type-lbl">Halfpipe</span><button data-type="Halfpipe Training" onclick="selectSessType(this,'Halfpipe Training')" class="sess-type-btn">Training</button><button data-type="Halfpipe Competition" onclick="selectSessType(this,'Halfpipe Competition')" class="sess-type-btn">Competition</button></div>
       </div>
       <div style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <label for="sess-datum" style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Session Date</label>

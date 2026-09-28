@@ -255,10 +255,14 @@ function updateSessTypeButtons() {
   const hasHp = CFG.squads.some(sq => HP_SQUAD_KEYS.has(sq.key) || ALLROUND_SQUAD_KEYS.has(sq.key));
   const hasPark = CFG.squads.some(sq => !HP_SQUAD_KEYS.has(sq.key));
   document.querySelectorAll('.sess-type-btn').forEach(b => {
-    const t = b.textContent.trim();
+    const t = b.dataset.type || b.textContent.trim();
     const isHp = t.startsWith('Halfpipe');
     const isPark = t.startsWith('Big Air') || t.startsWith('Slopestyle');
     b.style.display = (isHp && !hasHp) || (isPark && !hasPark) ? 'none' : '';
+  });
+  // Zeilen ohne sichtbare Knöpfe (z.B. Halfpipe für Park-Gruppen) ganz ausblenden
+  document.querySelectorAll('.sess-type-row').forEach(r => {
+    r.style.display = [...r.querySelectorAll('.sess-type-btn')].some(b => b.style.display !== 'none') ? '' : 'none';
   });
 }
 

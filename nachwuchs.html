@@ -267,6 +267,13 @@ textarea{min-height:64px;resize:vertical}
 .dot-o.failed{background:var(--red)}.dot-o.landed{background:var(--green)}.dot-o.stomped{background:var(--cyan)}
 
 /* Session-Ergänzungen wie Freeski */
+.stype-grid{display:grid;gap:8px;max-width:560px}
+.stype-row{display:grid;grid-template-columns:110px 1fr 1fr;gap:8px;align-items:center}
+.stype-row.single{grid-template-columns:1fr}
+.stype-lbl{font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.stype-btn{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:11px 10px;font-weight:700;font-size:14px;color:var(--char);cursor:pointer}
+.stype-btn.on{background:var(--char);border-color:var(--char);color:#fff}
+@media (max-width:500px){.stype-row{grid-template-columns:84px 1fr 1fr}}
 .gsel{width:auto;padding:6px 10px;font-size:13px;border-radius:8px}
 .run-el{padding:8px 0;border-top:1px solid var(--line)}
 .run-el:first-child{border-top:0}
@@ -2227,7 +2234,8 @@ function renderSessionSetup(root){
       </div>
       ${su.date < todayIso() ? `<div class="tiny" style="color:#C96A1F;margin-top:8px">⚠ Backdated — all entries will be saved for ${fmtDate(su.date)}.</div>` : ''}
       <div class="f-lbl">Session type</div>
-      <div class="seg">${SESS_TYPES.map(([t]) => `<button class="${su.type===t?'on':''}" onclick="SX.setup.type='${t}';renderSession()">${t}</button>`).join('')}</div>
+      <div class="stype-grid">${[['', ['Landing Bag']], ['Big Air', ['Big Air Training','Big Air Competition']], ['Slopestyle', ['Slopestyle Training','Slopestyle Competition']], ['Halfpipe', ['Halfpipe Training','Halfpipe Competition']]]
+        .map(([lbl, ts]) => `<div class="stype-row ${lbl ? '' : 'single'}">${lbl ? `<span class="stype-lbl">${lbl}</span>` : ''}${ts.map(t => `<button class="stype-btn ${su.type===t?'on':''}" onclick="SX.setup.type='${t}';renderSession()">${lbl ? t.replace(lbl + ' ', '') : t}</button>`).join('')}</div>`).join('')}</div>
       <div class="f-lbl">Athletes <button class="linkbtn" onclick="sxSetupAll()">${aths.every(a => su.ath.has(a.id)) && aths.length ? 'None' : 'All'}</button></div>
       <div class="athchips">${aths.map(a => `<button class="athchip ${su.ath.has(a.id)?'on':''}" onclick="sxSetupAth('${a.id}')">${esc(a.name)}<small>${a.level||''}</small></button>`).join('') || '<span class="muted small">No athletes in your group yet.</span>'}</div>
       <div class="btnrow"><button class="btn red" ${su.ath.size?'':'disabled'} onclick="startSession()">Start session${su.ath.size?` (${su.ath.size})`:''}</button></div>
@@ -3117,15 +3125,18 @@ async function applyRealityCheck(){
   } catch (err){ toast('Could not apply: ' + (err.message||err), true); }
 }
 
-// Team- und Athlet:innen-PDF
+// Team- und Athlet:innen-PDF — Prozentwerte in Ampelfarben mit Balken
+const pdfCol = (v, hi=70, mid=40) => v == null ? 'var(--muted)' : v >= hi ? MON_ST.ready.c : v >= mid ? MON_ST.building.c : MON_ST.critical.c;
+const pdfKpi = (label, v, sub='', col=null) => `<div class="kpi"><div class="k">${label}</div><div class="v" style="color:${col || pdfCol(v)}">${v ?? '–'}<small>%${sub}</small></div>${v != null ? `<div class="bar"><i style="width:${v}%;background:${col || pdfCol(v)}"></i></div>` : ''}</div>`;
+const pdfPctCell = (v, hi, mid) => v == null ? '<td class="num">–</td>' : `<td class="num"><b style="color:${pdfCol(v, hi, mid)}">${v}%</b><span class="minibar" style="width:54px"><i style="width:${v}%;background:${pdfCol(v, hi, mid)}"></i></span></td>`;
 function monStatsRows(list){
   return monTrickAgg(list).sort((a,b) => b.list.length - a.list.length).map(t => { const k = monCounts(t.list), st = monStatus(k.n, k.s);
-    return `<tr><td>${esc(t.label)}</td><td class="num">${k.n}</td><td class="num">${pctR(k.s, k.n)}%</td><td class="num">${pctR(k.s + k.l, k.n)}%</td><td class="num">${avg(t.list.map(qa))}%</td><td style="color:${MON_ST[st].c};font-weight:700">${MON_ST[st].l}</td></tr>`; }).join('');
+    return `<tr><td>${esc(t.label)}</td><td class="num">${k.n}</td>${pdfPctCell(pctR(k.s, k.n), 70, 40)}${pdfPctCell(pctR(k.s + k.l, k.n), 70, 50)}${pdfPctCell(avg(t.list.map(qa)), 70, 50)}<td><span class="pill" style="border-color:${MON_ST[st].c};color:${MON_ST[st].c}">${MON_ST[st].l}</span></td></tr>`; }).join('');
 }
 function teamPdf(){
   const all = monAttempts(), aths = [...visibleAthleteIds(ST.me, ST.profiles)].map(prof).filter(Boolean).sort((a,b) => (groupName(a.group_id)).localeCompare(groupName(b.group_id)) || a.name.localeCompare(b.name));
   const rows = aths.map(a => { const l = all.filter(x => x.athlete_id===a.id), c = monCounts(l), t = a.gender && a.level ? levelTotals(a, a.level) : null;
-    return `<tr><td><b>${esc(a.name)}</b><div class="tiny muted">${esc(groupName(a.group_id))}</div></td><td>${a.level || '–'}</td><td class="num">${t ? t.pct + '%' : '–'}</td><td class="num">${new Set(l.map(sessDate)).size}</td><td class="num">${c.n}</td><td class="num">${c.n ? pctR(c.s, c.n) + '%' : '–'}</td><td class="num">${c.n ? pctR(c.s + c.l, c.n) + '%' : '–'}</td><td class="num">${c.n ? avg(l.map(qa)) + '%' : '–'}</td></tr>`; }).join('');
+    return `<tr><td><b>${esc(a.name)}</b><div class="tiny muted">${esc(groupName(a.group_id))}</div></td><td>${a.level || '–'}</td>${pdfPctCell(t ? t.pct : null, 70, 40)}<td class="num">${new Set(l.map(sessDate)).size}</td><td class="num">${c.n}</td>${pdfPctCell(c.n ? pctR(c.s, c.n) : null, 70, 40)}${pdfPctCell(c.n ? pctR(c.s + c.l, c.n) : null, 70, 50)}${pdfPctCell(c.n ? avg(l.map(qa)) : null, 70, 50)}</tr>`; }).join('');
   openPrintWindow('Team Report', `${monPeriodLabel()} · ${aths.length} athletes`,
     `<div class="card"><table class="tbl"><thead><tr><th>Athlete</th><th>Level</th><th class="num">Skills-Check</th><th class="num">Sessions</th><th class="num">Attempts</th><th class="num">Stomp</th><th class="num">Landed</th><th class="num">Ø Quality</th></tr></thead><tbody>${rows}</tbody></table></div>`);
 }
@@ -3133,12 +3144,17 @@ function athletePdf(id){
   const a = prof(id), l = monAttempts().filter(x => x.athlete_id===id), c = monCounts(l);
   const t = a.gender && a.level ? levelTotals(a, a.level) : null;
   const ents = entriesOf(id), learned = ents.filter(e => e.status!=='goal'), goals = ents.filter(e => e.status==='goal');
-  const entryLi = e => `<li>${esc(e.label)} ${e.status==='reviewed' ? `<b>${e.score}/${maxFor(e.discipline)}</b>` : `<span class="muted">(${e.status})</span>`}</li>`;
+  const entryLi = e => `<li>${esc(e.label)} ${e.status==='reviewed' ? `<b style="color:${pdfCol(pctR(e.score, maxFor(e.discipline)), 100, 50)}">${e.score}/${maxFor(e.discipline)}</b>` : `<span class="muted">(${e.status})</span>`}</li>`;
+  const stomp = c.n ? pctR(c.s, c.n) : null, landed = c.n ? pctR(c.s + c.l, c.n) : null;
   openPrintWindow(`Athlete Report — ${a.name}`, `${esc(groupName(a.group_id))} · Level ${a.level || '–'} · ${monPeriodLabel()}`, `
-    <div class="card"><h2>Skills-Check ${a.level || ''}</h2>${t ? `<div class="kpis" style="margin:0"><div class="kpi"><div class="k">Total</div><div class="v">${t.pct}<small>%</small></div></div>${DISCS.filter(d => t.by[d]).map(d => `<div class="kpi"><div class="k">${DISC_LABEL[d]}${t.incl.includes(d) ? '' : ' (not in focus)'}</div><div class="v">${pctR(t.by[d].pts, t.by[d].max)}<small>% · ${t.by[d].pts}/${t.by[d].max}</small></div></div>`).join('')}</div>` : '<div class="muted">Sex/level not set.</div>'}</div>
-    <div class="card"><h2>Session summary</h2><div class="kpis" style="margin:0"><div class="kpi"><div class="k">Sessions</div><div class="v">${new Set(l.map(sessDate)).size}</div></div><div class="kpi"><div class="k">Attempts</div><div class="v">${c.n}</div></div><div class="kpi"><div class="k">Stomp rate</div><div class="v">${pctR(c.s, c.n)}<small>%</small></div></div><div class="kpi"><div class="k">Landed</div><div class="v">${pctR(c.s + c.l, c.n)}<small>%</small></div></div></div>
-      ${c.n ? `<table class="tbl" style="margin-top:14px"><thead><tr><th>Trick</th><th class="num">Att.</th><th class="num">Stomp</th><th class="num">Landed</th><th class="num">Ø Quality</th><th>Status</th></tr></thead><tbody>${monStatsRows(l)}</tbody></table>` : ''}</div>
-    <div class="card"><h2>Assessment</h2><div class="sb-columns"><div><b>Learned tricks (${learned.length})</b><ul class="small">${learned.map(entryLi).join('')}</ul></div><div><b>Goals (${goals.length})</b><ul class="small">${goals.map(entryLi).join('')}</ul></div></div></div>`);
+    <div class="card"><h2>Skills-Check ${a.level || ''}</h2>${t ? `<div class="kpis" style="margin:0">${pdfKpi('Total', t.pct)}${DISCS.filter(d => t.by[d]).map(d => t.incl.includes(d) ? pdfKpi(DISC_LABEL[d], pctR(t.by[d].pts, t.by[d].max), ` · ${t.by[d].pts}/${t.by[d].max}`) : `<div class="kpi" style="opacity:.5"><div class="k">${DISC_LABEL[d]}</div><div class="v"><small>not in focus</small></div></div>`).join('')}</div>` : '<div class="muted">Sex/level not set.</div>'}</div>
+    <div class="card"><h2>Session summary</h2><div class="kpis" style="margin:0">
+        <div class="kpi"><div class="k">Sessions</div><div class="v">${new Set(l.map(sessDate)).size}</div></div>
+        <div class="kpi"><div class="k">Attempts</div><div class="v">${c.n}</div></div>
+        ${pdfKpi('Stomp rate', stomp)}${pdfKpi('Landed', landed, '', pdfCol(landed, 70, 50))}</div>
+      ${c.n ? `<div class="legend" style="margin-top:12px"><span><i class="sq" style="background:${MON_ST.ready.c}"></i>Ready / good</span><span><i class="sq" style="background:${MON_ST.building.c}"></i>Building</span><span><i class="sq" style="background:${MON_ST.critical.c}"></i>Critical</span></div>
+      <table class="tbl" style="margin-top:10px"><thead><tr><th>Trick</th><th class="num">Att.</th><th class="num">Stomp</th><th class="num">Landed</th><th class="num">Ø Quality</th><th>Status</th></tr></thead><tbody>${monStatsRows(l)}</tbody></table>` : ''}</div>
+    <div class="card"><h2>Assessment</h2><div class="sb-columns"><div><b style="color:var(--green)">Learned tricks (${learned.length})</b><ul class="small">${learned.map(entryLi).join('')}</ul></div><div><b style="color:#C96A1F">Goals (${goals.length})</b><ul class="small">${goals.map(entryLi).join('')}</ul></div></div></div>`);
 }
 
 /* ── Assessment: Timeline «Progress — Goals Achieved» (wie Freeski) ── */

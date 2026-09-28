@@ -1590,7 +1590,7 @@ function addAthleteToSession() {
     </div>`;
   }).join('');
   document.querySelectorAll('.sess-type-btn').forEach(b => {
-    const active = b.textContent.trim() === sessType;
+    const active = (b.dataset.type || b.textContent.trim()) === sessType;
     b.classList.toggle('active', active);
   });
   document.getElementById('sess-start-btn').style.display = sessSelectedAthletes.length ? 'block' : 'none';

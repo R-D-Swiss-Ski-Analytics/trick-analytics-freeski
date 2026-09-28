@@ -1458,7 +1458,7 @@ function addAthleteToSession() {
   document.getElementById('sess-live').style.display = 'none';
   // Rebuild Step 1 + Step 2 pre-filled with the current session state
   document.querySelectorAll('.sess-type-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent.trim() === sessType);
+    b.classList.toggle('active', (b.dataset.type || b.textContent.trim()) === sessType);
   });
   const grid = document.getElementById('sess-athlete-grid');
   grid.innerHTML = SESS_SQUADS.map(sq => {
