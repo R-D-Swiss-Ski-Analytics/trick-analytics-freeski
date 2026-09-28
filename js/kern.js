@@ -490,7 +490,7 @@ function grabChipsHtml(e) {
     const col  = st === 'mastered' ? UI_GREEN_TEXT : '#C96A1F';
     const bg   = st === 'mastered' ? UI_GREEN_BG20 : 'rgba(201,106,31,0.15)';
     const icon = st === 'mastered' ? '✓' : '🎯';
-    return `<span onclick="event.stopPropagation();cycleGrabStatus(${e.id},'${g.replace(/'/g,"\\'")}')" title="Tap: ✓ ${SPORT==='snowboard'?'Learned':'Mastered'} → 🎯 Goal → remove" style="cursor:pointer;font-size:12px;padding:2px 8px;border-radius:10px;background:${bg};border:1px solid ${col};color:${col};white-space:nowrap;">${icon} ${g}</span>`;
+    return `<span onclick="event.stopPropagation();cycleGrabStatus(${e.id},'${g.replace(/'/g,"\\'")}')" title="Tap: ✓ Learned → 🎯 Goal → remove" style="cursor:pointer;font-size:12px;padding:2px 8px;border-radius:10px;background:${bg};border:1px solid ${col};color:${col};white-space:nowrap;">${icon} ${g}</span>`;
   }).join('');
   return `<span style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;align-items:center;">${chips}</span>`;
 }

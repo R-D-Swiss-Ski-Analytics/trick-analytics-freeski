@@ -2944,7 +2944,7 @@ async function loadEntwicklung() {
       (s.status === 'mastered' || s.status === 'erreicht') && (s.datum || s.created_at)
     );
     if (!sbMitDatum.length) {
-      verlaufEl.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No mastered tricks in assessment yet.</div>';
+      verlaufEl.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No learned tricks in assessment yet.</div>';
     } else {
       // Group by date
       const byDate = {};
@@ -2979,7 +2979,7 @@ async function loadEntwicklung() {
         return `<div style="padding:12px 0;${borderTop}">
           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
             <span style="font-family:inherit;font-size:16px;letter-spacing:1px;color:var(--char);">${dateStr}</span>
-            <span style="font-size:14px;color:var(--text);font-weight:600;">${r.total} Tricks mastered</span>
+            <span style="font-size:14px;color:var(--text);font-weight:600;">${r.total} Tricks learned</span>
             ${newBadge}
           </div>
           ${newList}

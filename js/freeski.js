@@ -1975,7 +1975,7 @@ function renderSbDirRadar() {
   const legY = H-18;
   ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillStyle='#3E8E5A'; ctx.font='bold 11px Poppins,sans-serif';
-  ctx.fillText('— Mastered', cx-52, legY);
+  ctx.fillText('— Learned', cx-52, legY);
   ctx.fillStyle='#C96A1F';
   ctx.setLineDash([5,3]);
   ctx.fillText('- - Goals', cx+52, legY);
@@ -2176,7 +2176,7 @@ async function sbSave(status) {
 
   if (error) { showToast('Error: ' + error.message, 'error'); return; }
 
-  showToast(status === 'mastered' ? '✓ Saved as mastered!' : '🎯 Saved as goal!', 'success');
+  showToast(status === 'mastered' ? '✓ Saved as learned!' : '🎯 Saved as goal!', 'success');
 
   // Reset sb form fields
   ['sb-disziplin','sb-drehrichtung','sb-flips','sb-achse','sb-rotation','sb-absprung',
@@ -2457,7 +2457,7 @@ async function loadEntwicklung() {
       (s.status === 'mastered' || s.status === 'erreicht') && (s.datum || s.created_at)
     );
     if (!sbMitDatum.length) {
-      verlaufEl.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No mastered tricks in assessment yet.</div>';
+      verlaufEl.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No learned tricks in assessment yet.</div>';
     } else {
       // Group by date
       const byDate = {};
@@ -2492,7 +2492,7 @@ async function loadEntwicklung() {
         return `<div style="padding:12px 0;${borderTop}">
           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
             <span style="font-family:inherit;font-size:16px;letter-spacing:1px;color:var(--char);">${dateStr}</span>
-            <span style="font-size:14px;color:var(--text);font-weight:600;">${r.total} Tricks mastered</span>
+            <span style="font-size:14px;color:var(--text);font-weight:600;">${r.total} Tricks learned</span>
             ${newBadge}
           </div>
           ${newList}
