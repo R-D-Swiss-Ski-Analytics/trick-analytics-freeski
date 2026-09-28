@@ -19,6 +19,9 @@
     color: #ffffff;
   }
   .nav-tabs { display: flex; gap: 4px; margin-left: auto; }
+  /* Swiss-Ski-Logo oben rechts (weiss auf dem dunklen Header) */
+  .brand-logo { flex-shrink: 0; margin-left: 18px; padding-left: 18px; border-left: 1px solid rgba(255,255,255,0.18); display: flex; align-items: center; }
+  .brand-logo svg { width: 92px; height: auto; display: block; }
   .nav-tab {
     padding: 7px 18px; border-radius: 6px; cursor: pointer; font-weight: 500;
     font-size: 13px; color: rgba(255,255,255,0.6); border: none; background: none;
@@ -262,8 +265,12 @@
     .nav-tabs { display: none !important; }
 
     /* Compact header - just title */
-    header { justify-content: flex-start; padding: 0 16px; }
-    header h1 { font-size: 18px; max-width: none; }
+    header { justify-content: flex-start; padding: 0 16px; gap: 10px; }
+    header h1 { font-size: 18px; max-width: none; min-width: 0; line-height: 1.15; flex: 1 1 auto; }
+    #auth-controls { margin-left: 0 !important; }
+    .brand-logo { margin-left: 0; padding-left: 0; border-left: 0; }
+    .brand-logo svg { width: 52px; }
+    @media (max-width: 420px) { header h1 { font-size: 15px; letter-spacing: .3px; } }
 
     /* Cards & chart cards */
     .card { padding: 14px 12px; }
