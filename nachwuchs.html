@@ -523,6 +523,7 @@ const I18N = {
   'This video was recorded directly in the upload dialog and its quality is too low (below 720p). Please film with the camera app and choose the video from your photo library.':['Dieses Video wurde direkt im Upload-Dialog aufgenommen und hat zu tiefe Qualität (unter 720p). Bitte mit der Kamera-App filmen und das Video aus der Fotomediathek wählen.','Cette vidéo a été filmée directement dans la fenêtre de téléchargement et sa qualité est trop faible (moins de 720p). Merci de filmer avec l’app Appareil photo et de choisir la vidéo dans la photothèque.','Questo video è stato registrato direttamente nella finestra di caricamento e la qualità è troppo bassa (sotto 720p). Filma con l’app Fotocamera e scegli il video dalla libreria foto.'],
   'Choose the video from your photo library (film with the camera app first).':['Video aus der Fotomediathek wählen (vorher mit der Kamera-App filmen).','Choisir la vidéo dans la photothèque (filmer d’abord avec l’app Appareil photo).','Scegli il video dalla libreria foto (prima filma con l’app Fotocamera).'],
   'Skills-Check requirement at another level':['Skills-Check-Anforderung einer anderen Stufe','Exigence Skills-Check d’un autre niveau','Requisito Skills-Check di un altro livello'],
+  'More':['Weitere','Autres','Altri'], 'New':['Neu','Nouveau','Nuovo'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned — in the review inbox':['Zu «gelernt» verschoben — in der Review-Inbox','Déplacé vers acquis — dans la boîte d’évaluation','Spostato in imparati — nella casella valutazioni'],
@@ -620,7 +621,7 @@ const I18N = {
   'Points = best coach rating per requirement':['Punkte = beste Coach-Bewertung pro Vorgabe','Points = meilleure évaluation du coach par exigence','Punti = migliore valutazione del coach per requisito'],
   'Jumps/Rails 0–4, Halfpipe 0–5 (incl. Amplitude)':['Jumps/Rails 0–4, Halfpipe 0–5 (inkl. Amplitude)','Jumps/Rails 0–4, Halfpipe 0–5 (incl. Amplitude)','Jumps/Rails 0–4, Halfpipe 0–5 (incl. Amplitude)'],
   'Achieved = full points':['Erreicht = volle Punktzahl','Atteint = maximum de points','Raggiunto = punteggio pieno'],
-  'Tricks waiting for the coach count once rated':['Tricks, die auf den Coach warten, zählen nach der Bewertung','Les tricks en attente du coach comptent une fois évalués','I trick in attesa del coach contano dopo la valutazione'],
+  'Tricks waiting for the coach count once rated':['Bewertung Coach ausstehend: zählt erst nach der Bewertung','Évaluation du coach en attente : compte seulement après l’évaluation','Valutazione del coach in sospeso: conta solo dopo la valutazione'],
   'Sessions = training days in the selected period':['Sessions = Trainingstage im gewählten Zeitraum','Sessions = jours d’entraînement de la période choisie','Sessioni = giorni di allenamento nel periodo scelto'],
   'Comp-readiness = every criterion ≥ 80% in the last 3 sessions (landed attempts)':['Wettkampfbereit = jedes Kriterium ≥ 80 % in den letzten 3 Sessions (gelandete Versuche)','Prêt pour la compétition = chaque critère ≥ 80 % sur les 3 dernières sessions (essais landed)','Pronto per la gara = ogni criterio ≥ 80 % nelle ultime 3 sessioni (tentativi landed)'],
   ': learned trick, Ø quality below 70% (≥5 attempts)':[': gelernter Trick, Ø Qualität unter 70 % (≥5 Versuche)',' : trick acquis, qualité moyenne sous 70 % (≥5 essais)',': trick imparato, qualità media sotto il 70 % (≥5 tentativi)'],
@@ -726,6 +727,47 @@ function trText(src){
   // längere deutsche Sätze innerhalb eines Textes (z.B. Skills-Check-Hinweise)
   return null;
 }
+// Satzteile der Skills-Check-Anforderungen (Trick-Namen bleiben Englisch) — [Quelle, de, fr, it, en]
+const I18N_PHR = [
+  ['720 in the three strongest directions (at least two off-axis), 540 in the weakest.','720 in den drei stärksten Richtungen (mindestens zwei off-axis), 540 in der schwächsten.','720 dans les trois directions les plus fortes (au moins deux off-axis), 540 dans la plus faible.','720 nelle tre direzioni più forti (almeno due off-axis), 540 nella più debole.','720 in the three strongest directions (at least two off-axis), 540 in the weakest.'],
+  ['1620/1800/1980 in the two strongest directions, at least 1440 in the third, at least 1080 in the weakest.','1620/1800/1980 in den zwei stärksten Richtungen, mindestens 1440 in der dritten, mindestens 1080 in der schwächsten.','1620/1800/1980 dans les deux directions les plus fortes, au moins 1440 dans la troisième, au moins 1080 dans la plus faible.','1620/1800/1980 nelle due direzioni più forti, almeno 1440 nella terza, almeno 1080 nella più debole.','1620/1800/1980 in the two strongest directions, at least 1440 in the third, at least 1080 in the weakest.'],
+  ['At least 720 in the strongest, 540 in the 2nd and 3rd, 360 in the weakest direction.','Mindestens 720 in der stärksten, 540 in der 2. und 3., 360 in der schwächsten Richtung.','Au moins 720 dans la plus forte, 540 dans la 2e et la 3e, 360 dans la direction la plus faible.','Almeno 720 nella più forte, 540 nella 2a e 3a, 360 nella direzione più debole.','At least 720 in the strongest, 540 in the 2nd and 3rd, 360 in the weakest direction.'],
+  ['At least a Double 1080 in the strongest, 900 in the 2nd and 3rd, 720 in the weakest direction.','Mindestens ein Double 1080 in der stärksten, 900 in der 2. und 3., 720 in der schwächsten Richtung.','Au moins un Double 1080 dans la plus forte, 900 dans la 2e et la 3e, 720 dans la direction la plus faible.','Almeno un Double 1080 nella più forte, 900 nella 2a e 3a, 720 nella direzione più debole.','At least a Double 1080 in the strongest, 900 in the 2nd and 3rd, 720 in the weakest direction.'],
+  ['Back- & Frontswap to switch and to normal (bzw. Switch-Up).','Back- & Frontswap to switch und to normal (bzw. Switch-Up).','Back- & Frontswap to switch et to normal (ou Switch-Up).','Back- & Frontswap to switch e to normal (o Switch-Up).','Back- & Frontswap to switch and to normal (bzw. Switch-Up).'],
+  ['At least two 270 on, at least one of them switch.','Mindestens zwei 270 on, davon mindestens einer switch.','Au moins deux 270 on, dont au moins un en switch.','Almeno due 270 on, di cui almeno uno switch.','At least two 270 on, at least one of them switch.'],
+  ['At least one of each pair switch.','Von jedem Paar mindestens einer switch.','Au moins un de chaque paire en switch.','Almeno uno per coppia switch.','At least one of each pair switch.'],
+  ['Rotation — all directions up to 900','Rotation — alle Richtungen bis 900','Rotation — toutes les directions jusqu’à 900','Rotation — tutte le direzioni fino a 900','Rotation — all directions up to 900'],
+  ['Rotation — ranked directions','Rotation — Richtungen nach Stärke','Rotation — directions par force','Rotation — direzioni per forza','Rotation — ranked directions'],
+  ['weaker switch direction (upright ok)','schwächere Switch-Richtung (Upright ok)','direction switch la plus faible (Upright ok)','direzione switch più debole (Upright ok)','weaker switch direction (upright ok)'],
+  ['stronger switch direction','stärkere Switch-Richtung','direction switch la plus forte','direzione switch più forte','stronger switch direction'],
+  ['strongest direction','stärkste Richtung','direction la plus forte','direzione più forte','strongest direction'],
+  ['weakest direction','schwächste Richtung','direction la plus faible','direzione più debole','weakest direction'],
+  ['2nd direction','2. Richtung','2e direction','2a direzione','2nd direction'],
+  ['3rd direction','3. Richtung','3e direction','3a direzione','3rd direction'],
+  ['— required if the forward 720s are Cork','— nötig, wenn die Forward-720 Cork sind','— requis si les 720 forward sont en Cork','— richiesto se i 720 forward sono Cork','— required if the forward 720s are Cork'],
+  ['At least one flip/cork out','Mindestens ein Flip/Cork out','Au moins un flip/cork out','Almeno un flip/cork out','At least one flip/cork out'],
+  ['At least one flip','Mindestens ein Flip','Au moins un flip','Almeno un flip','At least one flip'],
+  ['Grab with both hands','Grab mit beiden Händen','Grab avec les deux mains','Grab con entrambe le mani','Grab with both hands'],
+  ['Every trick varied with a different grab','Jeder Trick mit einem anderen Grab variiert','Chaque trick varié avec un grab différent','Ogni trick variato con un grab diverso','Every trick varied with a different grab'],
+  ['Creative take-off (nose-/tailbutter, N\'Ollie)','Kreativer Take-off (Nose-/Tailbutter, N\'Ollie)','Take-off créatif (nose-/tailbutter, N\'Ollie)','Take-off creativo (nose-/tailbutter, N\'Ollie)','Creative take-off (nose-/tailbutter, N\'Ollie)'],
+  ['Carved take-off','Gecarvter Take-off','Take-off carvé','Take-off carvato','Carved take-off'],
+  ['(right foot forward)','(rechter Fuss vorne)','(pied droit devant)','(piede destro avanti)','(right foot forward)'],
+  ['(left foot forward)','(linker Fuss vorne)','(pied gauche devant)','(piede sinistro avanti)','(left foot forward)'],
+  ['(in the wall, not transition)','(in der Wand, nicht im Übergang)','(dans le mur, pas dans la transition)','(nel muro, non nella transizione)','(in the wall, not transition)'],
+  ['Riding on the good edges','Auf den richtigen Kanten fahren','Rouler sur les bonnes carres','Sciare sulle lamine giuste','Riding on the good edges'],
+  ['(flat skis, no edges)','(flache Ski, keine Kanten)','(skis à plat, sans carres)','(sci piatti, senza lamine)','(flat skis, no edges)'],
+  ['(360 on snow)','(360 auf dem Schnee)','(360 sur la neige)','(360 sulla neve)','(360 on snow)'],
+  ['every direction','jede Richtung','chaque direction','ogni direzione','every direction'],
+  ['Slash at the coping','Slash an der Coping','Slash au coping','Slash al coping','Slash at the coping'],
+  ['Air height','Airhöhe','Hauteur','Altezza','Air height'],
+  ['(focus)','(Fokus)','(focus)','(focus)','(focus)'],
+  ['(L or R)','(L oder R)','(L ou R)','(L o R)','(L or R)'],
+  ['New — simple rail','Neu — einfaches Rail','Nouveau — rail simple','Nuovo — rail semplice','New — simple rail'],
+  ['New — tube or rail','Neu — Tube oder Rail','Nouveau — tube ou rail','Nuovo — tube o rail','New — tube or rail'],
+  ['(simple rail)','(einfaches Rail)','(rail simple)','(rail semplice)','(simple rail)'],
+  ['(demanding rail)','(anspruchsvolles Rail)','(rail exigeant)','(rail impegnativo)','(demanding rail)'],
+  ['Wiederholung — ','Wiederholung — ','Répétition — ','Ripetizione — ','Repeat — '],
+];
 function trString(s){
   if (!s) return s;
   const lead = s.match(/^\s*/)[0], trail = s.match(/\s*$/)[0], core = s.trim();
@@ -735,6 +777,7 @@ function trString(s){
     // eingebettete deutsche Sätze übersetzen (z.B. «… 540 in the weakest. Die vier Drehrichtungen …»)
     let changed = false, t = core;
     for (const k of Object.keys(I18N_DE)) if (t.includes(k) && k !== t){ t = t.replace(k, I18N_DE[k][{de:0, fr:1, it:2, en:3}[LANG]]); changed = true; }
+    for (const ph of I18N_PHR) if (t.includes(ph[0])){ const r = ph[{de:1, fr:2, it:3, en:4}[LANG]]; if (r !== ph[0]){ t = t.split(ph[0]).join(r); changed = true; } }
     if (!changed) return s;
     out = t;
   }
