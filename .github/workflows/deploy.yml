@@ -64,7 +64,7 @@ jobs:
       - name: Stage moguls app
         run: mkdir -p stage-moguls/icons && cp moguls.html stage-moguls/index.html && cp manifest-moguls.webmanifest stage-moguls/ && cp icons/*moguls* stage-moguls/icons/
       - name: Stage youth app
-        run: mkdir -p stage-youth/icons && cp nachwuchs.html stage-youth/index.html && cp manifest-youth.webmanifest stage-youth/ && cp icons/*youth* stage-youth/icons/
+        run: mkdir -p stage-youth/icons && cp nachwuchs.html stage-youth/index.html && cp sw-youth.js stage-youth/ && cp manifest-youth.webmanifest stage-youth/ && cp icons/*youth* stage-youth/icons/
       - name: Deploy Freeski
         run: npx netlify-cli@17 deploy --prod --dir=stage
         env:

@@ -502,6 +502,8 @@ main svg text{font-size:var(--fs-label)}
 .sel-banner b{font-size:var(--fs-item)} .sel-banner span{font-size:var(--fs-meta)}
 .sel-banner.frozen{background:#fdeceb;border-color:#f3c8c5;color:#8B0E13}
 .rv-log{margin:10px 0 0;font-size:var(--fs-meta)} .rv-log summary{cursor:pointer;font-weight:700;color:var(--char)} .rv-log ul{margin:6px 0 0;padding-left:18px}
+.push-banner{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;margin:0 0 16px;padding:12px 14px;border-radius:12px;background:#EAF1F8;border:1px solid #cddcec}
+.push-banner > div{flex:1 1 220px;display:flex;flex-direction:column;gap:2px} .push-banner b{font-size:var(--fs-item);color:#23466b} .push-banner span{font-size:var(--fs-meta);color:#23466b}
 </style>
 </head>
 <body>
@@ -720,6 +722,11 @@ const I18N = {
   'Ranking by Skills-Check total, tie-break: stomp rate from sessions':['Rangierung nach Skills-Check-Total, bei Gleichstand: Stomp-Rate aus den Sessions','Classement selon le total Skills-Check, en cas d’égalité : stomp rate des sessions','Classifica per totale Skills-Check, in caso di parità: stomp rate delle sessioni'],
   'Only tricks rated with video count':['Es zählen nur mit Video bewertete Tricks','Seuls les tricks évalués avec vidéo comptent','Contano solo i trick valutati con video'], 'Stomp rate is shown from 5 attempts':['Stomp-Rate ab 5 Versuchen','Stomp rate à partir de 5 essais','Stomp rate da 5 tentativi'],
   'Videos':['Videos','Vidéos','Video'], 'Stomp rate':['Stomp-Rate','Stomp rate','Stomp rate'], 'Women':['Frauen','Femmes','Donne'], 'Men':['Männer','Hommes','Uomini'],
+  'Push notifications':['Push-Nachrichten','Notifications push','Notifiche push'], 'Turn on':['Aktivieren','Activer','Attiva'], 'Later':['Später','Plus tard','Più tardi'],
+  'Get a message as soon as an athlete submits a trick.':['Erhalte eine Nachricht, sobald eine Athlet:in einen Trick einreicht.','Reçois un message dès qu’un·e athlète envoie un trick.','Ricevi un messaggio appena un atleta invia un trick.'],
+  'Get a message when your trick is rated and before the selection deadline.':['Erhalte eine Nachricht, wenn dein Trick bewertet ist und vor dem Selektions-Stichtag.','Reçois un message quand ton trick est évalué et avant la date limite de sélection.','Ricevi un messaggio quando il tuo trick è valutato e prima della scadenza della selezione.'],
+  'On iPhone: tap Share, then «Add to Home Screen», and open the app from there.':['Auf dem iPhone: Teilen antippen, dann «Zum Home-Bildschirm», und die App von dort öffnen.','Sur iPhone : touche Partager, puis «Sur l’écran d’accueil», et ouvre l’app depuis là.','Su iPhone: tocca Condividi, poi «Aggiungi alla schermata Home», e apri l’app da lì.'],
+  'Push notifications on':['Push-Nachrichten aktiviert','Notifications push activées','Notifiche push attivate'], 'Push notifications not allowed':['Push-Nachrichten nicht erlaubt','Notifications push non autorisées','Notifiche push non consentite'], 'Could not enable push: ':['Push konnte nicht aktiviert werden: ','Impossible d’activer les notifications : ','Impossibile attivare le notifiche: '],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
@@ -842,6 +849,7 @@ const I18N_DE = {
 };
 // Texte mit Zahlen/Namen
 const I18N_PAT = [
+  [/^Selection deadline 30 April: (\d+) days left, upload your tricks with video\.$/, (m, i) => [`Selektions-Stichtag 30. April: noch ${m[1]} Tage, lade deine Tricks mit Video hoch.`, `Date limite de sélection 30 avril : encore ${m[1]} jours, télécharge tes tricks avec vidéo.`, `Scadenza selezione 30 aprile: ancora ${m[1]} giorni, carica i tuoi trick con video.`][i]],
   [/^Frozen as of (.+)$/, (m, i) => [`Eingefroren per ${m[1]}`, `Figé au ${m[1]}`, `Congelato al ${m[1]}`][i]],
   [/^Deadline (\d.+)$/, (m, i) => [`Stichtag ${m[1]}`, `Date limite ${m[1]}`, `Scadenza ${m[1]}`][i]],
   [/^(\d+) days left · live status, freezes automatically at the deadline$/, (m, i) => [`noch ${m[1]} Tage · aktueller Stand, wird am Stichtag automatisch eingefroren`, `encore ${m[1]} jours · état actuel, figé automatiquement à la date limite`, `ancora ${m[1]} giorni · stato attuale, congelato automaticamente alla scadenza`][i]],
@@ -1896,6 +1904,46 @@ function noteHtml(note){
   const parts = note.split(/(?<=\.)(?<!bzw\.)(?<!z\.B\.)\s+(?=[A-ZÄÖÜ0-9])/).map(x => x.trim()).filter(Boolean);
   return parts.length > 1 ? `<ul class="hints sec-note">${parts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : `<div class="sec-note">${esc(note)}</div>`;
 }
+/* ── Push-Nachrichten (Web Push): Coaches bei neuen Tricks, Athlet:innen bei Bewertungen und vor dem Stichtag.
+   iPhone: nur wenn die App zum Home-Bildschirm hinzugefügt wurde (iOS 16.4+). ── */
+const VAPID_PUBLIC = 'BJ61VFnRSHa1GHBay6-VdGF5RveUjMq3-Ymw5zpjbk8xsuuh9s0L6omBw47z-ThBASvYOkdAGEuXYq3lVGM2jeo';
+const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent);
+const isStandalone = () => window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
+function b64ToU8(b){ const p = '='.repeat((4 - b.length % 4) % 4), s = atob((b + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from([...s].map(c => c.charCodeAt(0))); }
+async function registerSW(){ if (DEMO || !('serviceWorker' in navigator)) return null; try { return await navigator.serviceWorker.register('sw-youth.js'); } catch (e){ console.warn('SW', e); return null; } }
+async function savePushSub(sub){
+  const j = sub.toJSON();
+  const { error } = await db.from('push_subscriptions').upsert({profile_id:ST.me.id, endpoint:j.endpoint, p256dh:j.keys.p256dh, auth:j.keys.auth, lang:LANG}, {onConflict:'endpoint'});
+  if (error) throw error;
+}
+async function enablePush(){
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted'){ toast('Push notifications not allowed', true); renderPushBanner(); return; }
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64ToU8(VAPID_PUBLIC)});
+    await savePushSub(sub); toast('Push notifications on'); renderPushBanner();
+  } catch (err){ console.error(err); toast('Could not enable push: ' + (err.message||err), true); }
+}
+async function syncPush(){   // bestehendes Abo still aktualisieren (z.B. neue Sprache)
+  if (DEMO || !pushSupported() || Notification.permission !== 'granted') return;
+  try { const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription(); if (sub) await savePushSub(sub); } catch (e){ console.warn('push sync', e); }
+}
+function renderPushBanner(){
+  let b = document.getElementById('push-banner');
+  const dismissed = (() => { try { return localStorage.getItem('nw-push-later') === '1'; } catch { return false; } })();
+  const needHome = isIOS() && !isStandalone();
+  const show = !DEMO && ST.me && !dismissed && (needHome || (pushSupported() && Notification.permission === 'default'));
+  if (!show){ b?.remove(); return; }
+  if (!b){ b = document.createElement('div'); b.id = 'push-banner'; b.className = 'push-banner'; $('main.wrap').prepend(b); }
+  const why = isStaff() ? 'Get a message as soon as an athlete submits a trick.' : 'Get a message when your trick is rated and before the selection deadline.';
+  b.innerHTML = needHome
+    ? `<div><b>Push notifications</b><span>${why}</span><span>On iPhone: tap Share, then «Add to Home Screen», and open the app from there.</span></div><button class="btn ghost sm" onclick="pushLater()">Later</button>`
+    : `<div><b>Push notifications</b><span>${why}</span></div><button class="btn red sm" onclick="enablePush()">Turn on</button><button class="btn ghost sm" onclick="pushLater()">Later</button>`;
+}
+function pushLater(){ try { localStorage.setItem('nw-push-later', '1'); } catch {} renderPushBanner(); }
+
 function renderChrome(){
   const unread = ST.notes.filter(n => !n.read_at).length;
   $('#who').innerHTML = `
@@ -1929,7 +1977,7 @@ function toggleNotifs(ev){
   dd.innerHTML = ST.notes.length ? ST.notes.slice().sort((a,b) => b.created_at.localeCompare(a.created_at)).map(n => `
     <div class="n ${n.read_at?'':'unread'}" onclick="openNotif(${JSON.stringify(n.id)})">
       <div>${n.kind==='submitted'?'📥 New trick to review':n.kind==='rework'?'↺ Coach asks for a new video':'⭐ Your trick was rated'}</div>
-      <div style="font-weight:600;color:var(--char)">${esc(n.text)}</div><div class="d">${fmtAgo(n.created_at)}</div></div>`).join('')
+      <div style="font-weight:600;color:var(--char)">${esc(n.kind==='reminder' ? `Selection deadline 30 April: ${String(n.text).replace('deadline:', '')} days left, upload your tricks with video.` : n.text)}</div><div class="d">${fmtAgo(n.created_at)}</div></div>`).join('')
     : '<div class="empty">No notifications</div>';
   dd.hidden = false;
   const ids = ST.notes.filter(n => !n.read_at).map(n => n.id);
@@ -3871,7 +3919,7 @@ async function startApp(){
     ST.me = await Store.currentUser();
     if (!ST.me){ DEMO ? showDemoGate() : showLoginGate(); return; }
     await loadData();
-    if (!DEMO){ Outbox.applyLocal(); renderOutboxBar(); Outbox.flush(); }
+    if (!DEMO){ Outbox.applyLocal(); renderOutboxBar(); Outbox.flush(); registerSW().then(syncPush); }
     restoreSX();
   } catch (err){
     console.error(err);
@@ -3883,6 +3931,7 @@ async function startApp(){
   if (DEMO){ const b = $('#demo-bar'); b.hidden = false; b.innerHTML = `DEMO MODE: data stays in this browser <button onclick="Store.logout().then(()=>location.reload())">Switch user</button>`; }
   ST.page = isStaff() && activeSession() ? 'session' : 'assessment';
   render();
+  renderPushBanner();
 }
 
 document.addEventListener('visibilitychange', async () => {
