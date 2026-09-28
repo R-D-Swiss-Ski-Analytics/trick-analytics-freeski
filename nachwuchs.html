@@ -488,6 +488,12 @@ main svg text{font-size:var(--fs-label)}
 .pdf-doc .pdf-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:16px}
 .pdf-doc .pdf-head h1{font-size:26px}.pdf-doc .pdf-head svg{width:120px}
 .pdf-doc .pdf-foot{margin-top:20px;padding-top:8px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+.status-key{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:16px 0 6px;padding:10px 12px;background:#faf8f7;border:1px solid var(--line);border-radius:12px}
+.status-key-t{font-size:var(--fs-label);font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.status-pill{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--c);border-radius:999px;padding:3px 10px;font-size:var(--fs-meta)}
+.status-pill i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.status-pill b{color:var(--c)} .status-pill span{color:var(--muted)}
+.status-key-n{font-size:var(--fs-meta);color:var(--muted);flex-basis:100%}
 </style>
 </head>
 <body>
@@ -697,6 +703,7 @@ const I18N = {
   'Skills-Check Team':['Skills-Check Team','Skills-Check équipe','Skills-Check squadra'],
   '📵 No video attached. A rating is only possible with a video: request one from the athlete or upload it yourself.':['📵 Kein Video angehängt. Bewerten ist nur mit Video möglich: Video bei der Athlet:in anfordern oder selbst hochladen.','📵 Aucune vidéo jointe. L’évaluation n’est possible qu’avec une vidéo : demande-la à l’athlète ou télécharge-la toi-même.','📵 Nessun video allegato. La valutazione è possibile solo con un video: richiedilo all’atleta o caricalo tu.'],
   'A rating is only possible with a video':['Bewerten ist nur mit Video möglich','L’évaluation n’est possible qu’avec une vidéo','La valutazione è possibile solo con un video'], 'Request video':['Video anfordern','Demander une vidéo','Richiedi video'], '⬆ Upload video':['⬆ Video hochladen','⬆ Télécharger une vidéo','⬆ Carica video'],
+  'Trick status (stomp rate)':['Trick-Status (Stomp-Rate)','Statut du trick (taux de stomp)','Stato del trick (stomp rate)'], '< 5 attempts':['< 5 Versuche','< 5 essais','< 5 tentativi'], 'Stomped = all criteria met':['Stomped = alle Kriterien erfüllt','Stomped = tous les critères remplis','Stomped = tutti i criteri soddisfatti'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
@@ -3215,7 +3222,9 @@ function renderMonTeam(root, all){
       <div class="more">View details →</div></div>`;
   };
   root.innerHTML = `<div class="card">${monHeader('Team Monitoring', `${all.length} attempts · ${monPeriodLabel()}`, false)}
-    <div class="tiny muted" style="margin:14px 0 4px">Trick status: ≥70% stomp rate = <b>Ready</b> · 40–69% = <b>Building</b> · &lt;40% = <b>Critical</b> · fewer than 5 attempts = Low data. Stomped = all criteria met.</div>
+    <div class="status-key"><span class="status-key-t">Trick status (stomp rate)</span>
+      ${[['ready','≥ 70%'],['building','40–69%'],['critical','< 40%'],['lowdata','< 5 attempts']].map(([k, r]) => `<span class="status-pill" style="--c:${MON_ST[k].c}"><i></i><b>${MON_ST[k].l}</b><span>${r}</span></span>`).join('')}
+      <span class="status-key-n">Stomped = all criteria met</span></div>
     ${groups.map(g => { const list = aths.filter(a => (a.group_id || null)===g.id);
       return `<div class="sec-lbl">${esc(g.name)}</div><div class="mon-tiles">${list.map(tile).join('')}</div>`; }).join('') || '<div class="empty">No athletes.</div>'}
     <div class="row" style="justify-content:center;gap:10px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)">
