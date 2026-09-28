@@ -1,5 +1,7 @@
 -- ════════════════════════════════════════════════════════════════════════
 -- Skills-Check Freeski (Trick Analyses Nachwuchs) — Datenbank-Schema
+-- WICHTIG: danach IMMER auch nachwuchs_migration_roster.sql ausführen
+-- (Athlet:innen ohne Login, Profil ↔ Login über user_id).
 -- Einmal im SQL-Editor eines NEUEN Supabase-Projekts ausführen
 -- (Org «Swiss-Ski Freestyle», z.B. Name «Trick Analyses Nachwuchs»).
 --

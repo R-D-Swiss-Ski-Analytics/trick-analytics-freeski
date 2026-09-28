@@ -150,6 +150,7 @@ textarea{min-height:64px;resize:vertical}
 .tbl tr.click:hover td{background:#fbf9f8}
 .tbl select{padding:5px 8px;font-size:13px;width:auto}
 .name-in{border-color:transparent!important;background:transparent!important;font-weight:700;padding:4px 6px!important;min-width:150px}
+.mail-in{font-weight:500;font-size:12px!important;color:var(--muted);margin-top:2px}
 .name-in:hover,.name-in:focus{border-color:var(--line)!important;background:#fff!important}
 .tbl .num{text-align:right;white-space:nowrap}
 .minibar{width:90px;height:6px;background:#efebe9;border-radius:99px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:8px}
@@ -837,6 +838,7 @@ const DemoStore = {
   async videoUrl(path){ return this.videos[path] || null; },
   async markRead(ids){ this.data.notes.forEach(n => { if (ids.includes(n.id)) n.read_at = nowIso(); }); this.save(); },
   async updateProfile(id, patch){ Object.assign(this.data.profiles.find(p => p.id===id), patch); this.save(); },
+  async addProfile(row){ const p = {id:uid(), user_id:null, ...row}; this.data.profiles.push(p); this.save(); return p; },
 };
 
 let db = null;
@@ -844,7 +846,7 @@ const SupaStore = {
   async currentUser(){
     const { data:{ session } } = await db.auth.getSession();
     if (!session) return null;
-    const { data, error } = await db.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+    const { data, error } = await db.from('profiles').select('*').eq('user_id', session.user.id).maybeSingle();
     if (error) throw error;
     return data;
   },
@@ -924,6 +926,7 @@ const SupaStore = {
   async videoUrl(path){ const { data, error } = await db.storage.from(VIDEO_BUCKET).createSignedUrl(path, 3600); if (error) throw error; return data.signedUrl; },
   async markRead(ids){ if (ids.length) await db.from('notifications').update({read_at:nowIso()}).in('id', ids); },
   async updateProfile(id, patch){ const { error } = await db.from('profiles').update(patch).eq('id', id); if (error) throw error; },
+  async addProfile(row){ const { data, error } = await db.from('profiles').insert(row).select().single(); if (error) throw error; return data; },
 };
 const Store = DEMO ? DemoStore : SupaStore;
 
@@ -944,7 +947,7 @@ const prof = id => ST.profiles.find(p => p.id===id);
 const groupName = id => ST.groups.find(g => g.id===id)?.name || '—';
 function visibleAthletes(){
   const ids = visibleAthleteIds(ST.me, ST.profiles);
-  return ST.profiles.filter(p => ids.has(p.id) && (!ST.groupFilter || p.group_id===ST.groupFilter)).sort((a,b) => a.name.localeCompare(b.name));
+  return ST.profiles.filter(p => ids.has(p.id) && (!ST.groupFilter || (ST.groupFilter==='__none' ? !p.group_id : p.group_id===ST.groupFilter))).sort((a,b) => a.name.localeCompare(b.name));
 }
 const entriesOf = id => ST.entries.filter(e => e.athlete_id===id);
 const ROLE_LABEL = {athlete:'Athlete', coach:'Coach', dvlp:'DVLP / Nachwuchs'};
@@ -977,7 +980,7 @@ function athleteSelect(onchangeFn){
 }
 function groupFilterSelect(){
   if (ST.me.role !== 'dvlp') return '';
-  return `<select onchange="setGroupFilter(this.value)" style="max-width:240px"><option value="">All groups</option>${ST.groups.map(g => `<option value="${g.id}" ${ST.groupFilter===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>`;
+  return `<select onchange="setGroupFilter(this.value)" style="max-width:240px"><option value="">All groups</option><option value="__none" ${ST.groupFilter==='__none'?'selected':''}>— No group yet —</option>${ST.groups.map(g => `<option value="${g.id}" ${ST.groupFilter===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>`;
 }
 function setGroupFilter(v){ ST.groupFilter = v; const a = visibleAthletes(); if (!a.some(x => x.id===ST.athleteId)) ST.athleteId = a[0]?.id || null; render(); }
 function pickAthlete(id){ ST.athleteId = id; ST.level = null; ST.form = null; render(); }
@@ -1452,7 +1455,8 @@ function renderTeam(){
     const pend = entriesOf(a.id).filter(e => e.status==='pending').length;
     const cell = d => !t ? '–' : t.incl.includes(d) ? `${pct(t.by[d].pts, t.by[d].max)}% <span class="tiny muted">${t.by[d].pts}/${t.by[d].max}</span>` : '<span class="tiny muted">not in focus</span>';
     return `<tr class="click" onclick="if(event.target.closest('select,input'))return;ST.athleteId='${a.id}';ST.level=null;go('skills')">
-      <td><input type="text" class="name-in" value="${esc(a.name)}" onchange="setProfile('${a.id}','name',this.value.trim())" title="Edit name">${dv ? `<div class="tiny muted">${esc(groupName(a.group_id))}${a.email?' · '+esc(a.email):''}</div>` : ''}</td>
+      <td><input type="text" class="name-in" value="${esc(a.name)}" onchange="setProfile('${a.id}','name',this.value.trim())" title="Edit name"><div class="tiny muted">${a.birthdate ? a.birthdate.slice(0,4) + ' · ' : ''}${a.user_id || DEMO ? '<span style="color:var(--green)">✓ login</span>' : 'no login yet'}${dv ? ' · ' + esc(groupName(a.group_id)) : ''}</div>
+        ${dv && !DEMO ? `<input type="email" class="name-in mail-in" value="${esc(a.email||'')}" placeholder="+ e-mail for login" onchange="setProfile('${a.id}','email',this.value.trim().toLowerCase())" ${a.user_id?'disabled title="Linked to a login"':''}>` : ''}</td>
       <td><select onchange="setProfile('${a.id}','gender',this.value)"><option value="">–</option>${opts([['W','W'],['M','M']], a.gender)}</select></td>
       <td><select onchange="setProfile('${a.id}','level',this.value)"><option value="">–</option>${opts(LEVELS, a.level)}</select></td>
       <td>${a.level==='T4' ? `<select onchange="setProfile('${a.id}','focus',this.value)">${opts([['','All'],['park','Jumps & Rails'],['hp','Halfpipe']], a.focus||'')}</select>` : '<span class="tiny muted">all (T1–T3)</span>'}</td>
@@ -1463,7 +1467,7 @@ function renderTeam(){
   }).join('');
   const staffList = dv ? ST.profiles.filter(p => p.role!=='athlete').sort((a,b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name)) : [];
   root.innerHTML = `
-    ${dv ? `<div class="row" style="margin-bottom:18px">${groupFilterSelect()}</div>` : ''}
+    <div class="row" style="margin-bottom:18px">${dv ? groupFilterSelect() : ''}<span class="grow"></span><button class="btn red" onclick="openAddAthlete()">+ Add athlete</button></div>
     <div class="card"><h2>${dv ? 'All athletes' : esc(groupName(ST.me.group_id))} <span class="muted" style="letter-spacing:0;font-weight:600">${aths.length}</span></h2>
       <p class="lead">Skills-Check at each athlete's own level. Total = Jumps, Rails and Halfpipe weighted ⅓ each; from T4 a focus (Halfpipe only, or Jumps & Rails only) can be set. Click a row to open the Skills-Check.</p>
       <div class="scroll-x"><table class="tbl"><thead><tr><th>Athlete</th><th>Sex</th><th>Level</th><th>Focus</th>${dv?'<th>Group</th>':''}<th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th><th></th></tr></thead>
@@ -1473,7 +1477,31 @@ function renderTeam(){
         <td><select onchange="setProfile('${p.id}','role',this.value)" ${p.id===ST.me.id?'disabled':''}>${opts([['athlete','Athlete'],['coach','Coach'],['dvlp','DVLP / Nachwuchs']], p.role)}</select></td>
         <td>${p.role==='coach' ? `<select onchange="setProfile('${p.id}','group_id',this.value)"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${p.group_id===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>` : '<span class="muted">all</span>'}</td></tr>`).join('')}
       </tbody></table></div>
-      <p class="tiny muted" style="margin-top:12px">${DEMO ? 'Demo mode: accounts are fixed demo users.' : 'New accounts: invite them in Supabase → Authentication → «Invite user». They appear here as athletes — then assign role, group, sex and level.'}</p></div>` : ''}`;
+      <p class="tiny muted" style="margin-top:12px">${DEMO ? 'Demo mode: accounts are fixed demo users.' : 'Logins: enter the e-mail here first, then create the account in Supabase → Authentication → Users → «Create new user» with the same e-mail — it links automatically. Staff without a profile appear here after their first login.'}</p></div>` : ''}`;
+}
+function openAddAthlete(){
+  const dv = ST.me.role==='dvlp';
+  modal(`<h3>Add athlete</h3><p class="lead" style="margin-top:6px">The athlete can be tracked right away; a login can be added later via the e-mail.</p>
+    <div class="grid">
+      <label class="f">Name<input type="text" id="aa-name" placeholder="First Last"></label>
+      <label class="f">Sex<select id="aa-sex"><option value="">–</option><option>W</option><option>M</option></select></label>
+      <label class="f">Level<select id="aa-level"><option value="">–</option>${opts(LEVELS, '')}</select></label>
+      <label class="f">Year of birth<input type="number" id="aa-year" min="1990" max="2030" placeholder="e.g. 2011"></label>
+      ${dv ? `<label class="f">Group<select id="aa-group"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${ST.groupFilter===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select></label>` : ''}
+      ${dv ? '<label class="f">E-mail (optional)<input type="email" id="aa-mail"></label>' : ''}
+    </div>
+    <div class="btnrow"><button class="btn red" onclick="addAthlete()">Add</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
+  setTimeout(() => $('#aa-name')?.focus(), 30);
+}
+async function addAthlete(){
+  const name = $('#aa-name').value.trim(); if (!name){ toast('Please enter a name', true); return; }
+  const y = +$('#aa-year').value;
+  const row = {name, role:'athlete', gender:$('#aa-sex').value || null, level:$('#aa-level').value || null,
+    birthdate: y ? `${y}-01-01` : null,
+    group_id: ST.me.role==='dvlp' ? ($('#aa-group').value || null) : ST.me.group_id,
+    email: ST.me.role==='dvlp' ? ($('#aa-mail').value.trim().toLowerCase() || null) : null};
+  try { const p = await Store.addProfile(row); if (!ST.profiles.includes(p)) ST.profiles.push(p); closeModal(); toast(`${name} added`); render(); }
+  catch (err){ toast('Could not add: ' + (err.message||err), true); }
 }
 async function setProfile(id, k, v){
   try { await Store.updateProfile(id, {[k]:v || null}); Object.assign(prof(id), {[k]:v || null}); toast('Saved'); render(); }
