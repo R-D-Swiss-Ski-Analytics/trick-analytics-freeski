@@ -581,6 +581,7 @@ const I18N = {
   'Progress over sessions':['Verlauf über die Sessions','Évolution sur les sessions','Andamento nelle sessioni'], 'Volume (attempts)':['Volumen (Versuche)','Volume (essais)','Volume (tentativi)'],
   '⚠ Sessions with fewer than 5 attempts — rates are statistically weak.':['⚠ Sessions mit weniger als 5 Versuchen — Quoten statistisch schwach.','⚠ Sessions avec moins de 5 essais — taux statistiquement faibles.','⚠ Sessioni con meno di 5 tentativi — percentuali statisticamente deboli.'],
   'Tap a bar for session details.':['Balken antippen für Session-Details.','Touche une barre pour les détails de la session.','Tocca una barra per i dettagli della sessione.'], 'Open session view →':['Session-Ansicht öffnen →','Ouvrir la vue de session →','Apri vista sessione →'],
+  'Most common fail reason:':['Häufigster Fail-Grund:','Raison d’échec la plus fréquente :','Motivo di errore più frequente:'],
   'Coaching Analysis':['Coaching-Analyse','Analyse coaching','Analisi coaching'], 'Coach comment · current status':['Coach-Kommentar · aktueller Stand','Commentaire du coach · état actuel','Commento del coach · stato attuale'],
   'AI summary':['KI-Zusammenfassung','Résumé IA','Riepilogo IA'], 'Add new comment':['Neuen Kommentar erfassen','Ajouter un commentaire','Aggiungi un commento'], 'No comments yet.':['Noch keine Kommentare.','Pas encore de commentaires.','Ancora nessun commento.'],
   'Comment saved':['Kommentar gespeichert','Commentaire enregistré','Commento salvato'], 'Loading…':['Lädt…','Chargement…','Caricamento…'], '🔍 Reality Check':['🔍 Realitäts-Check','🔍 Contrôle de réalité','🔍 Verifica realtà'],
@@ -601,6 +602,8 @@ const I18N_DE = {
 };
 // Texte mit Zahlen/Namen
 const I18N_PAT = [
+  [/^(\d+) failed attempts? without reason$/, (m, i) => [`${m[1]} gescheiterte Versuche ohne Grund`, `${m[1]} essai(s) failed sans raison`, `${m[1]} tentativi failed senza motivo`][i]],
+  [/^\(([\d]+)×\) · $/, (m, i) => null],
   [/^(\d+) attempts · (.+)$/, (m, i) => `${m[1]} ${['Versuche','essais','tentativi'][i]} · ${I18N_PERIOD(m[2], i)}`],
   [/^(\d+) attempts · (\d+) stomped · $/, (m, i) => `${m[1]} ${['Versuche','essais','tentativi'][i]} · ${m[2]} stomped · `],
   [/^\+(\d+) in other levels?$/, (m, i) => [`+${m[1]} in anderen Stufen`, `+${m[1]} dans d’autres niveaux`, `+${m[1]} in altri livelli`][i]],
