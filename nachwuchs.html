@@ -1388,7 +1388,7 @@ function renderReviews(){
     ${ST.me.role==='dvlp' ? `<div class="row" style="margin-bottom:18px">${groupFilterSelect()}</div>` : ''}
     <div class="card"><h2>Review inbox <span class="chip ${pend.length?'red':''}">${pend.length}</span></h2>
       <p class="lead">Tricks your athletes submitted — oldest first. Rate Take-off, Trick, Grab and Landing (1 point each, max. 4) — Halfpipe additionally Amplitude (max. 5).</p>
-      <div class="list">${pend.length ? pend.map(e => entryRow(e, {showName:true})).join('') : '<div class="empty">🎉 Nothing to review right now.</div>'}</div></div>
+      <div class="list">${pend.length ? pend.map(e => entryRow(e, {showName:true})).join('') : '<div class="empty">Nothing to review right now.</div>'}</div></div>
     ${rework.length ? `<div class="card"><h2>Waiting for a new video <span class="chip">${rework.length}</span></h2><div class="list">${rework.map(e => entryRow(e, {showName:true})).join('')}</div></div>` : ''}
     <div class="card"><h2>Recently rated</h2><div class="list">${recent.length ? recent.map(e => entryRow(e, {showName:true})).join('') : '<div class="empty">No ratings yet.</div>'}</div></div>`;
 }
