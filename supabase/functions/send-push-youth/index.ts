@@ -24,6 +24,12 @@ const T: Record<string, Record<Lang, (x: string) => [string, string]>> = {
     de: (x) => ["Neues Video gewünscht", x.replace(/^New video requested: /, "")], fr: (x) => ["Nouvelle vidéo demandée", x.replace(/^New video requested: /, "")],
     it: (x) => ["Nuovo video richiesto", x.replace(/^New video requested: /, "")], en: (x) => ["New video requested", x.replace(/^New video requested: /, "")],
   },
+  cleanup: {
+    de: () => ["Video-Aufräumen", "Ab heute kannst du im Tab «Selektion» die nicht mehr verlangten Videos löschen."],
+    fr: () => ["Nettoyage des vidéos", "Dès aujourd’hui, tu peux supprimer les vidéos qui ne sont plus exigées dans l’onglet «Sélection»."],
+    it: () => ["Pulizia video", "Da oggi puoi eliminare i video non più richiesti nella scheda «Selezione»."],
+    en: () => ["Video clean-up", "From today you can delete videos that are no longer required in the «Selection» tab."],
+  },
   reminder: {
     de: (x) => ["Selektions-Stichtag 30. April", `Noch ${x} ${x === "1" ? "Tag" : "Tage"}: lade deine Tricks mit Video hoch.`],
     fr: (x) => ["Date limite de sélection : 30 avril", `Encore ${x} jour${x === "1" ? "" : "s"} : télécharge tes tricks avec vidéo.`],

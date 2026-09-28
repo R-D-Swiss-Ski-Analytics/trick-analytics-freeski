@@ -749,6 +749,12 @@ const I18N = {
   'Get a message when your trick is rated and before the selection deadline.':['Erhalte eine Nachricht, wenn dein Trick bewertet ist und vor dem Selektions-Stichtag.','Reçois un message quand ton trick est évalué et avant la date limite de sélection.','Ricevi un messaggio quando il tuo trick è valutato e prima della scadenza della selezione.'],
   'On iPhone: tap Share, then «Add to Home Screen», and open the app from there.':['Auf dem iPhone: Teilen antippen, dann «Zum Home-Bildschirm», und die App von dort öffnen.','Sur iPhone : touche Partager, puis «Sur l’écran d’accueil», et ouvre l’app depuis là.','Su iPhone: tocca Condividi, poi «Aggiungi alla schermata Home», e apri l’app da lì.'],
   'Push notifications on':['Push-Nachrichten aktiviert','Notifications push activées','Notifiche push attivate'], 'Push notifications not allowed':['Push-Nachrichten nicht erlaubt','Notifications push non autorisées','Notifiche push non consentite'], 'Could not enable push: ':['Push konnte nicht aktiviert werden: ','Impossible d’activer les notifications : ','Impossibile attivare le notifiche: '],
+  'Video clean-up':['Video-Aufräumen','Nettoyage des vidéos','Pulizia video'], 'Every year from 31 May (after selection and appeal period)':['Jährlich ab 31. Mai (nach Selektion und Rekursfrist)','Chaque année dès le 31 mai (après la sélection et le délai de recours)','Ogni anno dal 31 maggio (dopo la selezione e il termine di ricorso)'],
+  'Deletes videos of tricks that are no longer required at the athlete\'s current level':['Löscht Videos von Tricks, die auf der aktuellen Stufe der Athlet:in nicht mehr verlangt sind','Supprime les vidéos des tricks qui ne sont plus exigés au niveau actuel de l’athlète','Elimina i video dei trick non più richiesti al livello attuale dell’atleta'],
+  'Entry and rating stay, only the video is removed':['Eintrag und Bewertung bleiben, nur das Video wird entfernt','L’entrée et l’évaluation restent, seule la vidéo est supprimée','Voce e valutazione restano, viene rimosso solo il video'],
+  'Set the new levels in the Team tab first':['Zuerst im Team-Tab die neuen Stufen setzen','D’abord définir les nouveaux niveaux dans l’onglet Team','Prima impostare i nuovi livelli nella scheda Team'],
+  'No videos to clean up.':['Keine Videos zum Aufräumen.','Aucune vidéo à nettoyer.','Nessun video da pulire.'],
+  'Video clean-up: from today you can delete videos that are no longer required in the Selection tab.':['Video-Aufräumen: Ab heute kannst du im Tab «Selektion» die nicht mehr verlangten Videos löschen.','Nettoyage des vidéos : dès aujourd’hui, tu peux supprimer les vidéos qui ne sont plus exigées dans l’onglet Sélection.','Pulizia video: da oggi puoi eliminare i video non più richiesti nella scheda Selezione.'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
@@ -871,6 +877,11 @@ const I18N_DE = {
 };
 // Texte mit Zahlen/Namen
 const I18N_PAT = [
+  [/^Show videos \((\d+)\)$/, (m, i) => [`Videos anzeigen (${m[1]})`, `Afficher les vidéos (${m[1]})`, `Mostra video (${m[1]})`][i]],
+  [/^Delete (\d+) videos$/, (m, i) => [`${m[1]} Videos löschen`, `Supprimer ${m[1]} vidéos`, `Elimina ${m[1]} video`][i]],
+  [/^Available from (.+)$/, (m, i) => [`Verfügbar ab ${m[1]}`, `Disponible dès le ${m[1]}`, `Disponibile dal ${m[1]}`][i]],
+  [/^Delete (\d+) videos permanently\? Entries and ratings stay\.$/, (m, i) => [`${m[1]} Videos endgültig löschen? Einträge und Bewertungen bleiben.`, `Supprimer définitivement ${m[1]} vidéos ? Les entrées et évaluations restent.`, `Eliminare definitivamente ${m[1]} video? Voci e valutazioni restano.`][i]],
+  [/^(\d+) videos deleted$/, (m, i) => [`${m[1]} Videos gelöscht`, `${m[1]} vidéos supprimées`, `${m[1]} video eliminati`][i]],
   [/^Selection deadline 30 April: (\d+) days left, upload your tricks with video\.$/, (m, i) => [`Selektions-Stichtag 30. April: noch ${m[1]} Tage, lade deine Tricks mit Video hoch.`, `Date limite de sélection 30 avril : encore ${m[1]} jours, télécharge tes tricks avec vidéo.`, `Scadenza selezione 30 aprile: ancora ${m[1]} giorni, carica i tuoi trick con video.`][i]],
   [/^Frozen as of (.+)$/, (m, i) => [`Eingefroren per ${m[1]}`, `Figé au ${m[1]}`, `Congelato al ${m[1]}`][i]],
   [/^Deadline (\d.+)$/, (m, i) => [`Stichtag ${m[1]}`, `Date limite ${m[1]}`, `Scadenza ${m[1]}`][i]],
@@ -1632,6 +1643,7 @@ const DemoStore = {
   async saveAttempt(me, a){ return this._upsert(this.data.attempts, {...a}, me); },
   async deleteAttempt(id){ this.data.attempts = this.data.attempts.filter(a => a.id!==id); this.save(); },
   async entryLog(){ return null; },
+  async removeVideos(paths){ for (const p of paths) delete this.videos[p]; },
   async listComments(athId, key){ return (this.data.comments || []).filter(c => c.athlete_id===athId && c.trick_key===key).sort((a,b) => b.created_at.localeCompare(a.created_at)); },
   async addComment(me, athId, key, text){ (this.data.comments ||= []).push({id:Date.now(), athlete_id:athId, trick_key:key, comment:text, created_by:me.id, created_at:nowIso()}); this.save(); },
   async trickStatus(){ return null; },
@@ -1797,6 +1809,7 @@ const SupaStore = {
     if (error && 'achieved_at' in row && /column|schema cache/i.test(error.message || '')){ delete row.achieved_at; ({ data, error } = await run(row)); }
     if (error) throw error; return data;
   },
+  async removeVideos(paths){ for (let i = 0; i < paths.length; i += 100){ const { error } = await db.storage.from(VIDEO_BUCKET).remove(paths.slice(i, i + 100)); if (error) throw error; } },
   async deleteEntry(id){
     const e = ST.entries.find(x => x.id===id);
     const { error } = await db.from('entries').delete().eq('id', id); if (error) throw error;
@@ -1999,7 +2012,7 @@ function toggleNotifs(ev){
   dd.innerHTML = ST.notes.length ? ST.notes.slice().sort((a,b) => b.created_at.localeCompare(a.created_at)).map(n => `
     <div class="n ${n.read_at?'':'unread'}" onclick="openNotif(${JSON.stringify(n.id)})">
       <div>${n.kind==='submitted'?'📥 New trick to review':n.kind==='rework'?'↺ Coach asks for a new video':'⭐ Your trick was rated'}</div>
-      <div style="font-weight:600;color:var(--char)">${esc(n.kind==='reminder' ? `Selection deadline 30 April: ${String(n.text).replace('deadline:', '')} days left, upload your tricks with video.` : n.text)}</div><div class="d">${fmtAgo(n.created_at)}</div></div>`).join('')
+      <div style="font-weight:600;color:var(--char)">${esc(n.kind==='reminder' ? `Selection deadline 30 April: ${String(n.text).replace('deadline:', '')} days left, upload your tricks with video.` : n.kind==='cleanup' ? 'Video clean-up: from today you can delete videos that are no longer required in the Selection tab.' : n.text)}</div><div class="d">${fmtAgo(n.created_at)}</div></div>`).join('')
     : '<div class="empty">No notifications</div>';
   dd.hidden = false;
   const ids = ST.notes.filter(n => !n.read_at).map(n => n.id);
@@ -2672,7 +2685,38 @@ async function renderSelection(){
     <div class="card"><h2>Ranking ${F.level} ${F.sex==='W' ? 'Women' : 'Men'} <span class="muted" style="letter-spacing:0;font-weight:600">${rows.length}</span></h2>
       <ul class="hints"><li>Ranking by Skills-Check total, tie-break: stomp rate from sessions</li><li>Only tricks rated with video count</li><li>Stomp rate is shown from 5 attempts</li></ul>
       <div class="scroll-x"><table class="tbl sel-tbl"><thead><tr><th>#</th><th>Athlete</th><th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th><th class="num">Videos</th><th class="num">Stomp rate</th></tr></thead>
-      <tbody>${rows.map((r, i) => `<tr class="click" onclick="ST.athleteId='${r.a.id}';ST.level=null;go('skills')"><td class="num"><b>${i + 1}</b></td><td><b>${esc(r.a.name)}</b><div class="tiny muted">${esc(groupName(r.a.group_id))}</div></td>${[dc(r.t,'Jump'), dc(r.t,'Rail'), dc(r.t,'Halfpipe'), pdfPctCell(r.t.pct, 70, 40)].map((h, k) => h.replace('<td class="num"', `<td class="num" data-l="${['Jumps','Rails','HP','Total'][k]}"`)).join('')}<td class="num" data-l="Videos">${r.vids}/${r.rated}</td><td class="num" data-l="Stomp rate">${r.stomp==null ? `<span class="tiny muted">${r.n} att.</span>` : r.stomp + '%'}</td></tr>`).join('') || '<tr><td colspan="8" class="empty">No athletes.</td></tr>'}</tbody></table></div></div>`;
+      <tbody>${rows.map((r, i) => `<tr class="click" onclick="ST.athleteId='${r.a.id}';ST.level=null;go('skills')"><td class="num"><b>${i + 1}</b></td><td><b>${esc(r.a.name)}</b><div class="tiny muted">${esc(groupName(r.a.group_id))}</div></td>${[dc(r.t,'Jump'), dc(r.t,'Rail'), dc(r.t,'Halfpipe'), pdfPctCell(r.t.pct, 70, 40)].map((h, k) => h.replace('<td class="num"', `<td class="num" data-l="${['Jumps','Rails','HP','Total'][k]}"`)).join('')}<td class="num" data-l="Videos">${r.vids}/${r.rated}</td><td class="num" data-l="Stomp rate">${r.stomp==null ? `<span class="tiny muted">${r.n} att.</span>` : r.stomp + '%'}</td></tr>`).join('') || '<tr><td colspan="8" class="empty">No athletes.</td></tr>'}</tbody></table></div></div>
+    ${cleanupCard()}`;
+}
+/* ── Video-Aufräumen (jährlich ab 31. Mai, nach Selektion und Rekursfrist):
+   Videos von Tricks, die auf der aktuellen Stufe der Athlet:in nicht mehr explizit verlangt sind,
+   werden gelöscht. Eintrag und Bewertung bleiben erhalten (auch im Verlauf). ── */
+function cleanupDate(){ const d = selectionDeadline(); return new Date(Date.UTC(d.getUTCFullYear(), 4, 30, 22, 0, 0)); }   // 31.5. 00:00 Schweizer Zeit
+function cleanupCandidates(){
+  return ST.entries.filter(e => {
+    if (!e.video_path) return false;
+    const a = prof(e.athlete_id); if (!a?.level || !a.gender) return false;
+    return !directMatches(e.discipline, a.gender, e.trick).some(x => x.level === a.level);
+  });
+}
+function cleanupCard(){
+  const due = Date.now() >= cleanupDate().getTime(), list = cleanupCandidates();
+  const byAth = {}; list.forEach(e => (byAth[e.athlete_id] ||= []).push(e));
+  return `<div class="card"><h2>Video clean-up <span class="muted" style="letter-spacing:0;font-weight:600">${list.length}</span></h2>
+    <ul class="hints"><li>Every year from 31 May (after selection and appeal period)</li><li>Deletes videos of tricks that are no longer required at the athlete's current level</li><li>Entry and rating stay, only the video is removed</li><li>Set the new levels in the Team tab first</li></ul>
+    ${list.length ? `<details><summary>Show videos (${list.length})</summary><ul class="small">${Object.entries(byAth).map(([id, l]) => `<li><b>${esc(prof(id)?.name)}</b> (${prof(id)?.level}): ${l.map(e => esc(e.label)).join(', ')}</li>`).join('')}</ul></details>` : '<div class="empty">No videos to clean up.</div>'}
+    <div class="btnrow">${due
+      ? `<button class="btn red" ${list.length ? '' : 'disabled'} onclick="runVideoCleanup()">Delete ${list.length} videos</button>`
+      : `<span class="tiny muted">Available from ${fmtDate(cleanupDate().toISOString())}</span>`}</div></div>`;
+}
+async function runVideoCleanup(){
+  const list = cleanupCandidates();
+  if (!list.length || !confirm(`Delete ${list.length} videos permanently? Entries and ratings stay.`)) return;
+  try {
+    await Store.removeVideos(list.map(e => e.video_path));
+    for (const e of list) upsertLocal(await Store.saveEntry(ST.me, {...e, video_path:null}));
+    toast(`${list.length} videos deleted`); ST.sel = null; renderSelection();
+  } catch (err){ console.error(err); toast('Could not delete: ' + (err.message || err), true); }
 }
 function selectionPdf(){
   const F = ST.selF, rows = ST._selRows || [], dl = selectionDeadline();
