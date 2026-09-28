@@ -469,7 +469,7 @@ const I18N = {
   // Navigation & Kopf
   'Log out':['Abmelden','Déconnexion','Esci'], 'Notifications':['Mitteilungen','Notifications','Notifiche'], 'Switch user':['Person wechseln','Changer de personne','Cambia persona'],
   'Assess':['Assess','Assess','Assess'], 'Team':['Team','Équipe','Team'],
-  'Athlete':['Athlet:in','Athlète','Atleta'], 'Coach':['Coach','Coach','Coach'], 'DVLP / Nachwuchs':['DVLP / Nachwuchs','DVLP / Relève','DVLP / Giovani'],
+  'Athlete':['Athlet:in','Athlète','Atleta'], 'Coach':['Coach','Coach','Coach'], 'Admin':['Admin','Admin','Admin'],
   'No notifications':['Keine Mitteilungen','Aucune notification','Nessuna notifica'],
   '📥 New trick to review':['📥 Neuer Trick zur Bewertung','📥 Nouveau trick à évaluer','📥 Nuovo trick da valutare'],
   '↺ Coach asks for a new video':['↺ Coach wünscht ein neues Video','↺ Le coach demande une nouvelle vidéo','↺ Il coach chiede un nuovo video'],
@@ -486,7 +486,7 @@ const I18N = {
   // Demo
   'Demo — choose a view':['Demo — Ansicht wählen','Démo — choisir une vue','Demo — scegli una vista'], 'Nothing is saved to a server; data stays in this browser.':['Es wird nichts auf einem Server gespeichert; die Daten bleiben in diesem Browser.','Rien n’est enregistré sur un serveur ; les données restent dans ce navigateur.','Nulla viene salvato su un server; i dati restano in questo browser.'],
   'ATHLETES — see only themselves':['ATHLET:INNEN — sehen nur sich selbst','ATHLÈTES — ne voient qu’eux-mêmes','ATLETI — vedono solo sé stessi'], 'COACHES — see their group':['COACHES — sehen ihre Gruppe','COACHS — voient leur groupe','COACH — vedono il loro gruppo'],
-  'DVLP / NACHWUCHS — see everyone':['DVLP / NACHWUCHS — sehen alle','DVLP / RELÈVE — voient tout le monde','DVLP / GIOVANI — vedono tutti'], 'Reset demo data':['Demo-Daten zurücksetzen','Réinitialiser les données démo','Ripristina dati demo'],
+  'ADMIN — sees everyone':['ADMIN — sieht alle','ADMIN — voit tout le monde','ADMIN — vede tutti'], 'Reset demo data':['Demo-Daten zurücksetzen','Réinitialiser les données démo','Ripristina dati demo'],
   'Reset all demo data?':['Alle Demo-Daten zurücksetzen?','Réinitialiser toutes les données démo ?','Ripristinare tutti i dati demo?'], 'Demo data reset':['Demo-Daten zurückgesetzt','Données démo réinitialisées','Dati demo ripristinati'],
   // Assessment
   'ATHLETE':['ATHLET:IN','ATHLÈTE','ATLETA'], '+ Add Entry':['+ Eintrag','+ Ajouter','+ Aggiungi'], 'Rated Tricks':['Bewertete Tricks','Tricks évalués','Trick valutati'],
@@ -661,7 +661,7 @@ const I18N_PAT = [
   [/^Trick status: ≥70% stomp rate =$/, (m, i) => ['Trick-Status: ≥70% Stomp-Rate =', 'Statut du trick : ≥70% taux de stomp =', 'Stato del trick: ≥70% stomp rate ='][i]],
   [/^· fewer than 5 attempts = Low data\. Stomped = all criteria met\.$/, (m, i) => ['· weniger als 5 Versuche = Low data. Stomped = alle Kriterien erfüllt.', '· moins de 5 essais = Low data. Stomped = tous les critères remplis.', '· meno di 5 tentativi = Low data. Stomped = tutti i criteri soddisfatti.'][i]],
   [/^(.+) · (?:current season|last season|all time)(.*)$/, (m, i) => null],
-  [/^(.+) · (Athlete|Coach|DVLP \/ Nachwuchs)$/, (m, i) => `${m[1]} · ${({Athlete:['Athlet:in','Athlète','Atleta'], Coach:['Coach','Coach','Coach'], 'DVLP / Nachwuchs':['DVLP / Nachwuchs','DVLP / Relève','DVLP / Giovani']})[m[2]][i]}`],
+  [/^(.+) · (Athlete|Coach|Admin)$/, (m, i) => `${m[1]} · ${({Athlete:['Athlet:in','Athlète','Atleta'], Coach:['Coach','Coach','Coach'], 'Admin':['Admin','Admin','Admin']})[m[2]][i]}`],
   [/^Hi (.+)$/, (m, i) => [`Hallo ${m[1]}`, `Salut ${m[1]}`, `Ciao ${m[1]}`][i]],
   [/^Level (.+?) · (.+)$/, (m, i) => [`Stufe ${m[1]} · ${m[2]}`, `Niveau ${m[1]} · ${m[2]}`, `Livello ${m[1]} · ${m[2]}`][i]],
   [/^Your Skills-Check (T\d)$/, (m, i) => [`Dein Skills-Check ${m[1]}`, `Ton Skills-Check ${m[1]}`, `Il tuo Skills-Check ${m[1]}`][i]],
@@ -1434,7 +1434,7 @@ function visibleAthletes(){
   return ST.profiles.filter(p => ids.has(p.id) && (!ST.groupFilter || (ST.groupFilter==='__none' ? !p.group_id : p.group_id===ST.groupFilter))).sort((a,b) => a.name.localeCompare(b.name));
 }
 const entriesOf = id => ST.entries.filter(e => e.athlete_id===id);
-const ROLE_LABEL = {athlete:'Athlete', coach:'Coach', dvlp:'DVLP / Nachwuchs'};
+const ROLE_LABEL = {athlete:'Athlete', coach:'Coach', dvlp:'Admin'};
 
 /* ══════════════════════════════════════════════════════════════════════
    HILFSFUNKTIONEN UI
@@ -2042,7 +2042,7 @@ function renderTeam(){
       <tbody>${rows || `<tr><td colspan="10" class="empty">No athletes.</td></tr>`}</tbody></table></div></div>
     ${dv ? `<div class="card"><h2>Coaches & staff</h2><div class="scroll-x"><table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Group</th></tr></thead><tbody>
       ${staffList.map(p => `<tr><td><input type="text" class="name-in" value="${esc(p.name)}" onchange="setProfile('${p.id}','name',this.value.trim())" title="Edit name"><div class="tiny muted">${esc(p.email||'')}</div></td>
-        <td><select onchange="setProfile('${p.id}','role',this.value)" ${p.id===ST.me.id?'disabled':''}>${opts([['athlete','Athlete'],['coach','Coach'],['dvlp','DVLP / Nachwuchs']], p.role)}</select></td>
+        <td><select onchange="setProfile('${p.id}','role',this.value)" ${p.id===ST.me.id?'disabled':''}>${opts([['athlete','Athlete'],['coach','Coach'],['dvlp','Admin']], p.role)}</select></td>
         <td>${p.role==='coach' ? `<select onchange="setProfile('${p.id}','group_id',this.value)"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${p.group_id===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>` : '<span class="muted">all</span>'}</td></tr>`).join('')}
       </tbody></table></div>
       <p class="tiny muted" style="margin-top:12px">${DEMO ? 'Demo mode: accounts are fixed demo users.' : 'Logins: enter the e-mail here first, then create the account in Supabase → Authentication → Users → «Create new user» with the same e-mail — it links automatically. Staff without a profile appear here after their first login.'}</p></div>` : ''}`;
@@ -3194,7 +3194,7 @@ function showDemoGate(){
     <div class="card"><h2>Demo — choose a view</h2><p class="lead">Nothing is saved to a server; data stays in this browser.</p>
       <div class="muted tiny" style="margin:6px 0">ATHLETES — see only themselves</div><div class="demo-users">${by('athlete')}</div>
       <div class="muted tiny" style="margin:16px 0 6px">COACHES — see their group</div><div class="demo-users">${by('coach')}</div>
-      <div class="muted tiny" style="margin:16px 0 6px">DVLP / NACHWUCHS — see everyone</div><div class="demo-users">${by('dvlp')}</div>
+      <div class="muted tiny" style="margin:16px 0 6px">ADMIN — sees everyone</div><div class="demo-users">${by('dvlp')}</div>
       <div class="btnrow"><button class="btn ghost sm" onclick="if(confirm('Reset all demo data?')){DemoStore.reset();showDemoGate();toast('Demo data reset')}">Reset demo data</button></div></div>`);
   $('#gate').hidden = false; $('#app').hidden = true;
 }
