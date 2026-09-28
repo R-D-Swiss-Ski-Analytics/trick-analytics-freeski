@@ -477,6 +477,12 @@ main svg text{font-size:12.5px}
 .ico-alert{color:#C96A1F}
 .ico-clock{color:var(--cblue, #396FA8)}
 .ico-target{color:#C96A1F}
+.pdf-doc{width:780px;background:#fff;padding:8px 4px;color:var(--ink);font-size:14px}
+.pdf-doc .noprint,.pdf-doc .btn,.pdf-doc .icon-btn,.pdf-doc details,.pdf-doc select{display:none!important}
+.pdf-doc .card{border-color:#ddd;box-shadow:none}
+.pdf-doc .pdf-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:16px}
+.pdf-doc .pdf-head h1{font-size:26px}.pdf-doc .pdf-head svg{width:120px}
+.pdf-doc .pdf-foot{margin-top:20px;padding-top:8px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -681,6 +687,9 @@ const I18N = {
   'Choose a video: the trick is submitted after the upload':['Video wählen: Der Trick wird nach dem Upload eingereicht','Choisis une vidéo : le trick sera envoyé après le téléchargement','Scegli un video: il trick viene inviato dopo il caricamento'],
   'Video (optional)':['Video (optional)','Vidéo (facultative)','Video (facoltativo)'], 'Video (required for learned tricks)':['Video (Pflicht für gelernte Tricks)','Vidéo (obligatoire pour les tricks appris)','Video (obbligatorio per i trick imparati)'],
   'Comment (optional)':['Kommentar (optional)','Commentaire (facultatif)','Commento (facoltativo)'],
+  'Creating PDF…':['PDF wird erstellt…','Création du PDF…','Creazione PDF…'], 'PDF saved':['PDF gespeichert','PDF enregistré','PDF salvato'], 'Could not create PDF: ':['PDF konnte nicht erstellt werden: ','Impossible de créer le PDF : ','Impossibile creare il PDF: '],
+  'Please upload a new video.':['Bitte lade ein neues Video hoch.','Merci de télécharger une nouvelle vidéo.','Carica un nuovo video, per favore.'],
+  'Skills-Check Team':['Skills-Check Team','Skills-Check équipe','Skills-Check squadra'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
@@ -2383,6 +2392,7 @@ function renderTeam(){
     : TF.sort==='total_asc' ? (key(x) < 0) - (key(y) < 0) || key(x) - key(y) || x.a.name.localeCompare(y.a.name)
     : key(y) - key(x) || x.a.name.localeCompare(y.a.name));
   const aths = withT.map(x => x.a);
+  ST._teamView = withT;
   const filtered = TF.sex || TF.level;
   const rows = withT.map(({a, t}) => {
     const pend = entriesOf(a.id).filter(e => e.status==='pending').length;
@@ -2405,7 +2415,7 @@ function renderTeam(){
       <select onchange="setTeamFilter('level',this.value)">${opts([['','All levels'], ...LEVELS.map(l => [l, l])], TF.level)}</select>
       <select onchange="setTeamFilter('sort',this.value)">${opts([['name','Sort: name A–Z'],['total_desc','Total: strongest first'],['total_asc','Total: weakest first'],['jump','Jumps: strongest first'],['rail','Rails: strongest first'],['hp','Halfpipe: strongest first']], TF.sort)}</select>
       ${filtered || TF.sort!=='name' ? `<button class="btn ghost sm" onclick="ST.teamFilter=null;renderTeam()">Reset filters</button>` : ''}
-      <span class="grow"></span><button class="btn red" onclick="openAddAthlete()">+ Add athlete</button></div>
+      <span class="grow"></span><button class="btn ghost" onclick="teamSkillsPdf()">📄 PDF</button><button class="btn red" onclick="openAddAthlete()">+ Add athlete</button></div>
     <div class="card"><h2>${dv ? 'All athletes' : esc(groupName(ST.me.group_id))} <span class="muted" style="letter-spacing:0;font-weight:600">${filtered ? `${aths.length} / ${all.length}` : aths.length}</span></h2>
       <ul class="hints"><li>Skills-Check at each athlete's own level</li><li>Total = Jumps, Rails and Halfpipe, ⅓ each</li><li>From T4: focus possible (Halfpipe only, or Jumps & Rails only)</li><li>Click a row to open the Skills-Check</li></ul>
       <div class="scroll-x"><table class="tbl team-tbl"><thead><tr><th>Athlete</th><th>Sex</th><th>Level</th><th>Focus</th>${dv?'<th>Group</th>':''}<th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th><th></th></tr></thead>
@@ -2416,6 +2426,14 @@ function renderTeam(){
         <td class="c-sel" data-l="Group">${p.role==='coach' ? `<select onchange="setProfile('${p.id}','group_id',this.value)"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${p.group_id===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>` : '<span class="muted">all</span>'}</td></tr>`).join('')}
       </tbody></table></div>
       <p class="tiny muted" style="margin-top:12px">${DEMO ? 'Demo mode: accounts are fixed demo users.' : 'Logins: enter the e-mail here first, then create the account in Supabase → Authentication → Users → «Create new user» with the same e-mail: it links automatically. Staff without a profile appear here after their first login.'}</p></div>` : ''}`;
+}
+function teamSkillsPdf(){
+  const TF = ST.teamFilter || {}, rows = ST._teamView || [];
+  const dcell = (t, d) => !t ? '<td class="num">–</td>' : t.incl.includes(d) ? pdfPctCell(pct(t.by[d].pts, t.by[d].max), 70, 40) : '<td class="num"><span class="tiny muted">not in focus</span></td>';
+  const body = rows.map(({a, t}) => `<tr><td><b>${esc(a.name)}</b><div class="tiny muted">${esc(groupName(a.group_id))}</div></td><td>${a.gender || '–'}</td><td>${a.level || '–'}</td>${dcell(t,'Jump')}${dcell(t,'Rail')}${dcell(t,'Halfpipe')}${pdfPctCell(t ? t.pct : null, 70, 40)}</tr>`).join('');
+  const filt = [TF.sex==='W' ? 'Women only' : TF.sex==='M' ? 'Men only' : '', TF.level || ''].filter(Boolean).join(' · ');
+  openPrintWindow('Skills-Check Team', `${rows.length} athletes${filt ? ' · ' + filt : ''}`,
+    `<div class="card"><table class="tbl"><thead><tr><th>Athlete</th><th>Sex</th><th>Level</th><th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th></tr></thead><tbody>${body}</tbody></table></div>`);
 }
 function setTeamFilter(k, v){ (ST.teamFilter ||= {sex:'', level:'', sort:'name'})[k] = v; renderTeam(); }
 function openAddAthlete(){
@@ -3380,24 +3398,27 @@ function monCoaching(list, disc){
 /* ══════════════════════════════════════════════════════════════════════
    PDF-EXPORTE (wie Freeski: eigenes Fenster → «Print / Save as PDF»)
    ══════════════════════════════════════════════════════════════════════ */
-function openPrintWindow(title, sub, html){
-  const w = window.open('', '_blank');
-  if (!w){ toast('Please allow pop-ups to create the PDF.', true); return; }
-  const css = document.querySelector('style').outerHTML, logo = document.querySelector('.brand svg')?.outerHTML || '';
-  w.document.write(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>${esc(title)}</title>${css}
-    <style>body{background:#fff}.noprint,.btn,.icon-btn,details,select{display:none!important}.card{break-inside:avoid;border-color:#ddd}
-      .pdfbar{position:sticky;top:0;background:#fff;padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:14px;display:flex;gap:10px;align-items:center}
-      .pdfbar button{display:inline-block!important;background:var(--char);color:#fff;border:0;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer}
-      .pdf-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:18px}.pdf-head svg{width:130px}
-      .pdf-foot{margin-top:24px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
-      @media print{.pdfbar{display:none}}</style></head>
-    <body><div class="wrap" style="padding-top:16px">
-      <div class="pdfbar"><button onclick="window.print()">Print / Save as PDF</button><span class="muted small">Tip: choose «Save as PDF» as the printer.</span></div>
-      <div class="pdf-head"><div><h1>${esc(title)}<span class="dot">.</span></h1><div class="sub">${sub}</div></div><div>${logo}</div></div>
-      ${html}
-      <div class="pdf-foot">Trick Analyses Freeski Youth · Swiss-Ski · created ${fmtDate(nowIso())}</div>
-    </div></body></html>`);
-  w.document.close();
+// PDF direkt herunterladen (ohne Druckfenster): html2pdf.js wird bei Bedarf geladen
+let _h2p;
+function loadHtml2Pdf(){
+  return _h2p ||= new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js'; sc.onload = () => res(window.html2pdf); sc.onerror = () => { _h2p = null; rej(new Error('PDF library could not be loaded')); }; document.head.appendChild(sc); });
+}
+async function openPrintWindow(title, sub, html){
+  toast('Creating PDF…');
+  const logo = document.querySelector('.brand > svg')?.outerHTML || '';
+  const box = document.createElement('div');
+  box.className = 'pdf-doc';
+  box.innerHTML = `<div class="pdf-head"><div><h1>${esc(title)}<span class="dot">.</span></h1><div class="sub">${sub}</div></div><div>${logo}</div></div>
+    ${html}<div class="pdf-foot">Trick Analyses Freeski Youth · Swiss-Ski · created ${fmtDate(nowIso())}</div>`;
+  i18nNode(box);   // übersetzen + Icons, bevor html2pdf den Inhalt kopiert (Container ist nicht im DOM)
+  try {
+    const h2p = await loadHtml2Pdf();
+    const file = title.replace(/[^\wÀ-ÿ\- ]+/g, '').trim().replace(/\s+/g, '_') + '.pdf';
+    await h2p().set({margin:[10, 10, 12, 10], filename:file, image:{type:'jpeg', quality:0.95},
+      html2canvas:{scale:2, useCORS:true, backgroundColor:'#ffffff', windowWidth:820},
+      jsPDF:{unit:'mm', format:'a4', orientation:'portrait'}, pagebreak:{mode:['css'], avoid:['tr','.trick-block','.kpi','.pdf-head','.legend']}}).from(box).save();
+    toast('PDF saved');
+  } catch (err){ console.error(err); toast('Could not create PDF: ' + (err.message||err), true); }
 }
 function reportPdf(id){
   const s = sessById(id); if (!s) return;
