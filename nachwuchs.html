@@ -2172,14 +2172,12 @@ function renderSession(){
 function renderSessionSetup(root){
   SX.setup ||= {date:todayIso(), type:'Big Air Training', location:'', ath:new Set()};
   const su = SX.setup, aths = visibleAthletes();
-  const locs = [...new Set(ST.sessions.map(s => s.location).filter(Boolean))];
   const recent = ST.sessions.filter(s => s.ended_at).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 3);
   root.innerHTML = `
     ${ST.me.role==='dvlp' ? `<div class="row" style="margin-bottom:18px">${groupFilterSelect()}</div>` : ''}
     <div class="card"><h2>New session</h2>
       <div class="grid">
         <label class="f">Session Date<input type="date" value="${su.date}" max="${todayIso()}" onchange="SX.setup.date=this.value > todayIso() ? todayIso() : this.value;renderSession()"></label>
-        <label class="f">Location<input type="text" list="loc-list" value="${esc(su.location)}" oninput="SX.setup.location=this.value" placeholder="e.g. Laax"><datalist id="loc-list">${locs.map(l => `<option value="${esc(l)}">`).join('')}</datalist></label>
       </div>
       ${su.date < todayIso() ? `<div class="tiny" style="color:#C96A1F;margin-top:8px">⚠ Backdated — all entries will be saved for ${fmtDate(su.date)}.</div>` : ''}
       <div class="f-lbl">Session type</div>
@@ -2525,7 +2523,7 @@ function openEndSession(){
   modal(`<h3>Session Complete</h3><div class="muted small">${esc(normType(s.type))} · ${fmtDate(s.date)} · ${atts.length} attempts</div>
     <div class="form-grid" style="margin-top:14px">
       <div class="form-group"><label>Duration (min)</label><input type="number" id="es-dur" min="30" step="30" value="${s.duration_min || mins}"></div>
-      <div class="form-group"><label>Location</label><input type="text" id="es-loc" value="${esc(s.location||'')}"></div>
+      <div class="form-group"><label>Location</label><input type="text" id="es-loc" list="es-loc-list" value="${esc(s.location||'')}" placeholder="e.g. Laax"><datalist id="es-loc-list">${[...new Set(ST.sessions.map(x => x.location).filter(Boolean))].map(l => `<option value="${esc(l)}">`).join('')}</datalist></div>
       ${!isRunType(s.type) ? `<div class="form-group"><label>Jump Size</label><select id="es-size"><option value="">–</option>${opts(['M','L','XL'], s.jump_size||'')}</select></div>` : ''}
       <div class="form-group"><label>Conditions</label><select id="es-cond"><option value="">–</option>${opts([['1','1 · Poor'],['2','2'],['3','3 · OK'],['4','4'],['5','5 · Excellent']], s.conditions||'')}</select></div>
       <div class="form-group full"><label>Comments</label><textarea id="es-com" placeholder="Conditions, focus of the day …">${esc(s.comments||'')}</textarea></div>
