@@ -49,6 +49,9 @@ h1 .dot{color:var(--red)}
 .tabs{position:sticky;top:0;z-index:60;background:rgba(250,247,246,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .tabs-in{max-width:1180px;margin:0 auto;padding:0 24px;display:flex;gap:26px;overflow-x:auto;scrollbar-width:none}
 .tabs-in::-webkit-scrollbar{display:none}
+.tabs-in::after{content:'';flex:0 0 1px}
+@media(max-width:1060px){.tabs-in{gap:18px;padding:0 20px}.tab-btn{font-size:12px;letter-spacing:.8px}}
+@media(max-width:900px){.tabs-in{gap:13px;padding:0 16px}.tab-btn{font-size:11.5px;letter-spacing:.4px}}
 .tab-btn{background:none;border:0;padding:15px 0 12px;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;position:relative}
 .tab-btn.on{color:var(--char);border-bottom-color:var(--red)}
 .tab-sep{align-self:center;width:1.5px;height:20px;background:#cfc8c5;flex-shrink:0}
@@ -371,8 +374,8 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)
 .bottom-nav{display:none}
 @media (max-width:768px){
   .bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:120;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:4px 2px calc(4px + env(safe-area-inset-bottom))}
-  .bottom-nav button{flex:1;min-width:0;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 0;color:var(--muted);font-size:9.5px;font-weight:700;position:relative;cursor:pointer}
-  .bottom-nav button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .bottom-nav button{flex:1 1 auto;min-width:0;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 0;color:var(--muted);font-size:9.5px;font-weight:700;position:relative;cursor:pointer}
+  .bottom-nav button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;letter-spacing:-.1px}
   .bottom-nav button.on{color:var(--red)}
   .bn-sep{width:1px;align-self:stretch;margin:6px 1px;background:var(--line);flex-shrink:0}
   .bn-badge{position:absolute;top:1px;right:calc(50% - 20px);background:var(--red);color:#fff;border-radius:99px;font-size:9px;font-style:normal;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px}
@@ -469,7 +472,7 @@ const I18N = {
   // Navigation & Kopf
   'Log out':['Abmelden','Déconnexion','Esci'], 'Notifications':['Mitteilungen','Notifications','Notifiche'], 'Switch user':['Person wechseln','Changer de personne','Cambia persona'],
   'Assess':['Assess','Assess','Assess'], 'Team':['Team','Équipe','Team'],
-  'Athlete':['Athlet:in','Athlète','Atleta'], 'Coach':['Coach','Coach','Coach'], 'Admin':['Admin','Admin','Admin'],
+  'Athlete':['Athlet:in','Athlète','Atleta'], 'Coach':['Coach','Coach','Coach'], 'DVLP':['DVLP','DVLP','DVLP'], 'Admin':['Admin','Admin','Admin'],
   'No notifications':['Keine Mitteilungen','Aucune notification','Nessuna notifica'],
   '📥 New trick to review':['📥 Neuer Trick zur Bewertung','📥 Nouveau trick à évaluer','📥 Nuovo trick da valutare'],
   '↺ Coach asks for a new video':['↺ Coach wünscht ein neues Video','↺ Le coach demande une nouvelle vidéo','↺ Il coach chiede un nuovo video'],
@@ -486,7 +489,7 @@ const I18N = {
   // Demo
   'Demo — choose a view':['Demo — Ansicht wählen','Démo — choisir une vue','Demo — scegli una vista'], 'Nothing is saved to a server; data stays in this browser.':['Es wird nichts auf einem Server gespeichert; die Daten bleiben in diesem Browser.','Rien n’est enregistré sur un serveur ; les données restent dans ce navigateur.','Nulla viene salvato su un server; i dati restano in questo browser.'],
   'ATHLETES — see only themselves':['ATHLET:INNEN — sehen nur sich selbst','ATHLÈTES — ne voient qu’eux-mêmes','ATLETI — vedono solo sé stessi'], 'COACHES — see their group':['COACHES — sehen ihre Gruppe','COACHS — voient leur groupe','COACH — vedono il loro gruppo'],
-  'ADMIN — sees everyone':['ADMIN — sieht alle','ADMIN — voit tout le monde','ADMIN — vede tutti'], 'Reset demo data':['Demo-Daten zurücksetzen','Réinitialiser les données démo','Ripristina dati demo'],
+  'DVLP — see everyone':['DVLP — sehen alle','DVLP — voient tout le monde','DVLP — vedono tutti'], 'Reset demo data':['Demo-Daten zurücksetzen','Réinitialiser les données démo','Ripristina dati demo'],
   'Reset all demo data?':['Alle Demo-Daten zurücksetzen?','Réinitialiser toutes les données démo ?','Ripristinare tutti i dati demo?'], 'Demo data reset':['Demo-Daten zurückgesetzt','Données démo réinitialisées','Dati demo ripristinati'],
   // Assessment
   'ATHLETE':['ATHLET:IN','ATHLÈTE','ATLETA'], '+ Add Entry':['+ Eintrag','+ Ajouter','+ Aggiungi'], 'Rated Tricks':['Bewertete Tricks','Tricks évalués','Trick valutati'],
@@ -661,7 +664,7 @@ const I18N_PAT = [
   [/^Trick status: ≥70% stomp rate =$/, (m, i) => ['Trick-Status: ≥70% Stomp-Rate =', 'Statut du trick : ≥70% taux de stomp =', 'Stato del trick: ≥70% stomp rate ='][i]],
   [/^· fewer than 5 attempts = Low data\. Stomped = all criteria met\.$/, (m, i) => ['· weniger als 5 Versuche = Low data. Stomped = alle Kriterien erfüllt.', '· moins de 5 essais = Low data. Stomped = tous les critères remplis.', '· meno di 5 tentativi = Low data. Stomped = tutti i criteri soddisfatti.'][i]],
   [/^(.+) · (?:current season|last season|all time)(.*)$/, (m, i) => null],
-  [/^(.+) · (Athlete|Coach|Admin)$/, (m, i) => `${m[1]} · ${({Athlete:['Athlet:in','Athlète','Atleta'], Coach:['Coach','Coach','Coach'], 'Admin':['Admin','Admin','Admin']})[m[2]][i]}`],
+  [/^(.+) · (Athlete|Coach|DVLP|Admin)$/, (m, i) => `${m[1]} · ${({Athlete:['Athlet:in','Athlète','Atleta'], Coach:['Coach','Coach','Coach'], DVLP:['DVLP','DVLP','DVLP'], 'Admin':['Admin','Admin','Admin']})[m[2]][i]}`],
   [/^Hi (.+)$/, (m, i) => [`Hallo ${m[1]}`, `Salut ${m[1]}`, `Ciao ${m[1]}`][i]],
   [/^Level (.+?) · (.+)$/, (m, i) => [`Stufe ${m[1]} · ${m[2]}`, `Niveau ${m[1]} · ${m[2]}`, `Livello ${m[1]} · ${m[2]}`][i]],
   [/^Your Skills-Check (T\d)$/, (m, i) => [`Dein Skills-Check ${m[1]}`, `Ton Skills-Check ${m[1]}`, `Il tuo Skills-Check ${m[1]}`][i]],
@@ -752,7 +755,7 @@ function setLang(l){
   location.reload();   // sauber neu aufbauen (Session läuft in der DB weiter)
 }
 
-const DEMO_KEY = 'nw-demo-v6';
+const DEMO_KEY = 'nw-demo-v7';
 
 /* ══════════════════════════════════════════════════════════════════════
    TRICK-VOKABULAR
@@ -1177,7 +1180,7 @@ function demoSeed(){
     P('u-luca','Luca Demo','athlete',g1,'M','T2'), P('u-mia','Mia Test','athlete',g2,'W','T3'),
     {...P('u-elia','Elia Probe','athlete',g2,'M','T4'), focus:'hp'},
     P('u-coach-a','Coach Gruppe A','coach',g1,null,null), P('u-coach-b','Coach Gruppe B','coach',g2,null,null),
-    P('u-dvlp','Nachwuchs-Chefin','dvlp',null,null,null),
+    P('u-dvlp','DVLP Demo','dvlp',null,null,null),
   ];
   const groups = [{id:g1, name:'Demo TG Nachwuchs A'}, {id:g2, name:'Demo TG Nachwuchs B'}];
   const d = n => new Date(Date.now() - n*86400000).toISOString();
@@ -1434,7 +1437,10 @@ function visibleAthletes(){
   return ST.profiles.filter(p => ids.has(p.id) && (!ST.groupFilter || (ST.groupFilter==='__none' ? !p.group_id : p.group_id===ST.groupFilter))).sort((a,b) => a.name.localeCompare(b.name));
 }
 const entriesOf = id => ST.entries.filter(e => e.athlete_id===id);
-const ROLE_LABEL = {athlete:'Athlete', coach:'Coach', dvlp:'Admin'};
+const ROLE_LABEL = {athlete:'Athlete', coach:'Coach', dvlp:'DVLP'};
+// App-Admin (Profil-ID, keine Personendaten im öffentlichen Repo) — wird statt «DVLP» als «Admin» angezeigt
+const ADMIN_IDS = ['b953c49f-3033-4323-9247-af07c52c26a3'];
+const roleLabel = p => ADMIN_IDS.includes(p?.id) ? 'Admin' : ROLE_LABEL[p?.role];
 
 /* ══════════════════════════════════════════════════════════════════════
    HILFSFUNKTIONEN UI
@@ -1490,7 +1496,7 @@ function renderChrome(){
   $('#who').innerHTML = `
     ${langSelect()}
     <button class="iconbtn" onclick="toggleNotifs(event)" title="Notifications">🔔${unread?`<span class="badge">${unread}</span>`:''}</button>
-    <span class="chip">${esc(ST.me.name)} · ${ROLE_LABEL[ST.me.role]}</span>
+    <span class="chip">${ADMIN_IDS.includes(ST.me.id) ? 'Admin' : `${esc(ST.me.name)} · ${roleLabel(ST.me)}`}</span>
     <button class="iconbtn" onclick="logout()">Log out</button>`;
   const tabs = [['assessment','Assessment'], ['skills','Skills-Check']];
   // Reihenfolge: Skills-Check-Teil │ Session-Erfassung
@@ -2042,7 +2048,7 @@ function renderTeam(){
       <tbody>${rows || `<tr><td colspan="10" class="empty">No athletes.</td></tr>`}</tbody></table></div></div>
     ${dv ? `<div class="card"><h2>Coaches & staff</h2><div class="scroll-x"><table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Group</th></tr></thead><tbody>
       ${staffList.map(p => `<tr><td><input type="text" class="name-in" value="${esc(p.name)}" onchange="setProfile('${p.id}','name',this.value.trim())" title="Edit name"><div class="tiny muted">${esc(p.email||'')}</div></td>
-        <td><select onchange="setProfile('${p.id}','role',this.value)" ${p.id===ST.me.id?'disabled':''}>${opts([['athlete','Athlete'],['coach','Coach'],['dvlp','Admin']], p.role)}</select></td>
+        <td><select onchange="setProfile('${p.id}','role',this.value)" ${p.id===ST.me.id?'disabled':''}>${opts([['athlete','Athlete'],['coach','Coach'],['dvlp', ADMIN_IDS.includes(p.id) ? 'Admin' : 'DVLP']], p.role)}</select></td>
         <td>${p.role==='coach' ? `<select onchange="setProfile('${p.id}','group_id',this.value)"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${p.group_id===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>` : '<span class="muted">all</span>'}</td></tr>`).join('')}
       </tbody></table></div>
       <p class="tiny muted" style="margin-top:12px">${DEMO ? 'Demo mode: accounts are fixed demo users.' : 'Logins: enter the e-mail here first, then create the account in Supabase → Authentication → Users → «Create new user» with the same e-mail — it links automatically. Staff without a profile appear here after their first login.'}</p></div>` : ''}`;
@@ -3188,13 +3194,13 @@ function gateShell(inner){
 function showDemoGate(){
   const d = DemoStore.data;
   const card = p => `<button class="demo-user" onclick="demoLogin('${p.id}')"><span class="avatar r-${p.role}">${initials(p.name)}</span>
-    <span><b>${esc(p.name)}</b><br><span class="muted small">${ROLE_LABEL[p.role]}${p.group_id?` · ${esc(d.groups.find(g => g.id===p.group_id)?.name)}`:''}${p.level?` · ${p.level}`:''}</span></span></button>`;
+    <span><b>${esc(p.name)}</b><br><span class="muted small">${roleLabel(p)}${p.group_id?` · ${esc(d.groups.find(g => g.id===p.group_id)?.name)}`:''}${p.level?` · ${p.level}`:''}</span></span></button>`;
   const by = r => d.profiles.filter(p => p.role===r).map(card).join('');
   $('#gate').innerHTML = gateShell(`
     <div class="card"><h2>Demo — choose a view</h2><p class="lead">Nothing is saved to a server; data stays in this browser.</p>
       <div class="muted tiny" style="margin:6px 0">ATHLETES — see only themselves</div><div class="demo-users">${by('athlete')}</div>
       <div class="muted tiny" style="margin:16px 0 6px">COACHES — see their group</div><div class="demo-users">${by('coach')}</div>
-      <div class="muted tiny" style="margin:16px 0 6px">ADMIN — sees everyone</div><div class="demo-users">${by('dvlp')}</div>
+      <div class="muted tiny" style="margin:16px 0 6px">DVLP — see everyone</div><div class="demo-users">${by('dvlp')}</div>
       <div class="btnrow"><button class="btn ghost sm" onclick="if(confirm('Reset all demo data?')){DemoStore.reset();showDemoGate();toast('Demo data reset')}">Reset demo data</button></div></div>`);
   $('#gate').hidden = false; $('#app').hidden = true;
 }
