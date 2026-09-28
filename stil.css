@@ -488,3 +488,20 @@ header h1 { flex:1 1 auto; }
 }
 /* Handy: Versuchs-Grafiken im Session-Report auf Bildschirmbreite skalieren (kein seitliches Wischen) */
 @media (max-width:768px){ div[style*="overflow-x:auto"] > svg[viewBox]{ max-width:100%; height:auto; } }
+
+/* Kopf-Knöpfe wie Youth: runde Pills, Abmelden als Symbol */
+.iconbtn{position:relative;border:1px solid var(--border);background:rgba(255,255,255,.85);border-radius:999px;height:34px;min-width:34px;padding:0 12px;cursor:pointer;font-size:13px;font-weight:600;color:var(--char);display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit}
+.iconbtn:hover{border-color:#cfc8c5}
+.pill-sel{-webkit-appearance:none;appearance:none;height:34px;max-width:200px;padding:0 28px 0 14px !important;border-radius:999px !important;border:1px solid var(--border) !important;background:rgba(255,255,255,.85) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%233E3E3F' fill='none' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 11px center !important;font-size:13px !important;font-weight:700;color:var(--char) !important;cursor:pointer}
+.sb-col-header.mastered{color:#2F7A4A !important}
+/* Untere Leiste wie Youth: weiss, Abstand zur iPhone-Home-Leiste */
+@media (max-width:768px){
+  .iconbtn,.pill-sel{height:30px;font-size:12px !important}
+  .iconbtn{min-width:30px;padding:0 8px}
+  .pill-sel{max-width:110px;padding:0 22px 0 10px !important;background-position:right 8px center !important}
+  .logout-btn span{display:none}
+  .mobile-nav{height:auto !important;padding:4px 2px calc(6px + env(safe-area-inset-bottom, 0px)) !important;box-shadow:0 -1px 0 var(--border)}
+  .mobile-nav-btn{padding:6px 0 4px !important;gap:2px !important;font-size:10.5px !important;font-weight:700 !important;letter-spacing:-.1px}
+  .mobile-nav-btn svg{width:22px !important;height:22px !important}
+  .page{padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px)) !important}
+}

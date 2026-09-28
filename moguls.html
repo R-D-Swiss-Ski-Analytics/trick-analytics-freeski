@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Trick Analyses Moguls</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -160,6 +160,11 @@ header h1{font-weight:800 !important;letter-spacing:-.3px !important}
 input,select,textarea{background:#fff !important;color:var(--text) !important}
 .mobile-nav{background:#fff !important;border-top:1px solid var(--border) !important}
 @media (max-width:768px){.brand-logo{margin-left:auto}.brand-logo svg{width:60px}}
+@media (max-width:768px){
+  .mobile-nav{height:auto !important;padding:4px 2px calc(6px + env(safe-area-inset-bottom, 0px)) !important;box-shadow:0 -1px 0 var(--border)}
+  .mobile-nav-btn{padding:6px 0 4px !important;gap:2px !important;font-size:10.5px !important;font-weight:700 !important}
+  body{padding-bottom:calc(90px + env(safe-area-inset-bottom, 0px))}
+}
 </style>
 </head>
 <body>

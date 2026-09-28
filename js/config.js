@@ -347,6 +347,6 @@ const SPORT_CONFIGS = {
 const CFG = SPORT_CONFIGS[SPORT];
 // Snowboard uses the refreshed mint green; Freeski keeps the classic palette
 const UI_GREEN      = '#3E8E5A';  // seit 31.8.2026 beide Sportarten Mint
-const UI_GREEN_TEXT = SPORT === 'snowboard' ? '#3E8E5A' : '#4ade80';
+const UI_GREEN_TEXT = '#2F7A4A';   // dunkleres Grün: gut lesbar auf hellem Grund
 const UI_GREEN_BG25 = SPORT === 'snowboard' ? 'rgba(62,142,90,0.25)' : 'rgba(62,142,90,0.25)';
 const UI_GREEN_BG20 = SPORT === 'snowboard' ? 'rgba(62,142,90,0.2)'  : 'rgba(62,142,90,0.2)';
