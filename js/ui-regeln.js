@@ -71,7 +71,8 @@
     + 'table.m-cards td{display:block;padding:0!important;border:0!important;text-align:left!important;min-width:0;white-space:normal!important;overflow-wrap:anywhere}'
     + 'table.m-cards td:first-child{grid-column:1/-1;font-weight:700}'
     + 'table.m-cards td[data-l]:not(:first-child)::before{content:attr(data-l);display:block;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:1px}'
-    + 'table.m-cards td:empty{display:none}}';
+    + 'table.m-cards td:empty{display:none}table.m-cards td:last-child:not(:first-child){grid-column:1/-1}table.m-cards .dist-bar{min-width:0!important}'
+    + '[style*="overflow-x"] > svg[viewBox],.table-wrap svg[viewBox],.chart-scroll svg[viewBox]{max-width:100%;height:auto}}';
   document.head.appendChild(st);
   const start = () => {
     walk(document.body);

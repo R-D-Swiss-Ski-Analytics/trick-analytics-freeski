@@ -168,6 +168,11 @@ input,select,textarea{background:#fff !important;color:var(--text) !important}
 }
 header{padding-top:calc(10px + env(safe-area-inset-top, 0px)) !important}
 header h1 .dot{color:#E2001A}
+.sb-overview{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.sb-ov-card{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+.sb-ov-num{font-size:32px;font-weight:800;line-height:1}
+.sb-ov-label{font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.sb-col-header.mastered{color:#2F7A4A !important}
 </style>
 </head>
 <body>
@@ -178,8 +183,8 @@ header h1 .dot{color:#E2001A}
   <nav class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('standort', this)">Assessment</button>
     <button class="nav-tab" onclick="showPage('erfassen', this)">Session</button>
-    <button class="nav-tab" onclick="showPage('auswertung', this)">Development</button>
-    <button class="nav-tab" onclick="showPage('datenbank', this)">Database</button>
+    <button class="nav-tab" onclick="showPage('datenbank', this)">Reports</button>
+    <button class="nav-tab" onclick="showPage('auswertung', this)">Monitoring</button>
   </nav>
 </header>
 
@@ -575,24 +580,28 @@ function renderStandort() {
   const mastered = stRows.filter(r => r.status === 'mastered');
   const goals = stRows.filter(r => r.status === 'goal');
   el.innerHTML = `
+    <div class="sb-overview">
+      <div class="sb-ov-card"><div class="sb-ov-num" style="color:#2F7A4A;">${mastered.length}</div><div class="sb-ov-label">Learned Jumps</div></div>
+      <div class="sb-ov-card"><div class="sb-ov-num" style="color:#C96A1F;">${goals.length}</div><div class="sb-ov-label">Open Goals</div></div>
+    </div>
     <div class="card">
       <div class="card-title">Add Jump</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
         <div class="form-group" style="flex:1;min-width:160px;"><label>Jump</label>
           <select id="st-jump">${jumpOptions('all', '')}</select></div>
-        <button onclick="addStandort('mastered')" style="padding:11px 20px;background:linear-gradient(135deg,#1a5c38,#2d8a4e);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">✓ MASTERED</button>
+        <button onclick="addStandort('mastered')" style="padding:11px 20px;background:linear-gradient(135deg,#1a5c38,#2d8a4e);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">✓ LEARNED</button>
         <button onclick="addStandort('goal')" style="padding:11px 20px;background:linear-gradient(135deg,#b45309,#C96A1F);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">🎯 GOAL</button>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-top:10px;">In the live session, the jump dropdown only shows these jumps (goals marked 🎯).</div>
     </div>
     <div class="sb-columns">
       <div>
-        <div class="sb-col-header mastered">✓ Mastered <span style="margin-left:auto;font-size:12px;">${mastered.length}</span></div>
-        <div class="sb-col-body mastered">${mastered.map(stRowHtml).join('') || '<div style="padding:14px;color:var(--muted);font-size:12px;">No jumps yet.</div>'}</div>
+        <div class="sb-col-header mastered">✅ LEARNED JUMPS <span style="opacity:.6;font-size:14px;">(${mastered.length})</span></div>
+        <div class="sb-col-body mastered">${mastered.map(stRowHtml).join('') || '<div style="padding:14px;color:var(--muted);font-size:12px;">No entries yet</div>'}</div>
       </div>
       <div>
-        <div class="sb-col-header goal">🎯 Goals <span style="margin-left:auto;font-size:12px;">${goals.length}</span></div>
-        <div class="sb-col-body goal">${goals.map(stRowHtml).join('') || '<div style="padding:14px;color:var(--muted);font-size:12px;">No goals yet.</div>'}</div>
+        <div class="sb-col-header goal">🎯 GOALS / IN PROGRESS <span style="opacity:.6;font-size:14px;">(${goals.length})</span></div>
+        <div class="sb-col-body goal">${goals.map(stRowHtml).join('') || '<div style="padding:14px;color:var(--muted);font-size:12px;">No goals yet</div>'}</div>
       </div>
     </div>`;
 }
@@ -611,7 +620,7 @@ async function addStandort(status) {
   if (error) { showToast('Save error: ' + error.message, 'error'); return; }
   stRows.push(data[0]);
   renderStandort();
-  showToast(jump + ' → ' + (status === 'mastered' ? 'Mastered' : 'Goal'), 'success');
+  showToast(jump + ' → ' + (status === 'mastered' ? 'Learned' : 'Goal'), 'success');
 }
 
 async function setStandortStatus(id, status) {
@@ -632,7 +641,7 @@ async function deleteStandort(id) {
   showToast('Removed', 'success');
 }
 function updateMobileNav(id) {
-  const order = ['standort','erfassen','auswertung','datenbank'];
+  const order = ['standort','erfassen','datenbank','auswertung'];   // wie Freeski/Snowboard: Assessment · Session · Reports · Monitoring
   document.querySelectorAll('.mobile-nav-btn').forEach((b,i) => b.classList.toggle('active', order[i] === id));
 }
 
@@ -1870,13 +1879,13 @@ document.addEventListener('DOMContentLoaded', function() {
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
     Session
   </button>
-  <button class="mobile-nav-btn" onclick="showPage('auswertung', this)">
-    <svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="20"/><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="6"/><line x1="18" y1="20" x2="18" y2="14"/></svg>
-    Development
-  </button>
   <button class="mobile-nav-btn" onclick="showPage('datenbank', this)">
-    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
-    Database
+    <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="8"/><rect x="12" y="6" width="3" height="12"/><rect x="17" y="13" width="3" height="5"/></svg>
+    Reports
+  </button>
+  <button class="mobile-nav-btn" onclick="showPage('auswertung', this)">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Monitoring
   </button>
 </nav>
 
