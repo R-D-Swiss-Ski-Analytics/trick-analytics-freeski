@@ -215,6 +215,47 @@ textarea{min-height:64px;resize:vertical}
 .dot-o{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:2px}
 .dot-o.failed{background:var(--red)}.dot-o.landed{background:var(--green)}.dot-o.stomped{background:var(--cyan)}
 
+/* Monitoring (wie Snowboard) */
+.mon-head .mon-title{font-size:21px;font-weight:800;color:var(--char)}
+.typechips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.typechip{border:1.5px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer}
+.typechip.on{border-color:var(--cyan);background:#e6f4f6;color:var(--cyan)}
+.sec-lbl{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--char);margin:20px 0 10px}
+.mon-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.mon-tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer}
+.mon-tile:hover,.mon-card:hover{border-color:#cfc8c5;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.mon-tile .t,.mon-card .t{font-weight:700;color:var(--char);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avatar.sm{width:34px;height:34px;font-size:12px;background:#e6f4f6;color:var(--cyan)}
+.ringwrap{position:relative;width:92px;height:92px;margin:14px auto 10px}
+.ringlbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ringlbl b{font-size:17px;font-weight:800;color:var(--char)}
+.ringlbl span{font-size:8.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.tri{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);padding-top:8px;text-align:center}
+.tri b{display:block;font-size:15px;font-weight:800}
+.tri span{font-size:9.5px;color:var(--muted)}
+.mon-tile .more{text-align:center;font-size:11px;color:var(--cyan);font-weight:700;margin-top:8px}
+.mon-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.mon-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 14px;cursor:pointer}
+.mon-card.is-crit{border-color:rgba(214,69,69,.5)}
+.mon-card .big{font-size:26px;font-weight:800;line-height:1}
+.mon-card .mini{font-size:10.5px;line-height:1.6;color:var(--muted)}
+.dirbox{background:var(--soft);border-radius:12px;padding:14px;margin-top:14px}
+.dirbar{height:12px;border-radius:99px;overflow:hidden;display:flex;background:#e7e3e1}
+.dirbar i{display:block;height:100%}
+.pill{display:inline-block;border:1px solid;border-radius:999px;padding:4px 12px;font-size:11.5px;font-weight:700;background:#fff}
+.legtbl{font-size:13px;border-collapse:collapse;min-width:260px}
+.legtbl td{padding:4px 10px 4px 0}
+.legtbl tr.bb td{border-bottom:1px solid var(--line);padding-bottom:8px}
+.legtbl tr.bb + tr td{padding-top:8px}
+.sq{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.ln{display:inline-block;width:18px;height:2px;margin-right:6px;vertical-align:3px}
+.ln.dash{height:0;border-top:2px dashed}
+.sub-h{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--char);margin:18px 0 8px;display:flex;gap:10px}
+.sub-h .rt{margin-left:auto;font-weight:600;letter-spacing:0;text-transform:none;color:var(--muted)}
+.chips-row{display:flex;gap:6px;flex-wrap:wrap}
+.varrow{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;padding:7px 0;border-top:1px solid var(--line);font-size:12.5px;align-items:center}
+.coach-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px 24px}
+
 /* Session / Reports / Monitoring */
 .f-lbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;display:flex;align-items:center;gap:10px}
 .linkbtn{background:none;border:0;color:var(--red);font-weight:700;font-size:12px;cursor:pointer;letter-spacing:0;text-transform:none;padding:0}
@@ -963,7 +1004,7 @@ const Store = DEMO ? DemoStore : SupaStore;
    ZUSTAND & ROLLEN
    athlete: sieht nur sich · coach: seine Gruppe · dvlp: alle
    ══════════════════════════════════════════════════════════════════════ */
-const ST = {me:null, profiles:[], groups:[], entries:[], notes:[], sessions:[], attempts:[], rep:{sel:null, type:'', athlete:'', period:'season'}, mon:{view:'team', athleteId:null, key:null, period:'season'}, page:'assessment', athleteId:null, level:null, disc:'Jump', groupFilter:'', entryFilter:'all', form:null, pendingFile:null};
+const ST = {me:null, profiles:[], groups:[], entries:[], notes:[], sessions:[], attempts:[], rep:{sel:null, type:'', athlete:'', period:'season'}, mon:{view:'team', athleteId:null, key:null, period:'season', typ:'', from:'', to:''}, page:'assessment', athleteId:null, level:null, disc:'Jump', groupFilter:'', entryFilter:'all', form:null, pendingFile:null};
 
 function visibleAthleteIds(me, profiles){
   const ath = profiles.filter(p => p.role==='athlete');
@@ -1962,84 +2003,299 @@ async function deleteReport(id){
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   MONITORING — Team → Athlet:in → Trick
+   MONITORING — aufgebaut wie im Snowboard: Team → Athlet:in → Trick
+   Hauptmetrik Stomp-Rate (alle Kriterien erfüllt), dazu Landed-Rate,
+   Kriterien-Erfüllung, Fail-Gründe, Verlauf über Sessions, Coaching Analysis.
    ══════════════════════════════════════════════════════════════════════ */
+const MON_ST = {ready:{c:'#3E8E5A', l:'Ready'}, building:{c:'#C96A1F', l:'Building'}, critical:{c:'#D64545', l:'Critical'}, lowdata:{c:'#8a8a8f', l:'Low data'}};
+const OC = {stomped:'#148FA0', landed:'#3E8E5A', failed:'#D64545', volume:'#396FA8'};
+const MON_DIR_COL = {'Left':'#148FA0', 'Right':'#396FA8', 'Switch Left':'#8E5BB8', 'Switch Right':'#C96A1F', 'Forward':'#1F9E93', 'Switch':'#B08D1E', 'Rails':'#3E3E3F', 'Basics':'#6b6b70', 'Other':'#8a8a8f'};
+const MON_DIR_ORDER = ['Left','Right','Switch Left','Switch Right','Forward','Switch','Rails','Basics','Other'];
+const MON_PLATEAU_TOL = 5;
+const monStatus = (n, s) => n < 5 ? 'lowdata' : s / n >= .7 ? 'ready' : s / n >= .4 ? 'building' : 'critical';
+const monCounts = list => { const c = {n:list.length, s:0, l:0, f:0}; list.forEach(a => { const o = outcomeOf(a); if (o==='stomped') c.s++; else if (o==='landed') c.l++; else c.f++; }); return c; };
+const pctR = (a, b) => b ? Math.round(a / b * 100) : 0;
+function monDir(a){
+  const t = a.trick || {};
+  if (a.discipline==='Rail') return 'Rails';
+  if (a.discipline==='Halfpipe') return t.kind==='basic' ? 'Basics' : ((t.sw ? 'Switch ' : '') + (SIDE[t.dir] || '')).trim() || 'Other';
+  return DIRN[t.dir] || 'Other';
+}
+function monBounds(){
+  const m = ST.mon, d = new Date(), y = d.getMonth() >= 4 ? d.getFullYear() : d.getFullYear() - 1;   // Saison ab 1. Mai
+  if (m.period==='season') return [`${y}-05-01`, ''];
+  if (m.period==='last') return [`${y-1}-05-01`, `${y}-04-30`];
+  if (m.period==='custom') return [m.from || '', m.to || ''];
+  return ['', ''];
+}
+function monPeriodLabel(){
+  const m = ST.mon;
+  const p = m.period==='season' ? 'current season' : m.period==='last' ? 'last season' : m.period==='all' ? 'all time' : `${m.from ? fmtDate(m.from) : '…'} – ${m.to ? fmtDate(m.to) : '…'}`;
+  return p + (m.typ ? ` · ${m.typ}` : '');
+}
 function monAttempts(){
-  const vis = visGroupAthleteIds(), from = periodStart(ST.mon.period);
-  return ST.attempts.filter(a => vis.has(a.athlete_id) && sessById(a.session_id)?.ended_at && (!from || sessDate(a) >= from));
+  const vis = visibleAthleteIds(ST.me, ST.profiles), [from, to] = monBounds(), typ = ST.mon.typ;
+  return ST.attempts.filter(a => vis.has(a.athlete_id) && (!from || sessDate(a) >= from) && (!to || sessDate(a) <= to)
+    && (!typ || sessById(a.session_id)?.type===typ));
 }
-function perSession(list){
+// Sessions = Trainingstage (wie Snowboard), aufsteigend
+function monDates(list){ return [...new Set(list.map(sessDate))].sort(); }
+function monTrend(list, hit){
+  const dates = monDates(list); if (dates.length < 2) return null;
+  const rate = d => { const l = list.filter(a => sessDate(a)===d); return l.filter(hit).length / l.length; };
+  const last = rate(dates[dates.length - 1]), prev = dates.slice(-4, -1).map(rate);
+  const diff = last - prev.reduce((a, b) => a + b, 0) / prev.length;
+  return {dir: diff >= .05 ? 'up' : diff <= -.05 ? 'down' : 'flat', diff: Math.round(diff * 100)};
+}
+function monTrendHtml(t){
+  if (!t) return '<span class="muted">–</span>';
+  if (t.dir==='up') return `<span style="color:${OC.landed};font-weight:700">↗ rising, +${t.diff}%</span>`;
+  if (t.dir==='down') return `<span style="color:${OC.failed};font-weight:700">↘ falling, ${t.diff}%</span>`;
+  return '<span class="muted" style="font-weight:600">→ stable</span>';
+}
+const isStomp = a => outcomeOf(a)==='stomped', isLanded = a => !a.fell;
+function monRing(pct, color, size=92, stroke=9){
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg)"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#ece8e6" stroke-width="${stroke}"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - Math.max(0, Math.min(1, pct)))}"/></svg>`;
+}
+function monDonut(s, l, f, size=130){
+  const n = s + l + f || 1, stroke = 14, r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  let off = 0, segs = '';
+  for (const [v, col] of [[s, OC.stomped], [l, OC.landed], [f, OC.failed]]){
+    if (!v) continue; const fr = v / n;
+    segs += `<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${stroke}" stroke-dasharray="${fr*c} ${c - fr*c}" stroke-dashoffset="${-off*c}"/>`;
+    off += fr;
+  }
+  return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg)"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#ece8e6" stroke-width="${stroke}"/>${segs}</svg>`;
+}
+function monSetPeriod(v){ ST.mon.period = v; renderMonitoring(); }
+function monSetTyp(v){ ST.mon.typ = v; renderMonitoring(); }
+function monBack(){ ST.mon.view = ST.mon.view==='trick' ? 'athlete' : 'team'; renderMonitoring(); window.scrollTo({top:0}); }
+function monOpenAthlete(id){ Object.assign(ST.mon, {view:'athlete', athleteId:id}); renderMonitoring(); window.scrollTo({top:0}); }
+function monOpenTrick(i){ Object.assign(ST.mon, {view:'trick', key:MON_KEYS[i]}); renderMonitoring(); window.scrollTo({top:0}); }
+let MON_KEYS = [];
+function monHeader(title, sub, back){
+  const m = ST.mon;
+  const chip = (v, l) => `<button class="typechip ${m.typ===v?'on':''}" onclick="monSetTyp(${esc(JSON.stringify(v))})">${esc(l)}</button>`;
+  return `<div class="mon-head">
+    <div class="row" style="gap:12px">${back ? '<button class="btn ghost sm" onclick="monBack()">← Back</button>' : ''}
+      <div class="grow"><div class="mon-title">${esc(title)}</div><div class="muted small">${sub}</div></div>
+      <select style="width:auto" onchange="monSetPeriod(this.value)">${opts([['season','Current season'],['last','Last season'],['all','All time'],['custom','Custom period…']], m.period)}</select></div>
+    ${m.period==='custom' ? `<div class="row" style="margin-top:10px;gap:8px"><input type="date" value="${m.from||''}" onchange="ST.mon.from=this.value;renderMonitoring()" style="width:auto"> – <input type="date" value="${m.to||''}" onchange="ST.mon.to=this.value;renderMonitoring()" style="width:auto"></div>` : ''}
+    <div class="typechips">${chip('', 'All')}${SESS_TYPES.map(([t]) => chip(t, t)).join('')}</div>
+  </div>`;
+}
+// Trick-Aggregation pro Kern-Trick (Grab-Varianten zusammengefasst)
+function monTrickAgg(list){
   const by = {};
-  list.forEach(a => (by[a.session_id] ||= []).push(a));
-  return Object.entries(by).map(([sid, l]) => ({sid, date:sessDate(l[0]), list:l})).sort((a,b) => a.date.localeCompare(b.date));
+  list.forEach(a => { const c = coreOf(a); (by[c.key] ||= {key:c.key, label:c.label, disc:a.discipline, dir:monDir(a), rot:+(a.trick?.rot)||0, list:[]}).list.push(a); });
+  return Object.values(by);
 }
-function monNav(view, athleteId=null, key=null){ Object.assign(ST.mon, {view, athleteId, key}); renderMonitoring(); window.scrollTo({top:0}); }
+
 function renderMonitoring(){
-  CHARTS.length = 0;
   const root = $('#page-monitoring'), m = ST.mon, all = monAttempts();
-  const filters = `<div class="row noprint" style="margin-bottom:18px">${m.view==='team' ? groupFilterSelect() : ''}<select style="width:auto" onchange="ST.mon.period=this.value;renderMonitoring()">${opts(PERIODS, m.period)}</select>
-    <span class="muted small">Status = Ø quality of the last 3 sessions · ≥70% Ready · 50–69% Building · &lt;50% Critical · &lt;5 attempts Low data</span></div>`;
-  const crumbs = (...parts) => `<div class="crumbs">${parts.join(' <span>›</span> ')}</div>`;
+  if (m.view==='trick' && !(prof(m.athleteId) && m.key)) m.view = prof(m.athleteId) ? 'athlete' : 'team';
+  if (m.view==='athlete' && !prof(m.athleteId)) m.view = 'team';
+  if (m.view==='team') return renderMonTeam(root, all);
+  if (m.view==='athlete') return renderMonAthlete(root, all);
+  return renderMonTrick(root, all);
+}
 
-  if (m.view==='team' || !prof(m.athleteId)){
-    const rows = visibleAthletes().map(a => {
-      const l = all.filter(x => x.athlete_id===a.id), ps = perSession(l), rv = recentAvg(l);
-      return {a, l, ps, rv};
-    });
-    root.innerHTML = filters + `<div class="card"><h2>Team overview</h2>
-      <div class="scroll-x"><table class="tbl"><thead><tr><th>Athlete</th><th>Level</th><th class="num">Sessions</th><th class="num">Attempts</th><th class="num">Ø Quality</th><th class="num">Landed</th><th>Status</th><th>Last session</th></tr></thead>
-      <tbody>${rows.map(r => `<tr class="click" onclick="monNav('athlete','${r.a.id}')"><td><b>${esc(r.a.name)}</b></td><td>${r.a.level||'–'}</td>
-        <td class="num">${r.ps.length}</td><td class="num">${r.l.length}</td><td class="num">${qChip(r.rv)}</td><td class="num">${landedPct(r.l) ?? '–'}${r.l.length?'%':''}</td>
-        <td>${r.l.length ? statusChipOf(r.l.length, r.rv) : '<span class="muted small">no data</span>'}</td><td>${r.ps.length ? fmtDate(r.ps[r.ps.length-1].date) : '–'}</td></tr>`).join('') || '<tr><td colspan="8" class="empty">No athletes.</td></tr>'}</tbody></table></div></div>`;
-    drawCharts(); return;
+function renderMonTeam(root, all){
+  const aths = [...visibleAthleteIds(ST.me, ST.profiles)].map(prof).filter(Boolean).sort((a,b) => a.name.localeCompare(b.name));
+  const groups = [...ST.groups.filter(g => aths.some(a => a.group_id===g.id)), ...(aths.some(a => !a.group_id) ? [{id:null, name:'No group yet'}] : [])];
+  const tile = a => {
+    const l = all.filter(x => x.athlete_id===a.id), c = monCounts(l), st = monStatus(c.n, c.s);
+    const cnt = {ready:0, building:0, critical:0};
+    monTrickAgg(l).forEach(t => { const k = monCounts(t.list), s = monStatus(k.n, k.s); if (cnt[s] != null) cnt[s]++; });
+    return `<div class="mon-tile" onclick="monOpenAthlete('${a.id}')">
+      <div class="row" style="gap:10px;flex-wrap:nowrap"><span class="avatar sm">${initials(a.name)}</span><div style="min-width:0"><div class="t">${esc(a.name)}</div><div class="tiny muted">${a.level || '–'}${a.gender ? ' · ' + a.gender : ''}</div></div></div>
+      <div class="ringwrap">${monRing(c.n ? c.s / c.n : 0, MON_ST[st].c)}<div class="ringlbl"><b>${c.n ? pctR(c.s, c.n) + '%' : '—'}</b><span>stomp rate</span></div></div>
+      <div class="tri"><div><b style="color:${MON_ST.ready.c}">${cnt.ready}</b><span>Ready</span></div><div><b style="color:${MON_ST.building.c}">${cnt.building}</b><span>Building</span></div><div><b style="color:${MON_ST.critical.c}">${cnt.critical}</b><span>Critical</span></div></div>
+      <div class="more">View details →</div></div>`;
+  };
+  root.innerHTML = `<div class="card">${monHeader('Team Monitoring', `${all.length} attempts · ${monPeriodLabel()}`, false)}
+    <div class="tiny muted" style="margin:14px 0 4px">Trick status: ≥70% stomp rate = <b>Ready</b> · 40–69% = <b>Building</b> · &lt;40% = <b>Critical</b> · fewer than 5 attempts = Low data. Stomped = all criteria met.</div>
+    ${groups.map(g => { const list = aths.filter(a => (a.group_id || null)===g.id);
+      return `<div class="sec-lbl">${esc(g.name)}</div><div class="mon-tiles">${list.map(tile).join('')}</div>`; }).join('') || '<div class="empty">No athletes.</div>'}
+  </div>`;
+}
+
+function renderMonAthlete(root, all){
+  const ath = prof(ST.mon.athleteId), mine = all.filter(a => a.athlete_id===ath.id), c = monCounts(mine);
+  const tricks = monTrickAgg(mine);
+  MON_KEYS = tricks.map(t => t.key);
+  const byDir = {};
+  mine.forEach(a => { const d = monDir(a); byDir[d] = (byDir[d] || 0) + 1; });
+  const dirs = MON_DIR_ORDER.filter(d => byDir[d]);
+  const card = t => {
+    const k = monCounts(t.list), st = monStatus(k.n, k.s), i = MON_KEYS.indexOf(t.key);
+    return `<div class="mon-card ${st==='critical'?'is-crit':''}" onclick="monOpenTrick(${i})">
+      <div class="t">${esc(t.label)}</div>
+      <div class="row" style="flex-wrap:nowrap;gap:12px;margin-top:6px"><div class="big" style="color:${st==='lowdata' ? '#8a8a8f' : MON_ST[st].c}">${pctR(k.s, k.n)}%</div>
+        <div class="mini">Total <b>${k.n}</b><br><span style="color:${OC.stomped}">Stomped <b>${k.s}</b></span><br><span style="color:${OC.landed}">Landed <b>${k.l}</b></span><br><span style="color:${OC.failed}">Fail <b>${k.f}</b></span></div></div>
+      <div class="row tiny" style="margin-top:8px">${monTrendHtml(monTrend(t.list, isStomp))}<span class="grow"></span><b style="color:${MON_ST[st].c}">${MON_ST[st].l}</b></div></div>`;
+  };
+  root.innerHTML = `<div class="card">${monHeader(ath.name, `${c.n} attempts · ${c.s} stomped · <b>${pctR(c.s, c.n)}% stomp rate</b> · ${monPeriodLabel()}`, true)}
+    ${c.n ? `<div class="dirbox"><div class="tiny muted" style="font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Direction balance — session data only</div>
+      <div class="dirbar">${dirs.map(d => `<i style="width:${byDir[d] / c.n * 100}%;background:${MON_DIR_COL[d]}" title="${esc(d)}"></i>`).join('')}</div>
+      <div class="legend" style="margin-top:8px">${dirs.map(d => `<span><i class="dot" style="background:${MON_DIR_COL[d]}"></i>${esc(d)} <b style="color:${MON_DIR_COL[d]}">${pctR(byDir[d], c.n)}%</b></span>`).join('')}</div></div>` : '<div class="empty">No session data in this period.</div>'}
+    ${MON_DIR_ORDER.map(d => { const ts = tricks.filter(t => t.dir===d).sort((a,b) => b.rot - a.rot || b.list.length - a.list.length); if (!ts.length) return '';
+      return `<div class="sec-lbl" style="color:${MON_DIR_COL[d]}">${esc(d)}</div><div class="mon-cards">${ts.map(card).join('')}</div>`; }).join('')}
+  </div>`;
+}
+
+function monCritRates(list, disc){
+  const rows = list.filter(a => !a.fell && a.crit);
+  return {n:rows.length, rates:critSetFor(disc).map(c => ({name:c.name, pct: rows.length ? pctR(rows.filter(a => a.crit[c.k]).length, rows.length) : null}))};
+}
+function renderMonTrick(root, all){
+  const ath = prof(ST.mon.athleteId), key = ST.mon.key;
+  const list = all.filter(a => a.athlete_id===ath.id && coreOf(a).key===key).sort((a,b) => sessDate(a).localeCompare(sessDate(b)) || a.created_at.localeCompare(b.created_at));
+  if (!list.length){ ST.mon.view = 'athlete'; return renderMonAthlete(root, all); }
+  const disc = list[0].discipline, label = coreOf(list[0]).label;
+  const c = monCounts(list), st = monStatus(c.n, c.s), cr = monCritRates(list, disc);
+  // häufigster Fail-Grund + Tendenz (erste vs. zweite Hälfte der Fails)
+  const fails = list.filter(a => a.fell), tagc = {};
+  fails.forEach(a => parseTags(a.note).forEach(t => tagc[t] = (tagc[t] || 0) + 1));
+  const top = Object.entries(tagc).sort((a,b) => b[1] - a[1])[0];
+  let failTrend = '';
+  if (top && fails.length >= 4){
+    const h = Math.floor(fails.length / 2), sh = l => l.filter(a => parseTags(a.note).includes(top[0])).length / l.length;
+    const d = sh(fails.slice(h)) - sh(fails.slice(0, h));
+    failTrend = d <= -.15 ? ` · <span style="color:${OC.landed}">decreasing</span>` : d >= .15 ? ` · <span style="color:${OC.failed}">increasing</span>` : ' · stable';
   }
-
-  const ath = prof(m.athleteId), mine = all.filter(a => a.athlete_id===ath.id);
-  const tricks = {};
-  mine.forEach(a => { const c = coreOf(a); (tricks[c.key] ||= {label:c.label, disc:a.discipline, list:[]}).list.push(a); });
-
-  if (m.view==='trick' && tricks[m.key]){
-    const t = tricks[m.key], ps = perSession(t.list), rv = recentAvg(t.list);
-    const set = critSetFor(t.disc);
-    const variants = {};
-    t.list.forEach(a => (variants[a.label] ||= []).push(a));
-    root.innerHTML = filters + crumbs(`<a href="#" onclick="monNav('team');return false">Team</a>`, `<a href="#" onclick="monNav('athlete','${ath.id}');return false">${esc(ath.name)}</a>`, `<b>${esc(t.label)}</b>`) + `
-      <div class="kpis">
-        <div class="kpi"><div class="k">Status</div><div class="v" style="font-size:22px;margin-top:8px">${statusChipOf(t.list.length, rv)}</div></div>
-        <div class="kpi"><div class="k">Ø Quality (last 3)</div><div class="v">${rv ?? '–'}<small>%</small></div></div>
-        <div class="kpi"><div class="k">Landed</div><div class="v">${landedPct(t.list)}<small>%</small></div></div>
-        <div class="kpi"><div class="k">Attempts</div><div class="v">${t.list.length}<small> in ${ps.length} session${ps.length===1?'':'s'}</small></div></div>
+  // Varianten & Grabs
+  const vars = {};
+  list.forEach(a => (vars[a.label] ||= []).push(a));
+  const varRows = Object.entries(vars).sort((a,b) => b[1].length - a[1].length);
+  const grabOf = l => l.trick?.grab || (disc==='Rail' ? l.label : 'no grab');
+  const badge = st==='ready' ? `<span class="pill" style="border-color:${MON_ST.ready.c};color:${MON_ST.ready.c}">Comp Ready</span>` : `<span class="pill" style="border-color:${MON_ST[st].c};color:${MON_ST[st].c}">${MON_ST[st].l}</span>`;
+  root.innerHTML = `<div class="card">${monHeader(label, esc(ath.name), true)}</div>
+    <div class="card">
+      <div class="row" style="justify-content:flex-end">${badge}</div>
+      <div class="row" style="gap:22px;align-items:center;flex-wrap:wrap">
+        <div class="ringwrap" style="width:130px;height:130px">${monDonut(c.s, c.l, c.f)}<div class="ringlbl"><b style="font-size:26px">${c.n}</b><span>attempts</span></div></div>
+        <table class="legtbl">
+          <tr><td><i class="sq" style="background:${OC.stomped}"></i>Stomped (all criteria)</td><td><b>${c.s}</b></td></tr>
+          <tr><td><i class="sq" style="background:${OC.landed}"></i>Landed</td><td><b>${c.l}</b></td></tr>
+          <tr class="bb"><td><i class="sq" style="background:${OC.failed}"></i>Failed</td><td><b>${c.f}</b></td></tr>
+          <tr><td>Landed rate (Landed+Stomped)</td><td><b style="color:${OC.landed}">${pctR(c.s + c.l, c.n)}%</b> ${monTrendHtml(monTrend(list, isLanded))}</td></tr>
+          <tr><td>Stomp rate</td><td><b style="color:${MON_ST[st].c}">${pctR(c.s, c.n)}%</b> ${monTrendHtml(monTrend(list, isStomp))}</td></tr>
+        </table>
       </div>
-      <div class="card"><h2>Quality per session</h2>
-        ${barChart(ps.map(p => ({v:avg(p.list.map(qa)), top:`n=${p.list.length}`, label:fmtShort(p.date), title:`${fmtDate(p.date)} · Ø ${avg(p.list.map(qa))}% · ${p.list.length} attempts`})), {xTitle:'Sessions', yTitle:'Ø Quality'})}</div>
-      <div class="card"><h2>Criteria per session</h2><p class="lead">Share of attempts in which the criterion was fulfilled (falls count as not fulfilled).</p>
-        ${lineChart(set.map((c, i) => ({name:c.name, color:CRIT_COLORS[i], values:ps.map(p => critRates(p.list, t.disc)[i].pct)})), ps.map(p => fmtShort(p.date)))}</div>
-      <div class="card"><h2>Variants & grabs</h2><table class="tbl"><thead><tr><th>Trick</th><th class="num">Attempts</th><th class="num">Ø Quality</th><th class="num">Landed</th></tr></thead>
-        <tbody>${Object.entries(variants).sort((a,b) => b[1].length - a[1].length).map(([l, v]) => `<tr><td>${esc(l)}</td><td class="num">${v.length}</td><td class="num">${qChip(avg(v.map(qa)))}</td><td class="num">${landedPct(v)}%</td></tr>`).join('')}</tbody></table></div>
-      <div class="card"><h2>Recent attempts</h2><div class="list">${t.list.slice().sort((a,b) => b.created_at.localeCompare(a.created_at)).slice(0, 12).map(a => attemptRow(a, {noName:true, withDate:true})).join('')}</div></div>`;
-    drawCharts(); return;
-  }
-
-  ST.mon.view = 'athlete';
-  const ps = perSession(mine), rv = recentAvg(mine);
-  const rows = Object.entries(tricks).map(([key, t]) => {
-    const r = recentAvg(t.list), rates = critRates(t.list, t.disc).filter(x => x.pct != null).sort((a,b) => a.pct - b.pct);
-    return {key, t, r, weak:rates[0]};
-  }).sort((a,b) => b.t.list.length - a.t.list.length);
-  root.innerHTML = filters + crumbs(`<a href="#" onclick="monNav('team');return false">Team</a>`, `<b>${esc(ath.name)}</b>`) + `
-    <div class="kpis">
-      <div class="kpi"><div class="k">Status</div><div class="v" style="font-size:22px;margin-top:8px">${mine.length ? statusChipOf(mine.length, rv) : '–'}</div></div>
-      <div class="kpi"><div class="k">Ø Quality (last 3)</div><div class="v">${rv ?? '–'}<small>%</small></div></div>
-      <div class="kpi"><div class="k">Landed</div><div class="v">${landedPct(mine) ?? '–'}<small>%</small></div></div>
-      <div class="kpi"><div class="k">Attempts</div><div class="v">${mine.length}<small> in ${ps.length} session${ps.length===1?'':'s'}</small></div></div>
+      <div class="sub-h">Criteria fulfillment (Landed + Stomped)</div>
+      <div class="chips-row">${cr.n ? cr.rates.map(r => { const col = r.pct >= 80 ? MON_ST.ready.c : r.pct >= 50 ? '#C96A1F' : MON_ST.critical.c; return `<span class="pill" style="border-color:${col};color:${col}">${esc(r.name.replace(/ \(.*\)/, ''))} ${r.pct}%</span>`; }).join('') : '<span class="muted small">No landed attempts yet.</span>'}</div>
+      <div class="small" style="margin-top:12px">${top ? `Most common fail reason: <b>${esc(top[0])}</b> (${top[1]}×)${failTrend}` : fails.length ? `${fails.length} failed attempt${fails.length>1?'s':''} without reason` : 'No failed attempts.'}</div>
+      ${varRows.length > 1 || (varRows[0] && list[0].trick?.grab) ? `<div class="sub-h">Variants & grabs (${varRows.length})<span class="rt">Stomped/Landed/Failed · stomp rate</span></div>
+        ${varRows.map(([l, v]) => { const k = monCounts(v), r = pctR(k.s, k.n), col = k.n < 5 ? '#8a8a8f' : r >= 70 ? MON_ST.ready.c : r >= 40 ? '#C96A1F' : MON_ST.critical.c;
+          return `<div class="varrow"><span title="${esc(l)}">${esc(grabOf(v[0]))}</span><span class="muted">${k.n} att.</span><span><b style="color:${OC.stomped}">${k.s}</b>/<b style="color:${OC.landed}">${k.l}</b>/<b style="color:${OC.failed}">${k.f}</b></span><b style="color:${col}">${r}%</b></div>`; }).join('')}` : ''}
     </div>
-    ${ps.length ? `<div class="card"><h2>Quality per session</h2>${barChart(ps.map(p => ({v:avg(p.list.map(qa)), top:`n=${p.list.length}`, label:fmtShort(p.date), title:`${fmtDate(p.date)} · ${sessById(p.sid)?.type} · Ø ${avg(p.list.map(qa))}%`})), {xTitle:'Sessions', yTitle:'Ø Quality'})}</div>` : ''}
-    <div class="card"><h2>Tricks</h2><p class="lead">Grab variants are grouped per trick. Click a trick for the details.</p>
-      <div class="scroll-x"><table class="tbl"><thead><tr><th>Trick</th><th class="num">Attempts</th><th class="num">Ø Quality</th><th class="num">Landed</th><th>Weakest criterion</th><th>Status</th></tr></thead>
-      <tbody>${rows.map(r => `<tr class="click" onclick="monNav('trick','${ath.id}',${esc(JSON.stringify(r.key))})"><td><b>${esc(r.t.label)}</b><div class="tiny muted">${DISC_LABEL[r.t.disc]}</div></td>
-        <td class="num">${r.t.list.length}</td><td class="num">${qChip(r.r)}</td><td class="num">${landedPct(r.t.list)}%</td>
-        <td>${r.weak ? `${esc(r.weak.name)} <span class="muted small">${r.weak.pct}%</span>` : '–'}</td><td>${statusChipOf(r.t.list.length, r.r)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">No session data yet.</td></tr>'}</tbody></table></div></div>`;
-  drawCharts();
+    <div class="card"><h2>Progress over sessions</h2>
+      <div class="legend"><span><i class="sq" style="background:${OC.volume};opacity:.6"></i>Volume (attempts)</span><span><i class="ln" style="background:${OC.landed}"></i>Landed rate (Landed+Stomped)</span><span><i class="ln dash" style="border-color:#C96A1F"></i>Stomp rate</span></div>
+      ${monTimeChart(list)}
+      <div class="tiny muted" style="margin-top:6px">⚠ Sessions with fewer than 5 attempts — rates are statistically weak.</div>
+      <div id="mon-time-detail" class="small muted" style="margin-top:8px">Tap a bar for session details.</div>
+    </div>
+    <div class="card"><h2>Coaching Analysis</h2>${monCoaching(list, disc)}</div>`;
+}
+
+function monTimeChart(list){
+  const dates = monDates(list).slice(-12);
+  const H = 120, slot = 46, barW = 26, PAD = 38, W = PAD + dates.length * slot + 10;
+  const yOf = p => 10 + (H - 10) * (1 - p / 100);
+  const per = dates.map(d => { const l = list.filter(a => sessDate(a)===d), k = monCounts(l); return {d, k, lr:pctR(k.s + k.l, k.n), sr:pctR(k.s, k.n)}; });
+  const maxN = Math.max(1, ...per.map(p => p.k.n));
+  let s = '';
+  for (const t of [0, 25, 50, 75, 100]) s += `<line x1="${PAD}" x2="${W}" y1="${yOf(t)}" y2="${yOf(t)}" stroke="#e2ddda" ${t ? 'stroke-dasharray="2 4"' : ''}/><text x="${PAD - 5}" y="${yOf(t) + 3}" text-anchor="end" font-size="9" fill="#6b6b70">${t}%</text>`;
+  per.forEach((p, i) => {
+    const cx = PAD + i * slot + slot / 2, h = Math.max(6, p.k.n / maxN * (H - 10));
+    s += `<rect x="${cx - barW/2}" y="${H - h}" width="${barW}" height="${h}" rx="3" fill="${OC.volume}" opacity="${.3 + .55 * p.k.n / maxN}" style="cursor:pointer" onclick="monTimeSel('${p.d}')"><title>${fmtDate(p.d)}: ${p.k.n} attempts</title></rect>`;
+    s += `<text x="${cx}" y="${H - h - 4}" text-anchor="middle" font-size="9" fill="${OC.volume}">${p.k.n}</text>`;
+    s += `<text x="${cx}" y="${H + 14}" text-anchor="middle" font-size="9.5" fill="${p.k.n < 5 ? '#C96A1F' : '#6b6b70'}">${fmtShort(p.d)}.${p.k.n < 5 ? ' ⚠' : ''}</text>`;
+  });
+  if (per.length >= 2){
+    const pts = k => per.map((p, i) => `${PAD + i * slot + slot / 2},${yOf(p[k])}`).join(' ');
+    s += `<polyline fill="none" stroke="${OC.landed}" stroke-width="2" points="${pts('lr')}"/><polyline fill="none" stroke="#C96A1F" stroke-width="2" stroke-dasharray="4 3" points="${pts('sr')}"/>`;
+  }
+  s += `<text x="${PAD + (W - PAD) / 2}" y="${H + 30}" text-anchor="middle" font-size="9.5" font-weight="600" fill="#6b6b70">Sessions</text>`;
+  return `<div class="chart"><svg width="${W}" height="${H + 36}" viewBox="0 0 ${W} ${H + 36}">${s}</svg></div>`;
+}
+function monTrickList(){ const all = monAttempts(); return all.filter(a => a.athlete_id===ST.mon.athleteId && coreOf(a).key===ST.mon.key); }
+function monTimeSel(d){
+  const l = monTrickList().filter(a => sessDate(a)===d), k = monCounts(l);
+  $('#mon-time-detail').innerHTML = `<b>${fmtDate(d)}</b> — ${k.n} attempts · <span style="color:${OC.stomped}">${k.s} stomped</span> · <span style="color:${OC.landed}">${k.l} landed</span> · <span style="color:${OC.failed}">${k.f} failed</span> · <b>${pctR(k.s, k.n)}%</b> stomp rate
+    <button class="btn ghost sm" style="margin-left:8px" onclick="monOpenSession('${d}')">Open session view →</button>`;
+}
+function monOpenSession(d){
+  const l = monTrickList().filter(a => sessDate(a)===d).sort((a,b) => a.created_at.localeCompare(b.created_at));
+  const k = monCounts(l), mx = maxFor(l[0].discipline);
+  const H = 90, slot = 30, PAD = 34, W = PAD + l.length * slot + 10, yOf = v => 8 + (H - 8) * (1 - v);
+  let s = '';
+  for (const [v, t] of [[0, '0★'], [.6, '3★'], [1, mx + '★']]) s += `<line x1="${PAD}" x2="${W}" y1="${yOf(v)}" y2="${yOf(v)}" stroke="#e2ddda" ${v ? 'stroke-dasharray="2 4"' : ''}/><text x="${PAD - 5}" y="${yOf(v) + 3}" text-anchor="end" font-size="9" fill="#6b6b70">${t}</text>`;
+  let run = 0; const pts = [];
+  l.forEach((a, i) => {
+    const cx = PAD + i * slot + slot / 2, o = outcomeOf(a), v = a.fell ? 0 : a.score / (a.max || mx);
+    if (o==='stomped') run++;
+    pts.push(`${cx},${yOf(run / (i + 1))}`);
+    const h = a.fell ? 6 : Math.max(4, v * (H - 8));
+    s += `<rect x="${cx - 9}" y="${H - h}" width="18" height="${h}" rx="3" fill="${a.fell ? OC.failed : o==='stomped' ? OC.stomped : OC.landed}"><title>#${i + 1} · ${a.fell ? 'Failed' + (parseTags(a.note).length ? ': ' + parseTags(a.note).join(', ') : '') : a.score + '/' + (a.max || mx)}</title></rect>`;
+    s += `<text x="${cx}" y="${H + 13}" text-anchor="middle" font-size="9" font-weight="${a.fell ? 800 : 400}" fill="${a.fell ? OC.failed : '#6b6b70'}">${i + 1}</text>`;
+  });
+  if (l.length > 1) s += `<polyline fill="none" stroke="#9a9396" stroke-width="1.8" points="${pts.join(' ')}"/>`;
+  const tags = {}; l.filter(a => a.fell).forEach(a => parseTags(a.note).forEach(t => tags[t] = (tags[t] || 0) + 1));
+  const topT = Object.entries(tags).sort((a,b) => b[1] - a[1])[0];
+  modal(`<div class="row"><div class="grow"><h3>${esc(coreOf(l[0]).label)}</h3><div class="muted small">${esc(prof(ST.mon.athleteId)?.name)} · Session ${fmtDate(d)}</div></div><button class="btn ghost sm" onclick="closeModal()">Close</button></div>
+    <div class="legend" style="margin-top:12px"><span><i class="sq" style="background:${OC.landed}"></i>Landed / <i class="sq" style="background:${OC.stomped}"></i>Stomped (height = criteria met)</span><span><i class="sq" style="background:${OC.failed}"></i>Failed</span><span><i class="ln" style="background:#9a9396"></i>running stomp rate</span></div>
+    <div class="chart"><svg width="${W}" height="${H + 30}" viewBox="0 0 ${W} ${H + 30}">${s}<text x="${PAD + (W - PAD) / 2}" y="${H + 27}" text-anchor="middle" font-size="9.5" font-weight="600" fill="#6b6b70">Attempts</text></svg></div>
+    <div class="small" style="margin:8px 0 4px">${k.s} stomped · ${k.l} landed · ${k.f} failed · <b>${pctR(k.s, k.n)}%</b> stomp rate${topT ? ` · ✗ mostly: ${esc(topT[0])} (${topT[1]}×)` : ''}</div>
+    <div class="list">${l.map(a => attemptRow(a, {noName:true})).join('')}</div>`);
+}
+
+// Coaching Analysis — 6 Regeln wie Snowboard, «KPIs» = unsere Kriterien
+function monCoaching(list, disc){
+  const dates = monDates(list), nS = dates.length, GREY = '#8a8a8f', AMBER = '#C96A1F', RED = '#D64545';
+  const inD = ds => list.filter(a => ds.includes(sessDate(a)));
+  const srOf = d => { const l = inD([d]); return l.filter(isStomp).length / l.length; };
+  const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+  const critOk = ds => { const r = monCritRates(inD(ds), disc); return r.n > 0 && r.rates.every(x => x.pct >= 80); };
+  const items = [];
+  // 1 Comp-readiness
+  if (nS < 3) items.push(['Comp-readiness', `Not enough data (${nS}/3 sessions)`, GREY]);
+  else if (critOk(dates.slice(-3))) items.push(['Comp-readiness', 'Reached', GREY]);
+  else if (nS >= 4 && critOk(dates.slice(Math.max(0, nS - 6), nS - 3))) items.push(['Comp-readiness', 'Lost — was reached before', RED]);
+  else items.push(['Comp-readiness', 'Not reached', AMBER]);
+  // 2 Efficiency trend (Stomp-Rate)
+  if (nS < 4) items.push(['Efficiency trend', `Not enough data (${nS}/4 sessions)`, GREY]);
+  else { const d = Math.round((mean(dates.slice(-3).map(srOf)) - mean(dates.slice(Math.max(0, nS - 6), nS - 3).map(srOf))) * 100);
+    items.push(['Efficiency trend', d <= -5 ? `Falling, ${d}% (3 sessions)` : d >= 5 ? `Rising, +${d}% (3 sessions)` : 'Stable (3 sessions)', d <= -5 ? RED : GREY]); }
+  // 3 Volume effect
+  if (nS < 3) items.push(['Volume effect', `Not enough data (${nS}/3 sessions)`, GREY]);
+  else { const vol = dates.map(d => inD([d]).length), av = mean(vol), sa = mean(dates.map(srOf));
+    const k = dates.filter((d, i) => vol[i] > 1.5 * av && srOf(d) < sa).length;
+    items.push(['Volume effect', k ? `Drops at high volume, cause unclear (${k}×)` : 'No volume effect', k ? AMBER : GREY]); }
+  // 4 Plateau
+  if (nS < 3) items.push(['Plateau', `Not enough data (${nS}/3 sessions)`, GREY]);
+  else { const r3 = dates.slice(-3).map(d => srOf(d) * 100), range = Math.max(...r3) - Math.min(...r3);
+    items.push(['Plateau', range < MON_PLATEAU_TOL ? `Flat over last 3 sessions (±${Math.round(range)}%)` : 'None, still moving', range < MON_PLATEAU_TOL ? AMBER : GREY]); }
+  // 5 Consistency
+  if (nS < 3) items.push(['Consistency', `Not enough data (${nS}/3 sessions)`, GREY]);
+  else { const r6 = dates.slice(-6).map(d => srOf(d) * 100), m = mean(r6), sd = Math.sqrt(mean(r6.map(x => (x - m) ** 2)));
+    items.push(['Consistency', sd > 15 ? 'Irregular, session to session' : 'Consistent', sd > 15 ? AMBER : GREY]); }
+  // 6 Most common fail
+  const last3 = inD(dates.slice(-3)), prev = inD(dates.slice(Math.max(0, nS - 6), Math.max(0, nS - 3)));
+  const tc = {}; last3.filter(a => a.fell).forEach(a => parseTags(a.note).forEach(t => tc[t] = (tc[t] || 0) + 1));
+  const top = Object.entries(tc).sort((a,b) => b[1] - a[1])[0];
+  if (!top) items.push(['Most common fail', 'No fail pattern', GREY]);
+  else {
+    let tr = '', col = AMBER;
+    if (prev.length >= 3){ const now = top[1] / last3.length, before = prev.filter(a => a.fell && parseTags(a.note).includes(top[0])).length / prev.length;
+      if (now - before >= .05){ tr = ', increasing'; col = RED; } else if (before - now >= .05) tr = ', decreasing'; else tr = ', stable'; }
+    items.push(['Most common fail', `${top[0]} (${top[1]}×)${tr}`, col]);
+  }
+  return `<div class="coach-grid">${items.map(([l, t, col]) => `<div style="border-left:3px solid ${col};padding-left:10px"><div class="tiny muted" style="font-weight:700;letter-spacing:.6px;text-transform:uppercase">${esc(l)}</div><div style="font-weight:600;color:var(--char);font-size:14px">${esc(t)}</div></div>`).join('')}</div>
+    <div class="tiny muted" style="margin-top:12px">Basis: sessions = training days in the selected period. Comp-readiness = every criterion ≥ 80% in the last 3 sessions (landed attempts). Plateau tolerance ±${MON_PLATEAU_TOL}%.</div>`;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
