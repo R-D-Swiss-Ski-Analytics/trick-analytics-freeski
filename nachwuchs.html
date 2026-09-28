@@ -680,6 +680,7 @@ const I18N = {
   'A video is required: learned tricks only count with a video. Please add a video (from your photo library).':['Ein Video ist Pflicht: Gelernte Tricks zählen nur mit Video. Bitte ein Video hinzufügen (aus der Fotomediathek).','Une vidéo est obligatoire : les tricks appris ne comptent qu’avec une vidéo. Ajoute une vidéo (depuis ta photothèque).','Un video è obbligatorio: i trick imparati contano solo con un video. Aggiungi un video (dalla libreria foto).'],
   'Choose a video: the trick is submitted after the upload':['Video wählen: Der Trick wird nach dem Upload eingereicht','Choisis une vidéo : le trick sera envoyé après le téléchargement','Scegli un video: il trick viene inviato dopo il caricamento'],
   'Video (optional)':['Video (optional)','Vidéo (facultative)','Video (facoltativo)'], 'Video (required for learned tricks)':['Video (Pflicht für gelernte Tricks)','Vidéo (obligatoire pour les tricks appris)','Video (obbligatorio per i trick imparati)'],
+  'Comment (optional)':['Kommentar (optional)','Commentaire (facultatif)','Commento (facoltativo)'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
@@ -2725,7 +2726,6 @@ function renderSessionActive(root, s){
         <div class="row" style="margin-bottom:6px"><div><div style="font-weight:800;color:var(--char);font-size:17px">${esc(trickLabel(pk.disc, pickedTrick()))}</div>
           <div class="muted small">Attempt #${trickAtts.length + 1}</div></div><span class="grow"></span>
           <div class="statbox"><b>${trickAtts.length}</b><span>Attempts</span></div><div class="statbox"><b>${nLanded}</b><span>Landed</span></div><div class="statbox"><b>${trickAtts.length ? Math.round(nLanded / trickAtts.length * 100) + '%' : '–'}</b><span>Rate</span></div></div>
-        <input type="text" id="sx-comment" value="${esc(SX.comment)}" oninput="SX.comment=this.value" placeholder="Comment before rating (optional)" style="margin:8px 0 12px">
         <div class="bigbtns">
           <button class="bigbtn fail ${SX.mode==='failed'?'on':''}" onclick="sxMode('failed')">✗<br>FAILED</button>
           <button class="bigbtn land ${SX.mode==='landed'?'on':''}" onclick="sxMode('landed')">✓<br>LANDED</button>
@@ -2733,12 +2733,14 @@ function renderSessionActive(root, s){
         ${SX.mode==='landed' ? `<div class="disclose">
             <div class="row"><b style="color:var(--char)">Criteria met</b><span class="grow"></span><b style="color:var(--char)">${score}/${set.length}</b></div>
             <div class="critstars">${set.map(c => `<button class="critstar ${SX.crit[c.k]?'on':''}" onclick="sxCrit('${c.k}')"><span class="st">⭐</span><span class="nm">${esc(c.name)}</span></button>`).join('')}</div>
-            <div class="tiny muted" style="margin:8px 0 10px">${set.length}/${set.length} = automatically Stomped</div>
+            <div class="tiny muted" style="margin:8px 0 0">${set.length}/${set.length} = automatically Stomped</div>
+            <input type="text" id="sx-comment" value="${esc(SX.comment)}" oninput="SX.comment=this.value" placeholder="Comment (optional)" style="margin:12px 0 10px">
             <button class="btn big ${score===set.length?'stomp':'land'}" style="width:100%" onclick="logAttempt(false)">${score===set.length ? '⭐ Save as Stomped' : `✓ Save Landed (${score}/${set.length})`}</button>
           </div>` : ''}
         ${SX.mode==='failed' ? `<div class="disclose">
             <b style="color:var(--char)">Select reason(s)</b>
             <div class="failchips">${SX.reasons.map((r, i) => `<button class="failchip ${SX.fails.has(r)?'on':''}" onclick="sxFail(${i})">${esc(r)}</button>`).join('')}<button class="failchip add" onclick="sxFailOther()">＋ Other…</button></div>
+            <input type="text" id="sx-comment" value="${esc(SX.comment)}" oninput="SX.comment=this.value" placeholder="Comment (optional)" style="margin:12px 0 10px">
             <button class="btn big red" style="width:100%" onclick="logAttempt(true)">✗ Save Failed${SX.fails.size ? ` (${SX.fails.size} reason${SX.fails.size>1?'s':''})` : ' (no reason)'}</button>
           </div>` : ''}
       </div>` : ''}
