@@ -234,6 +234,12 @@ textarea{min-height:64px;resize:vertical}
 .sb-col-body.mastered{border-color:var(--green)}
 .sb-col-body.goal{border-color:#C96A1F}
 .dir-group{border-bottom:1px solid var(--line)}
+.disc-seg{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 16px}
+.disc-seg button{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 16px;font-size:14px;font-weight:700;color:var(--char);cursor:pointer}
+.disc-seg button b{font-size:12px;font-weight:700;color:var(--muted);background:#f1edeb;border-radius:99px;padding:1px 8px}
+.disc-seg button.on{background:var(--char);border-color:var(--char);color:#fff}
+.disc-seg button.on b{background:rgba(255,255,255,.2);color:#fff}
+.disc-seg button:disabled{opacity:.45;cursor:default}
 .disc-h{display:flex;align-items:center;gap:8px;padding:14px 14px 7px;font-size:13px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--char);border-bottom:2px solid var(--char);background:#fff}
 .disc-h .n{margin-left:auto;font-size:12px;font-weight:700;letter-spacing:0;color:var(--muted)}
 .disc-h:not(:first-child){margin-top:10px}
@@ -399,6 +405,9 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)
   .team-tbl .c-pend:empty{display:none}
   .team-tbl td .name-in{width:100%}
   .team-tbl tr .empty{grid-column:1/-1}
+  .disc-seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .disc-seg button{justify-content:center;gap:5px;padding:9px 4px;font-size:13px;border-radius:12px}
+  .disc-seg button b{padding:1px 6px}
   .team-filters{display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important}
   .team-filters > *{width:100%;max-width:none!important;min-width:0}
   .team-filters > select:first-child,.team-filters > .btn,.team-filters > select:nth-last-of-type(1){grid-column:1/-1}
@@ -2137,7 +2146,13 @@ function renderAssessment(){
   const staff = isStaff();
   const ath = prof(ST.athleteId);
   if (!ath){ root.innerHTML = `<div class="card"><div class="empty">${staff ? 'No athletes visible yet. Assign athletes to your group in the Team tab.' : 'Your profile is not set up yet: please contact your coach.'}</div></div>`; return; }
-  const list = entriesOf(ath.id);
+  const all = entriesOf(ath.id);
+  // Filter-Knöpfe Alle / Jumps / Rails / Halfpipe
+  const AD = ST.asDisc || '';
+  const discCount = d => all.filter(e => e.discipline===d).length;
+  const discBtns = `<div class="disc-seg">${[['', 'All', all.length], ...DISCS.map(d => [d, DISC_LABEL[d], discCount(d)])].map(([k, l, n]) =>
+    `<button class="${AD===k?'on':''}" onclick="ST.asDisc='${k}';renderAssessment()" ${n || !k ? '' : 'disabled'}><span>${l}</span><b>${n}</b></button>`).join('')}</div>`;
+  const list = AD ? all.filter(e => e.discipline===AD) : all;
   const learned = list.filter(e => e.status!=='goal'), goals = list.filter(e => e.status==='goal');
   const rated = list.filter(e => e.status==='reviewed').length, waiting = list.filter(e => e.status==='pending' || e.status==='rework').length;
   root.innerHTML = `
@@ -2151,6 +2166,7 @@ function renderAssessment(){
       <div class="sb-ov-card"><div class="sb-ov-num" style="color:#C96A1F">${goals.length}</div><div class="sb-ov-label">Open Goals</div></div>
     </div>
     ${ST.form ? formCard() : ''}
+    ${discBtns}
     <div class="sb-columns">
       <div><div class="sb-col-header mastered">✅ LEARNED TRICKS <span style="opacity:.6;font-size:13px">(${learned.length})</span></div>
         <div class="sb-col-body mastered">${asList(learned, staff ? 'No entries yet' : 'No tricks yet: add your first one!')}</div></div>
