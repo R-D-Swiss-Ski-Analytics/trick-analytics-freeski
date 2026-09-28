@@ -234,6 +234,9 @@ textarea{min-height:64px;resize:vertical}
 .sb-col-body.mastered{border-color:var(--green)}
 .sb-col-body.goal{border-color:#C96A1F}
 .dir-group{border-bottom:1px solid var(--line)}
+.disc-h{display:flex;align-items:center;gap:8px;padding:14px 14px 7px;font-size:13px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--char);border-bottom:2px solid var(--char);background:#fff}
+.disc-h .n{margin-left:auto;font-size:12px;font-weight:700;letter-spacing:0;color:var(--muted)}
+.disc-h:not(:first-child){margin-top:10px}
 .dir-group:last-child{border-bottom:none}
 .dir-h{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#fff!important;border-top:1px solid rgba(0,0,0,.06)}
 .dir-h .n{margin-left:auto;font-size:12px;font-weight:700;letter-spacing:0;background:rgba(255,255,255,.25);border-radius:99px;padding:1px 9px}
@@ -2077,9 +2080,16 @@ function asList(items, emptyMsg){
   if (!items.length) return `<div class="empty" style="padding:20px">${emptyMsg}</div>`;
   const groups = {};
   items.forEach(e => (groups[asDir(e)] ||= []).push(e));
+  // Unterteilung nach Disziplin (Jumps │ Rails │ Halfpipe), Jumps zusätzlich nach Drehrichtung
+  const discOf = d => d==='Rails' ? 'Rail' : d==='Halfpipe' ? 'Halfpipe' : 'Jump';
+  let lastDisc = null;
   return AS_DIR_ORDER.filter(d => groups[d]).map(d => {
     groups[d].sort((a,b) => (+(b.trick?.rot)||0) - (+(a.trick?.rot)||0));
-    return `<div class="dir-group"><div class="dir-h" style="background:${AS_DIR_COL[d]}">${d}<span class="n">${groups[d].length}</span></div>${groups[d].map(asRow).join('')}</div>`;
+    const disc = discOf(d), n = items.filter(e => discOf(asDir(e))===disc).length;
+    const title = disc !== lastDisc ? `<div class="disc-h">${DISC_LABEL[disc]}<span class="n">${n}</span></div>` : '';
+    lastDisc = disc;
+    const bar = disc==='Jump' ? `<div class="dir-h" style="background:${AS_DIR_COL[d]}">${d}<span class="n">${groups[d].length}</span></div>` : '';
+    return `${title}<div class="dir-group">${bar}${groups[d].map(asRow).join('')}</div>`;
   }).join('');
 }
 function renderAssessment(){
