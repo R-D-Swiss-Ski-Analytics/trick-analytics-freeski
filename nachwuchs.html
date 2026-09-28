@@ -256,6 +256,17 @@ textarea{min-height:64px;resize:vertical}
 .dot-o{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:2px}
 .dot-o.failed{background:var(--red)}.dot-o.landed{background:var(--green)}.dot-o.stomped{background:var(--cyan)}
 
+/* Session-Ergänzungen wie Freeski */
+.gsel{width:auto;padding:6px 10px;font-size:13px;border-radius:8px}
+.run-el{padding:8px 0;border-top:1px solid var(--line)}
+.run-el:first-child{border-top:0}
+.run-no{width:22px;text-align:center;color:var(--muted)}
+.rbtn{width:36px;height:34px;border-radius:8px;border:1.5px solid var(--line);background:#fff;font-weight:800;cursor:pointer;flex-shrink:0}
+.rbtn.f.on{background:var(--red);border-color:var(--red);color:#fff}
+.rbtn.l.on{background:var(--green);border-color:var(--green);color:#fff}
+.rbtn.s.on{background:var(--cyan);border-color:var(--cyan);color:#fff}
+.contest-row{padding:8px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+
 /* Monitoring (wie Snowboard) */
 .mon-head .mon-title{font-size:21px;font-weight:800;color:var(--char)}
 .typechips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
@@ -404,7 +415,7 @@ const SUPABASE_URL = 'https://yoeqjlonyyuwrojvlcqm.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_oLwde7BCOv-KpTHegncZTQ_-gMz_otw';
 const VIDEO_BUCKET = 'skills-videos';
 const DEMO = !SUPABASE_URL || new URLSearchParams(location.search).has('demo');
-const DEMO_KEY = 'nw-demo-v5';
+const DEMO_KEY = 'nw-demo-v6';
 
 /* ══════════════════════════════════════════════════════════════════════
    TRICK-VOKABULAR
@@ -877,8 +888,8 @@ function demoSessions(){
     'u-elia': [['Halfpipe', {kind:'air', dir:'L', sw:false, ao:false, axis:'Upright', flips:null, rot:540, grab:'Safety', height:3.5}], ['Halfpipe', {kind:'air', dir:'R', sw:false, ao:true, axis:'Upright', flips:null, rot:360, grab:'Mute', height:3}]],
   };
   const plan = [
-    ['g-a', ['u-lena','u-noah','u-luca'], [[24,'Landing Bag','Laax'], [17,'Jump Training','Laax'], [10,'Jump Training','Laax'], [3,'Jump Training','Laax']], 'u-coach-a'],
-    ['g-b', ['u-mia','u-elia'], [[12,'Jump Training','Saas-Fee'], [5,'Halfpipe Training','Saas-Fee']], 'u-coach-b'],
+    ['g-a', ['u-lena','u-noah','u-luca'], [[24,'Landing Bag','Laax'], [17,'Big Air Training','Laax'], [10,'Big Air Training','Laax'], [3,'Big Air Training','Laax']], 'u-coach-a'],
+    ['g-b', ['u-mia','u-elia'], [[12,'Big Air Training','Saas-Fee'], [5,'Halfpipe Training','Saas-Fee']], 'u-coach-b'],
   ];
   const sessions = [], attempts = [];
   for (const [gid, aths, days, coach] of plan) days.forEach(([ago, type, loc], si) => {
@@ -989,8 +1000,15 @@ const SupaStore = {
   async _upsert(table, list, row){
     const exists = list.some(x => x.id===row.id);
     const { created_at, created_by, ...rest } = row;
-    const q = exists ? db.from(table).update(rest).eq('id', row.id).select().single() : db.from(table).insert(rest).select().single();
-    const { data, error } = await q; if (error) throw error; return data;
+    const run = r => (exists ? db.from(table).update(r).eq('id', row.id) : db.from(table).insert(r)).select().single();
+    let { data, error } = await run(rest);
+    if (error && /column|schema cache/i.test(error.message || '')){
+      const OPT = ['jump_size','results','outcome','run_no'];   // aus Update 3
+      const slim = Object.fromEntries(Object.entries(rest).filter(([k]) => !OPT.includes(k)));
+      ({ data, error } = await run(slim));
+      if (!error){ console.warn('Update 3 (nachwuchs_migration_3.sql) fehlt — neue Felder nicht gespeichert'); data = {...rest, ...data}; }
+    }
+    if (error) throw error; return data;
   },
   async saveSession(me, s){ return this._upsert('sessions', ST.sessions, s); },
   async deleteSession(id){ const { error } = await db.from('sessions').delete().eq('id', id); if (error) throw error; },
@@ -1691,10 +1709,14 @@ async function setProfile(id, k, v){
    Qualität eines Versuchs = erfüllte Kriterien / max (in %), Sturz = 0 %.
    Status wie Freeski-Monitoring: ≥70 Ready · 50–69 Building · <50 Critical · <5 Versuche Low data
    ══════════════════════════════════════════════════════════════════════ */
-const SESS_TYPES = [['Landing Bag','Jump'], ['Jump Training','Jump'], ['Rail Training','Rail'], ['Halfpipe Training','Halfpipe'], ['Slopestyle Training','Jump'], ['Competition','Jump']];
-const typeDisc = t => (SESS_TYPES.find(x => x[0]===t) || [])[1] || 'Jump';
+const SESS_TYPES = [['Landing Bag','Jump'], ['Big Air Training','Jump'], ['Big Air Competition','Jump'], ['Slopestyle Training','Jump'], ['Slopestyle Competition','Jump'], ['Halfpipe Training','Halfpipe'], ['Halfpipe Competition','Halfpipe']];
+const LEGACY_TYPES = {'Jump Training':'Big Air Training', 'Rail Training':'Slopestyle Training', 'Competition':'Big Air Competition'};   // frühere Youth-Typen
+const normType = t => LEGACY_TYPES[t] || t;
+const typeDisc = t => (SESS_TYPES.find(x => x[0]===normType(t)) || [])[1] || 'Jump';
+const isComp = t => /Competition/.test(normType(t));
+const isRunType = t => /^(Slopestyle|Halfpipe)/.test(normType(t));
 const todayIso = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
-const qa = a => a.fell ? 0 : Math.round((a.score||0) / (a.max || maxFor(a.discipline)) * 100);
+const qa = a => a.fell ? 0 : !a.crit && a.outcome ? (a.outcome==='stomped' ? 100 : 60) : Math.round((a.score||0) / (a.max || maxFor(a.discipline)) * 100);   // Run-Elemente ohne Kriterien: ✓ = 60 %, ★ = 100 %
 const avg = arr => arr.length ? Math.round(arr.reduce((s, x) => s + x, 0) / arr.length) : null;
 const landedPct = list => list.length ? Math.round(list.filter(a => !a.fell).length / list.length * 100) : null;
 const qChip = v => v==null ? '<span class="chip">–</span>' : `<span class="chip ${v>=70?'green':v>=50?'gold':'red'}">${v}%</span>`;
@@ -1803,14 +1825,14 @@ function lineChart(series, xlabels, o={}){
    Jeder Versuch wird sofort gespeichert; die laufende Session liegt in der
    DB (ended_at leer) und wird nach Reload / auf anderem Gerät fortgesetzt.
    ══════════════════════════════════════════════════════════════════════ */
-const sxFresh = (o={}) => ({setup:null, athleteId:null, pick:null, crit:null, form:null, cands:[], editAth:false, mode:null, fails:new Set(), comment:'', reasons:[], ...o});
+const sxFresh = (o={}) => ({setup:null, athleteId:null, pick:null, crit:null, form:null, cands:[], editAth:false, mode:null, fails:new Set(), comment:'', reasons:[], grab:'', runs:{}, runNote:null, ...o});
 let SX = sxFresh();
 // Bewertung wie Snowboard: FAILED (Gründe, Mehrfachauswahl) oder LANDED (erfüllte Kriterien als ⭐; alle = Stomped).
 // Fail-Gründe werden wie im Snowboard als «Tags: …» vorne in der Notiz gespeichert.
 const FAIL_REASONS = ['Timing rotation','Position Take-off','Spin power','Air Position','Timing Grab','Spotting'];
 const parseTags = note => { const m = /^Tags: ([^|]*)/.exec(note || ''); return m ? m[1].split(',').map(x => x.trim()).filter(Boolean) : []; };
 const noteText = note => (note || '').replace(/^Tags: [^|]*(\|\s*)?/, '').trim();
-const outcomeOf = a => a.fell ? 'failed' : a.score === (a.max || maxFor(a.discipline)) ? 'stomped' : 'landed';
+const outcomeOf = a => a.fell ? 'failed' : a.outcome && !a.crit ? a.outcome : a.score === (a.max || maxFor(a.discipline)) ? 'stomped' : 'landed';
 function failReasonList(){
   const custom = new Set();
   ST.attempts.forEach(a => parseTags(a.note).forEach(t => { if (!FAIL_REASONS.includes(t)) custom.add(t); }));
@@ -1829,7 +1851,7 @@ function renderSession(){
   renderSessionActive(root, s);
 }
 function renderSessionSetup(root){
-  SX.setup ||= {date:todayIso(), type:'Jump Training', location:'', ath:new Set()};
+  SX.setup ||= {date:todayIso(), type:'Big Air Training', location:'', ath:new Set()};
   const su = SX.setup, aths = visibleAthletes();
   const locs = [...new Set(ST.sessions.map(s => s.location).filter(Boolean))];
   const recent = ST.sessions.filter(s => s.ended_at).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 3);
@@ -1837,9 +1859,10 @@ function renderSessionSetup(root){
     ${ST.me.role==='dvlp' ? `<div class="row" style="margin-bottom:18px">${groupFilterSelect()}</div>` : ''}
     <div class="card"><h2>New session</h2>
       <div class="grid">
-        <label class="f">Date<input type="date" value="${su.date}" max="${todayIso()}" onchange="SX.setup.date=this.value"></label>
+        <label class="f">Session Date<input type="date" value="${su.date}" max="${todayIso()}" onchange="SX.setup.date=this.value > todayIso() ? todayIso() : this.value;renderSession()"></label>
         <label class="f">Location<input type="text" list="loc-list" value="${esc(su.location)}" oninput="SX.setup.location=this.value" placeholder="e.g. Laax"><datalist id="loc-list">${locs.map(l => `<option value="${esc(l)}">`).join('')}</datalist></label>
       </div>
+      ${su.date < todayIso() ? `<div class="tiny" style="color:#C96A1F;margin-top:8px">⚠ Backdated — all entries will be saved for ${fmtDate(su.date)}.</div>` : ''}
       <div class="f-lbl">Session type</div>
       <div class="seg">${SESS_TYPES.map(([t]) => `<button class="${su.type===t?'on':''}" onclick="SX.setup.type='${t}';renderSession()">${t}</button>`).join('')}</div>
       <div class="f-lbl">Athletes <button class="linkbtn" onclick="sxSetupAll()">${aths.every(a => su.ath.has(a.id)) && aths.length ? 'None' : 'All'}</button></div>
@@ -1862,52 +1885,101 @@ async function startSession(){
   } catch (err){ console.error(err); toast('Could not start: ' + (err.message||err), true); }
 }
 
+// Kandidaten wie Freeski: Kern-Trick (ohne Grab) aus Session + Assessment; Grab wird pro Versuch gewählt
+function sxCandidates(s, atts){
+  const cands = [], seen = new Set();
+  const push = (src, disc, trick) => {
+    const core = disc==='Rail' || trick?.kind==='basic' ? {...trick} : {...trick, grab:''};
+    const label = trickLabel(disc, core), k = disc + '|' + label;
+    if (seen.has(k)) return; seen.add(k); cands.push({src, disc, trick:core, label, key:k});
+  };
+  atts.filter(a => a.athlete_id===SX.athleteId && !a.run_no).forEach(a => push('session', a.discipline, a.trick));
+  const d0 = typeDisc(s.type);
+  entriesOf(SX.athleteId).sort((a,b) => (a.discipline===d0 ? 0 : 1) - (b.discipline===d0 ? 0 : 1) || (+(b.trick?.rot)||0) - (+(a.trick?.rot)||0))
+    .forEach(e => push(e.status==='goal' ? 'goal' : 'assessment', e.discipline, e.trick));
+  return cands;
+}
+const hasGrab = pk => pk && pk.disc!=='Rail' && pk.trick?.kind!=='basic';
+// Grabs, die zu diesem Kern-Trick passen: aus dem Assessment (Goals markiert) + bereits geloggt
+function sxGrabOptions(pk){
+  const m = new Map();
+  entriesOf(SX.athleteId).forEach(e => { if (e.discipline===pk.disc && e.trick?.grab && trickLabel(e.discipline, {...e.trick, grab:''})===pk.label) m.set(e.trick.grab, m.get(e.trick.grab)==='assessment' ? 'assessment' : (e.status==='goal' ? 'goal' : 'assessment')); });
+  ST.attempts.forEach(a => { if (a.athlete_id===SX.athleteId && a.discipline===pk.disc && a.trick?.grab && coreOf(a).label===pk.label && !m.has(a.trick.grab)) m.set(a.trick.grab, 'session'); });
+  if (SX.grab && !m.has(SX.grab)) m.set(SX.grab, 'session');
+  return [...m.entries()];
+}
+function sxGrabTap(g){
+  // wie Freeski: zweiter Grab-Tipp = Doppelgrab «A to B»; nochmals tippen = zurück
+  if (!g) SX.grab = '';
+  else if (SX.grab===g) SX.grab = '';
+  else if (SX.grab && !SX.grab.includes(' to ')) SX.grab = `${SX.grab} to ${g}`;
+  else SX.grab = g;
+  renderSession();
+}
+function sxGrabOther(v){ if (v) { SX.grab = v; renderSession(); } }
+const pickedTrick = () => ({...SX.pick.trick, ...(hasGrab(SX.pick) ? {grab:SX.grab || ''} : {})});
+
+let _ac;
+function logSound(){ // kurzer Blip wie in der Freeski-App
+  try {
+    _ac ||= new (window.AudioContext || window.webkitAudioContext)();
+    const o = _ac.createOscillator(), g = _ac.createGain();
+    o.type = 'sine'; o.frequency.value = 520;
+    g.gain.setValueAtTime(.15, _ac.currentTime); g.gain.exponentialRampToValueAtTime(.001, _ac.currentTime + .18);
+    o.connect(g).connect(_ac.destination); o.start(); o.stop(_ac.currentTime + .2);
+  } catch {}
+}
+
 function renderSessionActive(root, s){
   const atts = sessAttempts(s.id).sort((a,b) => b.created_at.localeCompare(a.created_at));
   if (!s.athlete_ids.includes(SX.athleteId)) SX.athleteId = s.athlete_ids[0];
-  const ath = prof(SX.athleteId);
-  // Trick-Vorschläge: zuerst in dieser Session geloggt, dann Assessment (Goals markiert)
-  const cands = [], seen = new Set();
-  const push = (src, disc, trick, label) => { const k = disc + '|' + label; if (seen.has(k)) return; seen.add(k); cands.push({src, disc, trick, label}); };
-  atts.filter(a => a.athlete_id===SX.athleteId).forEach(a => push('session', a.discipline, a.trick, a.label));
-  const d0 = typeDisc(s.type);
-  entriesOf(SX.athleteId).sort((a,b) => (a.discipline===d0 ? 0 : 1) - (b.discipline===d0 ? 0 : 1) || b.created_at.localeCompare(a.created_at))
-    .forEach(e => push(e.status==='goal' ? 'goal' : 'assessment', e.discipline, e.trick, e.label));
+  const ath = prof(SX.athleteId), runMode = isRunType(s.type);
+  const cands = sxCandidates(s, atts);
   SX.cands = cands;
   const pk = SX.pick, set = pk ? critSetFor(pk.disc) : null;
   if (pk && (!SX.crit || Object.keys(SX.crit).length !== set.length)) SX.crit = Object.fromEntries(set.map(c => [c.k, false]));
   const score = pk ? Object.values(SX.crit).filter(Boolean).length : 0;
-  const trickAtts = pk ? atts.filter(a => a.athlete_id===SX.athleteId && a.discipline===pk.disc && a.label===pk.label) : [];
+  const trickAtts = pk ? atts.filter(a => a.athlete_id===SX.athleteId && coreOf(a).key===coreOf({discipline:pk.disc, trick:pk.trick, label:pk.label}).key) : [];
   const nLanded = trickAtts.filter(a => !a.fell).length;
   SX.reasons = failReasonList();
   const lastDot = id => { const l = atts.find(a => a.athlete_id===id); return !l ? '' : `<i class="dot-o ${outcomeOf(l)}"></i>`; };
   const mins = Math.max(0, Math.round((Date.now() - new Date(s.started_at)) / 60000));
   const others = visibleAthletes().filter(a => !s.athlete_ids.includes(a.id));
+  const backdated = s.date < todayIso();
+  const grabOpts = pk && hasGrab(pk) ? sxGrabOptions(pk) : [];
+  const grabBlock = pk && hasGrab(pk) ? `<div class="sub-h" style="margin-top:14px">Grab <span class="lbl-hint" style="text-transform:none;letter-spacing:0;font-weight:400">(2nd tap on another grab = double grab)</span></div>
+      <div class="grabchips"><button class="gchip ${!SX.grab?'on':''}" onclick="sxGrabTap('')">No Grab</button>${grabOpts.map(([g, src]) => `<button class="gchip ${SX.grab===g || (SX.grab||'').split(' to ').includes(g) ?'on':''}" onclick="sxGrabTap(${esc(JSON.stringify(g))})">${src==='goal'?'🎯 ':''}${esc(g)}</button>`).join('')}
+        <select class="gsel" onchange="sxGrabOther(this.value)"><option value="">+ Other grab…</option>${opts(GRABS, '')}</select></div>
+      ${SX.grab ? `<div class="tiny muted" style="margin-top:4px">Selected: <b>${esc(SX.grab)}</b></div>` : ''}` : '';
   root.innerHTML = `
     <div class="card sess-head">
       <div class="row">
-        <div><div class="sess-title">${esc(s.type)} <span class="chip red">● LIVE</span></div>
+        <div><div class="sess-title">${esc(normType(s.type))} <span class="chip red">● LIVE</span>${backdated ? ' <span class="chip gold">⚠ BACKDATED</span>' : ''}</div>
           <div class="muted small">${fmtDate(s.date)}${s.location ? ' · ' + esc(s.location) : ''} · ${mins} min · ${atts.length} attempt${atts.length===1?'':'s'}</div></div>
         <span class="grow"></span>
-        <button class="btn ghost sm" onclick="SX.editAth=!SX.editAth;renderSession()">± Athletes</button>
-        <button class="btn ghost sm" onclick="cancelSession()">Discard</button>
-        <button class="btn red sm" onclick="openEndSession()">End session</button>
+        <button class="btn ghost sm" onclick="SX.editAth=!SX.editAth;renderSession()">+ Add Athlete</button>
+        <button class="btn ghost sm" onclick="cancelSession()">✕ Cancel</button>
+        <button class="btn red sm" onclick="openEndSession()">✓ End Session</button>
       </div>
+      ${backdated ? `<div class="tiny" style="color:#C96A1F;margin-top:6px">⚠ Backdated — all entries are saved for ${fmtDate(s.date)}.</div>` : ''}
       ${SX.editAth ? `<div class="athchips" style="margin-top:12px">${s.athlete_ids.map(id => `<button class="athchip on" onclick="sxSessAth('${id}')">${esc(prof(id)?.name)} ✕</button>`).join('')}${others.map(a => `<button class="athchip" onclick="sxSessAth('${a.id}')">+ ${esc(a.name)}</button>`).join('')}</div>` : ''}
     </div>
     <div class="athchips" style="margin-bottom:16px">${s.athlete_ids.map(id => { const n = atts.filter(a => a.athlete_id===id).length;
       return `<button class="athchip ${id===SX.athleteId?'on':''}" onclick="sxAth('${id}')">${lastDot(id)}${esc(prof(id)?.name || '?')}<small>${n}</small></button>`; }).join('')}</div>
-    <div class="card"><h2>${esc(ath?.name)} · trick</h2>
+    <div class="card"><h2>${esc(ath?.name)} · ${runMode ? (typeDisc(s.type)==='Halfpipe' ? 'add hit' : 'add jump') : 'working on'}</h2>
       ${SX.form ? `<div class="seg" style="margin-bottom:12px">${DISCS.map(d => `<button class="${SX.form.disc===d?'on':''}" onclick="sxFormDisc('${d}')">${DISC_LABEL[d]}</button>`).join('')}</div>
           <div class="form-grid">${formFields(SX.form.disc, SX.form.F, 'sxFormSet')}</div>
           <div class="preview"><div class="lbl" id="sx-lbl">${esc(trickLabel(SX.form.disc, normTrick(SX.form.disc, SX.form.F)))}</div></div>
           <div class="btnrow"><button class="btn red" onclick="sxUseForm()">Use this trick</button><button class="btn ghost" onclick="SX.form=null;renderSession()">Cancel</button></div>`
-        : `<div class="trickchips">${cands.map((c, i) => `<button class="tchip ${pk && pk.label===c.label && pk.disc===c.disc ? 'on' : ''}" onclick="sxPick(${i})">${c.src==='session' ? '<i class="src">●</i>' : c.src==='goal' ? '<i class="src">🎯</i>' : ''}${esc(c.label)}</button>`).join('')}
+        : `<div class="trickchips">${cands.map((c, i) => `<button class="tchip ${pk && pk.key===c.key ? 'on' : ''}" onclick="sxPick(${i})">${c.src==='session' ? '<i class="src">●</i>' : c.src==='goal' ? '<i class="src">🎯</i>' : ''}${esc(c.label)}</button>`).join('')}
             <button class="tchip add" onclick="sxOpenForm()">+ Other trick</button></div>
-          ${cands.length ? '<div class="tiny muted" style="margin-top:8px">● already logged today · 🎯 goal in the assessment</div>' : '<div class="tiny muted" style="margin-top:8px">No tricks in the assessment yet — add one with «+ Other trick».</div>'}`}
+          ${cands.length ? '<div class="tiny muted" style="margin-top:8px">● already logged today · 🎯 goal in the assessment</div>' : '<div class="tiny muted" style="margin-top:8px">No tricks in the assessment yet — add one with «+ Other trick».</div>'}
+          ${grabBlock}
+          ${runMode && pk ? `<div class="btnrow"><button class="btn red" onclick="runAddPicked()">+ Add «${esc(trickLabel(pk.disc, pickedTrick()))}» to run</button></div>` : ''}`}
     </div>
-    ${pk && !SX.form ? `<div class="card rate-card">
-        <div class="row" style="margin-bottom:6px"><div><div style="font-weight:800;color:var(--char);font-size:17px">${esc(pk.label)}</div>
+    ${runMode ? runCardHtml(s) : ''}
+    ${!runMode && pk && !SX.form ? `<div class="card rate-card">
+        <div class="row" style="margin-bottom:6px"><div><div style="font-weight:800;color:var(--char);font-size:17px">${esc(trickLabel(pk.disc, pickedTrick()))}</div>
           <div class="muted small">Attempt #${trickAtts.length + 1}</div></div><span class="grow"></span>
           <div class="statbox"><b>${trickAtts.length}</b><span>Attempts</span></div><div class="statbox"><b>${nLanded}</b><span>Landed</span></div><div class="statbox"><b>${trickAtts.length ? Math.round(nLanded / trickAtts.length * 100) + '%' : '–'}</b><span>Rate</span></div></div>
         <input type="text" id="sx-comment" value="${esc(SX.comment)}" oninput="SX.comment=this.value" placeholder="Comment before rating (optional)" style="margin:8px 0 12px">
@@ -1927,11 +1999,85 @@ function renderSessionActive(root, s){
             <button class="btn big red" style="width:100%" onclick="logAttempt(true)">✗ Save Failed${SX.fails.size ? ` (${SX.fails.size} reason${SX.fails.size>1?'s':''})` : ' (no reason)'}</button>
           </div>` : ''}
       </div>` : ''}
-    <div class="card"><h2>Session log <span class="muted" style="letter-spacing:0;font-weight:600">${atts.length}</span></h2>
-      <div class="list">${atts.length ? atts.map(a => attemptRow(a)).join('') : '<div class="empty">No attempts yet.</div>'}</div></div>`;
+    <div class="card"><h2>Session log <span class="muted" style="letter-spacing:0;font-weight:600">${atts.filter(a => a.athlete_id===SX.athleteId).length} · ${esc(ath?.name)}</span></h2>
+      <div class="list">${atts.filter(a => a.athlete_id===SX.athleteId).slice(0, 30).map(a => attemptRow(a, {noName:true})).join('') || '<div class="empty">No attempts yet.</div>'}</div></div>`;
 }
-function sxAth(id){ SX.athleteId = id; SX.pick = null; SX.crit = null; SX.form = null; SX.mode = null; SX.fails = new Set(); renderSession(); }
-function sxPick(i){ SX.pick = {...SX.cands[i]}; SX.crit = null; SX.form = null; SX.mode = null; SX.fails = new Set(); renderSession(); }
+function sxAth(id){ SX.athleteId = id; SX.pick = null; SX.crit = null; SX.form = null; SX.mode = null; SX.fails = new Set(); SX.grab = ''; renderSession(); }
+function sxPick(i){
+  SX.pick = {...SX.cands[i]}; SX.crit = null; SX.form = null; SX.mode = null; SX.fails = new Set();
+  // Grab vorauswählen: zuletzt geloggter bzw. erster aus dem Assessment
+  const last = sessAttempts(activeSession().id).filter(a => a.athlete_id===SX.athleteId && coreOf(a).label===SX.pick.label).sort((a,b) => b.created_at.localeCompare(a.created_at))[0];
+  SX.grab = last?.trick?.grab ?? (sxGrabOptions(SX.pick)[0]?.[0] || '');
+  renderSession();
+}
+
+// ── Run-Builder (Slopestyle / Halfpipe) wie Freeski: Run zusammenstellen, jedes Element ✗ / ✓ / ★
+const RAIL_TYPES = ['Box','Tube','Rail','Down Tube','Down Rail','Single Kink','Double Kink','Cannon','Gap to Rail','DFD','Flat-Down','Waterfall','Ellbow','S-Rail','C-Rail','Pole-Jam'];
+const runKey = () => `nw-run-${activeSession()?.id}-${SX.athleteId}`;
+function runState(){
+  SX.runs ||= {};
+  const k = runKey();
+  if (!SX.runs[k]){ let r = null; try { r = JSON.parse(localStorage.getItem(k)); } catch {} SX.runs[k] = r || {n:1, els:[], rail:{type:'Rail', text:''}}; }
+  return SX.runs[k];
+}
+function runSave(){ try { localStorage.setItem(runKey(), JSON.stringify(runState())); } catch {} }
+const runMax = s => typeDisc(s.type)==='Halfpipe' ? 10 : 8;
+function runAddPicked(){
+  const s = activeSession(), r = runState();
+  if (r.els.length >= runMax(s)){ toast(`Max. ${runMax(s)} elements per run`, true); return; }
+  const t = pickedTrick();
+  r.els.push({disc:SX.pick.disc, trick:t, label:trickLabel(SX.pick.disc, t), rate:null, tags:[], note:''});
+  runSave(); renderSession();
+}
+function runAddRail(){
+  const s = activeSession(), r = runState(), txt = (document.getElementById('run-rail-text')?.value || '').trim();
+  if (!txt){ toast('Enter the rail trick', true); return; }
+  if (r.els.length >= runMax(s)){ toast(`Max. ${runMax(s)} elements per run`, true); return; }
+  r.els.push({disc:'Rail', trick:{railType:r.rail.type, text:txt, free:true}, label:`Rail ${r.rail.type} — ${txt}`, rate:null, tags:[], note:''});
+  r.rail.text = ''; runSave(); renderSession();
+}
+function runRate(i, v){ const e = runState().els[i]; e.rate = e.rate===v ? null : v; runSave(); renderSession(); }
+function runRemove(i){ runState().els.splice(i, 1); runSave(); renderSession(); }
+function runToggleTag(i, t){ const e = runState().els[i]; e.tags = e.tags.includes(t) ? e.tags.filter(x => x!==t) : [...e.tags, t]; runSave(); renderSession(); }
+function runOpenNote(i){ SX.runNote = SX.runNote===i ? null : i; renderSession(); }
+function runRailType(t){ runState().rail.type = t; runSave(); renderSession(); }
+function runRailNew(){ const t = (prompt('New rail type:') || '').trim(); if (t){ runState().rail.type = t; runSave(); renderSession(); } }
+function runCardHtml(s){
+  const r = runState(), hp = typeDisc(s.type)==='Halfpipe', max = runMax(s);
+  const rated = r.els.filter(e => e.rate).length;
+  const customRails = [...new Set(ST.attempts.filter(a => a.trick?.railType).map(a => a.trick.railType))].filter(t => !RAIL_TYPES.includes(t));
+  const railSugg = [...new Set(ST.attempts.filter(a => a.trick?.free && a.trick?.text).map(a => a.trick.text))];
+  const tag = e => e.disc==='Rail' ? 'RAIL' : hp ? 'HIT' : 'JUMP';
+  return `<div class="card run-card">
+    <div class="row"><div><div class="sess-title" style="font-size:18px">${hp ? 'HALFPIPE' : 'SLOPESTYLE'} RUN #${r.n}</div><div class="muted small">Run setup — ${r.els.length}/${max} ${hp ? 'hits' : 'elements'} · pick a trick above and add it</div></div></div>
+    ${!hp ? `<div class="disclose" style="margin-top:12px"><b style="color:var(--char)">+ Rail</b>
+      <div class="failchips">${[...RAIL_TYPES, ...customRails].map(t => `<button class="failchip ${r.rail.type===t?'on':''}" onclick="runRailType(${esc(JSON.stringify(t))})">${esc(t)}</button>`).join('')}<button class="failchip add" onclick="runRailNew()">+ New</button></div>
+      <div class="row" style="flex-wrap:nowrap"><input type="text" id="run-rail-text" list="run-rail-list" value="${esc(r.rail.text)}" oninput="runState().rail.text=this.value" placeholder="Rail trick, e.g. Lip 270 on 270 out"><datalist id="run-rail-list">${railSugg.map(x => `<option value="${esc(x)}">`).join('')}</datalist><button class="btn red sm" onclick="runAddRail()">Add</button></div></div>` : ''}
+    <div class="list" style="margin-top:10px">${r.els.map((e, i) => `<div class="run-el">
+        <div class="row" style="flex-wrap:nowrap;gap:8px"><b class="run-no">${i + 1}</b><span class="chip">${tag(e)}</span><span class="grow" style="font-weight:600;color:var(--char)">${esc(e.label)}</span>
+          <button class="rbtn f ${e.rate==='failed'?'on':''}" onclick="runRate(${i},'failed')">✗</button><button class="rbtn l ${e.rate==='landed'?'on':''}" onclick="runRate(${i},'landed')">✓</button><button class="rbtn s ${e.rate==='stomped'?'on':''}" onclick="runRate(${i},'stomped')">★</button>
+          <button class="icon-btn" onclick="runOpenNote(${i})" title="Tags & note">✎</button><button class="icon-btn del" onclick="runRemove(${i})" title="Remove">✕</button></div>
+        ${e.tags.length || e.note ? `<div class="tiny" style="margin:4px 0 0 30px">${e.tags.map(t => `<span class="chip gold">${esc(t)}</span>`).join(' ')} ${esc(e.note)}</div>` : ''}
+        ${SX.runNote===i ? `<div class="disclose" style="margin-top:8px"><div class="failchips">${SX.reasons.map(t => `<button class="failchip ${e.tags.includes(t)?'on':''}" onclick="runToggleTag(${i}, ${esc(JSON.stringify(t))})">${esc(t)}</button>`).join('')}</div>
+          <input type="text" value="${esc(e.note)}" placeholder="Note (optional)" oninput="runState().els[${i}].note=this.value;runSave()"><div class="btnrow"><button class="btn ghost sm" onclick="runOpenNote(${i})">Done</button></div></div>` : ''}
+      </div>`).join('') || '<div class="empty">No elements yet.</div>'}</div>
+    <div class="btnrow"><button class="btn big red" style="width:100%" ${r.els.length && rated===r.els.length ? '' : 'disabled'} onclick="runSaveAll()">Save Run #${r.n} (${rated}/${r.els.length} rated)</button></div>
+  </div>`;
+}
+async function runSaveAll(){
+  const s = activeSession(), r = runState(), N = r.els.length;
+  try {
+    for (const [i, e] of r.els.entries()){
+      const note = [e.tags.length ? 'Tags: ' + e.tags.join(', ') : '', `Run ${r.n} · ${i + 1}/${N}`, e.note].filter(Boolean).join(' | ');
+      const a = {id:uid(), session_id:s.id, athlete_id:SX.athleteId, discipline:e.disc, trick:e.trick, label:e.label, crit:null, score:null,
+        max:maxFor(e.disc), fell:e.rate==='failed', outcome:e.rate, run_no:r.n, note, entry_id:null, created_at:new Date(Date.now() + i).toISOString(), created_by:ST.me.id};
+      upsertIn(ST.attempts, await Store.saveAttempt(ST.me, a));
+    }
+    logSound(); toast(`Run #${r.n} saved`);
+    r.n++; r.els.forEach(e => { e.rate = null; e.tags = []; e.note = ''; });   // Layout bleibt für den nächsten Run
+    runSave(); renderSession();
+  } catch (err){ console.error(err); toast('Could not save run: ' + (err.message||err), true); }
+}
 function sxOpenForm(){ const d = SX.pick?.disc || typeDisc(activeSession().type); SX.form = {disc:d, F:{...FORM_DEFAULTS[d]}}; renderSession(); }
 function sxFormDisc(d){ SX.form = {disc:d, F:{...FORM_DEFAULTS[d]}}; renderSession(); }
 function sxFormSet(k, v, noRerender){
@@ -1939,7 +2085,12 @@ function sxFormSet(k, v, noRerender){
   if (noRerender){ const l = $('#sx-lbl'); if (l) l.textContent = trickLabel(SX.form.disc, normTrick(SX.form.disc, SX.form.F)); }
   else renderSession();
 }
-function sxUseForm(){ const t = normTrick(SX.form.disc, SX.form.F); SX.pick = {src:'new', disc:SX.form.disc, trick:t, label:trickLabel(SX.form.disc, t)}; SX.form = null; SX.crit = null; renderSession(); }
+function sxUseForm(){
+  const t = normTrick(SX.form.disc, SX.form.F), d = SX.form.disc;
+  const core = d==='Rail' || t.kind==='basic' ? t : {...t, grab:''};
+  SX.pick = {src:'new', disc:d, trick:core, label:trickLabel(d, core), key:d + '|' + trickLabel(d, core)}; SX.grab = t.grab || '';
+  SX.form = null; SX.crit = null; renderSession();
+}
 async function sxSessAth(id){
   const s = activeSession(); let ids = [...s.athlete_ids];
   if (ids.includes(id)){
@@ -1955,27 +2106,73 @@ async function logAttempt(fell){
   const crit = fell ? Object.fromEntries(set.map(c => [c.k, false])) : {...SX.crit};
   const fails = fell ? [...SX.fails] : [];
   const note = [fails.length ? 'Tags: ' + fails.join(', ') : '', (SX.comment || '').trim()].filter(Boolean).join(' | ') || null;
-  const a = {id:uid(), session_id:s.id, athlete_id:SX.athleteId, discipline:pk.disc, trick:pk.trick, label:pk.label, crit,
-    score: fell ? 0 : Object.values(crit).filter(Boolean).length, max:set.length, fell, note, entry_id:null, created_at:nowIso(), created_by:ST.me.id};
+  const t = pickedTrick();
+  const score = fell ? 0 : Object.values(crit).filter(Boolean).length;
+  const a = {id:uid(), session_id:s.id, athlete_id:SX.athleteId, discipline:pk.disc, trick:t, label:trickLabel(pk.disc, t), crit,
+    score, max:set.length, fell, outcome: fell ? 'failed' : score===set.length ? 'stomped' : 'landed', note, entry_id:null, created_at:nowIso(), created_by:ST.me.id};
   try {
     upsertIn(ST.attempts, await Store.saveAttempt(ST.me, a));
     SX.crit = null; SX.mode = null; SX.fails = new Set(); SX.comment = '';
+    logSound();
     const o = outcomeOf(a);
     toast(o==='failed' ? 'Failed logged' : o==='stomped' ? '⭐ Stomped!' : `Landed ${a.score}/${a.max}`); renderSession();
   } catch (err){ console.error(err); toast('Could not save attempt: ' + (err.message||err), true); }
 }
 function attemptRow(a, o={}){
-  const mx = a.max || maxFor(a.discipline);
+  const mx = a.max || maxFor(a.discipline), oc = outcomeOf(a);
   const missed = a.crit && !a.fell ? critSetFor(a.discipline).filter(c => a.crit[c.k] === false) : [];
+  const res = oc==='failed' ? '<span class="chip red">✗ Failed</span>' + parseTags(a.note).map(t => `<span class="chip">${esc(t)}</span>`).join('')
+    : oc==='stomped' ? `<span class="chip teal">⭐ Stomped${a.crit ? ` · ${mx}/${mx}` : ''}</span>`
+    : `<span class="chip green">✓ Landed${a.crit ? ` · ${stars(a.score, mx)} ${a.score}/${mx}` : ''}</span>`;
   return `<div class="item">
     <div class="main"><div class="t">${esc(a.label)}</div>
-      <div class="m">${o.noName ? '' : esc(prof(a.athlete_id)?.name) + ' · '}${o.withDate ? fmtDate(sessDate(a)) + ' · ' : ''}${new Date(a.created_at).toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'})}</div>
-      <div class="chips">${a.fell ? '<span class="chip red">✗ Failed</span>' + parseTags(a.note).map(t => `<span class="chip">${esc(t)}</span>`).join('')
-          : a.score===mx ? `<span class="chip teal">⭐ Stomped · ${mx}/${mx}</span>` : `<span class="chip green">✓ Landed · ${stars(a.score, mx)} ${a.score}/${mx}</span>`}
-        ${missed.map(c => `<span class="chip">✗ ${esc(c.name)}</span>`).join('')}${a.entry_id ? '<span class="chip dark">✓ in Skills-Check</span>' : ''}</div>
+      <div class="m">${o.noName ? '' : esc(prof(a.athlete_id)?.name) + ' · '}${o.withDate ? fmtDate(sessDate(a)) + ' · ' : ''}${new Date(a.created_at).toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'})}${a.run_no ? ` · Run ${a.run_no}` : ''}</div>
+      <div class="chips">${res}${missed.map(c => `<span class="chip">✗ ${esc(c.name)}</span>`).join('')}${a.entry_id ? '<span class="chip dark">✓ in Skills-Check</span>' : ''}</div>
       ${noteText(a.note) ? `<div class="small" style="margin-top:6px">💬 ${esc(noteText(a.note))}</div>` : ''}</div>
-    <div class="acts noprint">${!a.fell && !a.entry_id ? `<button class="btn ghost sm" onclick="attemptToSkills('${a.id}')" title="Use this rating in the athlete's Skills-Check">→ Skills-Check</button>` : ''}<button class="btn ghost sm" onclick="deleteAttempt('${a.id}')" title="Delete attempt">🗑</button></div>
+    <div class="acts noprint">${!a.fell && a.crit && !a.entry_id ? `<button class="btn ghost sm" onclick="attemptToSkills('${a.id}')" title="Use this rating in the athlete's Skills-Check">→ Skills-Check</button>` : ''}<button class="btn ghost sm" onclick="editAttempt('${a.id}')" title="Edit attempt">✏️</button><button class="btn ghost sm" onclick="deleteAttempt('${a.id}')" title="Delete attempt">🗑</button></div>
   </div>`;
+}
+
+// Versuch nachträglich bearbeiten (Session-Log, Report, Raw Entries, Monitoring)
+let EA = null;
+function editAttempt(id){
+  const a = ST.attempts.find(x => x.id===id); if (!a) return;
+  const set = critSetFor(a.discipline);
+  EA = {id, oc:outcomeOf(a), crit: a.crit ? {...a.crit} : Object.fromEntries(set.map(c => [c.k, false])), hasCrit: !!a.crit,
+    fails:new Set(parseTags(a.note)), comment:noteText(a.note), grab:a.trick?.grab || ''};
+  renderEditAttempt();
+}
+function renderEditAttempt(){
+  const a = ST.attempts.find(x => x.id===EA.id), set = critSetFor(a.discipline), score = Object.values(EA.crit).filter(Boolean).length;
+  const grabbable = a.discipline!=='Rail' && a.trick?.kind!=='basic';
+  const reasons = [...new Set([...failReasonList(), ...EA.fails])];
+  modal(`<h3>Edit attempt</h3><div class="muted small">${esc(prof(a.athlete_id)?.name)} · ${fmtDate(sessDate(a))} · ${new Date(a.created_at).toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'})}</div>
+    <div style="font-weight:800;color:var(--char);font-size:16px;margin:10px 0">${esc(grabbable ? trickLabel(a.discipline, {...a.trick, grab:EA.grab}) : a.label)}</div>
+    ${grabbable ? `<div class="form-group" style="margin-bottom:12px"><label>Grab</label><select onchange="EA.grab=this.value;renderEditAttempt()"><option value="">No grab</option>${opts([...new Set([...(EA.grab ? [EA.grab] : []), ...GRABS])], EA.grab)}</select></div>` : ''}
+    <div class="bigbtns" style="${EA.hasCrit ? '' : 'grid-template-columns:1fr 1fr 1fr'}">
+      <button class="bigbtn fail ${EA.oc==='failed'?'on':''}" onclick="EA.oc='failed';renderEditAttempt()">✗<br>FAILED</button>
+      <button class="bigbtn land ${EA.oc!=='failed' && (EA.hasCrit || EA.oc==='landed')?'on':''}" onclick="EA.oc='landed';renderEditAttempt()">✓<br>LANDED</button>
+      ${EA.hasCrit ? '' : `<button class="bigbtn land ${EA.oc==='stomped'?'on':''}" style="border-color:var(--cyan);color:var(--cyan)" onclick="EA.oc='stomped';renderEditAttempt()">★<br>STOMPED</button>`}
+    </div>
+    ${EA.oc!=='failed' && EA.hasCrit ? `<div class="disclose"><div class="row"><b style="color:var(--char)">Criteria met</b><span class="grow"></span><b>${score}/${set.length}</b></div>
+      <div class="critstars">${set.map(c => `<button class="critstar ${EA.crit[c.k]?'on':''}" onclick="EA.crit['${c.k}']=!EA.crit['${c.k}'];renderEditAttempt()"><span class="st">⭐</span><span class="nm">${esc(c.name)}</span></button>`).join('')}</div></div>` : ''}
+    ${EA.oc==='failed' ? `<div class="disclose"><b style="color:var(--char)">Reason(s)</b><div class="failchips">${reasons.map(r => `<button class="failchip ${EA.fails.has(r)?'on':''}" onclick="EA.fails.has(${esc(JSON.stringify(r))})?EA.fails.delete(${esc(JSON.stringify(r))}):EA.fails.add(${esc(JSON.stringify(r))});renderEditAttempt()">${esc(r)}</button>`).join('')}</div></div>` : ''}
+    <div class="form-group" style="margin-top:12px"><label>Comment</label><input type="text" id="ea-comment" value="${esc(EA.comment)}" oninput="EA.comment=this.value"></div>
+    <div class="btnrow"><button class="btn red" onclick="saveEditAttempt()">Save</button><button class="btn ghost" onclick="closeModal()">Cancel</button><span class="grow"></span><button class="btn ghost" onclick="closeModal();deleteAttempt('${a.id}')">🗑 Delete</button></div>`);
+}
+async function saveEditAttempt(){
+  const a = ST.attempts.find(x => x.id===EA.id), set = critSetFor(a.discipline);
+  const fell = EA.oc==='failed';
+  const trick = a.discipline!=='Rail' && a.trick?.kind!=='basic' ? {...a.trick, grab:EA.grab} : a.trick;
+  const note = [fell && EA.fails.size ? 'Tags: ' + [...EA.fails].join(', ') : '', (EA.comment || '').trim()].filter(Boolean).join(' | ') || null;
+  const next = {...a, trick, label: trick===a.trick ? a.label : trickLabel(a.discipline, trick), fell, note};
+  if (EA.hasCrit){
+    next.crit = fell ? Object.fromEntries(set.map(c => [c.k, false])) : {...EA.crit};
+    next.score = fell ? 0 : Object.values(next.crit).filter(Boolean).length;
+    next.outcome = fell ? 'failed' : next.score===set.length ? 'stomped' : 'landed';
+  } else next.outcome = EA.oc;
+  try { upsertIn(ST.attempts, await Store.saveAttempt(ST.me, next)); closeModal(); toast('Attempt updated'); render(); }
+  catch (err){ toast('Could not save: ' + (err.message||err), true); }
 }
 async function deleteAttempt(id){
   if (!confirm('Delete this attempt?')) return;
@@ -2003,17 +2200,25 @@ async function cancelSession(){
 }
 function openEndSession(){
   const s = activeSession(), atts = sessAttempts(s.id);
-  const mins = Math.max(5, Math.round((Date.now() - new Date(s.started_at)) / 300000) * 5);
-  modal(`<h3>End session</h3><div class="muted small">${esc(s.type)} · ${fmtDate(s.date)} · ${atts.length} attempts</div>
-    <div class="grid" style="margin-top:14px">
-      <label class="f">Duration (min)<input type="number" id="es-dur" min="5" step="5" value="${mins}"></label>
-      <label class="f">Location<input type="text" id="es-loc" value="${esc(s.location||'')}"></label>
-      <label class="f">Conditions<select id="es-cond"><option value="">–</option>${opts([['1','1 · poor'],['2','2'],['3','3 · ok'],['4','4'],['5','5 · perfect']], s.conditions||'')}</select></label>
+  const mins = Math.max(30, Math.round((Date.now() - new Date(s.started_at)) / 1800000) * 30);
+  const comp = isComp(s.type), nFinal = /^Slopestyle/.test(normType(s.type)) ? 2 : 3, res = s.results || {};
+  const inp = (id, v) => `<input type="number" step="0.01" min="0" max="100" id="${id}" value="${v ?? ''}" style="width:72px;padding:6px 8px">`;
+  modal(`<h3>Session Complete</h3><div class="muted small">${esc(normType(s.type))} · ${fmtDate(s.date)} · ${atts.length} attempts</div>
+    <div class="form-grid" style="margin-top:14px">
+      <div class="form-group"><label>Duration (min)</label><input type="number" id="es-dur" min="30" step="30" value="${s.duration_min || mins}"></div>
+      <div class="form-group"><label>Location</label><input type="text" id="es-loc" value="${esc(s.location||'')}"></div>
+      ${!isRunType(s.type) ? `<div class="form-group"><label>Jump Size</label><select id="es-size"><option value="">–</option>${opts(['M','L','XL'], s.jump_size||'')}</select></div>` : ''}
+      <div class="form-group"><label>Conditions</label><select id="es-cond"><option value="">–</option>${opts([['1','1 · Poor'],['2','2'],['3','3 · OK'],['4','4'],['5','5 · Excellent']], s.conditions||'')}</select></div>
+      <div class="form-group full"><label>Comments</label><textarea id="es-com" placeholder="Conditions, focus of the day …">${esc(s.comments||'')}</textarea></div>
     </div>
-    <label class="f" style="margin-top:12px">Session comment<textarea id="es-com" placeholder="Conditions, focus of the day …">${esc(s.comments||'')}</textarea></label>
-    <div class="f-lbl">Athlete notes</div>
-    ${s.athlete_ids.map(id => `<label class="f" style="margin-top:8px">${esc(prof(id)?.name)}<input type="text" id="es-note-${id}" value="${esc(s.athlete_notes?.[id]||'')}" placeholder="optional"></label>`).join('')}
-    <div class="btnrow"><button class="btn red" onclick="endSession()">Save report</button><button class="btn ghost" onclick="closeModal()">Back to session</button></div>`);
+    ${comp ? `<div class="sub-h">Contest results <span class="rt">empty final = not reached</span></div>
+      ${s.athlete_ids.map(id => { const r = res[id] || {};
+        return `<div class="contest-row"><b>${esc(prof(id)?.name)}</b><div class="row" style="gap:6px"><span class="tiny muted">QUALI</span>${[0,1].map(i => inp(`es-q-${id}-${i}`, r.quali?.[i])).join('')}
+          <span class="tiny muted">FINAL</span>${Array.from({length:nFinal}, (_, i) => inp(`es-f-${id}-${i}`, r.final?.[i])).join('')}
+          <span class="tiny muted">RANK</span><input type="number" min="1" id="es-r-${id}" value="${r.rank ?? ''}" style="width:60px;padding:6px 8px"></div></div>`; }).join('')}` : ''}
+    <div class="sub-h">Athlete notes</div>
+    ${s.athlete_ids.map(id => `<div class="form-group" style="margin-top:8px"><label>${esc(prof(id)?.name)}</label><input type="text" id="es-note-${id}" value="${esc(s.athlete_notes?.[id]||'')}" placeholder="optional"></div>`).join('')}
+    <div class="btnrow"><button class="btn red" onclick="endSession()">Save & Close</button><button class="btn ghost" onclick="closeModal()">Back to session</button></div>`);
 }
 async function endSession(){
   const s = activeSession(), atts = sessAttempts(s.id);
@@ -2022,11 +2227,21 @@ async function endSession(){
       await Store.deleteSession(s.id); ST.sessions = ST.sessions.filter(x => x.id!==s.id);
       closeModal(); SX = sxFresh(); toast('Empty session discarded'); render(); return;
     }
-    const notes = {};
-    s.athlete_ids.forEach(id => { const v = document.getElementById('es-note-' + id)?.value.trim(); if (v) notes[id] = v; });
+    const notes = {}, results = {};
+    const num = id => { const v = document.getElementById(id)?.value; return v === '' || v == null ? null : +v; };
+    s.athlete_ids.forEach(id => {
+      const v = document.getElementById('es-note-' + id)?.value.trim(); if (v) notes[id] = v;
+      if (isComp(s.type)){
+        const quali = [0,1].map(i => num(`es-q-${id}-${i}`)), final = [0,1,2].map(i => num(`es-f-${id}-${i}`)), rank = num('es-r-' + id);
+        if ([...quali, ...final, rank].some(x => x != null)) results[id] = {quali, final, rank};
+      }
+    });
     const row = {...s, duration_min:+$('#es-dur').value || null, location:$('#es-loc').value.trim() || null, conditions:+$('#es-cond').value || null,
       comments:$('#es-com').value.trim() || null, athlete_notes:notes, ended_at:nowIso()};
+    if ($('#es-size')) row.jump_size = $('#es-size').value || null;
+    if (isComp(s.type)) row.results = results;
     upsertIn(ST.sessions, await Store.saveSession(ST.me, row));
+    try { Object.keys(localStorage).filter(k => k.startsWith('nw-run-' + s.id)).forEach(k => localStorage.removeItem(k)); } catch {}
     closeModal(); SX = sxFresh(); ST.rep.sel = s.id; go('reports'); toast('Session saved');
   } catch (err){ console.error(err); toast('Could not save: ' + (err.message||err), true); }
 }
@@ -2037,13 +2252,13 @@ async function endSession(){
 function reportSessions(){
   const vis = visGroupAthleteIds(), f = ST.rep, from = periodStart(f.period);
   return ST.sessions.filter(s => s.ended_at && s.athlete_ids.some(id => vis.has(id))
-    && (!f.type || s.type===f.type) && (!f.athlete || s.athlete_ids.includes(f.athlete)) && (!from || s.date >= from))
+    && (!f.type || normType(s.type)===f.type) && (!f.athlete || s.athlete_ids.includes(f.athlete)) && (!from || s.date >= from))
     .sort((a,b) => b.date.localeCompare(a.date) || b.started_at.localeCompare(a.started_at));
 }
 function sessionListRow(s){
   const atts = sessAttempts(s.id);
   return `<div class="item click" onclick="ST.rep.sel='${s.id}';go('reports')">
-    <div class="main"><div class="t">${fmtDate(s.date)} · ${esc(s.type)}</div>
+    <div class="main"><div class="t">${fmtDate(s.date)} · ${esc(normType(s.type))}${s.jump_size ? ' · ' + esc(s.jump_size) : ''}</div>
       <div class="m">${s.location ? esc(s.location) + ' · ' : ''}${s.duration_min ? s.duration_min + ' min · ' : ''}${s.athlete_ids.map(id => esc(prof(id)?.name?.split(' ')[0] || '?')).join(', ')}</div></div>
     <div class="acts">${qChip(avg(atts.map(qa)))}<span class="chip">${atts.length} att.</span><span class="chip">${landedPct(atts) ?? '–'}% landed</span></div></div>`;
 }
@@ -2085,7 +2300,7 @@ function renderReport(root, s){
   root.innerHTML = `
     <div class="row noprint" style="margin-bottom:18px"><button class="btn ghost sm" onclick="ST.rep.sel=null;renderReports()">← All reports</button><span class="grow"></span>
       <button class="btn ghost sm" onclick="window.print()">🖨 Print / PDF</button><button class="btn ghost sm" onclick="deleteReport('${s.id}')">🗑 Delete report</button></div>
-    <div class="card"><h2>${fmtDate(s.date)} · ${esc(s.type)}<span class="rt muted">${s.location ? esc(s.location) : ''}</span></h2>
+    <div class="card"><h2>${fmtDate(s.date)} · ${esc(normType(s.type))}<span class="rt muted">${[s.location, s.jump_size ? 'Jump size ' + s.jump_size : ''].filter(Boolean).map(esc).join(' · ')}</span></h2>
       <div class="kpis" style="margin-bottom:0">
         <div class="kpi"><div class="k">Attempts</div><div class="v">${atts.length}</div></div>
         <div class="kpi"><div class="k">Ø Quality</div><div class="v">${avg(atts.map(qa)) ?? '–'}<small>%</small></div></div>
@@ -2099,6 +2314,7 @@ function renderReport(root, s){
       const groups = {};
       mine.forEach(x => (groups[x.discipline + '|' + x.label] ||= []).push(x));
       return `<div class="card"><h2>${esc(a?.name)} <span class="chip">${a?.level || '–'}</span><span class="rt">${mine.length} att. · Ø ${avg(mine.map(qa)) ?? '–'}% · ${landedPct(mine) ?? '–'}% landed</span></h2>
+        ${s.results?.[id] ? (r => `<div class="rule" style="margin:0 0 12px">🏆 ${r.quali?.some(x => x != null) ? 'Quali ' + r.quali.filter(x => x != null).join(' / ') : ''}${r.final?.some(x => x != null) ? ' · Final ' + r.final.filter(x => x != null).join(' / ') : ''}${r.rank ? ` · <b>Rank ${r.rank}</b>` : ''}</div>`)(s.results[id]) : ''}
         ${s.athlete_notes?.[id] ? `<div class="rule" style="margin:0 0 12px">📝 ${esc(s.athlete_notes[id])}</div>` : ''}
         ${mine.length ? Object.values(groups).map(l => trickBlock(l)).join('') : '<div class="empty">No attempts.</div>'}</div>`;
     }).join('')}`;
@@ -2144,7 +2360,7 @@ function monPeriodLabel(){
 function monAttempts(){
   const vis = visibleAthleteIds(ST.me, ST.profiles), [from, to] = monBounds(), typ = ST.mon.typ;
   return ST.attempts.filter(a => vis.has(a.athlete_id) && (!from || sessDate(a) >= from) && (!to || sessDate(a) <= to)
-    && (!typ || sessById(a.session_id)?.type===typ));
+    && (!typ || normType(sessById(a.session_id)?.type)===typ));
 }
 // Sessions = Trainingstage (wie Snowboard), aufsteigend
 function monDates(list){ return [...new Set(list.map(sessDate))].sort(); }
