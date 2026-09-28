@@ -601,6 +601,14 @@ const I18N = {
   'Criteria achieved':['Kriterien erfüllt','Critères remplis','Criteri soddisfatti'],
   'Attempts (dashed = running Ø) · teal = stomped':['Versuche (gestrichelt = laufender Ø) · türkis = stomped','Tentatives (pointillé = Ø courant) · turquoise = stomped','Tentativi (tratteggio = Ø progressivo) · turchese = stomped'],
   'all':['alle','tous','tutti'],
+  'Have a code?':['Code erhalten?','Tu as un code ?','Hai un codice?'], 'Enter code':['Code eingeben','Saisir le code','Inserisci il codice'],
+  'We sent a code to':['Wir haben einen Code gesendet an','Nous avons envoyé un code à','Abbiamo inviato un codice a'], 'Verify code':['Code prüfen','Vérifier le code','Verifica codice'],
+  'Back to login':['Zurück zum Login','Retour à la connexion','Torna al login'], 'Sending code…':['Code wird gesendet…','Envoi du code…','Invio del codice…'],
+  'Enter your e-mail above first, then tap the link again.':['Zuerst oben die E-Mail eingeben, dann nochmals auf den Link tippen.','Saisis d’abord ton e-mail ci-dessus, puis touche à nouveau le lien.','Inserisci prima l’e-mail qui sopra, poi tocca di nuovo il link.'],
+  'Code invalid or expired. Go back and request a new one.':['Code ungültig oder abgelaufen. Zurück und einen neuen anfordern.','Code invalide ou expiré. Reviens en arrière et demandes-en un nouveau.','Codice non valido o scaduto. Torna indietro e richiedine uno nuovo.'],
+  'Choose a new password':['Neues Passwort wählen','Choisis un nouveau mot de passe','Scegli una nuova password'], 'Repeat password':['Passwort wiederholen','Répéter le mot de passe','Ripeti password'],
+  'At least 8 characters.':['Mindestens 8 Zeichen.','Au moins 8 caractères.','Almeno 8 caratteri.'], 'Passwords do not match.':['Die Passwörter stimmen nicht überein.','Les mots de passe ne correspondent pas.','Le password non coincidono.'],
+  'Save password':['Passwort speichern','Enregistrer le mot de passe','Salva password'], 'Code':['Code','Code','Codice'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned — in the review inbox':['Zu «gelernt» verschoben — in der Review-Inbox','Déplacé vers acquis — dans la boîte d’évaluation','Spostato in imparati — nella casella valutazioni'],
@@ -3429,51 +3437,68 @@ function showLoginGate(msg){
         <label class="f">E-mail<input type="email" id="lg-mail" autocomplete="username"></label>
         <label class="f">Password<input type="password" id="lg-pw" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></label>
       </div>
-      <div class="btnrow"><button class="btn red" onclick="doLogin()">Log in</button><button class="btn ghost" onclick="showResetGate()">Forgot password?</button></div>
-      <div class="small" id="lg-msg" style="margin-top:10px;color:var(--red)">${esc(msg||'')}</div></div>`);
+      <div class="small" id="lg-msg" style="margin-top:10px;min-height:18px;color:var(--red)">${esc(msg||'')}</div>
+      <div class="btnrow"><button class="btn red" onclick="doLogin()">Log in</button></div>
+      <div class="small" style="margin-top:14px;text-align:center"><a href="#" onclick="authForgotPassword();return false">Forgot password?</a> <span class="muted">·</span> <a href="#" onclick="authHaveCode();return false">Have a code?</a></div></div>`);
   $('#gate').hidden = false; $('#app').hidden = true;
 }
 async function doLogin(){
   try { await SupaStore.login($('#lg-mail').value.trim(), $('#lg-pw').value); await startApp(); }
   catch (err){ $('#lg-msg').textContent = 'Login failed: ' + (err.message||err); }
 }
-function showResetGate(){
+// Ablauf wie Freeski/Snowboard: Code (6-stellig) statt Link — Links werden von Mail-Scannern verbraucht
+function loginMsg(t, ok){ const m = $('#lg-msg'); if (!m) return; m.style.color = ok ? 'var(--muted)' : 'var(--red)'; m.textContent = t; }
+async function authForgotPassword(){
+  const email = ($('#lg-mail')?.value || '').trim();
+  if (!email){ loginMsg('Enter your e-mail above first, then tap the link again.'); return; }
+  loginMsg('Sending code…', true);
+  const { error } = await db.auth.resetPasswordForEmail(email);
+  if (error){ loginMsg('Error: ' + error.message); return; }
+  showOtpGate(email);
+}
+// Code-Eingabe öffnen, ohne eine neue Mail auszulösen (Mail-Limit, verspätete Mail)
+function authHaveCode(){
+  const email = ($('#lg-mail')?.value || '').trim();
+  if (!email){ loginMsg('Enter your e-mail above first, then tap the link again.'); return; }
+  showOtpGate(email);
+}
+function showOtpGate(email){
   $('#gate').innerHTML = gateShell(`
-    <div class="card"><h2>Reset password</h2>
-      <p class="lead">We send you a code by e-mail. Enter it here together with your new password.</p>
+    <div class="card"><h2>Enter code</h2>
+      <p class="lead">We sent a code to</p><p style="margin:2px 0 12px"><b>${esc(email)}</b></p>
+      <label class="f">Code<input type="text" id="otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" style="text-align:center;font-size:20px;letter-spacing:4px" onkeydown="if(event.key==='Enter')doVerifyOtp()"></label>
+      <div class="small" id="otp-msg" style="margin-top:10px;min-height:18px;color:var(--red)"></div>
+      <div class="btnrow"><button class="btn red" id="otp-btn" onclick="doVerifyOtp()">Verify code</button></div>
+      <div class="small" style="margin-top:14px;text-align:center"><a href="#" onclick="showLoginGate();return false">Back to login</a></div></div>`);
+  $('#gate').hidden = false; $('#app').hidden = true;
+  ST._otpMail = email; $('#otp-code').focus();
+}
+async function doVerifyOtp(){
+  const b = $('#otp-btn'); b.disabled = true;
+  const { error } = await db.auth.verifyOtp({email:ST._otpMail, token:$('#otp-code').value.trim(), type:'recovery'});
+  b.disabled = false;
+  if (error){ $('#otp-msg').textContent = 'Code invalid or expired. Go back and request a new one.'; return; }
+  showSetPasswordGate(true);
+}
+function showSetPasswordGate(reset){
+  $('#gate').innerHTML = gateShell(`
+    <div class="card"><h2>${reset ? 'Choose a new password' : 'Welcome! Choose your password'}</h2>
       <div style="display:grid;gap:12px">
-        <label class="f">E-mail<input type="email" id="rs-mail"></label>
-        <button class="btn ghost" onclick="sendResetCode()">Send code</button>
-        <label class="f">Code from the e-mail<input type="text" id="rs-code" inputmode="numeric" maxlength="10"></label>
-        <label class="f">New password<input type="password" id="rs-pw" autocomplete="new-password"></label>
+        <label class="f">New password<input type="password" id="sp-pw" autocomplete="new-password" minlength="8"></label>
+        <label class="f">Repeat password<input type="password" id="sp-pw2" autocomplete="new-password" minlength="8" onkeydown="if(event.key==='Enter')doSetPassword()"></label>
       </div>
-      <div class="btnrow"><button class="btn red" onclick="doReset()">Set password</button><button class="btn ghost" onclick="showLoginGate()">Back</button></div>
-      <div class="small" id="rs-msg" style="margin-top:10px"></div></div>`);
-}
-async function sendResetCode(){
-  const { error } = await db.auth.resetPasswordForEmail($('#rs-mail').value.trim());
-  $('#rs-msg').textContent = error ? 'Error: ' + error.message : 'Code sent — check your inbox.';
-}
-async function doReset(){
-  const email = $('#rs-mail').value.trim();
-  const v = await db.auth.verifyOtp({email, token:$('#rs-code').value.trim(), type:'recovery'});
-  if (v.error){ $('#rs-msg').textContent = 'Code invalid: ' + v.error.message; return; }
-  const u = await db.auth.updateUser({password:$('#rs-pw').value});
-  if (u.error){ $('#rs-msg').textContent = 'Error: ' + u.error.message; return; }
-  toast('Password saved'); await startApp();
-}
-function showSetPasswordGate(){
-  $('#gate').innerHTML = gateShell(`
-    <div class="card"><h2>Welcome! Choose your password</h2>
-      <label class="f">New password<input type="password" id="sp-pw" autocomplete="new-password"></label>
-      <div class="btnrow"><button class="btn red" onclick="doSetPassword()">Save & continue</button></div>
-      <div class="small" id="sp-msg" style="margin-top:10px;color:var(--red)"></div></div>`);
+      <div class="small muted" style="margin-top:6px">At least 8 characters.</div>
+      <div class="small" id="sp-msg" style="margin-top:10px;min-height:18px;color:var(--red)"></div>
+      <div class="btnrow"><button class="btn red" onclick="doSetPassword()">Save password</button></div></div>`);
   $('#gate').hidden = false; $('#app').hidden = true;
 }
 async function doSetPassword(){
-  const { error } = await db.auth.updateUser({password:$('#sp-pw').value});
-  if (error){ $('#sp-msg').textContent = error.message; return; }
-  history.replaceState(null, '', location.pathname + location.search); await startApp();
+  const p1 = $('#sp-pw').value, p2 = $('#sp-pw2').value;
+  if (p1.length < 8){ $('#sp-msg').textContent = 'At least 8 characters.'; return; }
+  if (p1 !== p2){ $('#sp-msg').textContent = 'Passwords do not match.'; return; }
+  const { error } = await db.auth.updateUser({password:p1});
+  if (error){ $('#sp-msg').textContent = 'Error: ' + error.message; return; }
+  history.replaceState(null, '', location.pathname + location.search); toast('Password saved'); await startApp();
 }
 
 async function logout(){ await Store.logout(); location.reload(); }
