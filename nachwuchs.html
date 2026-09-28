@@ -373,6 +373,30 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)
 /* Untere Tab-Leiste auf dem Handy (wie Freeski) */
 .bottom-nav{display:none}
 @media (max-width:768px){
+  /* Team-Tabellen als Karten statt horizontal scrollen */
+  .team-tbl,.staff-tbl{min-width:0!important;width:100%}
+  .team-tbl thead,.staff-tbl thead{display:none}
+  .team-tbl tbody,.staff-tbl tbody{display:block}
+  .team-tbl tr,.staff-tbl tr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 8px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .staff-tbl tr{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .team-tbl td,.staff-tbl td{display:block;padding:0!important;border:0!important;text-align:left!important;min-width:0}
+  .team-tbl td:first-child,.staff-tbl td:first-child{grid-column:1/-1}
+  .team-tbl td[data-l]::before,.staff-tbl td[data-l]::before{content:attr(data-l);display:block;font-size:9px;font-weight:800;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  .team-tbl td select,.staff-tbl td select{width:100%;min-width:0;max-width:100%}
+  .team-tbl .c-focus{grid-column:span 2}
+  .team-tbl .c-group{grid-column:1/-1}
+  .team-tbl .c-d .tiny{display:block}
+  .team-tbl td.c-d,.team-tbl td.c-tot{white-space:normal;font-size:13px;line-height:1.25}
+  .team-tbl .c-tot{grid-column:span 1}
+  .team-tbl .c-tot .minibar{display:block;width:100%;margin:4px 0 0}
+  .team-tbl .c-pend{grid-column:1/-1}
+  .team-tbl .c-pend:empty{display:none}
+  .team-tbl td .name-in{width:100%}
+  .team-tbl tr .empty{grid-column:1/-1}
+  .team-filters{display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important}
+  .team-filters > *{width:100%;max-width:none!important;min-width:0}
+  .team-filters > select:first-child,.team-filters > .btn,.team-filters > select:nth-last-of-type(1){grid-column:1/-1}
+  .team-filters .grow{display:none}
   .bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:120;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:4px 2px calc(4px + env(safe-area-inset-bottom))}
   .bottom-nav button{flex:1 1 auto;min-width:0;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 0;color:var(--muted);font-size:9.5px;font-weight:700;position:relative;cursor:pointer}
   .bottom-nav button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;letter-spacing:-.1px}
@@ -788,7 +812,7 @@ function trString(s){
   }
   return lead + out + trail;
 }
-const I18N_ATTRS = ['placeholder', 'title', 'aria-label'];
+const I18N_ATTRS = ['placeholder', 'title', 'aria-label', 'data-l'];
 function i18nNode(root){
   const walk = n => {
     if (n.nodeType === 3){ const v = n.nodeValue, t = trString(v); if (t !== v) n.nodeValue = t; return; }
@@ -2129,17 +2153,17 @@ function renderTeam(){
     return `<tr class="click" onclick="if(event.target.closest('select,input'))return;ST.athleteId='${a.id}';ST.level=null;go('skills')">
       <td><input type="text" class="name-in" value="${esc(a.name)}" onchange="setProfile('${a.id}','name',this.value.trim())" title="Edit name"><div class="tiny muted">${a.birthdate ? a.birthdate.slice(0,4) + ' · ' : ''}${a.user_id || DEMO ? '<span style="color:var(--green)">✓ login</span>' : 'no login yet'}${dv ? ' · ' + esc(groupName(a.group_id)) : ''}</div>
         ${dv && !DEMO ? `<input type="email" class="name-in mail-in" value="${esc(a.email||'')}" placeholder="+ e-mail for login" onchange="setProfile('${a.id}','email',this.value.trim().toLowerCase())" ${a.user_id?'disabled title="Linked to a login"':''}>` : ''}</td>
-      <td><select onchange="setProfile('${a.id}','gender',this.value)"><option value="">–</option>${opts([['W','W'],['M','M']], a.gender)}</select></td>
-      <td><select onchange="setProfile('${a.id}','level',this.value)"><option value="">–</option>${opts(LEVELS, a.level)}</select></td>
-      <td>${a.level==='T4' ? `<select onchange="setProfile('${a.id}','focus',this.value)">${opts([['','All'],['park','Jumps & Rails'],['hp','Halfpipe']], a.focus||'')}</select>` : '<span class="tiny muted">all (T1–T3)</span>'}</td>
-      ${dv ? `<td><select onchange="setProfile('${a.id}','group_id',this.value)"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${a.group_id===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select></td>` : ''}
-      <td class="num">${cell('Jump')}</td><td class="num">${cell('Rail')}</td><td class="num">${cell('Halfpipe')}</td>
-      <td class="num"><b>${t ? `${t.pct}%` : '–'}</b>${t ? `<span class="minibar"><i style="width:${t.pct}%"></i></span>` : ''}</td>
-      <td class="num">${pend ? `<span class="chip blue">${pend} ⏳</span>` : ''}</td></tr>`;
+      <td class="c-sel" data-l="Sex"><select onchange="setProfile('${a.id}','gender',this.value)"><option value="">–</option>${opts([['W','W'],['M','M']], a.gender)}</select></td>
+      <td class="c-sel" data-l="Level"><select onchange="setProfile('${a.id}','level',this.value)"><option value="">–</option>${opts(LEVELS, a.level)}</select></td>
+      <td class="c-sel c-focus" data-l="Focus">${a.level==='T4' ? `<select onchange="setProfile('${a.id}','focus',this.value)">${opts([['','All'],['park','Jumps & Rails'],['hp','Halfpipe']], a.focus||'')}</select>` : '<span class="tiny muted">all (T1–T3)</span>'}</td>
+      ${dv ? `<td class="c-sel c-group" data-l="Group"><select onchange="setProfile('${a.id}','group_id',this.value)"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${a.group_id===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select></td>` : ''}
+      <td class="num c-d" data-l="Jumps">${cell('Jump')}</td><td class="num c-d" data-l="Rails">${cell('Rail')}</td><td class="num c-d" data-l="HP">${cell('Halfpipe')}</td>
+      <td class="num c-tot" data-l="Total"><b>${t ? `${t.pct}%` : '–'}</b>${t ? `<span class="minibar"><i style="width:${t.pct}%"></i></span>` : ''}</td>
+      <td class="num c-pend">${pend ? `<span class="chip blue">${pend} ⏳</span>` : ''}</td></tr>`;
   }).join('');
   const staffList = dv ? ST.profiles.filter(p => p.role!=='athlete').sort((a,b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name)) : [];
   root.innerHTML = `
-    <div class="row" style="margin-bottom:18px;flex-wrap:wrap;gap:8px">${dv ? groupFilterSelect() : ''}
+    <div class="row team-filters" style="margin-bottom:18px;flex-wrap:wrap;gap:8px">${dv ? groupFilterSelect() : ''}
       <select onchange="setTeamFilter('sex',this.value)">${opts([['','All sexes'],['W','Women only'],['M','Men only']], TF.sex)}</select>
       <select onchange="setTeamFilter('level',this.value)">${opts([['','All levels'], ...LEVELS.map(l => [l, l])], TF.level)}</select>
       <select onchange="setTeamFilter('sort',this.value)">${opts([['name','Sort: name A–Z'],['total_desc','Total: strongest first'],['total_asc','Total: weakest first'],['jump','Jumps: strongest first'],['rail','Rails: strongest first'],['hp','Halfpipe: strongest first']], TF.sort)}</select>
@@ -2147,12 +2171,12 @@ function renderTeam(){
       <span class="grow"></span><button class="btn red" onclick="openAddAthlete()">+ Add athlete</button></div>
     <div class="card"><h2>${dv ? 'All athletes' : esc(groupName(ST.me.group_id))} <span class="muted" style="letter-spacing:0;font-weight:600">${filtered ? `${aths.length} / ${all.length}` : aths.length}</span></h2>
       <ul class="hints"><li>Skills-Check at each athlete's own level</li><li>Total = Jumps, Rails and Halfpipe, ⅓ each</li><li>From T4: focus possible (Halfpipe only, or Jumps & Rails only)</li><li>Click a row to open the Skills-Check</li></ul>
-      <div class="scroll-x"><table class="tbl"><thead><tr><th>Athlete</th><th>Sex</th><th>Level</th><th>Focus</th>${dv?'<th>Group</th>':''}<th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th><th></th></tr></thead>
+      <div class="scroll-x"><table class="tbl team-tbl"><thead><tr><th>Athlete</th><th>Sex</th><th>Level</th><th>Focus</th>${dv?'<th>Group</th>':''}<th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th><th></th></tr></thead>
       <tbody>${rows || `<tr><td colspan="10" class="empty">${filtered ? 'No athletes match the filter.' : 'No athletes.'}</td></tr>`}</tbody></table></div></div>
-    ${dv ? `<div class="card"><h2>Coaches & staff</h2><div class="scroll-x"><table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Group</th></tr></thead><tbody>
-      ${staffList.map(p => `<tr><td><input type="text" class="name-in" value="${esc(p.name)}" onchange="setProfile('${p.id}','name',this.value.trim())" title="Edit name"><div class="tiny muted">${esc(p.email||'')}</div></td>
-        <td><select onchange="setProfile('${p.id}','role',this.value)" ${p.id===ST.me.id?'disabled':''}>${opts([['athlete','Athlete'],['coach','Coach'],['dvlp', ADMIN_IDS.includes(p.id) ? 'Admin' : 'DVLP']], p.role)}</select></td>
-        <td>${p.role==='coach' ? `<select onchange="setProfile('${p.id}','group_id',this.value)"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${p.group_id===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>` : '<span class="muted">all</span>'}</td></tr>`).join('')}
+    ${dv ? `<div class="card"><h2>Coaches & staff</h2><div class="scroll-x"><table class="tbl staff-tbl"><thead><tr><th>Name</th><th>Role</th><th>Group</th></tr></thead><tbody>
+      ${staffList.map(p => `<tr><td class="c-name"><input type="text" class="name-in" value="${esc(p.name)}" onchange="setProfile('${p.id}','name',this.value.trim())" title="Edit name"><div class="tiny muted">${esc(p.email||'')}</div></td>
+        <td class="c-sel" data-l="Role"><select onchange="setProfile('${p.id}','role',this.value)" ${p.id===ST.me.id?'disabled':''}>${opts([['athlete','Athlete'],['coach','Coach'],['dvlp', ADMIN_IDS.includes(p.id) ? 'Admin' : 'DVLP']], p.role)}</select></td>
+        <td class="c-sel" data-l="Group">${p.role==='coach' ? `<select onchange="setProfile('${p.id}','group_id',this.value)"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${p.group_id===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>` : '<span class="muted">all</span>'}</td></tr>`).join('')}
       </tbody></table></div>
       <p class="tiny muted" style="margin-top:12px">${DEMO ? 'Demo mode: accounts are fixed demo users.' : 'Logins: enter the e-mail here first, then create the account in Supabase → Authentication → Users → «Create new user» with the same e-mail — it links automatically. Staff without a profile appear here after their first login.'}</p></div>` : ''}`;
 }
