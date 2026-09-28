@@ -1,0 +1,16 @@
+{
+  "id": "/",
+  "name": "Skills-Check Freeski",
+  "short_name": "Youth",
+  "description": "Swiss-Ski Trick Analyses Youth — Skills-Check Freeski",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf7f6",
+  "theme_color": "#f4efed",
+  "icons": [
+    { "src": "icons/icon-youth-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-youth-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-youth-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
