@@ -494,6 +494,10 @@ main svg text{font-size:var(--fs-label)}
 .status-pill i{width:9px;height:9px;border-radius:50%;background:var(--c)}
 .status-pill b{color:var(--c)} .status-pill span{color:var(--muted)}
 .status-key-n{font-size:var(--fs-meta);color:var(--muted);flex-basis:100%}
+#outbox-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:210;display:flex;align-items:center;gap:10px;background:#396FA8;color:#fff;border-radius:999px;padding:7px 8px 7px 16px;font-size:var(--fs-meta);font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.18);white-space:nowrap}
+#outbox-bar.err{background:var(--red)}
+#outbox-bar button{border:0;background:rgba(255,255,255,.22);color:#fff;border-radius:999px;padding:5px 12px;font-weight:700;cursor:pointer}
+@media (min-width:769px){#outbox-bar{bottom:24px}}
 </style>
 </head>
 <body>
@@ -704,6 +708,7 @@ const I18N = {
   '📵 No video attached. A rating is only possible with a video: request one from the athlete or upload it yourself.':['📵 Kein Video angehängt. Bewerten ist nur mit Video möglich: Video bei der Athlet:in anfordern oder selbst hochladen.','📵 Aucune vidéo jointe. L’évaluation n’est possible qu’avec une vidéo : demande-la à l’athlète ou télécharge-la toi-même.','📵 Nessun video allegato. La valutazione è possibile solo con un video: richiedilo all’atleta o caricalo tu.'],
   'A rating is only possible with a video':['Bewerten ist nur mit Video möglich','L’évaluation n’est possible qu’avec une vidéo','La valutazione è possibile solo con un video'], 'Request video':['Video anfordern','Demander une vidéo','Richiedi video'], '⬆ Upload video':['⬆ Video hochladen','⬆ Télécharger une vidéo','⬆ Carica video'],
   'Trick status (stomp rate)':['Trick-Status (Stomp-Rate)','Statut du trick (taux de stomp)','Stato del trick (stomp rate)'], '< 5 attempts':['< 5 Versuche','< 5 essais','< 5 tentativi'], 'Stomped = all criteria met':['Stomped = alle Kriterien erfüllt','Stomped = tous les critères remplis','Stomped = tutti i criteri soddisfatti'],
+  'Send now':['Jetzt senden','Envoyer','Invia ora'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
@@ -826,6 +831,8 @@ const I18N_DE = {
 };
 // Texte mit Zahlen/Namen
 const I18N_PAT = [
+  [/^Saved offline: (\d+)$/, (m, i) => [`${m[1]} offline gespeichert, wird automatisch gesendet`, `${m[1]} enregistré(s) hors ligne, envoi automatique`, `${m[1]} salvati offline, invio automatico`][i]],
+  [/^Not sent: (\d+)$/, (m, i) => [`${m[1]} nicht gesendet: bitte prüfen`, `${m[1]} non envoyé(s) : à vérifier`, `${m[1]} non inviati: da verificare`][i]],
   [/^↗ rising, (\+\d+)%$/, (m, i) => [`↗ steigend, ${m[1]}%`, `↗ en hausse, ${m[1]}%`, `↗ in crescita, ${m[1]}%`][i]],
   [/^↘ falling, (-\d+)%$/, (m, i) => [`↘ sinkend, ${m[1]}%`, `↘ en baisse, ${m[1]}%`, `↘ in calo, ${m[1]}%`][i]],
   [/^Stomped \(all criteria\)$/, (m, i) => ['Stomped (alle Kriterien)', 'Stomped (tous les critères)', 'Stomped (tutti i criteri)'][i]],
@@ -1615,6 +1622,67 @@ const DemoStore = {
 };
 
 let db = null;
+/* ── Offline-Speicher für Sessions: Versuche/Sessions werden bei fehlendem Netz auf dem Gerät
+   zwischengespeichert (localStorage) und automatisch nachgeschickt, sobald wieder Netz da ist. ── */
+const OUTBOX_KEY = 'nw-outbox';
+const isNetErr = err => !navigator.onLine || err instanceof TypeError || /failed to fetch|load failed|network|fetch|timeout/i.test(err?.message || '');
+const Outbox = {
+  list(){ try { return JSON.parse(localStorage.getItem(OUTBOX_KEY) || '[]'); } catch { return []; } },
+  save(l){ try { localStorage.setItem(OUTBOX_KEY, JSON.stringify(l)); } catch {} renderOutboxBar(); },
+  has(table, id){ return this.list().some(x => x.table===table && x.id===id); },
+  add(op){ const l = this.list().filter(x => !(x.table===op.table && x.id===op.id)); l.push(op); this.save(l); },
+  // nach dem Laden: noch nicht gesendete Einträge wieder in die Listen einspielen
+  applyLocal(){
+    for (const op of this.list()){
+      const list = op.table==='attempts' ? ST.attempts : ST.sessions;
+      if (op.op==='delete'){ const i = list.findIndex(x => x.id===op.id); if (i >= 0) list.splice(i, 1); }
+      else upsertIn(list, op.row);
+    }
+  },
+  _busy:false,
+  async flush(){
+    if (DEMO || this._busy || !this.list().length || !db) return;
+    this._busy = true;
+    try {
+      for (const op of this.list()){
+        try {
+          if (op.op==='delete'){ const { error } = await db.from(op.table).delete().eq('id', op.id); if (error) throw error; }
+          else {
+            const { created_by, ...row } = op.row;
+            let { error } = await db.from(op.table).upsert(row);
+            if (error && /column|schema cache/i.test(error.message || '')){
+              const OPT = ['jump_size','results','outcome','run_no'];
+              ({ error } = await db.from(op.table).upsert(Object.fromEntries(Object.entries(row).filter(([k]) => !OPT.includes(k)))));
+            }
+            if (error) throw error;
+          }
+          this.save(this.list().filter(x => !(x.table===op.table && x.id===op.id && x.t===op.t)));
+        } catch (err){
+          if (isNetErr(err)) break;   // weiterhin offline → später erneut
+          console.error('Outbox', op, err); op.err = String(err.message || err); this.save(this.list().map(x => x.t===op.t ? op : x));
+        }
+      }
+    } finally { this._busy = false; }
+  },
+};
+async function offlineable(table, list, row, online){
+  // solange für diese Zeile noch etwas wartet: hinten anstellen (Reihenfolge bleibt erhalten)
+  if (!DEMO && (!navigator.onLine || Outbox.has(table, row.id))){ Outbox.add({op:'upsert', table, id:row.id, row:{...row}, t:Date.now()}); return {...row}; }
+  try { return await online(); }
+  catch (err){ if (DEMO || !isNetErr(err)) throw err; Outbox.add({op:'upsert', table, id:row.id, row:{...row}, t:Date.now()}); return {...row}; }
+}
+function renderOutboxBar(){
+  let b = document.getElementById('outbox-bar');
+  const l = Outbox.list(), n = l.length, bad = l.some(x => x.err);
+  if (!n){ b?.remove(); return; }
+  if (!b){ b = document.createElement('div'); b.id = 'outbox-bar'; document.body.appendChild(b); }
+  b.className = bad ? 'err' : '';
+  b.innerHTML = `<span>${bad ? `Not sent: ${n}` : `Saved offline: ${n}`}</span><button onclick="Outbox.flush()">Send now</button>`;
+}
+window.addEventListener('online', () => Outbox.flush());
+document.addEventListener('visibilitychange', () => { if (!document.hidden) Outbox.flush(); });
+setInterval(() => { if (Outbox.list().length) Outbox.flush(); }, 20000);
+
 const SupaStore = {
   async currentUser(){
     const { data:{ session } } = await db.auth.getSession();
@@ -1657,10 +1725,14 @@ const SupaStore = {
     }
     if (error) throw error; return data;
   },
-  async saveSession(me, s){ return this._upsert('sessions', ST.sessions, s); },
+  async saveSession(me, s){ return offlineable('sessions', ST.sessions, s, () => this._upsert('sessions', ST.sessions, s)); },
   async deleteSession(id){ const { error } = await db.from('sessions').delete().eq('id', id); if (error) throw error; },
-  async saveAttempt(me, a){ return this._upsert('attempts', ST.attempts, a); },
-  async deleteAttempt(id){ const { error } = await db.from('attempts').delete().eq('id', id); if (error) throw error; },
+  async saveAttempt(me, a){ return offlineable('attempts', ST.attempts, a, () => this._upsert('attempts', ST.attempts, a)); },
+  async deleteAttempt(id){
+    if (!navigator.onLine || Outbox.has('attempts', id)){ Outbox.add({op:'delete', table:'attempts', id, t:Date.now()}); return; }
+    try { const { error } = await db.from('attempts').delete().eq('id', id); if (error) throw error; }
+    catch (err){ if (!isNetErr(err)) throw err; Outbox.add({op:'delete', table:'attempts', id, t:Date.now()}); }
+  },
   async listComments(athId, key){ const { data, error } = await db.from('trick_comments').select('*').eq('athlete_id', athId).eq('trick_key', key).order('created_at', {ascending:false}); if (error) throw error; return data; },
   async addComment(me, athId, key, text){ const { error } = await db.from('trick_comments').insert({athlete_id:athId, trick_key:key, comment:text}); if (error) throw error; },
   async trickStatus(athId, key){ const { data } = await db.from('trick_status').select('status_text,updated_at').eq('athlete_id', athId).eq('trick_key', `${key}@${LANG}`).maybeSingle(); return data; },
@@ -2623,11 +2695,22 @@ function sxCrit(k){ SX.crit[k] = !SX.crit[k]; renderSession(); }
 function sxFail(i){ const r = SX.reasons[i]; SX.fails.has(r) ? SX.fails.delete(r) : SX.fails.add(r); renderSession(); }
 function sxFailOther(){ const r = (prompt('New fail reason:') || '').trim(); if (r){ SX.fails.add(r); renderSession(); } }
 
+// Arbeitsstand der laufenden Session auf dem Gerät sichern (App kann bei stundenlangen Sessions
+// vom Handy beendet werden): gewählte Athlet:in, Trick, Kriterien, Kommentar, Run-Aufbau
+const SX_KEY = 'nw-sx';
+function saveSX(sessId){
+  try { const { cands, fails, ...rest } = SX; localStorage.setItem(SX_KEY, JSON.stringify({sessId, sx:{...rest, fails:[...(fails||[])]}})); } catch {}
+}
+function restoreSX(){
+  const s = activeSession(); if (!s) return;
+  try { const d = JSON.parse(localStorage.getItem(SX_KEY) || 'null'); if (d && d.sessId===s.id) SX = sxFresh({...d.sx, fails:new Set(d.sx.fails || [])}); } catch {}
+}
 function renderSession(){
   const root = $('#page-session');
   const s = activeSession();
-  if (!s) return renderSessionSetup(root);
+  if (!s){ try { localStorage.removeItem(SX_KEY); } catch {} return renderSessionSetup(root); }
   renderSessionActive(root, s);
+  saveSX(s.id);
 }
 function renderSessionSetup(root){
   SX.setup ||= {date:todayIso(), type:'Big Air Training', location:'', ath:new Set()};
@@ -2768,13 +2851,13 @@ function renderSessionActive(root, s){
             <div class="row"><b style="color:var(--char)">Criteria met</b><span class="grow"></span><b style="color:var(--char)">${score}/${set.length}</b></div>
             <div class="critstars">${set.map(c => `<button class="critstar ${SX.crit[c.k]?'on':''}" onclick="sxCrit('${c.k}')"><span class="st">⭐</span><span class="nm">${esc(c.name)}</span></button>`).join('')}</div>
             <div class="tiny muted" style="margin:8px 0 0">${set.length}/${set.length} = automatically Stomped</div>
-            <input type="text" id="sx-comment" value="${esc(SX.comment)}" oninput="SX.comment=this.value" placeholder="Comment (optional)" style="margin:12px 0 10px">
+            <input type="text" id="sx-comment" value="${esc(SX.comment)}" oninput="SX.comment=this.value;saveSX(activeSession()?.id)" placeholder="Comment (optional)" style="margin:12px 0 10px">
             <button class="btn big ${score===set.length?'stomp':'land'}" style="width:100%" onclick="logAttempt(false)">${score===set.length ? '⭐ Save as Stomped' : `✓ Save Landed (${score}/${set.length})`}</button>
           </div>` : ''}
         ${SX.mode==='failed' ? `<div class="disclose">
             <b style="color:var(--char)">Select reason(s)</b>
             <div class="failchips">${SX.reasons.map((r, i) => `<button class="failchip ${SX.fails.has(r)?'on':''}" onclick="sxFail(${i})">${esc(r)}</button>`).join('')}<button class="failchip add" onclick="sxFailOther()">＋ Other…</button></div>
-            <input type="text" id="sx-comment" value="${esc(SX.comment)}" oninput="SX.comment=this.value" placeholder="Comment (optional)" style="margin:12px 0 10px">
+            <input type="text" id="sx-comment" value="${esc(SX.comment)}" oninput="SX.comment=this.value;saveSX(activeSession()?.id)" placeholder="Comment (optional)" style="margin:12px 0 10px">
             <button class="btn big red" style="width:100%" onclick="logAttempt(true)">✗ Save Failed${SX.fails.size ? ` (${SX.fails.size} reason${SX.fails.size>1?'s':''})` : ' (no reason)'}</button>
           </div>` : ''}
       </div>` : ''}
@@ -3702,6 +3785,8 @@ async function startApp(){
     ST.me = await Store.currentUser();
     if (!ST.me){ DEMO ? showDemoGate() : showLoginGate(); return; }
     await loadData();
+    if (!DEMO){ Outbox.applyLocal(); renderOutboxBar(); Outbox.flush(); }
+    restoreSX();
   } catch (err){
     console.error(err);
     DEMO ? showDemoGate() : showLoginGate('Could not load your profile: ' + (err.message||err));
