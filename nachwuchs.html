@@ -619,7 +619,7 @@ const I18N = {
   'Choose a new password':['Neues Passwort wählen','Choisis un nouveau mot de passe','Scegli una nuova password'], 'Repeat password':['Passwort wiederholen','Répéter le mot de passe','Ripeti password'],
   'At least 8 characters.':['Mindestens 8 Zeichen.','Au moins 8 caractères.','Almeno 8 caratteri.'], 'Passwords do not match.':['Die Passwörter stimmen nicht überein.','Les mots de passe ne correspondent pas.','Le password non coincidono.'],
   'Save password':['Passwort speichern','Enregistrer le mot de passe','Salva password'], 'Code':['Code','Code','Codice'],
-  'Attempts (dashed = running Ø)':['Versuche (gestrichelt = laufender Ø)','Tentatives (pointillé = Ø courant)','Tentativi (tratteggio = Ø progressivo)'], 'Height = quality':['Höhe = Qualität','Hauteur = qualité','Altezza = qualità'],
+  'Attempts (dashed = running Ø)':['Versuche (gestrichelt = laufender Ø)','Tentatives (pointillé = Ø courant)','Tentativi (tratteggio = Ø progressivo)'], 'Height = criteria met (Jumps/Rails max. 4, Halfpipe max. 5)':['Höhe = erfüllte Kriterien (Jumps/Rails max. 4, Halfpipe max. 5)','Hauteur = critères remplis (Jumps/Rails max. 4, Halfpipe max. 5)','Altezza = criteri soddisfatti (Jumps/Rails max. 4, Halfpipe max. 5)'], 'Criteria':['Kriterien','Critères','Criteri'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned — in the review inbox':['Zu «gelernt» verschoben — in der Review-Inbox','Déplacé vers acquis — dans la boîte d’évaluation','Spostato in imparati — nella casella valutazioni'],
@@ -2375,11 +2375,13 @@ const CHARTS = [];
 function chartSlot(draw){ const id = 'ch' + CHARTS.length + '-' + Math.random().toString(36).slice(2,6); CHARTS.push({id, draw}); return `<div class="chart" id="${id}"></div>`; }
 function drawCharts(){ for (const c of CHARTS){ const el = document.getElementById(c.id); if (el) el.innerHTML = c.draw(Math.max(el.clientWidth, 280)); } }
 let _rsT; window.addEventListener('resize', () => { clearTimeout(_rsT); _rsT = setTimeout(drawCharts, 150); });
-function axes(W, H, pad, yTitle, xTitle){
+// yMax: Achse in Punkten 0…yMax (Kriterien) statt 0–100 %
+function axes(W, H, pad, yTitle, xTitle, yMax){
   const ih = H - pad.t - pad.b; let s = '';
-  for (const t of [0, 25, 50, 75, 100]){
+  const ticks = yMax ? Array.from({length:yMax + 1}, (_, k) => [k / yMax * 100, String(k)]) : [0, 25, 50, 75, 100].map(t => [t, t + '%']);
+  for (const [t, lbl] of ticks){
     const y = pad.t + ih * (1 - t/100);
-    s += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y}" y2="${y}" stroke="${t===0?'#bdb6b3':'#ece8e6'}"/><text x="${pad.l - 6}" y="${y + 3.5}" text-anchor="end" font-size="11" fill="#6b6b70">${t}%</text>`;
+    s += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y}" y2="${y}" stroke="${t===0?'#bdb6b3':'#ece8e6'}"/><text x="${pad.l - 6}" y="${y + 3.5}" text-anchor="end" font-size="11" fill="#6b6b70">${lbl}</text>`;
   }
   s += `<text transform="translate(13 ${pad.t + ih/2}) rotate(-90)" text-anchor="middle" font-size="11" fill="#6b6b70">${esc(yTitle)}</text>`;
   s += `<text x="${pad.l + (W - pad.l - pad.r)/2}" y="${H - 5}" text-anchor="middle" font-size="11" fill="#6b6b70">${esc(xTitle)}</text>`;
@@ -2395,7 +2397,7 @@ function barChart(bars, o={}){
     const ih = H - pad.t - pad.b, y = v => pad.t + ih * (1 - v/100);
     const bw = Math.min(slotW * 0.68, 34), every = slotW < 26 ? Math.ceil(26 / slotW) : 1;
     const x0 = pad.l + Math.max(0, (W - pad.l - pad.r - slotW * n) / 2);
-    let s = axes(W, H, pad, o.yTitle || 'Quality', o.xTitle || 'Attempts');
+    let s = axes(W, H, pad, o.yTitle || 'Quality', o.xTitle || 'Attempts', o.yMax);
     const run = []; let sum = 0;
     bars.forEach((b, i) => {
       const x = x0 + i * slotW + (slotW - bw)/2, v = Math.max(0, Math.min(100, b.v||0));
@@ -2902,8 +2904,8 @@ function trickBlock(list, o={}){
       <span class="chip">${list.length} att.</span>${qChip(avg(list.map(qa)))}<span class="chip">${landedPct(list)}% landed</span><span class="chip green">${list.filter(a => outcomeOf(a)==='stomped').length} ⭐</span></div>
     <div class="chips" style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 2px">${rates.map(r => `<span class="chip ${r.pct>=70?'green':r.pct>=50?'gold':'red'}">${esc(r.name.replace(/ \(.*\)/,''))} ${r.pct}%</span>`).join('')}</div>
     ${Object.keys(tagCount).length ? `<div class="chips" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px"><span class="tiny muted" style="align-self:center">Fail reasons:</span>${Object.entries(tagCount).sort((a,b) => b[1]-a[1]).map(([t, n]) => `<span class="chip red">${esc(t)} ${n}×</span>`).join('')}</div>` : ''}
-    ${barChart(bars, {line:true, h:170, xTitle:'Attempts (dashed = running Ø)'})}
-    <div class="legend" style="justify-content:center"><span><i class="sq" style="background:${OC.stomped}"></i>Stomped (all criteria)</span><span><i class="sq" style="background:${OC.landed}"></i>Landed</span><span><b style="color:${OC.failed}">✗</b> Failed</span><span>Height = quality</span></div>
+    ${barChart(bars, {line:true, h:170, xTitle:'Attempts (dashed = running Ø)', yTitle:'Criteria', yMax:maxFor(disc)})}
+    <div class="legend" style="justify-content:center"><span><i class="sq" style="background:${OC.stomped}"></i>Stomped (all criteria)</span><span><i class="sq" style="background:${OC.landed}"></i>Landed</span><span><b style="color:${OC.failed}">✗</b> Failed</span><span>Height = criteria met (Jumps/Rails max. 4, Halfpipe max. 5)</span></div>
     <details class="noprint"><summary>Attempts</summary><div class="list">${list.slice().reverse().map(a => attemptRow(a, {noName:true})).join('')}</div></details>
   </div>`;
 }
