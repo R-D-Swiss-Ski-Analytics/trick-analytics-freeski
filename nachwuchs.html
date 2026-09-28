@@ -15,7 +15,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4/dist/tus.min.js"></script>
 <style>
-/* Trick Analyses Freeski Youth — Aussehen nach dem Dashboard «Auswertung Wettkampfdaten» (Swiss-Ski CI). */
+/* Trick Analyses Freeski Youth: Aussehen nach dem Dashboard «Auswertung Wettkampfdaten» (Swiss-Ski CI). */
 :root{
   --red:#E2001A; --char:#3E3E3F; --blue:#004877; --redd:#8B0E13; --cyan:#148FA0;
   --bg:#faf7f6; --paper:#ffffff; --ink:#2c2c2e; --muted:#6b6b70; --line:#e7e3e1; --soft:#f4efed;
@@ -25,7 +25,7 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;min-height:100vh}
 button,input,select,textarea{font:inherit;color:inherit}
 .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
 [hidden]{display:none!important}
@@ -405,16 +405,8 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)
   .bn-sep{width:1px;align-self:stretch;margin:6px 1px;background:var(--line);flex-shrink:0}
   .bn-badge{position:absolute;top:1px;right:calc(50% - 20px);background:var(--red);color:#fff;border-radius:99px;font-size:9px;font-style:normal;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px}
   .tabs{display:none}
-  /* Lesbarkeit Handy (Richtwerte iOS/Android: Fliesstext ≥16px, Nebentexte ≥12–13px) */
-  body{font-size:16px}
-  .small{font-size:14px} .tiny{font-size:13px} .lead{font-size:15px}
-  .chip{font-size:13px} .legend{font-size:13px}
-  label.f,.form-group > label{font-size:12px}
-  .kpi .k{font-size:12px}
-  main svg text{font-size:12.5px}
   .bottom-nav button{font-size:10.5px}
   .team-tbl td[data-l]::before,.staff-tbl td[data-l]::before{font-size:10px}
-  :root{--muted:#5c5c61}
   /* Handy: Modus-Umschalter für Staff (Skills-Check ↔ Monitoring), unten nur die Tabs des Modus */
   .mode-sw:not([hidden]){display:flex;position:sticky;top:0;z-index:60;gap:4px;margin:10px 16px 0;padding:4px;background:#efe9e7;border-radius:12px}
   .mode-sw button{flex:1;border:0;background:none;padding:9px 6px;border-radius:9px;font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);cursor:pointer}
@@ -455,6 +447,16 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)
   .kpis .kpi:first-child{grid-column:1/-1}
   .kpi .v{font-size:24px}
 }
+/* Lesbarkeit (Laptop und Handy): Fliesstext 16px, Nebentexte mind. 13px, Kontrast ≥ 4.5:1 (WCAG AA) */
+:root{--muted:#58585d}
+body{font-size:16px;line-height:1.5}
+.small{font-size:14px} .tiny{font-size:13px} .lead{font-size:15px}
+.chip{font-size:13px} .legend{font-size:13px} .hints,.sec-note{font-size:14px}
+label.f,.form-group > label{font-size:12px}
+.kpi .k{font-size:12px}
+.tbl td{font-size:15px}
+main svg text{font-size:12.5px}
+.slot .sm,.slot .st + .sm{font-size:13.5px}
 </style>
 </head>
 <body>
@@ -506,7 +508,7 @@ const SUPABASE_KEY = 'sb_publishable_oLwde7BCOv-KpTHegncZTQ_-gMz_otw';
 const VIDEO_BUCKET = 'skills-videos';
 const DEMO = !SUPABASE_URL || new URLSearchParams(location.search).has('demo');
 /* ══════════════════════════════════════════════════════════════════════
-   SPRACHE (DE / FR / IT / EN) — übersetzt nur, was fürs Verständnis nötig ist.
+   SPRACHE (DE / FR / IT / EN): übersetzt nur, was fürs Verständnis nötig ist.
    Sportspezifisches (Tricks, Achsen, Grabs, Stomped/Landed/Failed, Kriterien,
    Skills-Check-Vorgaben, Session-Typen) bleibt bewusst Englisch.
    Umsetzung: Wörterbuch (Quelltext → [de, fr, it]) + Muster für Texte mit Zahlen;
@@ -536,37 +538,37 @@ const I18N = {
   'Send code':['Code senden','Envoyer le code','Invia codice'], 'Code from the e-mail':['Code aus der E-Mail','Code reçu par e-mail','Codice dall’e-mail'], 'New password':['Neues Passwort','Nouveau mot de passe','Nuova password'],
   'Set password':['Passwort speichern','Enregistrer le mot de passe','Salva password'], 'Back':['Zurück','Retour','Indietro'], 'Password saved':['Passwort gespeichert','Mot de passe enregistré','Password salvata'],
   'Welcome! Choose your password':['Willkommen! Wähle dein Passwort','Bienvenue ! Choisis ton mot de passe','Benvenuto/a! Scegli la tua password'], 'Save & continue':['Speichern & weiter','Enregistrer et continuer','Salva e continua'],
-  'Code sent — check your inbox.':['Code gesendet — schau in dein Postfach.','Code envoyé — vérifie ta boîte mail.','Codice inviato — controlla la posta.'],
+  'Code sent: check your inbox.':['Code gesendet: schau in dein Postfach.','Code envoyé: vérifie ta boîte mail.','Codice inviato: controlla la posta.'],
   // Demo
-  'Demo — choose a view':['Demo — Ansicht wählen','Démo — choisir une vue','Demo — scegli una vista'], 'Nothing is saved to a server; data stays in this browser.':['Es wird nichts auf einem Server gespeichert; die Daten bleiben in diesem Browser.','Rien n’est enregistré sur un serveur ; les données restent dans ce navigateur.','Nulla viene salvato su un server; i dati restano in questo browser.'],
-  'ATHLETES — see only themselves':['ATHLET:INNEN — sehen nur sich selbst','ATHLÈTES — ne voient qu’eux-mêmes','ATLETI — vedono solo sé stessi'], 'COACHES — see their group':['COACHES — sehen ihre Gruppe','COACHS — voient leur groupe','COACH — vedono il loro gruppo'],
-  'DVLP — see everyone':['DVLP — sehen alle','DVLP — voient tout le monde','DVLP — vedono tutti'], 'Reset demo data':['Demo-Daten zurücksetzen','Réinitialiser les données démo','Ripristina dati demo'],
+  'Demo: choose a view':['Demo: Ansicht wählen','Démo: choisir une vue','Demo: scegli una vista'], 'Nothing is saved to a server; data stays in this browser.':['Es wird nichts auf einem Server gespeichert; die Daten bleiben in diesem Browser.','Rien n’est enregistré sur un serveur ; les données restent dans ce navigateur.','Nulla viene salvato su un server; i dati restano in questo browser.'],
+  'ATHLETES: see only themselves':['ATHLET:INNEN: sehen nur sich selbst','ATHLÈTES: ne voient qu’eux-mêmes','ATLETI: vedono solo sé stessi'], 'COACHES: see their group':['COACHES: sehen ihre Gruppe','COACHS: voient leur groupe','COACH: vedono il loro gruppo'],
+  'DVLP: see everyone':['DVLP: sehen alle','DVLP: voient tout le monde','DVLP: vedono tutti'], 'Reset demo data':['Demo-Daten zurücksetzen','Réinitialiser les données démo','Ripristina dati demo'],
   'Reset all demo data?':['Alle Demo-Daten zurücksetzen?','Réinitialiser toutes les données démo ?','Ripristinare tutti i dati demo?'], 'Demo data reset':['Demo-Daten zurückgesetzt','Données démo réinitialisées','Dati demo ripristinati'],
   // Assessment
   'ATHLETE':['ATHLET:IN','ATHLÈTE','ATLETA'], '+ Add Entry':['+ Eintrag','+ Ajouter','+ Aggiungi'], 'Rated Tricks':['Bewertete Tricks','Tricks évalués','Trick valutati'],
   'Waiting for Coach':['Wartet auf Coach','En attente du coach','In attesa del coach'], 'Open Goals':['Offene Ziele','Objectifs ouverts','Obiettivi aperti'],
   '✅ LEARNED TRICKS':['✅ GELERNTE TRICKS','✅ TRICKS ACQUIS','✅ TRICK IMPARATI'], '🎯 GOALS / IN PROGRESS':['🎯 ZIELE / IN ARBEIT','🎯 OBJECTIFS / EN COURS','🎯 OBIETTIVI / IN CORSO'],
   'No entries yet':['Noch keine Einträge','Pas encore d’entrées','Ancora nessuna voce'], 'No goals yet':['Noch keine Ziele','Pas encore d’objectifs','Ancora nessun obiettivo'],
-  'No tricks yet — add your first one!':['Noch keine Tricks — erfasse deinen ersten!','Pas encore de tricks — ajoute ton premier !','Ancora nessun trick — aggiungi il primo!'],
+  'No tricks yet: add your first one!':['Noch keine Tricks: erfasse deinen ersten!','Pas encore de tricks: ajoute ton premier !','Ancora nessun trick: aggiungi il primo!'],
   'Add Trick':['Trick erfassen','Ajouter un trick','Aggiungi trick'], 'Edit Trick':['Trick bearbeiten','Modifier le trick','Modifica trick'], 'Date':['Datum','Date','Data'], 'Discipline':['Disziplin','Discipline','Disciplina'],
   '(click to select · click again = no grab)':['(antippen = wählen · nochmals = kein Grab)','(toucher = choisir · encore = pas de grab)','(tocca = scegli · di nuovo = nessun grab)'],
   'Video for your coach':['Video für deinen Coach','Vidéo pour ton coach','Video per il tuo coach'], 'Video (optional)':['Video (optional)','Vidéo (optionnel)','Video (facoltativo)'],
   'Note (optional)':['Notiz (optional)','Note (optionnel)','Nota (facoltativa)'], 'Anything your coach should know?':['Etwas, das dein Coach wissen sollte?','Quelque chose que ton coach devrait savoir ?','Qualcosa che il tuo coach dovrebbe sapere?'],
   'Note for the athlete':['Notiz für die Athlet:in','Note pour l’athlète','Nota per l’atleta'],
-  'A video is already attached — choose a file to replace it.':['Es ist bereits ein Video angehängt — wähle eine Datei, um es zu ersetzen.','Une vidéo est déjà jointe — choisis un fichier pour la remplacer.','È già allegato un video — scegli un file per sostituirlo.'],
+  'A video is already attached: choose a file to replace it.':['Es ist bereits ein Video angehängt: wähle eine Datei, um es zu ersetzen.','Une vidéo est déjà jointe: choisis un fichier pour la remplacer.','È già allegato un video: scegli un file per sostituirlo.'],
   '✓ LEARNED · SUBMIT TO COACH':['✓ GELERNT · AN COACH SENDEN','✓ ACQUIS · ENVOYER AU COACH','✓ IMPARATO · INVIA AL COACH'], '✓ LEARNED · RATE NOW':['✓ GELERNT · JETZT BEWERTEN','✓ ACQUIS · ÉVALUER MAINTENANT','✓ IMPARATO · VALUTA ORA'],
   '🎯 GOAL / IN PROGRESS':['🎯 ZIEL / IN ARBEIT','🎯 OBJECTIF / EN COURS','🎯 OBIETTIVO / IN CORSO'], 'Cancel':['Abbrechen','Annuler','Annulla'],
   'Save to review inbox (rate later)':['In die Review-Inbox (später bewerten)','Dans la boîte d’évaluation (évaluer plus tard)','Nella casella valutazioni (valuta dopo)'],
-  'Your coach gets a notification and rates the trick (Take-off, Trick, Grab, Landing — max. 4 points; Halfpipe + Amplitude = max. 5).':['Dein Coach bekommt eine Mitteilung und bewertet den Trick (Take-off, Trick, Grab, Landing — max. 4 Punkte; Halfpipe + Amplitude = max. 5).','Ton coach reçoit une notification et évalue le trick (Take-off, Trick, Grab, Landing — max. 4 points ; Halfpipe + Amplitude = max. 5).','Il tuo coach riceve una notifica e valuta il trick (Take-off, Trick, Grab, Landing — max. 4 punti; Halfpipe + Amplitude = max. 5).'],
+  'Your coach gets a notification and rates the trick (Take-off, Trick, Grab, Landing: max. 4 points; Halfpipe + Amplitude = max. 5).':['Dein Coach bekommt eine Mitteilung und bewertet den Trick (Take-off, Trick, Grab, Landing: max. 4 Punkte; Halfpipe + Amplitude = max. 5).','Ton coach reçoit une notification et évalue le trick (Take-off, Trick, Grab, Landing: max. 4 points ; Halfpipe + Amplitude = max. 5).','Il tuo coach riceve una notifica e valuta il trick (Take-off, Trick, Grab, Landing: max. 4 punti; Halfpipe + Amplitude = max. 5).'],
   'SKILLS-CHECK MATCH':['SKILLS-CHECK-TREFFER','CORRESPONDANCE SKILLS-CHECK','CORRISPONDENZA SKILLS-CHECK'],
-  'No Skills-Check requirement matches this trick — it is still saved as a free trick.':['Keine Skills-Check-Vorgabe passt zu diesem Trick — er wird trotzdem als freier Trick gespeichert.','Aucune exigence du Skills-Check ne correspond à ce trick — il est tout de même enregistré comme trick libre.','Nessun requisito dello Skills-Check corrisponde a questo trick — viene comunque salvato come trick libero.'],
+  'No Skills-Check requirement matches this trick: it is still saved as a free trick.':['Keine Skills-Check-Vorgabe passt zu diesem Trick: er wird trotzdem als freier Trick gespeichert.','Aucune exigence du Skills-Check ne correspond à ce trick: il est tout de même enregistré comme trick libre.','Nessun requisito dello Skills-Check corrisponde a questo trick: viene comunque salvato come trick libero.'],
   'Set gender & level for this athlete (Team tab) to see the Skills-Check match.':['Geschlecht & Stufe im Tab Team setzen, um den Skills-Check-Treffer zu sehen.','Définis le sexe et le niveau (onglet Team) pour voir la correspondance Skills-Check.','Imposta sesso e livello (scheda Team) per vedere la corrispondenza Skills-Check.'],
   'Free trick':['Freier Trick','Trick libre','Trick libero'], '⏳ Waiting for coach':['⏳ Wartet auf Coach','⏳ En attente du coach','⏳ In attesa del coach'], '↺ New video requested':['↺ Neues Video gewünscht','↺ Nouvelle vidéo demandée','↺ Nuovo video richiesto'],
   '🎯 Goal':['🎯 Ziel','🎯 Objectif','🎯 Obiettivo'], 'Rate':['Bewerten','Évaluer','Valuta'], 'Edit rating':['Bewertung ändern','Modifier l’évaluation','Modifica valutazione'],
   '✓ Learned · submit':['✓ Gelernt · senden','✓ Acquis · envoyer','✓ Imparato · invia'], 'Move to learned':['Zu «gelernt» verschieben','Déplacer vers acquis','Sposta in imparati'],
   'Video':['Video','Vidéo','Video'], 'New video':['Neues Video','Nouvelle vidéo','Nuovo video'], 'Upload video':['Video hochladen','Télécharger une vidéo','Carica video'], '▶ Video':['▶ Video','▶ Vidéo','▶ Video'],
   'Edit':['Bearbeiten','Modifier','Modifica'], 'Remove':['Entfernen','Supprimer','Rimuovi'], 'Delete':['Löschen','Supprimer','Elimina'], 'Close':['Schliessen','Fermer','Chiudi'],
-  'Coach:':['Coach:','Coach :','Coach:'], 'Progress — Goals Achieved':['Fortschritt — erreichte Ziele','Progrès — objectifs atteints','Progressi — obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
+  'Coach:':['Coach:','Coach :','Coach:'], 'Progress: Goals Achieved':['Fortschritt: erreichte Ziele','Progrès: objectifs atteints','Progressi: obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
   'Please keep the app open until the upload is finished.':['Bitte die App offen lassen, bis der Upload fertig ist.','Merci de laisser l’app ouverte jusqu’à la fin du téléchargement.','Tieni aperta l’app finché il caricamento non è terminato.'],
   'Your coach can now watch it.':['Dein Coach kann es jetzt anschauen.','Ton coach peut maintenant la regarder.','Il tuo coach ora può guardarlo.'],
   'The video is attached to the trick.':['Das Video ist beim Trick gespeichert.','La vidéo est enregistrée avec le trick.','Il video è salvato con il trick.'],
@@ -580,18 +582,18 @@ const I18N = {
   'Total: strongest first':['Total: Stärkste zuerst','Total : les plus forts d’abord','Totale: i più forti prima'], 'Total: weakest first':['Total: Schwächste zuerst','Total : les plus faibles d’abord','Totale: i più deboli prima'],
   'Jumps: strongest first':['Jumps: Stärkste zuerst','Jumps : les plus forts d’abord','Jumps: i più forti prima'], 'Rails: strongest first':['Rails: Stärkste zuerst','Rails : les plus forts d’abord','Rails: i più forti prima'], 'Halfpipe: strongest first':['Halfpipe: Stärkste zuerst','Halfpipe : les plus forts d’abord','Halfpipe: i più forti prima'],
   'Reset filters':['Filter zurücksetzen','Réinitialiser les filtres','Azzera filtri'], 'No athletes match the filter.':['Keine Athlet:innen passen zum Filter.','Aucun·e athlète ne correspond au filtre.','Nessun atleta corrisponde al filtro.'],
-  'Timing & pop on the lip — uses the whole kicker':['Timing & Pop an der Kante — nutzt den ganzen Kicker','Timing & pop sur la lèvre — utilise tout le kicker','Timing & pop sul labbro — usa tutto il kicker'],
+  'Timing & pop on the lip: uses the whole kicker':['Timing & Pop an der Kante: nutzt den ganzen Kicker','Timing & pop sur la lèvre: utilise tout le kicker','Timing & pop sul labbro: usa tutto il kicker'],
   'No rushed take-off or rotation started early on the lip (butter/blender intended = ok)':['Kein überhasteter Take-off, Rotation nicht zu früh auf der Kante eingeleitet (Butter/Blender gewollt = ok)','Pas de take-off précipité ni de rotation lancée trop tôt sur la lèvre (butter/blender voulu = ok)','Nessun take-off affrettato né rotazione iniziata troppo presto sul labbro (butter/blender voluto = ok)'],
   'Centred stance, speed fits the jump':['Zentrale Position, Tempo passt zum Sprung','Position centrée, vitesse adaptée au saut','Posizione centrata, velocità adatta al salto'],
-  'Clean, recognisable axis — as declared':['Saubere, erkennbare Achse — wie angegeben','Axe propre et reconnaissable — comme annoncé','Asse pulito e riconoscibile — come dichiarato'],
+  'Clean, recognisable axis: as declared':['Saubere, erkennbare Achse: wie angegeben','Axe propre et reconnaissable: comme annoncé','Asse pulito e riconoscibile: come dichiarato'],
   'Rotation completed before landing, not finished on the snow':['Rotation vor der Landung abgeschlossen, nicht erst auf dem Schnee','Rotation terminée avant la réception, pas finie sur la neige','Rotazione completata prima dell’atterraggio, non finita sulla neve'],
   'Controlled body position throughout, no insecurity or flailing':['Durchgehend kontrollierte Körperposition, keine Unsicherheit, kein Rudern','Position du corps contrôlée tout du long, sans hésitation ni moulinets','Posizione del corpo controllata per tutto il tempo, nessuna insicurezza o sbracciata'],
-  'Grab on the ski — not boot, binding or knee':['Grab am Ski — nicht am Schuh, an der Bindung oder am Knie','Grab sur le ski — pas sur la chaussure, la fixation ou le genou','Grab sullo sci — non su scarpone, attacco o ginocchio'],
+  'Grab on the ski: not boot, binding or knee':['Grab am Ski: nicht am Schuh, an der Bindung oder am Knie','Grab sur le ski: pas sur la chaussure, la fixation ou le genou','Grab sullo sci: non su scarpone, attacco o ginocchio'],
   'Held through most of the rotation, clearly visible':['Über den Grossteil der Rotation gehalten, klar sichtbar','Tenu pendant la plus grande partie de la rotation, bien visible','Tenuto per gran parte della rotazione, ben visibile'],
   'Tweak / bone is a plus; free hand calm and controlled':['Tweak / Bone ist ein Plus; freie Hand ruhig und kontrolliert','Tweak / bone est un plus ; main libre calme et contrôlée','Tweak / bone è un plus; mano libera calma e controllata'],
-  'Lands in the sweet spot — not on the knuckle, not flat':['Landet im Sweet Spot — nicht auf dem Knuckle, nicht im Flat','Réception dans le sweet spot — pas sur le knuckle, pas à plat','Atterra nello sweet spot — non sul knuckle, non in piano'],
+  'Lands in the sweet spot: not on the knuckle, not flat':['Landet im Sweet Spot: nicht auf dem Knuckle, nicht im Flat','Réception dans le sweet spot: pas sur le knuckle, pas à plat','Atterra nello sweet spot: non sul knuckle, non in piano'],
   'Centred on both skis, not in the backseat':['Zentral auf beiden Ski, nicht in Rücklage','Centré sur les deux skis, pas en arrière','Centrato su entrambi gli sci, non seduto indietro'],
-  'No hand drag, butt check or washout — rides away clean':['Kein Hand Drag, Butt Check oder Washout — fährt sauber weg','Pas de hand drag, butt check ou washout — repart proprement','Nessun hand drag, butt check o washout — riparte pulito'],
+  'No hand drag, butt check or washout: rides away clean':['Kein Hand Drag, Butt Check oder Washout: fährt sauber weg','Pas de hand drag, butt check ou washout: repart proprement','Nessun hand drag, butt check o washout: riparte pulito'],
   'Takes off high on the wall at the coping':['Take-off hoch in der Wand am Coping','Take-off haut dans le mur, au coping','Take-off alto sul muro, al coping'],
   'Timing & pop, no early rotation':['Timing & Pop, keine frühe Rotation','Timing & pop, pas de rotation anticipée','Timing & pop, nessuna rotazione anticipata'],
   'Line keeps speed for the next hit':['Linie hält das Tempo für den nächsten Hit','La ligne garde la vitesse pour le hit suivant','La linea mantiene la velocità per il prossimo hit'],
@@ -603,7 +605,7 @@ const I18N = {
   'Centred, no backseat':['Zentral, keine Rücklage','Centré, pas en arrière','Centrato, non seduto indietro'],
   'No hand drag, butt check or washout':['Kein Hand Drag, Butt Check oder Washout','Pas de hand drag, butt check ou washout','Nessun hand drag, butt check o washout'],
   'Height above the coping fits the level (Skills-Check focus)':['Höhe über dem Coping passt zur Stufe (Skills-Check-Fokus)','Hauteur au-dessus du coping adaptée au niveau (focus Skills-Check)','Altezza sopra il coping adatta al livello (focus Skills-Check)'],
-  'Keeps amplitude from hit to hit — no loss of height':['Hält die Amplitude von Hit zu Hit — kein Höhenverlust','Garde l’amplitude d’un hit à l’autre — sans perte de hauteur','Mantiene l’amplitude da hit a hit — nessuna perdita di altezza'],
+  'Keeps amplitude from hit to hit: no loss of height':['Hält die Amplitude von Hit zu Hit: kein Höhenverlust','Garde l’amplitude d’un hit à l’autre: sans perte de hauteur','Mantiene l’amplitude da hit a hit: nessuna perdita di altezza'],
   'Distance down the pipe in proportion to the height':['Weite in der Pipe im Verhältnis zur Höhe','Distance dans le pipe proportionnelle à la hauteur','Distanza nel pipe proporzionata all’altezza'],
   'Clean pop onto the feature':['Sauberer Pop aufs Obstacle','Pop propre sur le module','Pop pulito sul modulo'],
   'Spin-in fully rotated, no sketch or ski-cross on the way on':['Spin-in voll gedreht, kein Wackeln oder Ski-Cross beim Aufspringen','Spin-in entièrement tourné, sans déséquilibre ni skis croisés à l’entrée','Spin-in completamente ruotato, nessuno sbilanciamento o sci incrociati in entrata'],
@@ -615,7 +617,7 @@ const I18N = {
   'Centred landing, rides away clean':['Zentrale Landung, fährt sauber weg','Réception centrée, repart proprement','Atterraggio centrato, riparte pulito'],
   'Develop according to individual strengths':['Entwicklung nach individuellen Stärken','Développement selon les points forts individuels','Sviluppo secondo i punti di forza individuali'],
   'no tricks matched yet':['noch keine passenden Tricks','pas encore de tricks correspondants','ancora nessun trick corrispondente'],
-  'DEMO MODE — data stays in this browser':['DEMO-MODUS — Daten bleiben in diesem Browser','MODE DÉMO — les données restent dans ce navigateur','MODALITÀ DEMO — i dati restano in questo browser'],
+  'DEMO MODE: data stays in this browser':['DEMO-MODUS: Daten bleiben in diesem Browser','MODE DÉMO: les données restent dans ce navigateur','MODALITÀ DEMO: i dati restano in questo browser'],
   'stomp rate':['Stomp-Rate','stomp rate','stomp rate'],
   'Quality':['Qualität','Qualité','Qualità'],
   'Criteria achieved':['Kriterien erfüllt','Critères remplis','Criteri soddisfatti'],
@@ -632,12 +634,12 @@ const I18N = {
   'Attempts (dashed = running Ø)':['Versuche (gestrichelt = laufender Ø)','Tentatives (pointillé = Ø courant)','Tentativi (tratteggio = Ø progressivo)'], 'Height = criteria met (Jumps/Rails max. 4, Halfpipe max. 5)':['Höhe = erfüllte Kriterien (Jumps/Rails max. 4, Halfpipe max. 5)','Hauteur = critères remplis (Jumps/Rails max. 4, Halfpipe max. 5)','Altezza = criteri soddisfatti (Jumps/Rails max. 4, Halfpipe max. 5)'], 'Criteria':['Kriterien','Critères','Criteri'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
-  'Moved to learned — in the review inbox':['Zu «gelernt» verschoben — in der Review-Inbox','Déplacé vers acquis — dans la boîte d’évaluation','Spostato in imparati — nella casella valutazioni'],
+  'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
   'Deleted':['Gelöscht','Supprimé','Eliminato'], 'Video uploaded':['Video hochgeladen','Vidéo téléchargée','Video caricato'], 'New video sent to your coach':['Neues Video an deinen Coach gesendet','Nouvelle vidéo envoyée à ton coach','Nuovo video inviato al tuo coach'],
   'Rated tricks can only be changed by your coach.':['Bewertete Tricks kann nur dein Coach ändern.','Seul ton coach peut modifier les tricks évalués.','Solo il tuo coach può modificare i trick valutati.'],
-  'Trick saved, but the video upload failed — try again via «Upload video».':['Trick gespeichert, aber der Video-Upload ist fehlgeschlagen — nochmals über «Video hochladen» versuchen.','Trick enregistré, mais le téléchargement de la vidéo a échoué — réessaie via «Télécharger une vidéo».','Trick salvato, ma il caricamento del video non è riuscito — riprova con «Carica video».'],
+  'Trick saved, but the video upload failed: try again via «Upload video».':['Trick gespeichert, aber der Video-Upload ist fehlgeschlagen: nochmals über «Video hochladen» versuchen.','Trick enregistré, mais le téléchargement de la vidéo a échoué: réessaie via «Télécharger une vidéo».','Trick salvato, ma il caricamento del video non è riuscito: riprova con «Carica video».'],
   'This trick no longer exists.':['Diesen Trick gibt es nicht mehr.','Ce trick n’existe plus.','Questo trick non esiste più.'],
-  'Your profile is not set up yet — please contact your coach.':['Dein Profil ist noch nicht eingerichtet — bitte melde dich bei deinem Coach.','Ton profil n’est pas encore configuré — contacte ton coach.','Il tuo profilo non è ancora configurato — contatta il tuo coach.'],
+  'Your profile is not set up yet: please contact your coach.':['Dein Profil ist noch nicht eingerichtet: bitte melde dich bei deinem Coach.','Ton profil n’est pas encore configuré: contacte ton coach.','Il tuo profilo non è ancora configurato: contatta il tuo coach.'],
   'No athletes visible yet. Assign athletes to your group in the Team tab.':['Noch keine Athlet:innen sichtbar. Weise sie im Tab Team deiner Gruppe zu.','Aucun·e athlète visible. Attribue-les à ton groupe dans l’onglet Team.','Nessun atleta visibile. Assegnali al tuo gruppo nella scheda Team.'],
   // Skills-Check
   'Total':['Total','Total','Totale'], 'all criteria achieved':['alle Kriterien erfüllt','tous les critères remplis','tutti i criteri soddisfatti'], 'rated, not yet full points':['bewertet, noch nicht volle Punktzahl','évalué, pas encore le maximum','valutato, non ancora punteggio pieno'],
@@ -647,14 +649,14 @@ const I18N = {
   'No athlete selected.':['Keine Athlet:in gewählt.','Aucun·e athlète sélectionné·e.','Nessun atleta selezionato.'], 'not in focus':['nicht im Fokus','hors focus','fuori focus'],
   // Reviews
   'Review inbox':['Review-Inbox','Boîte d’évaluation','Casella valutazioni'], 'Nothing to review right now.':['Gerade nichts zu bewerten.','Rien à évaluer pour le moment.','Niente da valutare al momento.'],
-  'Tricks your athletes submitted — oldest first. Rate Take-off, Trick, Grab and Landing (1 point each, max. 4) — Halfpipe additionally Amplitude (max. 5).':['Von deinen Athlet:innen eingereichte Tricks — älteste zuerst. Bewerte Take-off, Trick, Grab und Landing (je 1 Punkt, max. 4) — Halfpipe zusätzlich Amplitude (max. 5).','Tricks soumis par tes athlètes — les plus anciens d’abord. Évalue Take-off, Trick, Grab et Landing (1 point chacun, max. 4) — Halfpipe en plus Amplitude (max. 5).','Trick inviati dai tuoi atleti — prima i più vecchi. Valuta Take-off, Trick, Grab e Landing (1 punto ciascuno, max. 4) — Halfpipe anche Amplitude (max. 5).'],
+  'Tricks your athletes submitted: oldest first. Rate Take-off, Trick, Grab and Landing (1 point each, max. 4): Halfpipe additionally Amplitude (max. 5).':['Von deinen Athlet:innen eingereichte Tricks: älteste zuerst. Bewerte Take-off, Trick, Grab und Landing (je 1 Punkt, max. 4): Halfpipe zusätzlich Amplitude (max. 5).','Tricks soumis par tes athlètes: les plus anciens d’abord. Évalue Take-off, Trick, Grab et Landing (1 point chacun, max. 4): Halfpipe en plus Amplitude (max. 5).','Trick inviati dai tuoi atleti: prima i più vecchi. Valuta Take-off, Trick, Grab e Landing (1 punto ciascuno, max. 4): Halfpipe anche Amplitude (max. 5).'],
   'Waiting for a new video':['Wartet auf ein neues Video','En attente d’une nouvelle vidéo','In attesa di un nuovo video'], 'Recently rated':['Zuletzt bewertet','Évalués récemment','Valutati di recente'], 'No ratings yet.':['Noch keine Bewertungen.','Pas encore d’évaluations.','Ancora nessuna valutazione.'],
   'Feedback for the athlete':['Feedback für die Athlet:in','Feedback pour l’athlète','Feedback per l’atleta'], 'What was good, what to work on?':['Was war gut, woran arbeiten?','Qu’est-ce qui était bien, sur quoi travailler ?','Cosa è andato bene, su cosa lavorare?'],
   'Save rating':['Bewertung speichern','Enregistrer l’évaluation','Salva valutazione'], 'Request new video':['Neues Video anfordern','Demander une nouvelle vidéo','Richiedi un nuovo video'],
-  '📵 No video attached. You can still rate from what you saw on the hill — or request a video.':['📵 Kein Video angehängt. Du kannst trotzdem nach dem bewerten, was du am Hang gesehen hast — oder ein Video anfordern.','📵 Aucune vidéo jointe. Tu peux quand même évaluer ce que tu as vu sur la piste — ou demander une vidéo.','📵 Nessun video allegato. Puoi comunque valutare ciò che hai visto in pista — o richiedere un video.'],
+  '📵 No video attached. You can still rate from what you saw on the hill: or request a video.':['📵 Kein Video angehängt. Du kannst trotzdem nach dem bewerten, was du am Hang gesehen hast: oder ein Video anfordern.','📵 Aucune vidéo jointe. Tu peux quand même évaluer ce que tu as vu sur la piste: ou demander une vidéo.','📵 Nessun video allegato. Puoi comunque valutare ciò che hai visto in pista: o richiedere un video.'],
   'Loading video…':['Video wird geladen…','Chargement de la vidéo…','Caricamento video…'], 'Athlete asked for a new video':['Athlet:in um neues Video gebeten','Nouvelle vidéo demandée à l’athlète','Nuovo video richiesto all’atleta'],
   // Team
-  'All athletes':['Alle Athlet:innen','Tous les athlètes','Tutti gli atleti'], 'All groups':['Alle Gruppen','Tous les groupes','Tutti i gruppi'], '— No group yet —':['— Noch ohne Gruppe —','— Sans groupe —','— Senza gruppo —'],
+  'All athletes':['Alle Athlet:innen','Tous les athlètes','Tutti gli atleti'], 'All groups':['Alle Gruppen','Tous les groupes','Tutti i gruppi'], 'No group yet':['Noch ohne Gruppe','Sans groupe','Senza gruppo'],
   '+ Add athlete':['+ Athlet:in hinzufügen','+ Ajouter un·e athlète','+ Aggiungi atleta'], 'Add athlete':['Athlet:in hinzufügen','Ajouter un·e athlète','Aggiungi atleta'],
   'Skills-Check at each athlete\'s own level. Total = Jumps, Rails and Halfpipe weighted ⅓ each; from T4 a focus (Halfpipe only, or Jumps & Rails only) can be set. Click a row to open the Skills-Check.':['Skills-Check auf der eigenen Stufe jeder Athlet:in. Total = Jumps, Rails und Halfpipe je ⅓; ab T4 kann ein Fokus gesetzt werden (nur Halfpipe oder nur Jumps & Rails). Zeile anklicken öffnet den Skills-Check.','Skills-Check au niveau propre de chaque athlète. Total = Jumps, Rails et Halfpipe à ⅓ chacun ; dès T4 un focus peut être défini (seulement Halfpipe ou seulement Jumps & Rails). Clique sur une ligne pour ouvrir le Skills-Check.','Skills-Check al livello di ogni atleta. Totale = Jumps, Rails e Halfpipe ⅓ ciascuno; da T4 si può impostare un focus (solo Halfpipe o solo Jumps & Rails). Clicca una riga per aprire lo Skills-Check.'],
   'Sex':['Geschlecht','Sexe','Sesso'], 'Level':['Stufe','Niveau','Livello'], 'Focus':['Fokus','Focus','Focus'], 'Group':['Gruppe','Groupe','Gruppo'], 'Athlete':['Athlet:in','Athlète','Atleta'],
@@ -672,7 +674,7 @@ const I18N = {
   '⚠ BACKDATED':['⚠ NACHERFASST','⚠ ANTIDATÉ','⚠ RETRODATATA'], '+ Other trick':['+ Anderer Trick','+ Autre trick','+ Altro trick'], 'No Grab':['Kein Grab','Pas de grab','Nessun grab'], '+ Other grab…':['+ Anderer Grab…','+ Autre grab…','+ Altro grab…'],
   '(2nd tap on another grab = double grab)':['(zweiter Grab antippen = Doppelgrab)','(toucher un 2e grab = double grab)','(tocca un 2° grab = doppio grab)'], 'Selected:':['Gewählt:','Choisi :','Selezionato:'],
   '● already logged today · 🎯 goal in the assessment':['● heute schon geloggt · 🎯 Ziel im Assessment','● déjà enregistré aujourd’hui · 🎯 objectif dans l’assessment','● già registrato oggi · 🎯 obiettivo nell’assessment'],
-  'No tricks in the assessment yet — add one with «+ Other trick».':['Noch keine Tricks im Assessment — mit «+ Anderer Trick» ergänzen.','Pas encore de tricks dans l’assessment — ajoute-en un avec «+ Autre trick».','Ancora nessun trick nell’assessment — aggiungine uno con «+ Altro trick».'],
+  'No tricks in the assessment yet: add one with «+ Other trick».':['Noch keine Tricks im Assessment: mit «+ Anderer Trick» ergänzen.','Pas encore de tricks dans l’assessment: ajoute-en un avec «+ Autre trick».','Ancora nessun trick nell’assessment: aggiungine uno con «+ Altro trick».'],
   'Use this trick':['Diesen Trick verwenden','Utiliser ce trick','Usa questo trick'], 'Comment before rating (optional)':['Kommentar vor der Bewertung (optional)','Commentaire avant l’évaluation (optionnel)','Commento prima della valutazione (facoltativo)'],
   'Attempts':['Versuche','Essais','Tentativi'], 'Rate':['Bewerten','Évaluer','Valuta'], 'Criteria met':['Erfüllte Kriterien','Critères remplis','Criteri soddisfatti'], 'Select reason(s)':['Grund/Gründe wählen','Choisir la/les raison(s)','Scegli il/i motivo/i'],
   '＋ Other…':['＋ Anderer…','＋ Autre…','＋ Altro…'], 'New fail reason:':['Neuer Fail-Grund:','Nouvelle raison d’échec :','Nuovo motivo di errore:'],
@@ -694,7 +696,7 @@ const I18N = {
   'Session reports':['Session-Berichte','Rapports de session','Report delle sessioni'], 'All types':['Alle Typen','Tous les types','Tutti i tipi'],
   'No sessions in this filter. Start one in the Session tab.':['Keine Sessions in diesem Filter. Starte eine im Tab Session.','Aucune session avec ce filtre. Démarre-en une dans l’onglet Session.','Nessuna sessione con questo filtro. Avviane una nella scheda Session.'],
   '← All reports':['← Alle Berichte','← Tous les rapports','← Tutti i report'], '📄 PDF':['📄 PDF','📄 PDF','📄 PDF'], '🗑 Delete report':['🗑 Bericht löschen','🗑 Supprimer le rapport','🗑 Elimina report'], 'Report deleted':['Bericht gelöscht','Rapport supprimé','Report eliminato'],
-  'Duration':['Dauer','Durée','Durata'], 'No attempts.':['Keine Versuche.','Aucun essai.','Nessun tentativo.'], 'Raw Entries':['Rohdaten','Données brutes','Dati grezzi'], '— select athlete —':['— Athlet:in wählen —','— choisir un·e athlète —','— scegli atleta —'],
+  'Duration':['Dauer','Durée','Durata'], 'No attempts.':['Keine Versuche.','Aucun essai.','Nessun tentativo.'], 'Raw Entries':['Rohdaten','Données brutes','Dati grezzi'], 'Select athlete':['Athlet:in wählen','Choisir un·e athlète','Scegli atleta'],
   'All attempts':['Alle Versuche','Tous les essais','Tutti i tentativi'], 'Fail reasons:':['Fail-Gründe:','Raisons d’échec :','Motivi di errore:'],
   'Please allow pop-ups to create the PDF.':['Bitte Pop-ups erlauben, um das PDF zu erstellen.','Merci d’autoriser les pop-ups pour créer le PDF.','Consenti i pop-up per creare il PDF.'],
   'Print / Save as PDF':['Drucken / als PDF sichern','Imprimer / enregistrer en PDF','Stampa / salva come PDF'], 'Tip: choose «Save as PDF» as the printer.':['Tipp: als Drucker «Als PDF sichern» wählen.','Astuce : choisis «Enregistrer en PDF» comme imprimante.','Suggerimento: scegli «Salva come PDF» come stampante.'],
@@ -702,18 +704,18 @@ const I18N = {
   'Team Monitoring':['Team-Monitoring','Monitoring d’équipe','Monitoring del team'], 'Current season':['Aktuelle Saison','Saison en cours','Stagione attuale'], 'Last season':['Letzte Saison','Saison passée','Stagione scorsa'],
   'All time':['Gesamte Zeit','Toute la période','Sempre'], 'Custom period…':['Eigener Zeitraum…','Période personnalisée…','Periodo personalizzato…'], '← Back':['← Zurück','← Retour','← Indietro'],
   'View details →':['Details ansehen →','Voir les détails →','Vedi dettagli →'], 'stomp rate':['Stomp-Rate','taux de stomp','stomp rate'], 'Stomp rate':['Stomp-Rate','Taux de stomp','Stomp rate'],
-  'Direction balance — session data only':['Richtungsverteilung — nur Session-Daten','Répartition des directions — données de session uniquement','Distribuzione delle direzioni — solo dati di sessione'],
+  'Direction balance: session data only':['Richtungsverteilung: nur Session-Daten','Répartition des directions: données de session uniquement','Distribuzione delle direzioni: solo dati di sessione'],
   'No session data in this period.':['Keine Session-Daten in diesem Zeitraum.','Aucune donnée de session sur cette période.','Nessun dato di sessione in questo periodo.'],
   'Landed rate (Landed+Stomped)':['Landed-Rate (Landed+Stomped)','Taux de landed (Landed+Stomped)','Landed rate (Landed+Stomped)'],
   'Criteria fulfillment (Landed + Stomped)':['Kriterien-Erfüllung (Landed + Stomped)','Critères remplis (Landed + Stomped)','Criteri soddisfatti (Landed + Stomped)'],
   'No landed attempts yet.':['Noch keine gelandeten Versuche.','Pas encore d’essais landed.','Ancora nessun tentativo landed.'], 'No failed attempts.':['Keine gescheiterten Versuche.','Aucun essai failed.','Nessun tentativo failed.'],
   'Progress over sessions':['Verlauf über die Sessions','Évolution sur les sessions','Andamento nelle sessioni'], 'Volume (attempts)':['Volumen (Versuche)','Volume (essais)','Volume (tentativi)'],
-  '⚠ Sessions with fewer than 5 attempts — rates are statistically weak.':['⚠ Sessions mit weniger als 5 Versuchen — Quoten statistisch schwach.','⚠ Sessions avec moins de 5 essais — taux statistiquement faibles.','⚠ Sessioni con meno di 5 tentativi — percentuali statisticamente deboli.'],
+  '⚠ Sessions with fewer than 5 attempts: rates are statistically weak.':['⚠ Sessions mit weniger als 5 Versuchen: Quoten statistisch schwach.','⚠ Sessions avec moins de 5 essais: taux statistiquement faibles.','⚠ Sessioni con meno di 5 tentativi: percentuali statisticamente deboli.'],
   'Tap a bar for session details.':['Balken antippen für Session-Details.','Touche une barre pour les détails de la session.','Tocca una barra per i dettagli della sessione.'], 'Open session view →':['Session-Ansicht öffnen →','Ouvrir la vue de session →','Apri vista sessione →'],
   'Most common fail reason:':['Häufigster Fail-Grund:','Raison d’échec la plus fréquente :','Motivo di errore più frequente:'],
   'Comp-readiness':['Wettkampfbereitschaft','Préparation compétition','Prontezza gara'], 'Efficiency trend':['Effizienz-Trend','Tendance d’efficacité','Tendenza efficienza'],
   'Volume effect':['Volumen-Effekt','Effet du volume','Effetto volume'], 'Plateau':['Plateau','Plateau','Plateau'], 'Consistency':['Konstanz','Régularité','Costanza'], 'Most common fail':['Häufigster Fail','Échec le plus fréquent','Errore più frequente'],
-  'Reached':['Erreicht','Atteinte','Raggiunta'], 'Not reached':['Nicht erreicht','Non atteinte','Non raggiunta'], 'Lost — was reached before':['Verloren — war schon erreicht','Perdue — était déjà atteinte','Persa — era già raggiunta'],
+  'Reached':['Erreicht','Atteinte','Raggiunta'], 'Not reached':['Nicht erreicht','Non atteinte','Non raggiunta'], 'Lost: was reached before':['Verloren: war schon erreicht','Perdue: était déjà atteinte','Persa: era già raggiunta'],
   'No volume effect':['Kein Volumen-Effekt','Pas d’effet du volume','Nessun effetto volume'], 'None, still moving':['Keines, entwickelt sich noch','Aucun, encore en évolution','Nessuno, ancora in evoluzione'],
   'Irregular, session to session':['Unregelmässig von Session zu Session','Irrégulier d’une session à l’autre','Irregolare da una sessione all’altra'], 'Consistent':['Konstant','Régulier','Costante'],
   'No fail pattern':['Kein Fail-Muster','Pas de schéma d’échec','Nessuno schema di errore'],
@@ -737,7 +739,7 @@ const I18N = {
   'Comment saved':['Kommentar gespeichert','Commentaire enregistré','Commento salvato'], 'Loading…':['Lädt…','Chargement…','Caricamento…'], '🔍 Reality Check':['🔍 Realitäts-Check','🔍 Contrôle de réalité','🔍 Verifica realtà'],
   'Reality Check':['Realitäts-Check','Contrôle de réalité','Verifica realtà'], '📄 Team PDF':['📄 Team-PDF','📄 PDF équipe','📄 PDF team'], '📄 Athlete Report (PDF)':['📄 Athlet:innen-Bericht (PDF)','📄 Rapport athlète (PDF)','📄 Report atleta (PDF)'],
   'Search athlete…':['Athlet:in suchen…','Chercher un·e athlète…','Cerca atleta…'], '✓ All':['✓ Alle','✓ Tous','✓ Tutti'], '✗ None':['✗ Keine','✗ Aucun','✗ Nessuno'],
-  'Everything matches — no suggestions.':['Alles stimmt überein — keine Vorschläge.','Tout concorde — aucune suggestion.','Tutto corrisponde — nessun suggerimento.'], '↑ Learned':['↑ Gelernt','↑ Acquis','↑ Imparato'], '↓ Goal':['↓ Ziel','↓ Objectif','↓ Obiettivo'],
+  'Everything matches: no suggestions.':['Alles stimmt überein: keine Vorschläge.','Tout concorde: aucune suggestion.','Tutto corrisponde: nessun suggerimento.'], '↑ Learned':['↑ Gelernt','↑ Acquis','↑ Imparato'], '↓ Goal':['↓ Ziel','↓ Objectif','↓ Obiettivo'],
   'Running stomp rate':['Laufende Stomp-Rate','Taux de stomp cumulé','Stomp rate progressiva'], 'running stomp rate':['laufende Stomp-Rate','taux de stomp cumulé','stomp rate progressiva'],
   'decreasing':['abnehmend','en baisse','in calo'], 'increasing':['zunehmend','en hausse','in aumento'], 'stable':['stabil','stable','stabile'], '→ stable':['→ stabil','→ stable','→ stabile'],
   'Comp Ready':['Wettkampfbereit','Prêt pour la compétition','Pronto per la gara'], 'attempts':['Versuche','essais','tentativi'],
@@ -745,8 +747,8 @@ const I18N = {
 };
 // Deutschsprachige Quelltexte (aus dem Skills-Check-SVG) → [de, fr, it, en]
 const I18N_DE = {
-  'Die vier Drehrichtungen werden pro Athlet:in von der stärksten bis zur schwächsten geordnet — die App sucht automatisch die beste Zuordnung.':['Die vier Drehrichtungen werden pro Athlet:in von der stärksten bis zur schwächsten geordnet — die App sucht automatisch die beste Zuordnung.','Les quatre sens de rotation sont classés du plus fort au plus faible pour chaque athlète — l’app cherche automatiquement la meilleure attribution.','Le quattro direzioni di rotazione sono ordinate dalla più forte alla più debole per ogni atleta — l’app cerca automaticamente la migliore assegnazione.','The four spin directions are ranked from strongest to weakest for each athlete — the app finds the best assignment automatically.'],
-  'Tricks können X oder gecarved werden — anzustreben ist beides.':['Tricks können X oder gecarved werden — anzustreben ist beides.','Les tricks peuvent être faits en X ou carvés — l’objectif est de maîtriser les deux.','I trick possono essere fatti in X o carvati — l’obiettivo è entrambi.','Tricks can be done X or carved — aim for both.'],
+  'Die vier Drehrichtungen werden pro Athlet:in von der stärksten bis zur schwächsten geordnet: die App sucht automatisch die beste Zuordnung.':['Die vier Drehrichtungen werden pro Athlet:in von der stärksten bis zur schwächsten geordnet: die App sucht automatisch die beste Zuordnung.','Les quatre sens de rotation sont classés du plus fort au plus faible pour chaque athlète: l’app cherche automatiquement la meilleure attribution.','Le quattro direzioni di rotazione sono ordinate dalla più forte alla più debole per ogni atleta: l’app cerca automaticamente la migliore assegnazione.','The four spin directions are ranked from strongest to weakest for each athlete: the app finds the best assignment automatically.'],
+  'Tricks können X oder gecarved werden: anzustreben ist beides.':['Tricks können X oder gecarved werden: anzustreben ist beides.','Les tricks peuvent être faits en X ou carvés: l’objectif est de maîtriser les deux.','I trick possono essere fatti in X o carvati: l’obiettivo è entrambi.','Tricks can be done X or carved: aim for both.'],
   'Wiederholung = Tricks aus früheren Phasen auf dem schwierigeren Obstacle.':['Wiederholung = Tricks aus früheren Phasen auf dem schwierigeren Obstacle.','Répétition = tricks des phases précédentes sur l’obstacle plus difficile.','Ripetizione = trick delle fasi precedenti sull’ostacolo più difficile.','Repetition = tricks from earlier phases on the harder obstacle.'],
   'Back- & Frontswap to switch and to normal (bzw. Switch-Up).':['Back- & Frontswap to switch und to normal (bzw. Switch-Up).','Back- & Frontswap to switch et to normal (resp. Switch-Up).','Back- & Frontswap to switch e to normal (o Switch-Up).','Back- & frontswap to switch and to normal (or switch-up).'],
 };
@@ -784,14 +786,14 @@ const I18N_PAT = [
   [/^Level (.+?) · (.+)$/, (m, i) => [`Stufe ${m[1]} · ${m[2]}`, `Niveau ${m[1]} · ${m[2]}`, `Livello ${m[1]} · ${m[2]}`][i]],
   [/^Your Skills-Check (T\d)$/, (m, i) => [`Dein Skills-Check ${m[1]}`, `Ton Skills-Check ${m[1]}`, `Il tuo Skills-Check ${m[1]}`][i]],
   [/^Start session(?: \((\d+)\))?$/, (m, i) => ['Session starten', 'Démarrer la session', 'Avvia sessione'][i] + (m[1] ? ` (${m[1]})` : '')],
-  [/^⚠ Backdated — all entries (?:will be|are) saved for (.+)\.$/, (m, i) => [`⚠ Nacherfasst — alle Einträge werden für den ${m[1]} gespeichert.`, `⚠ Antidaté — toutes les entrées sont enregistrées pour le ${m[1]}.`, `⚠ Retrodatata — tutte le voci vengono salvate per il ${m[1]}.`][i]],
+  [/^⚠ Backdated: all entries (?:will be|are) saved for (.+)\.$/, (m, i) => [`⚠ Nacherfasst: alle Einträge werden für den ${m[1]} gespeichert.`, `⚠ Antidaté: toutes les entrées sont enregistrées pour le ${m[1]}.`, `⚠ Retrodatata: tutte le voci vengono salvate per il ${m[1]}.`][i]],
   [/^Attempt #(\d+)$/, (m, i) => [`Versuch #${m[1]}`, `Essai n°${m[1]}`, `Tentativo #${m[1]}`][i]],
   [/^✓ Save Landed \((.+)\)$/, (m, i) => [`✓ Landed speichern (${m[1]})`, `✓ Enregistrer Landed (${m[1]})`, `✓ Salva Landed (${m[1]})`][i]],
   [/^⭐ Save as Stomped$/, (m, i) => ['⭐ Als Stomped speichern', '⭐ Enregistrer comme Stomped', '⭐ Salva come Stomped'][i]],
   [/^✗ Save Failed(?: \((\d+) reasons?\)| \(no reason\))$/, (m, i) => ['✗ Failed speichern', '✗ Enregistrer Failed', '✗ Salva Failed'][i] + (m[1] ? ` (${m[1]} ${['Grund/Gründe','raison(s)','motivo/i'][i]})` : ` (${['ohne Grund','sans raison','senza motivo'][i]})`)],
   [/^(\d+)\/(\d+) = automatically Stomped$/, (m, i) => [`${m[1]}/${m[2]} = automatisch Stomped`, `${m[1]}/${m[2]} = automatiquement Stomped`, `${m[1]}/${m[2]} = automaticamente Stomped`][i]],
   [/^Save Run #(\d+) \((\d+)\/(\d+) rated\)$/, (m, i) => [`Run #${m[1]} speichern (${m[2]}/${m[3]} bewertet)`, `Enregistrer le run n°${m[1]} (${m[2]}/${m[3]} évalués)`, `Salva run #${m[1]} (${m[2]}/${m[3]} valutati)`][i]],
-  [/^Run setup — (\d+)\/(\d+) (hits|elements) · pick a trick above and add it$/, (m, i) => [`Run-Aufbau — ${m[1]}/${m[2]} ${m[3]==='hits'?'Hits':'Elemente'} · oben Trick wählen und hinzufügen`, `Composition du run — ${m[1]}/${m[2]} ${m[3]==='hits'?'hits':'éléments'} · choisis un trick ci-dessus et ajoute-le`, `Composizione run — ${m[1]}/${m[2]} ${m[3]==='hits'?'hit':'elementi'} · scegli un trick sopra e aggiungilo`][i]],
+  [/^Run setup: (\d+)\/(\d+) (hits|elements) · pick a trick above and add it$/, (m, i) => [`Run-Aufbau: ${m[1]}/${m[2]} ${m[3]==='hits'?'Hits':'Elemente'} · oben Trick wählen und hinzufügen`, `Composition du run: ${m[1]}/${m[2]} ${m[3]==='hits'?'hits':'éléments'} · choisis un trick ci-dessus et ajoute-le`, `Composizione run: ${m[1]}/${m[2]} ${m[3]==='hits'?'hit':'elementi'} · scegli un trick sopra e aggiungilo`][i]],
   [/^(\d+) attempts?$/, (m, i) => `${m[1]} ${['Versuche','essais','tentativi'][i]}`],
   [/^(\d+) att\.$/, (m, i) => `${m[1]} ${['Vers.','ess.','tent.'][i]}`],
   [/^(\d+)% landed$/, (m, i) => `${m[1]}% ${['gelandet','landed','landed'][i]}`],
@@ -800,7 +802,7 @@ const I18N_PAT = [
   [/^Jumps, Rails & Halfpipe count ⅓ each(.*)$/, (m, i) => ['Jumps, Rails & Halfpipe zählen je ⅓', 'Jumps, Rails & Halfpipe comptent ⅓ chacun', 'Jumps, Rails & Halfpipe contano ⅓ ciascuno'][i] + m[1].replace(/(\d+) of (\d+) fully achieved/, (x, a, b) => [`${a} von ${b} voll erreicht`, `${a} sur ${b} pleinement atteints`, `${a} di ${b} pienamente raggiunti`][i]).replace(/waiting/, ['wartend','en attente','in attesa'][i])],
   [/^Rated (\d+)\/(\d+): (.+)$/, (m, i) => [`Bewertet ${m[1]}/${m[2]}: ${m[3]}`, `Évalué ${m[1]}/${m[2]} : ${m[3]}`, `Valutato ${m[1]}/${m[2]}: ${m[3]}`][i]],
   [/^New video requested: (.+)$/, (m, i) => [`Neues Video gewünscht: ${m[1]}`, `Nouvelle vidéo demandée : ${m[1]}`, `Nuovo video richiesto: ${m[1]}`][i]],
-  [/^Rated (\d+)\/(\d+) — athlete notified$/, (m, i) => [`Bewertet ${m[1]}/${m[2]} — Athlet:in benachrichtigt`, `Évalué ${m[1]}/${m[2]} — athlète notifié·e`, `Valutato ${m[1]}/${m[2]} — atleta avvisato`][i]],
+  [/^Rated (\d+)\/(\d+): athlete notified$/, (m, i) => [`Bewertet ${m[1]}/${m[2]}: Athlet:in benachrichtigt`, `Évalué ${m[1]}/${m[2]}: athlète notifié·e`, `Valutato ${m[1]}/${m[2]}: atleta avvisato`][i]],
   [/^rated by (.+)$/, (m, i) => [`bewertet von ${m[1]}`, `évalué par ${m[1]}`, `valutato da ${m[1]}`][i]],
   [/^submitted (.+)$/, (m, i) => [`eingereicht ${m[1]}`, `soumis ${m[1]}`, `inviato ${m[1]}`][i]],
   [/^(\d+) min ago$/, (m, i) => [`vor ${m[1]} Min.`, `il y a ${m[1]} min`, `${m[1]} min fa`][i]],
@@ -833,7 +835,7 @@ function trText(src){
   // längere deutsche Sätze innerhalb eines Textes (z.B. Skills-Check-Hinweise)
   return null;
 }
-// Satzteile der Skills-Check-Anforderungen (Trick-Namen bleiben Englisch) — [Quelle, de, fr, it, en]
+// Satzteile der Skills-Check-Anforderungen (Trick-Namen bleiben Englisch): [Quelle, de, fr, it, en]
 const I18N_PHR = [
   ['Focus: ','Fokus: ','Focus : ','Focus: ','Focus: '],
   ['Jumps & Rails only','nur Jumps & Rails','Jumps & Rails uniquement','solo Jumps & Rails','Jumps & Rails only'],
@@ -854,15 +856,15 @@ const I18N_PHR = [
   ['Back- & Frontswap to switch and to normal (bzw. Switch-Up).','Back- & Frontswap to switch und to normal (bzw. Switch-Up).','Back- & Frontswap to switch et to normal (ou Switch-Up).','Back- & Frontswap to switch e to normal (o Switch-Up).','Back- & Frontswap to switch and to normal (bzw. Switch-Up).'],
   ['At least two 270 on, at least one of them switch.','Mindestens zwei 270 on, davon mindestens einer switch.','Au moins deux 270 on, dont au moins un en switch.','Almeno due 270 on, di cui almeno uno switch.','At least two 270 on, at least one of them switch.'],
   ['At least one of each pair switch.','Von jedem Paar mindestens einer switch.','Au moins un de chaque paire en switch.','Almeno uno per coppia switch.','At least one of each pair switch.'],
-  ['Rotation — all directions up to 900','Rotation — alle Richtungen bis 900','Rotation — toutes les directions jusqu’à 900','Rotation — tutte le direzioni fino a 900','Rotation — all directions up to 900'],
-  ['Rotation — ranked directions','Rotation — Richtungen nach Stärke','Rotation — directions par force','Rotation — direzioni per forza','Rotation — ranked directions'],
+  ['Rotation: all directions up to 900','Rotation: alle Richtungen bis 900','Rotation: toutes les directions jusqu’à 900','Rotation: tutte le direzioni fino a 900','Rotation: all directions up to 900'],
+  ['Rotation: ranked directions','Rotation: Richtungen nach Stärke','Rotation: directions par force','Rotation: direzioni per forza','Rotation: ranked directions'],
   ['weaker switch direction (upright ok)','schwächere Switch-Richtung (Upright ok)','direction switch la plus faible (Upright ok)','direzione switch più debole (Upright ok)','weaker switch direction (upright ok)'],
   ['stronger switch direction','stärkere Switch-Richtung','direction switch la plus forte','direzione switch più forte','stronger switch direction'],
   ['strongest direction','stärkste Richtung','direction la plus forte','direzione più forte','strongest direction'],
   ['weakest direction','schwächste Richtung','direction la plus faible','direzione più debole','weakest direction'],
   ['2nd direction','2. Richtung','2e direction','2a direzione','2nd direction'],
   ['3rd direction','3. Richtung','3e direction','3a direzione','3rd direction'],
-  ['— required if the forward 720s are Cork','— nötig, wenn die Forward-720 Cork sind','— requis si les 720 forward sont en Cork','— richiesto se i 720 forward sono Cork','— required if the forward 720s are Cork'],
+  [': required if the forward 720s are Cork',': nötig, wenn die Forward-720 Cork sind',': requis si les 720 forward sont en Cork',': richiesto se i 720 forward sono Cork',': required if the forward 720s are Cork'],
   ['At least one flip/cork out','Mindestens ein Flip/Cork out','Au moins un flip/cork out','Almeno un flip/cork out','At least one flip/cork out'],
   ['At least one flip','Mindestens ein Flip','Au moins un flip','Almeno un flip','At least one flip'],
   ['Grab with both hands','Grab mit beiden Händen','Grab avec les deux mains','Grab con entrambe le mani','Grab with both hands'],
@@ -880,11 +882,11 @@ const I18N_PHR = [
   ['Air height','Airhöhe','Hauteur','Altezza','Air height'],
   ['(focus)','(Fokus)','(focus)','(focus)','(focus)'],
   ['(L or R)','(L oder R)','(L ou R)','(L o R)','(L or R)'],
-  ['New — simple rail','Neu — einfaches Rail','Nouveau — rail simple','Nuovo — rail semplice','New — simple rail'],
-  ['New — tube or rail','Neu — Tube oder Rail','Nouveau — tube ou rail','Nuovo — tube o rail','New — tube or rail'],
+  ['New: simple rail','Neu: einfaches Rail','Nouveau: rail simple','Nuovo: rail semplice','New: simple rail'],
+  ['New: tube or rail','Neu: Tube oder Rail','Nouveau: tube ou rail','Nuovo: tube o rail','New: tube or rail'],
   ['(simple rail)','(einfaches Rail)','(rail simple)','(rail semplice)','(simple rail)'],
   ['(demanding rail)','(anspruchsvolles Rail)','(rail exigeant)','(rail impegnativo)','(demanding rail)'],
-  ['Wiederholung — ','Wiederholung — ','Répétition — ','Ripetizione — ','Repeat — '],
+  ['Wiederholung: ','Wiederholung: ','Répétition: ','Ripetizione: ','Repeat: '],
 ];
 // Zahlen-Satzteile irgendwo im Text (z.B. «14 att. · Ø 75% · 86% landed»)
 const I18N_RXP = [
@@ -1004,7 +1006,7 @@ function trickLabel(disc, t){
    Jede Vorgabe = ein «Slot» mit Prüffunktion auf das Trick-Objekt.
    Rotationen matchen exakt; nur «mindestens»-Vorgaben zählen aufwärts.
    grp: Slots, die je eine ANDERE Drehrichtung (key 'dir') bzw. einen
-   anderen Eintrag (key 'id') brauchen — beste Zuordnung wird gesucht.
+   anderen Eintrag (key 'id') brauchen: beste Zuordnung wird gesucht.
    ══════════════════════════════════════════════════════════════════════ */
 const slot = (id, text, match, o={}) => ({id, text, match, ...o});
 
@@ -1020,7 +1022,7 @@ function jumpCatalog(g){
   const swZero = lv => slot(`${P}${lv}-swzero`, 'Switch Zero Spin', t => t.axis==='Zero Spin' && isSw(t));
   const ax = (lv, dirs, axis, deg, pre='') => dirs.map(d => slot(`${P}${lv}-${axis}${deg}-${d}`, `${DIRN[d]} ${axis==='Bio/Misty'?'Misty/Bio':axis} ${deg}`, t => t.dir===d && t.axis===axis && +t.rot===deg));
   const grabRule = {id:'grabvar', text:'Every trick varied with a different grab'};
-  const RANK_NOTE = 'Die vier Drehrichtungen werden pro Athlet:in von der stärksten bis zur schwächsten geordnet — die App sucht automatisch die beste Zuordnung.';
+  const RANK_NOTE = 'Die vier Drehrichtungen werden pro Athlet:in von der stärksten bis zur schwächsten geordnet: die App sucht automatisch die beste Zuordnung.';
 
   if (g === 'M') return {
     T1:{meta:['Kicker S–M'], sections:[
@@ -1028,19 +1030,19 @@ function jumpCatalog(g){
       {title:'Axis & flips', slots:[flip(1)]},
       {title:'Grabs', slots:grabs(1)}]},
     T2:{meta:['Kicker M–L'], sections:[
-      {title:'Rotation — ranked directions', note:'720 in the three strongest directions (at least two off-axis), 540 in the weakest. '+RANK_NOTE, slots:ranked(2,[
+      {title:'Rotation: ranked directions', note:'720 in the three strongest directions (at least two off-axis), 540 in the weakest. '+RANK_NOTE, slots:ranked(2,[
         ['720 off-axis · strongest direction', t => +t.rot===720 && isOff(t)],
         ['720 off-axis · 2nd direction', t => +t.rot===720 && isOff(t)],
         ['720 · 3rd direction', t => +t.rot===720],
         ['540 · weakest direction', t => +t.rot===540]])},
       {title:'Axis & flips', slots:[swCork540(2), cork360(2), swZero(2)]}]},
     T3:{meta:['Kicker L–XL','Foundation for doubles: broad range of directions and axes'], sections:[
-      {title:'Rotation — all directions up to 900', slots:[...rotDir(3,540,D4), ...rotDir(3,720,D4)]},
+      {title:'Rotation: all directions up to 900', slots:[...rotDir(3,540,D4), ...rotDir(3,720,D4)]},
       {title:'Axis & flips', slots:[...ax(3,['L','R'],'Cork',900), ...ax(3,['L','R'],'Bio/Misty',720), ...ax(3,['SL','SR'],'Cork',900), ...ax(3,['SL','SR'],'Bio/Misty',900)]},
-      {title:'Take-off', note:'Tricks können X oder gecarved werden — anzustreben ist beides.', slots:[slot(`${P}3-carve`, 'Carved take-off', t => t.takeoff==='Carved')]}],
+      {title:'Take-off', note:'Tricks können X oder gecarved werden: anzustreben ist beides.', slots:[slot(`${P}3-carve`, 'Carved take-off', t => t.takeoff==='Carved')]}],
       rules:[grabRule]},
     T4:{meta:['Kicker XL','Develop according to individual strengths'], sections:[
-      {title:'Rotation — ranked directions', note:'1620/1800/1980 in the two strongest directions, at least 1440 in the third, at least 1080 in the weakest. '+RANK_NOTE, slots:ranked(4,[
+      {title:'Rotation: ranked directions', note:'1620/1800/1980 in the two strongest directions, at least 1440 in the third, at least 1080 in the weakest. '+RANK_NOTE, slots:ranked(4,[
         ['≥ 1620 · strongest direction', t => +t.rot>=1620],
         ['≥ 1620 · 2nd direction', t => +t.rot>=1620],
         ['≥ 1440 · 3rd direction', t => +t.rot>=1440],
@@ -1053,7 +1055,7 @@ function jumpCatalog(g){
       {title:'Rotation', slots:[...rotDir(1,180,D4), ...rotDir(1,360,['L','R'])]},
       {title:'Grabs', slots:grabs(1)}]},
     T2:{meta:['Kicker M'], sections:[
-      {title:'Rotation — ranked directions', note:'At least 720 in the strongest, 540 in the 2nd and 3rd, 360 in the weakest direction. '+RANK_NOTE, slots:ranked(2,[
+      {title:'Rotation: ranked directions', note:'At least 720 in the strongest, 540 in the 2nd and 3rd, 360 in the weakest direction. '+RANK_NOTE, slots:ranked(2,[
         ['≥ 720 · strongest direction', t => +t.rot>=720],
         ['≥ 540 · 2nd direction', t => +t.rot>=540],
         ['≥ 540 · 3rd direction', t => +t.rot>=540],
@@ -1067,12 +1069,12 @@ function jumpCatalog(g){
           ['Switch 720 off-axis · stronger switch direction', t => isSw(t) && +t.rot===720 && isOff(t)],
           ['Switch 540 · weaker switch direction (upright ok)', t => isSw(t) && +t.rot===540]], 'sw')]},
       {title:'Axis & flips', slots:[
-        slot(`${P}3-cond540`, 'Misty/Bio or Flat 540 — required if the forward 720s are Cork', t => ['Bio/Misty','Flat Spin'].includes(t.axis) && +t.rot===540,
+        slot(`${P}3-cond540`, 'Misty/Bio or Flat 540: required if the forward 720s are Cork', t => ['Bio/Misty','Flat Spin'].includes(t.axis) && +t.rot===540,
           {cond: res => [res[`${P}3-720-L`], res[`${P}3-720-R`]].some(e => e && e.trick.axis==='Cork')}),
         cork360(3)]}],
       rules:[grabRule]},
     T4:{meta:['Kicker L–XL','Develop according to individual strengths'], sections:[
-      {title:'Rotation — ranked directions', note:'At least a Double 1080 in the strongest, 900 in the 2nd and 3rd, 720 in the weakest direction. '+RANK_NOTE, slots:ranked(4,[
+      {title:'Rotation: ranked directions', note:'At least a Double 1080 in the strongest, 900 in the 2nd and 3rd, 720 in the weakest direction. '+RANK_NOTE, slots:ranked(4,[
         ['Double ≥ 1080 · strongest direction', t => +t.flips>=2 && +t.rot>=1080],
         ['≥ 900 · 2nd direction', t => +t.rot>=900],
         ['≥ 900 · 3rd direction', t => +t.rot>=900],
@@ -1127,7 +1129,7 @@ function railCatalog(g){
       {title:'Swaps', note:'Back- & Frontswap to switch and to normal (bzw. Switch-Up).', slots:swaps(`${P}2`,1)},
       {title:'Out', slots:spinOut(`${P}2`,1,450)}]},
     T3:{meta:['Obstacle: Simple rail'], sections:[
-      {title:'On – Out', slots:onOut(`${P}3`,2,false)},
+      {title:'On/Out', slots:onOut(`${P}3`,2,false)},
       {title:'Pretzel', slots:onOut(`${P}3`,2,true)},
       {title:'More', slots:[...LR.map(s => mk(`${P}3-sf-${s}`, `Super-Fed ${SIDE[s]}`, 2, t => t.side===s && t.swap==='Super-Fed')),
         mk(`${P}3-flipout`, 'At least one flip/cork out', 2, t => railSpinOut(t) && t.outStyle==='flip')]}]},
@@ -1137,24 +1139,24 @@ function railCatalog(g){
         ...distinct(`${P}4-sw360`, 2, '360 swap', 3, t => ['Front 360 Swap','Back 360 Swap'].includes(t.swap)),
         mk(`${P}4-o630`, 'Spin/flip out 630', 3, t => t.out==='630 out'),
         mk(`${P}4-o810`, 'Spin out 810', 3, t => t.out==='810 out')]},
-      {title:'Wiederholung — On – Out', slots:onOut(`${P}4`,3,false)},
-      {title:'Wiederholung — Pretzel', slots:onOut(`${P}4`,3,true)}]},
+      {title:'Wiederholung: On/Out', slots:onOut(`${P}4`,3,false)},
+      {title:'Wiederholung: Pretzel', slots:onOut(`${P}4`,3,true)}]},
   };
   return {
     T1,
     T2:{meta:['Obstacle: Tube or rail'], sections:[
       {title:'Swaps', note:'Back- & Frontswap to switch and to normal (bzw. Switch-Up).', slots:swaps(`${P}2`,1)}]},
     T3:{meta:['Obstacle: Simple rail / tube or rail', RN], sections:[
-      {title:'New — simple rail', slots:distinct(`${P}3-o450`, 2, '450 out', 2, t => t.out==='450 out')},
-      {title:'New — tube or rail', note:'At least two 270 on, at least one of them switch.', slots:distinct(`${P}3-on270`, 1, '270 on', 1, on270any, [['Switch 270 on', t => on270any(t) && t.approach==='S']])},
-      {title:'Wiederholung — slides (simple rail)', slots:[...slides(`${P}3`,2,'F'), ...slides(`${P}3`,2,'S')]},
-      {title:'Wiederholung — swaps (simple rail)', slots:swaps(`${P}3`,2)}]},
+      {title:'New: simple rail', slots:distinct(`${P}3-o450`, 2, '450 out', 2, t => t.out==='450 out')},
+      {title:'New: tube or rail', note:'At least two 270 on, at least one of them switch.', slots:distinct(`${P}3-on270`, 1, '270 on', 1, on270any, [['Switch 270 on', t => on270any(t) && t.approach==='S']])},
+      {title:'Wiederholung: slides (simple rail)', slots:[...slides(`${P}3`,2,'F'), ...slides(`${P}3`,2,'S')]},
+      {title:'Wiederholung: swaps (simple rail)', slots:swaps(`${P}3`,2)}]},
     T4:{meta:['Obstacle: Demanding rail / simple rail', RN], sections:[
-      {title:'New — simple rail', note:'At least one of each pair switch.', slots:[
+      {title:'New: simple rail', note:'At least one of each pair switch.', slots:[
         ...distinct(`${P}4-oo`, 1, '270 on 270 out', 2, t => on270any(t) && t.out==='270 out', [['Switch 270 on 270 out', t => on270any(t) && t.approach==='S' && t.out==='270 out']]),
         ...distinct(`${P}4-pz`, 1, '270 pretzel 270', 2, t => on270any(t) && t.out==='Pretzel 270', [['Switch 270 pretzel 270', t => on270any(t) && t.approach==='S' && t.out==='Pretzel 270']])]},
-      {title:'Wiederholung — slides (demanding rail)', slots:[...slides(`${P}4`,3,'F'), ...slides(`${P}4`,3,'S')]},
-      {title:'Wiederholung — out & swaps (demanding rail)', slots:[...spinOut(`${P}4`,3,270), ...swaps(`${P}4`,3), ...distinct(`${P}4-o450`, 2, '450 out', 3, t => t.out==='450 out')]}]},
+      {title:'Wiederholung: slides (demanding rail)', slots:[...slides(`${P}4`,3,'F'), ...slides(`${P}4`,3,'S')]},
+      {title:'Wiederholung: out & swaps (demanding rail)', slots:[...spinOut(`${P}4`,3,270), ...swaps(`${P}4`,3), ...distinct(`${P}4-o450`, 2, '450 out', 3, t => t.out==='450 out')]}]},
   };
 }
 
@@ -1175,8 +1177,8 @@ function hpCatalog(g){
       ...LR.map(s => b(`1-drop-${s}`, `Drop in ${SIDE[s]} (in the wall, not transition)`, t => t.basic==='Drop in' && t.side===s)),
       b('1-edges', 'Riding on the good edges', t => t.basic==='Riding on the edges'),
       b('1-straight', 'Straight air (flat skis, no edges)', t => t.basic==='Straight air'),
-      b('1-waltz', 'Waltz — every direction (360 on snow)', t => t.basic==='Waltz'),
-      b('1-banana', 'Banana straight to switch — every direction', t => t.basic==='Banana'),
+      b('1-waltz', 'Waltz: every direction (360 on snow)', t => t.basic==='Waltz'),
+      b('1-banana', 'Banana straight to switch: every direction', t => t.basic==='Banana'),
       b('1-slash', 'Slash at the coping', t => t.basic==='Slash')]},
     {title:'Focus', slots:[height(1, H.T1)]}]};
   const T2 = {meta:[`Focus: air height ${H.T2} m`], sections:[
@@ -1223,24 +1225,24 @@ const CATALOG = {
 };
 
 /* ══════════════════════════════════════════════════════════════════════
-   BEWERTUNGSKRITERIEN (Coach) — 1 Punkt je Kriterium: Jumps/Rails max. 4, Halfpipe max. 5 (+ Amplitude).
+   BEWERTUNGSKRITERIEN (Coach): 1 Punkt je Kriterium: Jumps/Rails max. 4, Halfpipe max. 5 (+ Amplitude).
    Checkpunkte abgeleitet aus FIS Judges Handbook (SB/FK, 8.1 Execution):
    Take-off, Control, Grabs, Landing.
    ══════════════════════════════════════════════════════════════════════ */
 const CRIT = {
   jump: [
-    {k:'takeoff', name:'Take-Off', hints:['Timing & pop on the lip — uses the whole kicker','No rushed take-off or rotation started early on the lip (butter/blender intended = ok)','Centred stance, speed fits the jump']},
-    {k:'trick', name:'Trick (Axis / Control)', hints:['Clean, recognisable axis — as declared','Rotation completed before landing, not finished on the snow','Controlled body position throughout, no insecurity or flailing']},
-    {k:'grab', name:'Grab', hints:['Grab on the ski — not boot, binding or knee','Held through most of the rotation, clearly visible','Tweak / bone is a plus; free hand calm and controlled']},
-    {k:'landing', name:'Landing', hints:['Lands in the sweet spot — not on the knuckle, not flat','Centred on both skis, not in the backseat','No hand drag, butt check or washout — rides away clean']},
+    {k:'takeoff', name:'Take-Off', hints:['Timing & pop on the lip: uses the whole kicker','No rushed take-off or rotation started early on the lip (butter/blender intended = ok)','Centred stance, speed fits the jump']},
+    {k:'trick', name:'Trick (Axis / Control)', hints:['Clean, recognisable axis: as declared','Rotation completed before landing, not finished on the snow','Controlled body position throughout, no insecurity or flailing']},
+    {k:'grab', name:'Grab', hints:['Grab on the ski: not boot, binding or knee','Held through most of the rotation, clearly visible','Tweak / bone is a plus; free hand calm and controlled']},
+    {k:'landing', name:'Landing', hints:['Lands in the sweet spot: not on the knuckle, not flat','Centred on both skis, not in the backseat','No hand drag, butt check or washout: rides away clean']},
   ],
   // Halfpipe = gleiche Kriterien wie Jumps + Amplitude (FIS JH 8.3.1) → max. 5 Punkte
   hp: [
     {k:'takeoff', name:'Take-Off', hints:['Takes off high on the wall at the coping','Timing & pop, no early rotation','Line keeps speed for the next hit']},
-    {k:'trick', name:'Trick (Axis / Control)', hints:['Clean, recognisable axis — as declared','Rotation completed before landing','Controlled body position throughout']},
-    {k:'grab', name:'Grab', hints:['Grab on the ski — not boot, binding or knee','Held through most of the trick','Tweak / bone is a plus']},
+    {k:'trick', name:'Trick (Axis / Control)', hints:['Clean, recognisable axis: as declared','Rotation completed before landing','Controlled body position throughout']},
+    {k:'grab', name:'Grab', hints:['Grab on the ski: not boot, binding or knee','Held through most of the trick','Tweak / bone is a plus']},
     {k:'landing', name:'Landing', hints:['Lands high in the wall, not on the deck or flat bottom','Centred, no backseat','No hand drag, butt check or washout']},
-    {k:'amplitude', name:'Amplitude', hints:['Height above the coping fits the level (Skills-Check focus)','Keeps amplitude from hit to hit — no loss of height','Distance down the pipe in proportion to the height']},
+    {k:'amplitude', name:'Amplitude', hints:['Height above the coping fits the level (Skills-Check focus)','Keeps amplitude from hit to hit: no loss of height','Distance down the pipe in proportion to the height']},
   ],
   rail: [
     {k:'takeon', name:'Take-On', hints:['Clean pop onto the feature','Spin-in fully rotated, no sketch or ski-cross on the way on']},
@@ -1322,7 +1324,7 @@ function evaluate(disc, gender, level, entries){
   return {def, out, pts, max, done, n, pending, rules};
 }
 
-// Direkte Treffer (ohne Zuordnung) — für Vorschau und Chips.
+// Direkte Treffer (ohne Zuordnung): für Vorschau und Chips.
 function directMatches(disc, gender, trick){
   const r = [];
   for (const lv of LEVELS){
@@ -1350,7 +1352,7 @@ function assignedSlots(e){
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   DATENSCHICHT — Demo (localStorage) und Supabase mit gleicher Schnittstelle
+   DATENSCHICHT: Demo (localStorage) und Supabase mit gleicher Schnittstelle
    ══════════════════════════════════════════════════════════════════════ */
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36));
 const nowIso = () => new Date().toISOString();
@@ -1378,7 +1380,7 @@ function demoSeed(){
   const entries = [
     E('u-lena','Jump',J('L','Cork',720,'Safety'),'reviewed',C4,20),
     E('u-lena','Jump',J('R','Upright',540,'Mute'),'reviewed',{...C4, grab:false},18),
-    E('u-lena','Jump',J('SL','Upright',540,'Japan'),'reviewed',{...C4, landing:false},15, {review_note:'Landung noch etwas im Rücklage — Hüfte nach vorne.'}),
+    E('u-lena','Jump',J('SL','Upright',540,'Japan'),'reviewed',{...C4, landing:false},15, {review_note:'Landung noch etwas im Rücklage: Hüfte nach vorne.'}),
     E('u-lena','Jump',J('SR','Upright',360,'Tail'),'reviewed',C4,12),
     E('u-lena','Jump',J('S','Zero Spin',null,'Safety'),'pending',null,1, {note:'Zweiter Versuch, diesmal sauber gestanden!'}),
     E('u-lena','Jump',J('SL','Cork',540,'Mute'),'goal',null,3),
@@ -1388,7 +1390,7 @@ function demoSeed(){
     E('u-luca','Jump',J('L','Cork',720,'Safety'),'pending',null,2),
     E('u-mia','Jump',J('L','Cork',720,'Safety'),'reviewed',C4,14),
     E('u-mia','Jump',J('R','Cork',720,'Mute'),'reviewed',{...C4, trick:false},14),
-    E('u-mia','Jump',J('SL','Bio/Misty',720,'Japan'),'rework',null,5, {review_note:'Video zu weit weg — bitte nochmals näher filmen.'}),
+    E('u-mia','Jump',J('SL','Bio/Misty',720,'Japan'),'rework',null,5, {review_note:'Video zu weit weg: bitte nochmals näher filmen.'}),
     E('u-elia','Halfpipe',{kind:'air', dir:'L', sw:false, ao:false, axis:'Upright', flips:null, rot:540, grab:'Safety', height:3.5},'pending',null,1),
   ];
   const notes = [
@@ -1536,7 +1538,7 @@ const SupaStore = {
       const OPT = ['jump_size','results','outcome','run_no'];   // aus Update 3
       const slim = Object.fromEntries(Object.entries(rest).filter(([k]) => !OPT.includes(k)));
       ({ data, error } = await run(slim));
-      if (!error){ console.warn('Update 3 (nachwuchs_migration_3.sql) fehlt — neue Felder nicht gespeichert'); data = {...rest, ...data}; }
+      if (!error){ console.warn('Update 3 (nachwuchs_migration_3.sql) fehlt: neue Felder nicht gespeichert'); data = {...rest, ...data}; }
     }
     if (error) throw error; return data;
   },
@@ -1573,7 +1575,7 @@ const SupaStore = {
     const path = `${e.athlete_id}/${e.id}-${Date.now()}.${ext}`;
     const { data:{ session } } = await db.auth.getSession();
     if (window.tus){
-      // Resumable Upload (TUS) — hält auch bei wackligem Netz am Berg durch.
+      // Resumable Upload (TUS): hält auch bei wackligem Netz am Berg durch.
       await new Promise((resolve, reject) => {
         const up = new tus.Upload(file, {
           endpoint: `${SUPABASE_URL}/storage/v1/upload/resumable`,
@@ -1614,14 +1616,14 @@ function visibleAthleteIds(me, profiles){
 }
 const isStaff = () => ST.me && ST.me.role !== 'athlete';
 const prof = id => ST.profiles.find(p => p.id===id);
-const groupName = id => ST.groups.find(g => g.id===id)?.name || '—';
+const groupName = id => ST.groups.find(g => g.id===id)?.name || '–';
 function visibleAthletes(){
   const ids = visibleAthleteIds(ST.me, ST.profiles);
   return ST.profiles.filter(p => ids.has(p.id) && (!ST.groupFilter || (ST.groupFilter==='__none' ? !p.group_id : p.group_id===ST.groupFilter))).sort((a,b) => a.name.localeCompare(b.name));
 }
 const entriesOf = id => ST.entries.filter(e => e.athlete_id===id);
 const ROLE_LABEL = {athlete:'Athlete', coach:'Coach', dvlp:'DVLP'};
-// App-Admin (Profil-ID, keine Personendaten im öffentlichen Repo) — wird statt «DVLP» als «Admin» angezeigt
+// App-Admin (Profil-ID, keine Personendaten im öffentlichen Repo): wird statt «DVLP» als «Admin» angezeigt
 const ADMIN_IDS = ['b953c49f-3033-4323-9247-af07c52c26a3'];
 const roleLabel = p => ADMIN_IDS.includes(p?.id) ? 'Admin' : ROLE_LABEL[p?.role];
 
@@ -1653,7 +1655,7 @@ function athleteSelect(onchangeFn){
 }
 function groupFilterSelect(){
   if (ST.me.role !== 'dvlp') return '';
-  return `<select onchange="setGroupFilter(this.value)" style="max-width:240px"><option value="">All groups</option><option value="__none" ${ST.groupFilter==='__none'?'selected':''}>— No group yet —</option>${ST.groups.map(g => `<option value="${g.id}" ${ST.groupFilter===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>`;
+  return `<select onchange="setGroupFilter(this.value)" style="max-width:240px"><option value="">All groups</option><option value="__none" ${ST.groupFilter==='__none'?'selected':''}>No group yet</option>${ST.groups.map(g => `<option value="${g.id}" ${ST.groupFilter===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>`;
 }
 function setGroupFilter(v){ ST.groupFilter = v; const a = visibleAthletes(); if (!a.some(x => x.id===ST.athleteId)) ST.athleteId = a[0]?.id || null; render(); }
 function pickAthlete(id){ ST.athleteId = id; ST.level = null; ST.form = null; render(); }
@@ -1680,6 +1682,11 @@ ST.mode = (() => { try { const m = localStorage.getItem('nw-mode'); if (MODE_PAG
 function setMode(m){
   ST.mode = m; try { localStorage.setItem('nw-mode', m); } catch {}
   if (!MODE_PAGES[m].includes(ST.page)) go(m); else renderChrome();
+}
+// Längere Hinweise als Aufzählung (ein Satz pro Punkt)
+function noteHtml(note){
+  const parts = note.split(/(?<=\.)\s+(?=[A-ZÄÖÜ0-9])/).map(x => x.trim()).filter(Boolean);
+  return parts.length > 1 ? `<ul class="hints sec-note">${parts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : `<div class="sec-note">${esc(note)}</div>`;
 }
 function renderChrome(){
   const unread = ST.notes.filter(n => !n.read_at).length;
@@ -1742,7 +1749,7 @@ function render(){
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   ASSESSMENT — Tricks erfassen (+ Video), eigene Liste
+   ASSESSMENT: Tricks erfassen (+ Video), eigene Liste
    ══════════════════════════════════════════════════════════════════════ */
 const FORM_DEFAULTS = {
   Jump: {axis:'Upright', dir:'L', flips:'1', rot:'360', grab:'', takeoff:'', bringback:'', style:''},
@@ -1868,7 +1875,7 @@ function renderFormPreview(){
   box.innerHTML = `<div class="lbl">${esc(trickLabel(disc, t))}</div>
     ${!ath?.gender ? '<div class="muted">Set gender & level for this athlete (Team tab) to see the Skills-Check match.</div>'
       : m.length ? `<div class="muted tiny" style="margin-bottom:6px">SKILLS-CHECK MATCH</div><div class="chips">${mine.map(x => `<span class="chip dark">${x.level} · ${esc(x.text)}</span>`).join('')}${other.map(x => `<span class="chip">${x.level} · ${esc(x.text)}</span>`).join('')}</div>`
-      : '<div class="muted">No Skills-Check requirement matches this trick — it is still saved as a free trick.</div>'}`;
+      : '<div class="muted">No Skills-Check requirement matches this trick: it is still saved as a free trick.</div>'}`;
 }
 function renderFormInner(){
   const card = $('#form-card'); if (!card) return;
@@ -1892,7 +1899,7 @@ function formCard(){
       <div class="form-group full"><label>Video ${staff ? '(optional)' : 'for your coach'}</label>
         <div class="filebox">
           <input type="file" accept="video/*" id="f-video" onchange="onFormVideo(this)">
-          <span class="muted small" id="f-vname">${hasVideo ? 'A video is already attached — choose a file to replace it.' : ''}</span>
+          <span class="muted small" id="f-vname">${hasVideo ? 'A video is already attached: choose a file to replace it.' : ''}</span>
         </div><div class="tiny muted" style="margin-top:6px">Choose the video from your photo library (film with the camera app first).</div></div>
       <div class="form-group full"><label>Note (optional)</label><textarea id="f-note" placeholder="${staff ? 'Note for the athlete' : 'Anything your coach should know?'}">${esc(fm.note)}</textarea></div>
     </div>
@@ -1901,7 +1908,7 @@ function formCard(){
       ${staff ? `<button class="btn-mastered" onclick="submitForm('rate')">✓ LEARNED · RATE NOW</button>` : `<button class="btn-mastered" onclick="submitForm('pending')">✓ LEARNED · SUBMIT TO COACH</button>`}
       <button class="btn-goal" onclick="submitForm('goal')">🎯 GOAL / IN PROGRESS</button>
     </div>
-    ${staff ? `<button class="btn-secondary" style="width:100%;margin-top:10px" onclick="submitForm('pending')">Save to review inbox (rate later)</button>` : '<div class="tiny muted" style="margin-top:8px">Your coach gets a notification and rates the trick (Take-off, Trick, Grab, Landing — max. 4 points; Halfpipe + Amplitude = max. 5).</div>'}
+    ${staff ? `<button class="btn-secondary" style="width:100%;margin-top:10px" onclick="submitForm('pending')">Save to review inbox (rate later)</button>` : '<div class="tiny muted" style="margin-top:8px">Your coach gets a notification and rates the trick (Take-off, Trick, Grab, Landing: max. 4 points; Halfpipe + Amplitude = max. 5).</div>'}
     <button class="btn-secondary" style="width:100%;margin-top:10px" onclick="closeForm()">Cancel</button>
   </div>`;
 }
@@ -1930,7 +1937,7 @@ async function submitForm(mode){
         saved = await Store.saveEntry(ST.me, {...saved, video_path:path});
         upsertLocal(saved); uploaded = true;
       } catch (err){
-        console.error(err); closeModal(); toast('Trick saved, but the video upload failed — try again via «Upload video».', true);
+        console.error(err); closeModal(); toast('Trick saved, but the video upload failed: try again via «Upload video».', true);
       }
     }
     ST.form = null; ST.pendingFile = null;
@@ -1951,7 +1958,7 @@ async function deleteEntry(id){
 }
 async function submitGoal(id){
   const e = ST.entries.find(x => x.id===id);
-  try { upsertLocal(await Store.saveEntry(ST.me, {...e, status:'pending', ...(e.status==='goal' ? {achieved_at:nowIso()} : {})})); toast(isStaff() ? 'Moved to learned — in the review inbox' : 'Sent to your coach'); render(); }
+  try { upsertLocal(await Store.saveEntry(ST.me, {...e, status:'pending', ...(e.status==='goal' ? {achieved_at:nowIso()} : {})})); toast(isStaff() ? 'Moved to learned: in the review inbox' : 'Sent to your coach'); render(); }
   catch (err){ toast('Could not send: ' + (err.message||err), true); }
 }
 // Upload-Status als Dialog: gut sichtbar, auch wenn das Formular lang ist
@@ -2078,7 +2085,7 @@ function renderAssessment(){
   const root = $('#page-assessment');
   const staff = isStaff();
   const ath = prof(ST.athleteId);
-  if (!ath){ root.innerHTML = `<div class="card"><div class="empty">${staff ? 'No athletes visible yet. Assign athletes to your group in the Team tab.' : 'Your profile is not set up yet — please contact your coach.'}</div></div>`; return; }
+  if (!ath){ root.innerHTML = `<div class="card"><div class="empty">${staff ? 'No athletes visible yet. Assign athletes to your group in the Team tab.' : 'Your profile is not set up yet: please contact your coach.'}</div></div>`; return; }
   const list = entriesOf(ath.id);
   const learned = list.filter(e => e.status!=='goal'), goals = list.filter(e => e.status==='goal');
   const rated = list.filter(e => e.status==='reviewed').length, waiting = list.filter(e => e.status==='pending' || e.status==='rework').length;
@@ -2095,7 +2102,7 @@ function renderAssessment(){
     ${ST.form ? formCard() : ''}
     <div class="sb-columns">
       <div><div class="sb-col-header mastered">✅ LEARNED TRICKS <span style="opacity:.6;font-size:13px">(${learned.length})</span></div>
-        <div class="sb-col-body mastered">${asList(learned, staff ? 'No entries yet' : 'No tricks yet — add your first one!')}</div></div>
+        <div class="sb-col-body mastered">${asList(learned, staff ? 'No entries yet' : 'No tricks yet: add your first one!')}</div></div>
       <div><div class="sb-col-header goal">🎯 GOALS / IN PROGRESS <span style="opacity:.6;font-size:13px">(${goals.length})</span></div>
         <div class="sb-col-body goal">${asList(goals, 'No goals yet')}</div></div>
     </div>
@@ -2120,7 +2127,7 @@ function levelTotals(ath, level){
     if (!incl.includes(d)) continue;
     r.pts += ev.pts; r.max += ev.max; r.done += ev.done; r.n += ev.n; r.pending += ev.pending;
   }
-  // Total: jede zählende Disziplin gleich gewichtet (⅓ bzw. ½ bzw. ganz) — unabhängig von der Anzahl Vorgaben
+  // Total: jede zählende Disziplin gleich gewichtet (⅓ bzw. ½ bzw. ganz): unabhängig von der Anzahl Vorgaben
   const parts = incl.map(d => r.by[d]).filter(ev => ev && ev.max > 0).map(ev => ev.pts / ev.max);
   r.pct = parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length * 100) : 0;
   return r;
@@ -2166,7 +2173,7 @@ function renderSkills(){
       ${ev.def.sections.map(sec => {
         const sp = sec.slots.reduce((a, s) => { const o = ev.out[s.id]; if (o.applicable){ a.p += o.pts; a.m += maxFor(disc); } return a; }, {p:0, m:0});
         return `<div class="sec" style="margin-top:22px"><div class="sec-h">${esc(sec.title)}<span class="rt">${sp.p} / ${sp.m}</span></div>
-          ${sec.note ? `<div class="sec-note">${esc(sec.note)}</div>` : ''}
+          ${sec.note ? noteHtml(sec.note) : ''}
           ${sec.slots.map(s => { const o = ev.out[s.id]; const e = o.entry;
             return `<div class="slot ${o.state==='na'?'na':''}"><div class="ic ${o.state}">${ICON[o.state]}</div>
               <div><div class="st">${esc(s.text)}</div><div class="sm">${o.state==='na' ? 'not required (condition not met)' : e ? `${esc(e.label)}${e.video_path?` · <a href="#" onclick="playVideo('${e.id}');return false">▶ video</a>`:''}` : 'open'}</div></div>
@@ -2178,7 +2185,7 @@ function renderSkills(){
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   REVIEWS — Inbox für Coach / DVLP, Bewertungsdialog
+   REVIEWS: Inbox für Coach / DVLP, Bewertungsdialog
    ══════════════════════════════════════════════════════════════════════ */
 function renderReviews(){
   const root = $('#page-reviews');
@@ -2206,7 +2213,7 @@ async function openReview(id){
   modal(`<div class="muted small">${esc(ath?.name)} · ${ath?.level||'–'} · ${DISC_LABEL[e.discipline]} · submitted ${fmtAgo(e.created_at)}</div>
     <h3>${esc(e.label)}</h3>
     <div class="chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${m.map(x => `<span class="chip ${x.level===ath.level?'dark':''}">${x.level} · ${esc(x.text)}</span>`).join('') || '<span class="chip">Free trick</span>'}</div>
-    <div id="rv-video">${e.video_path ? '<div class="empty">Loading video…</div>' : '<div class="rule" style="margin:14px 0">📵 No video attached. You can still rate from what you saw on the hill — or request a video.</div>'}</div>
+    <div id="rv-video">${e.video_path ? '<div class="empty">Loading video…</div>' : '<div class="rule" style="margin:14px 0">📵 No video attached. You can still rate from what you saw on the hill: or request a video.</div>'}</div>
     ${e.note ? `<div class="small" style="margin-bottom:6px">💬 <b>Athlete:</b> ${esc(e.note)}</div>` : ''}
     <div id="rv-crit"></div>
     <label class="f" style="margin-top:12px">Feedback for the athlete<textarea id="rv-note" placeholder="What was good, what to work on?">${esc(e.review_note||'')}</textarea></label>
@@ -2242,12 +2249,12 @@ async function saveReview(kind){
     : {status:'reviewed', crit:{...RV.crit}, score:Object.values(RV.crit).filter(v => v===true).length, review_note:note || null};
   try {
     upsertLocal(await Store.review(ST.me, RV.id, patch));
-    closeModal(); toast(kind==='rework' ? 'Athlete asked for a new video' : `Rated ${patch.score}/${Object.keys(patch.crit).length} — athlete notified`); render();
+    closeModal(); toast(kind==='rework' ? 'Athlete asked for a new video' : `Rated ${patch.score}/${Object.keys(patch.crit).length}: athlete notified`); render();
   } catch (err){ console.error(err); toast('Could not save: ' + (err.message||err), true); }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   TEAM — Übersicht Gruppe (Coach) bzw. alle (DVLP), Level/Geschlecht pflegen
+   TEAM: Übersicht Gruppe (Coach) bzw. alle (DVLP), Level/Geschlecht pflegen
    ══════════════════════════════════════════════════════════════════════ */
 function renderTeam(){
   const root = $('#page-team');
@@ -2295,7 +2302,7 @@ function renderTeam(){
         <td class="c-sel" data-l="Role"><select onchange="setProfile('${p.id}','role',this.value)" ${p.id===ST.me.id?'disabled':''}>${opts([['athlete','Athlete'],['coach','Coach'],['dvlp', ADMIN_IDS.includes(p.id) ? 'Admin' : 'DVLP']], p.role)}</select></td>
         <td class="c-sel" data-l="Group">${p.role==='coach' ? `<select onchange="setProfile('${p.id}','group_id',this.value)"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${p.group_id===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>` : '<span class="muted">all</span>'}</td></tr>`).join('')}
       </tbody></table></div>
-      <p class="tiny muted" style="margin-top:12px">${DEMO ? 'Demo mode: accounts are fixed demo users.' : 'Logins: enter the e-mail here first, then create the account in Supabase → Authentication → Users → «Create new user» with the same e-mail — it links automatically. Staff without a profile appear here after their first login.'}</p></div>` : ''}`;
+      <p class="tiny muted" style="margin-top:12px">${DEMO ? 'Demo mode: accounts are fixed demo users.' : 'Logins: enter the e-mail here first, then create the account in Supabase → Authentication → Users → «Create new user» with the same e-mail: it links automatically. Staff without a profile appear here after their first login.'}</p></div>` : ''}`;
 }
 function setTeamFilter(k, v){ (ST.teamFilter ||= {sex:'', level:'', sort:'name'})[k] = v; renderTeam(); }
 function openAddAthlete(){
@@ -2446,7 +2453,7 @@ function lineChart(series, xlabels, o={}){
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   SESSION — Live-Erfassung im Training (Coach / DVLP)
+   SESSION: Live-Erfassung im Training (Coach / DVLP)
    Jeder Versuch wird sofort gespeichert; die laufende Session liegt in der
    DB (ended_at leer) und wird nach Reload / auf anderem Gerät fortgesetzt.
    ══════════════════════════════════════════════════════════════════════ */
@@ -2485,7 +2492,7 @@ function renderSessionSetup(root){
       <div class="grid">
         <label class="f">Session Date<input type="date" value="${su.date}" max="${todayIso()}" onchange="SX.setup.date=this.value > todayIso() ? todayIso() : this.value;renderSession()"></label>
       </div>
-      ${su.date < todayIso() ? `<div class="tiny" style="color:#C96A1F;margin-top:8px">⚠ Backdated — all entries will be saved for ${fmtDate(su.date)}.</div>` : ''}
+      ${su.date < todayIso() ? `<div class="tiny" style="color:#C96A1F;margin-top:8px">⚠ Backdated: all entries will be saved for ${fmtDate(su.date)}.</div>` : ''}
       <div class="f-lbl">Session type</div>
       <div class="stype-grid">${[['', ['Landing Bag']], ['Big Air', ['Big Air Training','Big Air Competition']], ['Slopestyle', ['Slopestyle Training','Slopestyle Competition']], ['Halfpipe', ['Halfpipe Training','Halfpipe Competition']]]
         .map(([lbl, ts]) => `<div class="stype-row ${lbl ? '' : 'single'}">${lbl ? `<span class="stype-lbl">${lbl}</span>` : ''}${ts.map(t => `<button class="stype-btn ${su.type===t?'on':''}" onclick="SX.setup.type='${t}';renderSession()">${lbl ? t.replace(lbl + ' ', '') : t}</button>`).join('')}</div>`).join('')}</div>
@@ -2585,7 +2592,7 @@ function renderSessionActive(root, s){
         <button class="btn ghost sm" onclick="cancelSession()">✕ Cancel</button>
         <button class="btn red sm" onclick="openEndSession()">✓ End Session</button>
       </div>
-      ${backdated ? `<div class="tiny" style="color:#C96A1F;margin-top:6px">⚠ Backdated — all entries are saved for ${fmtDate(s.date)}.</div>` : ''}
+      ${backdated ? `<div class="tiny" style="color:#C96A1F;margin-top:6px">⚠ Backdated: all entries are saved for ${fmtDate(s.date)}.</div>` : ''}
       ${SX.editAth ? `<div class="athchips" style="margin-top:12px">${s.athlete_ids.map(id => `<button class="athchip on" onclick="sxSessAth('${id}')">${esc(prof(id)?.name)} ✕</button>`).join('')}${others.map(a => `<button class="athchip" onclick="sxSessAth('${a.id}')">+ ${esc(a.name)}</button>`).join('')}</div>` : ''}
     </div>
     <div class="athchips" style="margin-bottom:16px">${s.athlete_ids.map(id => { const n = atts.filter(a => a.athlete_id===id).length;
@@ -2597,7 +2604,7 @@ function renderSessionActive(root, s){
           <div class="btnrow"><button class="btn red" onclick="sxUseForm()">Use this trick</button><button class="btn ghost" onclick="SX.form=null;renderSession()">Cancel</button></div>`
         : `<div class="trickchips">${cands.map((c, i) => `<button class="tchip ${pk && pk.key===c.key ? 'on' : ''}" onclick="sxPick(${i})">${c.src==='session' ? '<i class="src">●</i>' : c.src==='goal' ? '<i class="src">🎯</i>' : ''}${esc(c.label)}</button>`).join('')}
             <button class="tchip add" onclick="sxOpenForm()">+ Other trick</button></div>
-          ${cands.length ? '<div class="tiny muted" style="margin-top:8px">● already logged today · 🎯 goal in the assessment</div>' : '<div class="tiny muted" style="margin-top:8px">No tricks in the assessment yet — add one with «+ Other trick».</div>'}
+          ${cands.length ? '<div class="tiny muted" style="margin-top:8px">● already logged today · 🎯 goal in the assessment</div>' : '<div class="tiny muted" style="margin-top:8px">No tricks in the assessment yet: add one with «+ Other trick».</div>'}
           ${grabBlock}
           ${runMode && pk ? `<div class="btnrow"><button class="btn red" onclick="runAddPicked()">+ Add «${esc(trickLabel(pk.disc, pickedTrick()))}» to run</button></div>` : ''}`}
     </div>
@@ -2657,7 +2664,7 @@ function runAddRail(){
   const s = activeSession(), r = runState(), txt = (document.getElementById('run-rail-text')?.value || '').trim();
   if (!txt){ toast('Enter the rail trick', true); return; }
   if (r.els.length >= runMax(s)){ toast(`Max. ${runMax(s)} elements per run`, true); return; }
-  r.els.push({disc:'Rail', trick:{railType:r.rail.type, text:txt, free:true}, label:`Rail ${r.rail.type} — ${txt}`, rate:null, tags:[], note:''});
+  r.els.push({disc:'Rail', trick:{railType:r.rail.type, text:txt, free:true}, label:`Rail ${r.rail.type}: ${txt}`, rate:null, tags:[], note:''});
   r.rail.text = ''; runSave(); renderSession();
 }
 function runRate(i, v){ const e = runState().els[i]; e.rate = e.rate===v ? null : v; runSave(); renderSession(); }
@@ -2673,7 +2680,7 @@ function runCardHtml(s){
   const railSugg = [...new Set(ST.attempts.filter(a => a.trick?.free && a.trick?.text).map(a => a.trick.text))];
   const tag = e => e.disc==='Rail' ? 'RAIL' : hp ? 'HIT' : 'JUMP';
   return `<div class="card run-card">
-    <div class="row"><div><div class="sess-title" style="font-size:18px">${hp ? 'HALFPIPE' : 'SLOPESTYLE'} RUN #${r.n}</div><div class="muted small">Run setup — ${r.els.length}/${max} ${hp ? 'hits' : 'elements'} · pick a trick above and add it</div></div></div>
+    <div class="row"><div><div class="sess-title" style="font-size:18px">${hp ? 'HALFPIPE' : 'SLOPESTYLE'} RUN #${r.n}</div><div class="muted small">Run setup: ${r.els.length}/${max} ${hp ? 'hits' : 'elements'} · pick a trick above and add it</div></div></div>
     ${!hp ? `<div class="disclose" style="margin-top:12px"><b style="color:var(--char)">+ Rail</b>
       <div class="failchips">${[...RAIL_TYPES, ...customRails].map(t => `<button class="failchip ${r.rail.type===t?'on':''}" onclick="runRailType(${esc(JSON.stringify(t))})">${esc(t)}</button>`).join('')}<button class="failchip add" onclick="runRailNew()">+ New</button></div>
       <div class="row" style="flex-wrap:nowrap"><input type="text" id="run-rail-text" list="run-rail-list" value="${esc(r.rail.text)}" oninput="runState().rail.text=this.value" placeholder="Rail trick, e.g. Lip 270 on 270 out"><datalist id="run-rail-list">${railSugg.map(x => `<option value="${esc(x)}">`).join('')}</datalist><button class="btn red sm" onclick="runAddRail()">Add</button></div></div>` : ''}
@@ -2813,7 +2820,7 @@ async function attemptToSkills(id){
     e = await Store.review(ST.me, e.id, {status:'reviewed', crit:a.crit, score:a.score, review_note:`Rated in the session of ${fmtDate(sessDate(a))}`});
     upsertLocal(e);
     upsertIn(ST.attempts, await Store.saveAttempt(ST.me, {...a, entry_id:e.id}));
-    toast('Added to the Skills-Check — athlete notified'); render();
+    toast('Added to the Skills-Check: athlete notified'); render();
   } catch (err){ console.error(err); toast('Could not add: ' + (err.message||err), true); }
 }
 async function cancelSession(){
@@ -2871,7 +2878,7 @@ async function endSession(){
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   REPORTS — Session-Berichte (Liste → Bericht pro Athlet:in und Trick)
+   REPORTS: Session-Berichte (Liste → Bericht pro Athlet:in und Trick)
    ══════════════════════════════════════════════════════════════════════ */
 function reportSessions(){
   const vis = visGroupAthleteIds(), f = ST.rep, from = periodStart(f.period);
@@ -2953,7 +2960,7 @@ async function deleteReport(id){
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   MONITORING — aufgebaut wie im Snowboard: Team → Athlet:in → Trick
+   MONITORING: aufgebaut wie im Snowboard: Team → Athlet:in → Trick
    Hauptmetrik Stomp-Rate (alle Kriterien erfüllt), dazu Landed-Rate,
    Kriterien-Erfüllung, Fail-Gründe, Verlauf über Sessions, Coaching Analysis.
    ══════════════════════════════════════════════════════════════════════ */
@@ -3062,7 +3069,7 @@ function renderMonTeam(root, all){
     monTrickAgg(l).forEach(t => { const k = monCounts(t.list), s = monStatus(k.n, k.s); if (cnt[s] != null) cnt[s]++; });
     return `<div class="mon-tile" onclick="monOpenAthlete('${a.id}')">
       <div class="row" style="gap:10px;flex-wrap:nowrap"><span class="avatar sm">${initials(a.name)}</span><div style="min-width:0"><div class="t">${esc(a.name)}</div><div class="tiny muted">${a.level || '–'}${a.gender ? ' · ' + a.gender : ''}</div></div></div>
-      <div class="ringwrap">${monRing(c.n ? c.s / c.n : 0, MON_ST[st].c)}<div class="ringlbl"><b>${c.n ? pctR(c.s, c.n) + '%' : '—'}</b><span>stomp rate</span></div></div>
+      <div class="ringwrap">${monRing(c.n ? c.s / c.n : 0, MON_ST[st].c)}<div class="ringlbl"><b>${c.n ? pctR(c.s, c.n) + '%' : '–'}</b><span>stomp rate</span></div></div>
       <div class="tri"><div><b style="color:${MON_ST.ready.c}">${cnt.ready}</b><span>Ready</span></div><div><b style="color:${MON_ST.building.c}">${cnt.building}</b><span>Building</span></div><div><b style="color:${MON_ST.critical.c}">${cnt.critical}</b><span>Critical</span></div></div>
       <div class="more">View details →</div></div>`;
   };
@@ -3092,7 +3099,7 @@ function renderMonAthlete(root, all){
       <div class="row tiny" style="margin-top:8px">${monTrendHtml(monTrend(t.list, isStomp))}<span class="grow"></span><b style="color:${MON_ST[st].c}">${MON_ST[st].l}</b></div></div>`;
   };
   root.innerHTML = `<div class="card">${monHeader(ath.name, `${c.n} attempts · ${c.s} stomped · <b>${pctR(c.s, c.n)}% stomp rate</b> · ${monPeriodLabel()}`, true)}
-    ${c.n ? `<div class="dirbox"><div class="tiny muted" style="font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Direction balance — session data only</div>
+    ${c.n ? `<div class="dirbox"><div class="tiny muted" style="font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Direction balance: session data only</div>
       <div class="dirbar">${dirs.map(d => `<i style="width:${byDir[d] / c.n * 100}%;background:${MON_DIR_COL[d]}" title="${esc(d)}"></i>`).join('')}</div>
       <div class="legend" style="margin-top:8px">${dirs.map(d => `<span><i class="dot" style="background:${MON_DIR_COL[d]}"></i>${esc(d)} <b style="color:${MON_DIR_COL[d]}">${pctR(byDir[d], c.n)}%</b></span>`).join('')}</div></div>` : '<div class="empty">No session data in this period.</div>'}
     ${MON_DIR_ORDER.map(d => { const ts = tricks.filter(t => t.dir===d).sort((a,b) => b.rot - a.rot || b.list.length - a.list.length); if (!ts.length) return '';
@@ -3151,7 +3158,7 @@ function renderMonTrick(root, all){
     <div class="card"><h2>Progress over sessions</h2>
       <div class="legend"><span><i class="sq" style="background:${OC.volume};opacity:.6"></i>Volume (attempts)</span><span><i class="ln" style="background:${OC.landed}"></i>Landed rate (Landed+Stomped)</span><span><i class="ln dash" style="border-color:#C96A1F"></i>Stomp rate</span></div>
       ${monTimeChart(list)}
-      <div class="tiny muted" style="margin-top:6px">⚠ Sessions with fewer than 5 attempts — rates are statistically weak.</div>
+      <div class="tiny muted" style="margin-top:6px">⚠ Sessions with fewer than 5 attempts: rates are statistically weak.</div>
       <div id="mon-time-detail" class="small muted" style="margin-top:8px">Tap a bar for session details.</div>
     </div>
     <div class="card"><h2>Coaching Analysis</h2>${monCoaching(list, disc)}</div>
@@ -3183,7 +3190,7 @@ function monTimeChart(list){
 function monTrickList(){ const all = monAttempts(); return all.filter(a => a.athlete_id===ST.mon.athleteId && coreOf(a).key===ST.mon.key); }
 function monTimeSel(d){
   const l = monTrickList().filter(a => sessDate(a)===d), k = monCounts(l);
-  $('#mon-time-detail').innerHTML = `<b>${fmtDate(d)}</b> — ${k.n} attempts · <span style="color:${OC.stomped}">${k.s} stomped</span> · <span style="color:${OC.landed}">${k.l} landed</span> · <span style="color:${OC.failed}">${k.f} failed</span> · <b>${pctR(k.s, k.n)}%</b> stomp rate
+  $('#mon-time-detail').innerHTML = `<b>${fmtDate(d)}</b>: ${k.n} attempts · <span style="color:${OC.stomped}">${k.s} stomped</span> · <span style="color:${OC.landed}">${k.l} landed</span> · <span style="color:${OC.failed}">${k.f} failed</span> · <b>${pctR(k.s, k.n)}%</b> stomp rate
     <button class="btn ghost sm" style="margin-left:8px" onclick="monOpenSession('${d}')">Open session view →</button>`;
 }
 function monOpenSession(d){
@@ -3211,7 +3218,7 @@ function monOpenSession(d){
     <div class="list">${l.map(a => attemptRow(a, {noName:true})).join('')}</div>`);
 }
 
-// Coaching Analysis — 6 Regeln wie Snowboard, «KPIs» = unsere Kriterien
+// Coaching Analysis: 6 Regeln wie Snowboard, «KPIs» = unsere Kriterien
 function monCoaching(list, disc){
   const dates = monDates(list), nS = dates.length, GREY = '#8a8a8f', AMBER = '#C96A1F', RED = '#D64545';
   const inD = ds => list.filter(a => ds.includes(sessDate(a)));
@@ -3222,7 +3229,7 @@ function monCoaching(list, disc){
   // 1 Comp-readiness
   if (nS < 3) items.push(['Comp-readiness', `Not enough data (${nS}/3 sessions)`, GREY]);
   else if (critOk(dates.slice(-3))) items.push(['Comp-readiness', 'Reached', GREY]);
-  else if (nS >= 4 && critOk(dates.slice(Math.max(0, nS - 6), nS - 3))) items.push(['Comp-readiness', 'Lost — was reached before', RED]);
+  else if (nS >= 4 && critOk(dates.slice(Math.max(0, nS - 6), nS - 3))) items.push(['Comp-readiness', 'Lost: was reached before', RED]);
   else items.push(['Comp-readiness', 'Not reached', AMBER]);
   // 2 Efficiency trend (Stomp-Rate)
   if (nS < 4) items.push(['Efficiency trend', `Not enough data (${nS}/4 sessions)`, GREY]);
@@ -3290,7 +3297,7 @@ function rawEntriesCard(){
   const id = ST.rep.raw && aths.some(a => a.id===ST.rep.raw) ? ST.rep.raw : '';
   const list = id ? ST.attempts.filter(a => a.athlete_id===id).sort((a,b) => b.created_at.localeCompare(a.created_at)) : [];
   return `<div class="card noprint"><h2>Raw Entries</h2>
-    <div class="row" style="margin-bottom:10px"><select style="width:auto;max-width:280px" onchange="ST.rep.raw=this.value;renderReports()"><option value="">— select athlete —</option>${opts(aths.map(a => [a.id, a.name]), id)}</select>
+    <div class="row" style="margin-bottom:10px"><select style="width:auto;max-width:280px" onchange="ST.rep.raw=this.value;renderReports()"><option value="">Select athlete</option>${opts(aths.map(a => [a.id, a.name]), id)}</select>
       ${id ? `<span class="muted small">${list.length} attempts</span>` : ''}</div>
     ${id ? `<details open><summary>All attempts</summary><div class="list">${list.slice(0, 300).map(a => attemptRow(a, {noName:true, withDate:true})).join('') || '<div class="empty">No attempts.</div>'}</div></details>` : ''}
   </div>`;
@@ -3365,7 +3372,7 @@ function renderRealityCheck(){
     <div class="row" style="margin-bottom:10px"><input type="text" placeholder="Search athlete…" value="${esc(RC.q)}" oninput="RC.q=this.value;renderRealityCheck();setTimeout(()=>{const i=document.querySelector('.modal input[type=text]');i.focus();i.setSelectionRange(i.value.length,i.value.length)},0)" style="max-width:240px">
       <button class="btn ghost sm" onclick="RC.items.forEach((_, i) => RC.sel.add(i));renderRealityCheck()">✓ All</button><button class="btn ghost sm" onclick="RC.sel.clear();renderRealityCheck()">✗ None</button></div>
     ${Object.values(by).map(list => `<div class="sub-h">${esc(list[0].ath.name)}</div>${list.map(it => `<label class="rc-row"><input type="checkbox" ${RC.sel.has(it.i)?'checked':''} onchange="this.checked?RC.sel.add(${it.i}):RC.sel.delete(${it.i})">
-        <span class="grow">${esc(it.e.label)}</span><span class="chip ${it.dir==='up'?'green':'gold'}">${it.dir==='up' ? '↑ Learned' : '↓ Goal'}</span><span class="tiny muted">Ø ${it.q}% · ${it.n} att.</span></label>`).join('')}`).join('') || '<div class="empty">Everything matches — no suggestions.</div>'}
+        <span class="grow">${esc(it.e.label)}</span><span class="chip ${it.dir==='up'?'green':'gold'}">${it.dir==='up' ? '↑ Learned' : '↓ Goal'}</span><span class="tiny muted">Ø ${it.q}% · ${it.n} att.</span></label>`).join('')}`).join('') || '<div class="empty">Everything matches: no suggestions.</div>'}
     <div class="btnrow"><button class="btn red" ${RC.items.length ? '' : 'disabled'} onclick="applyRealityCheck()">Apply selected (${RC.sel.size})</button><button class="btn ghost" onclick="closeModal()">Close</button></div>`);
 }
 async function applyRealityCheck(){
@@ -3380,7 +3387,7 @@ async function applyRealityCheck(){
   } catch (err){ toast('Could not apply: ' + (err.message||err), true); }
 }
 
-// Team- und Athlet:innen-PDF — Prozentwerte in Ampelfarben mit Balken
+// Team- und Athlet:innen-PDF: Prozentwerte in Ampelfarben mit Balken
 const pdfCol = (v, hi=70, mid=40) => v == null ? 'var(--muted)' : v >= hi ? MON_ST.ready.c : v >= mid ? MON_ST.building.c : MON_ST.critical.c;
 const pdfKpi = (label, v, sub='', col=null) => `<div class="kpi"><div class="k">${label}</div><div class="v" style="color:${col || pdfCol(v)}">${v ?? '–'}<small>%${sub}</small></div>${v != null ? `<div class="bar"><i style="width:${v}%;background:${col || pdfCol(v)}"></i></div>` : ''}</div>`;
 const pdfPctCell = (v, hi, mid) => v == null ? '<td class="num">–</td>' : `<td class="num"><b style="color:${pdfCol(v, hi, mid)}">${v}%</b><span class="minibar" style="width:54px"><i style="width:${v}%;background:${pdfCol(v, hi, mid)}"></i></span></td>`;
@@ -3401,7 +3408,7 @@ function athletePdf(id){
   const ents = entriesOf(id), learned = ents.filter(e => e.status!=='goal'), goals = ents.filter(e => e.status==='goal');
   const entryLi = e => `<li>${esc(e.label)} ${e.status==='reviewed' ? `<b style="color:${pdfCol(pctR(e.score, maxFor(e.discipline)), 100, 50)}">${e.score}/${maxFor(e.discipline)}</b>` : `<span class="muted">(${e.status})</span>`}</li>`;
   const stomp = c.n ? pctR(c.s, c.n) : null, landed = c.n ? pctR(c.s + c.l, c.n) : null;
-  openPrintWindow(`Athlete Report — ${a.name}`, `${esc(groupName(a.group_id))} · Level ${a.level || '–'} · ${monPeriodLabel()}`, `
+  openPrintWindow(`Athlete Report: ${a.name}`, `${esc(groupName(a.group_id))} · Level ${a.level || '–'} · ${monPeriodLabel()}`, `
     <div class="card"><h2>Skills-Check ${a.level || ''}</h2>${t ? `<div class="kpis" style="margin:0">${pdfKpi('Total', t.pct)}${DISCS.filter(d => t.by[d]).map(d => t.incl.includes(d) ? pdfKpi(DISC_LABEL[d], pctR(t.by[d].pts, t.by[d].max), ` · ${t.by[d].pts}/${t.by[d].max}`) : `<div class="kpi" style="opacity:.5"><div class="k">${DISC_LABEL[d]}</div><div class="v"><small>not in focus</small></div></div>`).join('')}</div>` : '<div class="muted">Sex/level not set.</div>'}</div>
     <div class="card"><h2>Session summary</h2><div class="kpis" style="margin:0">
         <div class="kpi"><div class="k">Sessions</div><div class="v">${new Set(l.map(sessDate)).size}</div></div>
@@ -3412,11 +3419,11 @@ function athletePdf(id){
     <div class="card"><h2>Assessment</h2><div class="sb-columns"><div><b style="color:var(--green)">Learned tricks (${learned.length})</b><ul class="small">${learned.map(entryLi).join('')}</ul></div><div><b style="color:#C96A1F">Goals (${goals.length})</b><ul class="small">${goals.map(entryLi).join('')}</ul></div></div></div>`);
 }
 
-/* ── Assessment: Timeline «Progress — Goals Achieved» (wie Freeski) ── */
+/* ── Assessment: Timeline «Progress: Goals Achieved» (wie Freeski) ── */
 function goalsTimelineCard(athId){
   const list = entriesOf(athId).filter(e => e.achieved_at).sort((a,b) => b.achieved_at.localeCompare(a.achieved_at));
   if (!list.length) return '';
-  return `<div class="card" style="margin-top:16px"><div class="card-title">Progress — Goals Achieved</div>
+  return `<div class="card" style="margin-top:16px"><div class="card-title">Progress: Goals Achieved</div>
     ${list.map(e => `<div class="tl-row"><span class="chip green">✓ Achieved</span><div class="grow"><div style="font-weight:600;color:var(--char)">${esc(e.label)}</div><div class="tiny muted">${fmtDate(e.achieved_at)} · goal since ${fmtDate(e.created_at)}</div></div>${statusChip(e)}</div>`).join('')}
   </div>`;
 }
@@ -3446,10 +3453,10 @@ function showDemoGate(){
     <span><b>${esc(p.name)}</b><br><span class="muted small">${roleLabel(p)}${p.group_id?` · ${esc(d.groups.find(g => g.id===p.group_id)?.name)}`:''}${p.level?` · ${p.level}`:''}</span></span></button>`;
   const by = r => d.profiles.filter(p => p.role===r).map(card).join('');
   $('#gate').innerHTML = gateShell(`
-    <div class="card"><h2>Demo — choose a view</h2><p class="lead">Nothing is saved to a server; data stays in this browser.</p>
-      <div class="muted tiny" style="margin:6px 0">ATHLETES — see only themselves</div><div class="demo-users">${by('athlete')}</div>
-      <div class="muted tiny" style="margin:16px 0 6px">COACHES — see their group</div><div class="demo-users">${by('coach')}</div>
-      <div class="muted tiny" style="margin:16px 0 6px">DVLP — see everyone</div><div class="demo-users">${by('dvlp')}</div>
+    <div class="card"><h2>Demo: choose a view</h2><p class="lead">Nothing is saved to a server; data stays in this browser.</p>
+      <div class="muted tiny" style="margin:6px 0">ATHLETES: see only themselves</div><div class="demo-users">${by('athlete')}</div>
+      <div class="muted tiny" style="margin:16px 0 6px">COACHES: see their group</div><div class="demo-users">${by('coach')}</div>
+      <div class="muted tiny" style="margin:16px 0 6px">DVLP: see everyone</div><div class="demo-users">${by('dvlp')}</div>
       <div class="btnrow"><button class="btn ghost sm" onclick="if(confirm('Reset all demo data?')){DemoStore.reset();showDemoGate();toast('Demo data reset')}">Reset demo data</button></div></div>`);
   $('#gate').hidden = false; $('#app').hidden = true;
 }
@@ -3471,7 +3478,7 @@ async function doLogin(){
   try { await SupaStore.login($('#lg-mail').value.trim(), $('#lg-pw').value); await startApp(); }
   catch (err){ $('#lg-msg').textContent = 'Login failed: ' + (err.message||err); }
 }
-// Ablauf wie Freeski/Snowboard: Code (6-stellig) statt Link — Links werden von Mail-Scannern verbraucht
+// Ablauf wie Freeski/Snowboard: Code (6-stellig) statt Link: Links werden von Mail-Scannern verbraucht
 function loginMsg(t, ok){ const m = $('#lg-msg'); if (!m) return; m.style.color = ok ? 'var(--muted)' : 'var(--red)'; m.textContent = t; }
 async function authForgotPassword(){
   const email = ($('#lg-mail')?.value || '').trim();
@@ -3549,7 +3556,7 @@ async function startApp(){
   }
   document.querySelectorAll('.page').forEach(p => p.innerHTML = '');
   $('#gate').hidden = true; $('#app').hidden = false;
-  if (DEMO){ const b = $('#demo-bar'); b.hidden = false; b.innerHTML = `DEMO MODE — data stays in this browser <button onclick="Store.logout().then(()=>location.reload())">Switch user</button>`; }
+  if (DEMO){ const b = $('#demo-bar'); b.hidden = false; b.innerHTML = `DEMO MODE: data stays in this browser <button onclick="Store.logout().then(()=>location.reload())">Switch user</button>`; }
   ST.page = isStaff() && activeSession() ? 'session' : 'assessment';
   render();
 }
