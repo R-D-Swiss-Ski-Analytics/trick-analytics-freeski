@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f4efed">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -39,7 +39,7 @@ h1{font-size:36px;font-weight:800;letter-spacing:-.5px;color:var(--char);margin:
 h1 .dot{color:var(--red)}
 .sub{margin-top:8px;font-size:16px;color:var(--muted);font-weight:500}
 .brand{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
-.brand svg{width:150px;height:auto;display:block}
+.brand > svg{width:150px;height:auto;display:block}
 .who{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .who .chip{background:rgba(255,255,255,.85)}
 .iconbtn{position:relative;border:1px solid var(--line);background:rgba(255,255,255,.85);border-radius:999px;height:34px;min-width:34px;padding:0 12px;cursor:pointer;font-size:13px;font-weight:600;color:var(--char);display:inline-flex;align-items:center;gap:6px}
@@ -398,7 +398,7 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)
   .team-filters > *{width:100%;max-width:none!important;min-width:0}
   .team-filters > select:first-child,.team-filters > .btn,.team-filters > select:nth-last-of-type(1){grid-column:1/-1}
   .team-filters .grow{display:none}
-  .bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:120;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:4px 2px calc(4px + env(safe-area-inset-bottom))}
+  .bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:200;background:#fff;transform:translateZ(0);-webkit-transform:translateZ(0);border-top:1px solid var(--line);padding:4px 2px calc(4px + env(safe-area-inset-bottom))}
   .bottom-nav button{flex:1 1 auto;min-width:0;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 0;color:var(--muted);font-size:9.5px;font-weight:700;position:relative;cursor:pointer}
   .bottom-nav button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;letter-spacing:-.1px}
   .bottom-nav button.on{color:var(--red)}
@@ -420,10 +420,20 @@ details summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)
   .critgrid{grid-template-columns:1fr 1fr}
   .btn.big{min-width:0}
   .wrap,.hd,.tabs-in{padding-left:16px;padding-right:16px}
-  .hd{padding-top:20px;padding-bottom:16px;gap:12px}
-  h1{font-size:24px}
+  .hd{padding-top:10px;padding-bottom:10px;gap:10px;align-items:center}
+  h1{font-size:16px;line-height:1.15;letter-spacing:-.2px}
+  header::after{top:-120%;height:340%;width:45%;right:-8%}
+  .brand{flex-direction:row-reverse;align-items:center;gap:8px}
+  .brand > svg{width:58px!important}
+  .who{flex-wrap:nowrap;gap:5px}
+  .who .chip{display:none}
+  .iconbtn,.lang-sel{height:30px;font-size:12px}
+  .iconbtn{min-width:30px;padding:0 8px}
+  .lang-sel{padding:0 20px 0 9px;background-position:right 7px center}
+  .logout-btn span{display:none}
+  /* iPhone zoomt bei Feldern unter 16px hinein → Seite verrutscht, Leiste unten scheint weg */
+  select,input[type=text],input[type=date],input[type=email],input[type=password],input[type=number],textarea{font-size:16px}
   .sub{font-size:13px;margin-top:4px}
-  .brand svg{width:92px}
   .card{padding:16px}
   .grid{grid-template-columns:1fr 1fr}
   .item{flex-direction:column;gap:8px}
@@ -609,6 +619,7 @@ const I18N = {
   'Choose a new password':['Neues Passwort wählen','Choisis un nouveau mot de passe','Scegli una nuova password'], 'Repeat password':['Passwort wiederholen','Répéter le mot de passe','Ripeti password'],
   'At least 8 characters.':['Mindestens 8 Zeichen.','Au moins 8 caractères.','Almeno 8 caratteri.'], 'Passwords do not match.':['Die Passwörter stimmen nicht überein.','Les mots de passe ne correspondent pas.','Le password non coincidono.'],
   'Save password':['Passwort speichern','Enregistrer le mot de passe','Salva password'], 'Code':['Code','Code','Codice'],
+  'Attempts (dashed = running Ø)':['Versuche (gestrichelt = laufender Ø)','Tentatives (pointillé = Ø courant)','Tentativi (tratteggio = Ø progressivo)'], 'Height = quality':['Höhe = Qualität','Hauteur = qualité','Altezza = qualità'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned — in the review inbox':['Zu «gelernt» verschoben — in der Review-Inbox','Déplacé vers acquis — dans la boîte d’évaluation','Spostato in imparati — nella casella valutazioni'],
@@ -1666,7 +1677,7 @@ function renderChrome(){
     ${langSelect()}
     <button class="iconbtn" onclick="toggleNotifs(event)" title="Notifications">🔔${unread?`<span class="badge">${unread}</span>`:''}</button>
     <span class="chip">${ADMIN_IDS.includes(ST.me.id) ? 'Admin' : `${esc(ST.me.name)} · ${roleLabel(ST.me)}`}</span>
-    <button class="iconbtn" onclick="logout()">Log out</button>`;
+    <button class="iconbtn logout-btn" onclick="logout()" title="Log out"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Log out</span></button>`;
   const tabs = [['assessment','Assessment'], ['skills','Skills-Check']];
   // Reihenfolge: Skills-Check-Teil │ Session-Erfassung
   if (isStaff()) tabs.push(['reviews','Reviews'], ['team','Team'], ['|'], ['session','Session'], ['reports','Reports'], ['monitoring','Monitoring']);
@@ -2723,7 +2734,7 @@ function attemptRow(a, o={}){
   const mx = a.max || maxFor(a.discipline), oc = outcomeOf(a);
   const missed = a.crit && !a.fell ? critSetFor(a.discipline).filter(c => a.crit[c.k] === false) : [];
   const res = oc==='failed' ? '<span class="chip red">✗ Failed</span>' + parseTags(a.note).map(t => `<span class="chip">${esc(t)}</span>`).join('')
-    : oc==='stomped' ? `<span class="chip teal">⭐ Stomped${a.crit ? ` · ${mx}/${mx}` : ''}</span>`
+    : oc==='stomped' ? `<span class="chip green">⭐ Stomped${a.crit ? ` · ${mx}/${mx}` : ''}</span>`
     : `<span class="chip green">✓ Landed${a.crit ? ` · ${stars(a.score, mx)} ${a.score}/${mx}` : ''}</span>`;
   return `<div class="item">
     <div class="main"><div class="t">${esc(a.label)}</div>
@@ -2885,13 +2896,14 @@ function trickBlock(list, o={}){
   const rates = critRates(list, disc);
   const tagCount = {};
   list.filter(a => a.fell).forEach(a => parseTags(a.note).forEach(t => tagCount[t] = (tagCount[t] || 0) + 1));
-  const bars = list.map((a, i) => ({v:qa(a), red:a.fell, col: outcomeOf(a)==='stomped' ? '#148FA0' : null, label:String(i + 1), title:`#${i + 1} · ${a.fell ? 'fall / miss' : a.score + '/' + a.max} · ${new Date(a.created_at).toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'})}`}));
+  const bars = list.map((a, i) => ({v:qa(a), red:a.fell, col: a.fell ? null : outcomeOf(a)==='stomped' ? OC.stomped : OC.landed, label:String(i + 1), title:`#${i + 1} · ${a.fell ? 'fall / miss' : a.score + '/' + a.max} · ${new Date(a.created_at).toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'})}`}));
   return `<div class="trick-block">
     <div class="row" style="gap:8px"><b style="color:var(--char)">${esc(o.title || list[0].label)}</b><span class="grow"></span>
-      <span class="chip">${list.length} att.</span>${qChip(avg(list.map(qa)))}<span class="chip">${landedPct(list)}% landed</span><span class="chip teal">${list.filter(a => outcomeOf(a)==='stomped').length} ⭐</span></div>
+      <span class="chip">${list.length} att.</span>${qChip(avg(list.map(qa)))}<span class="chip">${landedPct(list)}% landed</span><span class="chip green">${list.filter(a => outcomeOf(a)==='stomped').length} ⭐</span></div>
     <div class="chips" style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 2px">${rates.map(r => `<span class="chip ${r.pct>=70?'green':r.pct>=50?'gold':'red'}">${esc(r.name.replace(/ \(.*\)/,''))} ${r.pct}%</span>`).join('')}</div>
     ${Object.keys(tagCount).length ? `<div class="chips" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px"><span class="tiny muted" style="align-self:center">Fail reasons:</span>${Object.entries(tagCount).sort((a,b) => b[1]-a[1]).map(([t, n]) => `<span class="chip red">${esc(t)} ${n}×</span>`).join('')}</div>` : ''}
-    ${barChart(bars, {line:true, h:170, xTitle:'Attempts (dashed = running Ø) · teal = stomped'})}
+    ${barChart(bars, {line:true, h:170, xTitle:'Attempts (dashed = running Ø)'})}
+    <div class="legend" style="justify-content:center"><span><i class="sq" style="background:${OC.stomped}"></i>Stomped (all criteria)</span><span><i class="sq" style="background:${OC.landed}"></i>Landed</span><span><b style="color:${OC.failed}">✗</b> Failed</span><span>Height = quality</span></div>
     <details class="noprint"><summary>Attempts</summary><div class="list">${list.slice().reverse().map(a => attemptRow(a, {noName:true})).join('')}</div></details>
   </div>`;
 }
@@ -2934,7 +2946,8 @@ async function deleteReport(id){
    Kriterien-Erfüllung, Fail-Gründe, Verlauf über Sessions, Coaching Analysis.
    ══════════════════════════════════════════════════════════════════════ */
 const MON_ST = {ready:{c:'#3E8E5A', l:'Ready'}, building:{c:'#C96A1F', l:'Building'}, critical:{c:'#D64545', l:'Critical'}, lowdata:{c:'#8a8a8f', l:'Low data'}};
-const OC = {stomped:'#148FA0', landed:'#3E8E5A', failed:'#D64545', volume:'#396FA8'};
+// Stomped = bestes Ergebnis → Grün; Landed → Türkis; Failed → Rot
+const OC = {stomped:'#3E8E5A', landed:'#148FA0', failed:'#D64545', volume:'#396FA8', good:'#3E8E5A'};
 const MON_DIR_COL = {'Left':'#148FA0', 'Right':'#396FA8', 'Switch Left':'#8E5BB8', 'Switch Right':'#C96A1F', 'Forward':'#1F9E93', 'Switch':'#B08D1E', 'Rails':'#3E3E3F', 'Basics':'#6b6b70', 'Other':'#8a8a8f'};
 const MON_DIR_ORDER = ['Left','Right','Switch Left','Switch Right','Forward','Switch','Rails','Basics','Other'];
 const MON_PLATEAU_TOL = 5;
@@ -2975,7 +2988,7 @@ function monTrend(list, hit){
 }
 function monTrendHtml(t){
   if (!t) return '<span class="muted">–</span>';
-  if (t.dir==='up') return `<span style="color:${OC.landed};font-weight:700">↗ rising, +${t.diff}%</span>`;
+  if (t.dir==='up') return `<span style="color:${OC.good};font-weight:700">↗ rising, +${t.diff}%</span>`;
   if (t.dir==='down') return `<span style="color:${OC.failed};font-weight:700">↘ falling, ${t.diff}%</span>`;
   return '<span class="muted" style="font-weight:600">→ stable</span>';
 }
@@ -3094,7 +3107,7 @@ function renderMonTrick(root, all){
   if (top && fails.length >= 4){
     const h = Math.floor(fails.length / 2), sh = l => l.filter(a => parseTags(a.note).includes(top[0])).length / l.length;
     const d = sh(fails.slice(h)) - sh(fails.slice(0, h));
-    failTrend = d <= -.15 ? ` · <span style="color:${OC.landed}">decreasing</span>` : d >= .15 ? ` · <span style="color:${OC.failed}">increasing</span>` : ' · stable';
+    failTrend = d <= -.15 ? ` · <span style="color:${OC.good}">decreasing</span>` : d >= .15 ? ` · <span style="color:${OC.failed}">increasing</span>` : ' · stable';
   }
   // Varianten & Grabs
   const vars = {};
