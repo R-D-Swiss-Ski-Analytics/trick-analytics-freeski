@@ -42,7 +42,7 @@ function updateFwdSwBtn(prefix) {
       btn.type = 'button'; btn.textContent = val;
       btn.dataset.val = val;
       const isActive = dirSelect.value === val;
-      btn.style.cssText = `flex:1;padding:8px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .15s;background:${isActive?'rgba(57,195,212,0.18)':'var(--surface2)'};border-color:${isActive?'#39c3d4':'var(--border)'};color:${isActive?'#39c3d4':'var(--muted)'};`;
+      btn.style.cssText = `flex:1;padding:8px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .15s;background:${isActive?'rgba(57,195,212,0.18)':'var(--surface2)'};border-color:${isActive?'#39c3d4':'var(--border)'};color:${isActive?'#39c3d4':'var(--muted)'};`;
       btn.onclick = () => {
         dirSelect.value = val;
         wrap.querySelectorAll('button').forEach(b => {
@@ -230,7 +230,7 @@ function renderSessionPerformance() {
   if (to)   data = data.filter(t => t.datum && t.datum <= to);
 
   if (!data.length) {
-    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">No session data for this period / filter.</div>';
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:14px;">No session data for this period / filter.</div>';
     return;
   }
 
@@ -256,7 +256,7 @@ function renderSessionPerformance() {
   el.innerHTML = `
     <div class="hinweis-block">
       <span>All recorded tricks per athlete, grouped by direction</span>
-      <div style="margin-top:4px;font-size:10px;">QoE (Quality of Execution) = average of the rated categories Take-off · Trick · Grab · Landing — Miss 0% · Okay 50% · Perfect 100% · 🟢 ≥70% Ready · 🟡 ≥50% Developing</div>
+      <div style="margin-top:4px;font-size:12px;">QoE (Quality of Execution) = average of the rated categories Take-off · Trick · Grab · Landing — Miss 0% · Okay 50% · Perfect 100% · 🟢 ≥70% Ready · 🟡 ≥50% Developing</div>
     </div>
     <div>
       ${athList.map((athlet, i) => {
@@ -283,7 +283,7 @@ function renderSessionPerformance() {
         const dirBlocks = DIRS.map(d => {
           const entries = byDir[d];
           return `<div style="flex:1;min-width:200px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${DIR_COL[d]};margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid ${DIR_COL[d]}33;">${d}</div>
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${DIR_COL[d]};margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid ${DIR_COL[d]}33;">${d}</div>
             ${entries.length ? entries.map(([trick, s]) => {
               const qoe      = avgOf(s.qoeVals);
               const st       = status(qoe);
@@ -292,12 +292,12 @@ function renderSessionPerformance() {
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
                   <span style="font-size:12px;color:var(--text);flex:1;">${trick}</span>
                 </div>
-                <div style="display:flex;gap:10px;margin-top:4px;font-size:11px;font-weight:700;flex-wrap:wrap;">
+                <div style="display:flex;gap:10px;margin-top:4px;font-size:12px;font-weight:700;flex-wrap:wrap;">
                   <span style="color:${colFor(qoe)};">${qoe}% QoE</span>
                   <span style="color:var(--muted);font-weight:400;">${s.att} att.</span>
                 </div>
               </div>`;
-            }).join('') : `<div style="color:var(--muted);font-size:11px;padding:6px 0;">—</div>`}
+            }).join('') : `<div style="color:var(--muted);font-size:12px;padding:6px 0;">—</div>`}
           </div>`;
         }).join('');
 
@@ -423,16 +423,16 @@ async function realityCheck() {
   modal.innerHTML = `
     <div style="background:#0d1f33;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:660px;width:100%;max-height:88vh;display:flex;flex-direction:column;">
       <!-- Header -->
-      <div style="font-family:Poppins,sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">🔍 Reality Check</div>
+      <div style="font-family:inherit;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">🔍 Reality Check</div>
       <div class="hinweis-block">
         Session data since ${seasonFrom.split('-').reverse().join('.')} · ${flagged.length} suggestion${flagged.length!==1?'s':''} (Learned &lt;70% ↓ · Goals ≥70% ↑) · select athletes to apply
       </div>
       <!-- Search + select all -->
       <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
         <input id="rc-search" type="text" placeholder="Search athlete…" oninput="rcFilter(this.value)"
-          style="flex:1;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:Poppins,sans-serif;">
-        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=true)"  style="padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);white-space:nowrap;">✓ All</button>
-        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=false)" style="padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);white-space:nowrap;">✗ None</button>
+          style="flex:1;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
+        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=true)"  style="padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--muted);white-space:nowrap;">✓ All</button>
+        <button onclick="document.querySelectorAll('.rc-chk').forEach(c=>c.checked=false)" style="padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--muted);white-space:nowrap;">✗ None</button>
       </div>
       <!-- Athlete list -->
       <div id="rc-list" style="overflow-y:auto;flex:1;margin-bottom:14px;">
@@ -442,7 +442,7 @@ async function realityCheck() {
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--surface2);">
               <input type="checkbox" class="rc-chk" data-athlet="${athlet}" checked
                 style="width:15px;height:15px;accent-color:#f59e0b;cursor:pointer;flex-shrink:0;">
-              <span style="font-size:13px;font-weight:700;color:var(--text);flex:1;">${athlet}</span>
+              <span style="font-size:14px;font-weight:700;color:var(--text);flex:1;">${athlet}</span>
               <span class="hinweis">${byAthlet[athlet].length} trick${byAthlet[athlet].length!==1?'s':''} affected</span>
             </label>
             <!-- Tricks -->
@@ -450,16 +450,16 @@ async function realityCheck() {
               <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;padding:7px 14px 7px 38px;border-top:1px solid var(--border);">
                 <div>
                   <div style="font-size:12px;color:var(--text);font-weight:500;">${rcTrickDesc(f)}</div>
-                  ${f.disziplin?`<div style="font-size:10px;color:var(--muted);margin-top:1px;">${f.disziplin}</div>`:''}
+                  ${f.disziplin?`<div style="font-size:12px;color:var(--muted);margin-top:1px;">${f.disziplin}</div>`:''}
                 </div>
-                <span style="font-size:11px;color:${f.action.startsWith('upgrade')?'#34d399':'#f59e0b'};white-space:nowrap;font-weight:600;">${f.action.startsWith('upgrade')?'↑':'↓'} ${f.reason}</span>
+                <span style="font-size:12px;color:${f.action.startsWith('upgrade')?'#34d399':'#f59e0b'};white-space:nowrap;font-weight:600;">${f.action.startsWith('upgrade')?'↑':'↓'} ${f.reason}</span>
               </div>`).join('')}
           </div>`).join('')}
       </div>
       <!-- Footer -->
       <div style="display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:14px;">
-        <button onclick="this.closest('[style*=inset]').remove()" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Cancel</button>
-        <button onclick="applyRealityCheckSelected(window._rcFlagged,this)" style="padding:8px 18px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply selected</button>
+        <button onclick="this.closest('[style*=inset]').remove()" style="padding:8px 18px;border-radius:8px;font-family:inherit;font-size:14px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Cancel</button>
+        <button onclick="applyRealityCheckSelected(window._rcFlagged,this)" style="padding:8px 18px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:none;background:#f59e0b;color:#000;">Apply selected</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -625,7 +625,7 @@ async function rebuildReportFromTimestamps(id, silent=false) {
 function renderSessionReports() {
   const el = document.getElementById('session-reports-list');
   if (!el) return;
-  if (!dbSessionReports.length) { el.innerHTML = '<div style="color:var(--muted);padding:12px;font-size:13px;">No session reports yet.</div>'; return; }
+  if (!dbSessionReports.length) { el.innerHTML = '<div style="color:var(--muted);padding:12px;font-size:14px;">No session reports yet.</div>'; return; }
   el.innerHTML = dbSessionReports.map((r,idx) => {
     const dateStr = r.datum ? (() => { const p=r.datum.split('-'); return p[2]+'.'+p[1]+'.'+p[0].slice(2); })() : '';
     const condStars = r.conditions ? '★'.repeat(r.conditions)+'☆'.repeat(5-r.conditions) : '';
@@ -635,12 +635,12 @@ function renderSessionReports() {
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
       <div style="flex:1;min-width:0;">
         <div class="wert-mittel">${dateStr} &nbsp;<span style="color:var(--muted);font-weight:400;font-size:12px;">${typeShort} · ${durStr}</span></div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${athStr}${condStars?' · '+condStars:''}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${athStr}${condStars?' · '+condStars:''}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
-        <button onclick="openReportPrint(window._srReports[${idx}])" style="padding:6px 12px;border-radius:6px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">View</button>
-        <button onclick="deleteSessionReport(${r.id},false)" title="Delete report only" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a33;color:#e2001a;font-size:13px;cursor:pointer;">🗑</button>
-        <button onclick="deleteSessionReport(${r.id},true)" title="Delete report + all trick data" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a;color:#e2001a;font-size:11px;cursor:pointer;font-weight:700;">🗑+</button>
+        <button onclick="openReportPrint(window._srReports[${idx}])" style="padding:6px 12px;border-radius:6px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:inherit;font-size:12px;cursor:pointer;">View</button>
+        <button onclick="deleteSessionReport(${r.id},false)" title="Delete report only" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a33;color:#e2001a;font-size:14px;cursor:pointer;">🗑</button>
+        <button onclick="deleteSessionReport(${r.id},true)" title="Delete report + all trick data" style="padding:6px 8px;border-radius:6px;background:none;border:1px solid #e2001a;color:#e2001a;font-size:12px;cursor:pointer;font-weight:700;">🗑+</button>
       </div>
     </div>`;
   }).join('');
@@ -880,7 +880,7 @@ function openTeamPdfReport() {
     const sessRows = Object.entries(byTrick).sort((a,b)=>b[1].att-a[1].att).map(([trick,s]) => {
       const lp = qoeAvg(s.qoeVals) ?? 0;
       const typeStr = [...s.type].map(t=>({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Comp'}[t]||t)).join(', ');
-      return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#34d399':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:11px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
+      return `<tr><td>${trick}</td><td>${typeStr}</td><td style="text-align:center">${s.att}</td><td style="text-align:center;font-weight:700;color:${lp>=70?'#34d399':lp>=40?'#f59e0b':'#cc0000'}">${lp}%</td><td style="font-size:12px;color:#777">${[...s.dates].slice(-3).join(', ')}</td></tr>`;
     }).join('');
 
     // ── Assessment data ──
@@ -914,18 +914,18 @@ function openTeamPdfReport() {
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Team Report — ${title}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;padding:32px 40px;max-width:900px;margin:0 auto;font-size:13px;}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;padding:32px 40px;max-width:900px;margin:0 auto;font-size:14px;}
   .print-btn{margin-bottom:24px;}
-  .print-btn button{padding:9px 22px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;}
+  .print-btn button{padding:9px 22px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:14px;cursor:pointer;}
   h1{font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:20px;}
   .ath-block{margin-bottom:24px;border:1px solid #e0e0e0;border-radius:4px;overflow:hidden;page-break-inside:avoid;}
-  .ath-name{background:#1a1a1a;color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;}
+  .ath-name{background:#1a1a1a;color:#fff;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;}
   .ath-sum{background:#f9f9f9;border-bottom:1px solid #e0e0e0;padding:6px 12px;font-size:12px;color:#555;}
   table{width:100%;border-collapse:collapse;}
-  th{background:#f0f0f0;padding:6px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#666;}
+  th{background:#f0f0f0;padding:6px 10px;text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#666;}
   td{padding:6px 10px;border-top:1px solid #eee;font-size:12px;}
-  .section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#777;padding:8px 12px 4px;background:#fafafa;border-top:1px solid #e0e0e0;border-bottom:1px solid #eee;}
-  footer{margin-top:28px;border-top:1px solid #ddd;padding-top:10px;font-size:11px;color:#aaa;display:flex;justify-content:space-between;}
+  .section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#777;padding:8px 12px 4px;background:#fafafa;border-top:1px solid #e0e0e0;border-bottom:1px solid #eee;}
+  footer{margin-top:28px;border-top:1px solid #ddd;padding-top:10px;font-size:12px;color:#aaa;display:flex;justify-content:space-between;}
   @media print{.print-btn{display:none;} body{padding:16px;}}
 </style></head><body>
   <div class="print-btn"><button onclick="window.print()">Print / Save as PDF</button></div>
@@ -1043,7 +1043,7 @@ function renderLiveSession() {
       const dot = lastResult ? (lastResult.result==='miss'?'🔴':lastResult.result==='perfect'?'🔵':'🟢') : '';
       const isActive = name === sessActiveAthlete;
       return `<button onclick="selectSessAthlete('${name}')" style="
-        padding:10px 18px;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;
+        padding:10px 18px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;
         background:${isActive?'rgba(57,195,212,0.2)':'var(--surface2)'};
         border:2px solid ${isActive?'#39c3d4':'var(--border)'};
         color:${isActive?'#39c3d4':'var(--muted)'};
@@ -1069,9 +1069,9 @@ function renderLiveSession() {
 
       <!-- Trick dropdown -->
       <div class="abstand-20">
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Working on</div>
+        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;text-align:center;">Working on</div>
         <select onchange="sessSetTrick('${name}',this.value)"
-          style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+          style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;font-family:inherit;">
           <option value="">— select trick —</option>
           ${(() => {
             const fsDirOrder = {'Left':0,'Right':1,'Switch Left':2,'Switch Right':3};
@@ -1121,14 +1121,14 @@ function renderLiveSession() {
         if (!grabs.length) return '';
         const selParts = (d.currentGrab || '').split(' to ').filter(Boolean);
         return `<div style="margin-bottom:16px;">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Grab <span style="text-transform:none;letter-spacing:0;">(tap a 2nd grab for a double grab)</span></div>
+          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Grab <span style="text-transform:none;letter-spacing:0;">(tap a 2nd grab for a double grab)</span></div>
           <div style="display:flex;flex-wrap:wrap;gap:5px;" id="sess-grabs-${sid}">
             <button onclick="sessSelectGrab('${name}','',this)" data-grab="" class="sess-grab-btn${!d.currentGrab?' active':''}"
-              style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid ${!d.currentGrab?'#39c3d4':'var(--border)'};background:${!d.currentGrab?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${!d.currentGrab?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;">No Grab</button>
+              style="padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;border:1.5px solid ${!d.currentGrab?'#39c3d4':'var(--border)'};background:${!d.currentGrab?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${!d.currentGrab?'#39c3d4':'var(--muted)'};font-family:inherit;">No Grab</button>
             ${grabs.map(g => {
               const active = selParts.includes(g);
               return '<button onclick="sessSelectGrab(\''+name+'\',\''+g.replace(/'/g,"\\'")+'\',this)" data-grab="'+g.replace(/"/g,'&quot;')+'" class="sess-grab-btn"'+
-                ' style="padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;border:1.5px solid '+(active?'#39c3d4':'var(--border)')+';background:'+(active?'rgba(57,195,212,0.18)':'var(--surface2)')+';color:'+(active?'#39c3d4':'var(--muted)')+';font-family:\'Poppins\',sans-serif;">'+g+(grabStat[g]==='goal'?' 🎯':'')+'</button>';
+                ' style="padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;border:1.5px solid '+(active?'#39c3d4':'var(--border)')+';background:'+(active?'rgba(57,195,212,0.18)':'var(--surface2)')+';color:'+(active?'#39c3d4':'var(--muted)')+';font-family:inherit;">'+g+(grabStat[g]==='goal'?' 🎯':'')+'</button>';
             }).join('')}
           </div>
         </div>`;
@@ -1138,7 +1138,7 @@ function renderLiveSession() {
       <div style="display:flex;flex-direction:column;gap:12px;">
         ${[['takeoff','Take-off'],['trick','Trick'],['grab','Grab'],['land','Landing']].map(([cat,label]) => `
           <div>
-            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">${label}</div>
+            <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">${label}</div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
               ${[['miss','✗ MISS','#e2001a','rgba(226,0,26,0.1)'],
                  ['okay','✓ OKAY','#34d399','rgba(52,211,153,0.1)'],
@@ -1146,7 +1146,7 @@ function renderLiveSession() {
                    const active = sessRatings[name]?.[cat] === val;
                    return `<button onclick="setSessRating('${name}','${cat}','${val}',this)"
                      id="sr-${sid}-${cat}-${val}"
-                     style="padding:18px 8px;border-radius:12px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent;
+                     style="padding:18px 8px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent;
                      background:${active?col.replace(')',',0.25)').replace('rgba','rgba').replace('#','rgba(').replace(/rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2}),/i,(m,r,g,b)=>`rgba(${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},`)||bg:bg};
                      border:${active?'3px':'2px'} solid ${col};color:${col};opacity:${active?1:0.6};"
                    >${lbl}</button>`;
@@ -1154,8 +1154,8 @@ function renderLiveSession() {
             </div>
           </div>`).join('')}
       </div>
-      <input type="text" id="sess-comment-${sid}" placeholder="Comment before rating (optional)" style="width:100%;margin-top:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
-      <button onclick="logRatedAttempt('${name}')" style="width:100%;margin-top:10px;padding:14px 8px;border-radius:12px;background:rgba(57,195,212,0.12);border:2px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;cursor:pointer;-webkit-tap-highlight-color:transparent;">＋ LOG ATTEMPT</button>
+      <input type="text" id="sess-comment-${sid}" placeholder="Comment before rating (optional)" style="width:100%;margin-top:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
+      <button onclick="logRatedAttempt('${name}')" style="width:100%;margin-top:10px;padding:14px 8px;border-radius:12px;background:rgba(57,195,212,0.12);border:2px solid #39c3d4;color:#39c3d4;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.5px;cursor:pointer;-webkit-tap-highlight-color:transparent;">＋ LOG ATTEMPT</button>
     </div>`;
   }
 
@@ -1316,7 +1316,7 @@ async function logAttempt(name, result) {
 function renderSessionLog() {
   const el = document.getElementById('sess-log');
   if (!sessLog.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;">No attempts logged yet.</div>';
+    el.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">No attempts logged yet.</div>';
     return;
   }
   const filtered = sessActiveAthlete
@@ -1326,35 +1326,35 @@ function renderSessionLog() {
     const icon = e.result==='miss'?'✗':e.result==='perfect'?'⭐':'✓';
     const col = e.result==='miss'?'#e2001a':e.result==='perfect'?'#39c3d4':'#34d399';
     const ratingStr = [e.takeoff&&`TO:${e.takeoff}`, e.trick_r&&`T:${e.trick_r}`, e.grab&&`G:${e.grab}`, e.land&&`L:${e.land}`].filter(Boolean).join(' ');
-    const ratings = ratingStr ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">[${ratingStr}]</span>` : '';
+    const ratings = ratingStr ? `<span style="font-size:12px;color:var(--muted);margin-left:4px;">[${ratingStr}]</span>` : '';
     const isEditing = sessEditIdx === i;
     let editRow = '';
     if (isEditing) {
       const r = sessEditRatings;
       const catBtn = (cat,val,lbl,c) => {
         const active = r[cat]===val;
-        return `<button onclick="setEditRating('${cat}','${val}')" style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:2px solid ${c};background:${active?c:'transparent'};color:${active?'#060f1a':c};font-family:'Poppins',sans-serif;">${lbl}</button>`;
+        return `<button onclick="setEditRating('${cat}','${val}')" style="padding:5px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ${c};background:${active?c:'transparent'};color:${active?'#060f1a':c};font-family:inherit;">${lbl}</button>`;
       };
       const tg = splitTrickGrab(e.trick||'');
       editRow = `<div style="padding:8px 12px 8px 38px;display:flex;flex-direction:column;gap:6px;">
-        <input type="text" id="sess-edit-trick" value="${tg.base.replace(/"/g,'&quot;')}" placeholder="Trick name" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+        <input type="text" id="sess-edit-trick" value="${tg.base.replace(/"/g,'&quot;')}" placeholder="Trick name" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
         ${grabSelectHtml('sess-edit-grab', assessGrabList(), tg.grab)}
-        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">T-off</span>${catBtn('takeoff','miss','Miss','#e2001a')}${catBtn('takeoff','okay','Okay','#34d399')}${catBtn('takeoff','perfect','Perfect','#39c3d4')}</div>
-        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Trick</span>${catBtn('trick','miss','Miss','#e2001a')}${catBtn('trick','okay','Okay','#34d399')}${catBtn('trick','perfect','Perfect','#39c3d4')}</div>
-        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>${catBtn('grab','miss','Miss','#e2001a')}${catBtn('grab','okay','Okay','#34d399')}${catBtn('grab','perfect','Perfect','#39c3d4')}</div>
-        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Land</span>${catBtn('land','miss','Miss','#e2001a')}${catBtn('land','okay','Okay','#34d399')}${catBtn('land','perfect','Perfect','#39c3d4')}</div>
-        <input type="text" id="sess-edit-comment" value="${(e.comment||'').replace(/"/g,'&quot;')}" placeholder="Comment (optional)" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
-        <div style="display:flex;gap:8px;margin-top:2px;"><button onclick="saveFsLogEdit(${i})" style="padding:6px 16px;border-radius:8px;background:#39c3d4;border:none;color:#060f1a;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;">Save</button><button onclick="cancelFsEdit()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button></div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:var(--muted);min-width:36px;">T-off</span>${catBtn('takeoff','miss','Miss','#e2001a')}${catBtn('takeoff','okay','Okay','#34d399')}${catBtn('takeoff','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:var(--muted);min-width:36px;">Trick</span>${catBtn('trick','miss','Miss','#e2001a')}${catBtn('trick','okay','Okay','#34d399')}${catBtn('trick','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:var(--muted);min-width:36px;">Grab</span>${catBtn('grab','miss','Miss','#e2001a')}${catBtn('grab','okay','Okay','#34d399')}${catBtn('grab','perfect','Perfect','#39c3d4')}</div>
+        <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:var(--muted);min-width:36px;">Land</span>${catBtn('land','miss','Miss','#e2001a')}${catBtn('land','okay','Okay','#34d399')}${catBtn('land','perfect','Perfect','#39c3d4')}</div>
+        <input type="text" id="sess-edit-comment" value="${(e.comment||'').replace(/"/g,'&quot;')}" placeholder="Comment (optional)" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
+        <div style="display:flex;gap:8px;margin-top:2px;"><button onclick="saveFsLogEdit(${i})" style="padding:6px 16px;border-radius:8px;background:#39c3d4;border:none;color:#060f1a;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Save</button><button onclick="cancelFsEdit()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;">Cancel</button></div>
       </div>`;
     }
     return `<div style="border-radius:8px;${isEditing?'background:rgba(57,195,212,0.08);border:1px solid #39c3d433;':''}">
       <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;${isEditing?'':'background:var(--surface2);border-radius:8px;'}font-size:12px;">
-        <span style="color:${col};font-weight:800;font-size:15px;min-width:16px;">${icon}</span>
+        <span style="color:${col};font-weight:800;font-size:16px;min-width:16px;">${icon}</span>
         <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
         <span style="flex:1;color:var(--text);">${e.trick||'—'}${ratings}${e.comment?` <span class="gedaempft-10">— ${e.comment}</span>`:''}</span>
         <span class="gedaempft-11">${e.time}</span>
-        <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">✏️</button>
-        <button onclick="deleteLogEntry(${i})" style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;flex-shrink:0;">🗑</button>
+        <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;padding:2px 7px;font-size:12px;flex-shrink:0;">✏️</button>
+        <button onclick="deleteLogEntry(${i})" style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:14px;padding:2px 6px;flex-shrink:0;">🗑</button>
       </div>
       ${editRow}
     </div>`;
@@ -1464,13 +1464,13 @@ function addAthleteToSession() {
   grid.innerHTML = SESS_SQUADS.map(sq => {
     const athletes = SESS_ALL_ATHLETES.filter(a => a.squad === sq.key);
     return `<div style="margin-bottom:14px;">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${sq.color};margin-bottom:8px;">${sq.label}</div>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${sq.color};margin-bottom:8px;">${sq.label}</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;">
         ${athletes.map(a => {
           const checked = sessSelectedAthletes.includes(a.name);
           return `<label style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface2);border:2px solid ${checked?'#39c3d4':'var(--border)'};border-radius:10px;cursor:pointer;transition:border-color .15s;" id="sess-ath-card-${a.name.replace(/\s/g,'_')}">
             <input type="checkbox" value="${a.name}" onchange="toggleSessionAthlete('${a.name}')" ${checked?'checked':''} style="width:16px;height:16px;accent-color:${sq.color};cursor:pointer;flex-shrink:0;">
-            <span style="font-weight:600;font-size:13px;color:var(--text);">${shortName(a.name)}</span>
+            <span style="font-weight:600;font-size:14px;color:var(--text);">${shortName(a.name)}</span>
           </label>`;
         }).join('')}
       </div>
@@ -1802,10 +1802,10 @@ async function viewSessionReportByDate(date) {
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
   modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:24px;max-width:400px;width:100%;">
     <div style="font-size:16px;font-weight:700;color:#39c3d4;margin-bottom:16px;">Multiple reports for ${date}</div>
-    ${data.map((r,i)=>`<button onclick="document.getElementById('sr-pick-modal').remove();openReportPrint(window._srPickData[${i}])" style="display:block;width:100%;text-align:left;padding:10px 14px;margin-bottom:8px;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;">
+    ${data.map((r,i)=>`<button onclick="document.getElementById('sr-pick-modal').remove();openReportPrint(window._srPickData[${i}])" style="display:block;width:100%;text-align:left;padding:10px 14px;margin-bottom:8px;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;font-family:inherit;font-size:14px;cursor:pointer;">
       ${({'Landing Bag':'Bag','Jump On-Snow':'On-Snow','Big Air Competition':'Competition'}[r.session_type]||r.session_type||'—')} · ${(r.athletes||[]).map(a=>a.split(' ')[0]).join(', ')} · ${r.duration_min}min
     </button>`).join('')}
-    <button onclick="document.getElementById('sr-pick-modal').remove()" style="padding:8px 16px;background:none;border:1px solid #1a3450;border-radius:8px;color:#6b8299;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;margin-top:4px;">Cancel</button>
+    <button onclick="document.getElementById('sr-pick-modal').remove()" style="padding:8px 16px;background:none;border:1px solid #1a3450;border-radius:8px;color:#6b8299;font-family:inherit;font-size:14px;cursor:pointer;margin-top:4px;">Cancel</button>
   </div>`;
   window._srPickData = data;
   document.body.appendChild(modal);
@@ -2041,13 +2041,13 @@ function renderStandort() {
         <span style="display:flex;gap:8px;align-items:center;margin-top:2px;">
           ${e.datum ? `<span class="hinweis-klein">${e.datum}</span>` : ''}
           ${e.notiz ? `<span class="hinweis-klein">${e.notiz}</span>` : ''}
-          ${e.coach_kommentar ? `<div style="font-size:10px;color:#f59e0b;margin-top:3px;"><b>Coach:</b> ${e.coach_kommentar}</div>` : ''}
-          ${e.coach_video ? `<div style="font-size:10px;"><a class="warnung" href="${e.coach_video}" target="_blank">▶ Video</a></div>` : ''}
+          ${e.coach_kommentar ? `<div style="font-size:12px;color:#f59e0b;margin-top:3px;"><b>Coach:</b> ${e.coach_kommentar}</div>` : ''}
+          ${e.coach_video ? `<div style="font-size:12px;"><a class="warnung" href="${e.coach_video}" target="_blank">▶ Video</a></div>` : ''}
         </span>
         ${grabChipsHtml(e)}
       </span>
       <span style="margin-right:6px;flex-shrink:0;">${sbVideoBtn(e)}</span>
-      <button style="background:none;border:1px solid #1a3450;border-radius:5px;color:#6b8299;cursor:pointer;padding:2px 7px;font-size:11px;margin-right:2px;" onclick="openSbEdit(${e.id})" title="Edit">✏️</button>
+      <button style="background:none;border:1px solid #1a3450;border-radius:5px;color:#6b8299;cursor:pointer;padding:2px 7px;font-size:12px;margin-right:2px;" onclick="openSbEdit(${e.id})" title="Edit">✏️</button>
       <button class="btn-del" onclick="deleteSbEntry(${e.id})" title="Remove">✕</button>
     </div>`;
   }
@@ -2058,7 +2058,7 @@ function renderStandort() {
   }
 
   function renderList(items, emptyMsg) {
-    if (!items.length) return `<div style="padding:20px;color:var(--muted);font-size:13px;text-align:center;">${emptyMsg}</div>`;
+    if (!items.length) return `<div style="padding:20px;color:var(--muted);font-size:14px;text-align:center;">${emptyMsg}</div>`;
     // Group by direction
     const groups = {};
     items.forEach(e => {
@@ -2074,7 +2074,7 @@ function renderStandort() {
     return orderedKeys.map(dir => {
       const col = DIR_COLORS[dir] || 'var(--muted)';
       return `<div style="border-bottom:1px solid var(--border);">
-        <div style="padding:6px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${col};background:var(--surface2);">${dir}</div>
+        <div style="padding:6px 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${col};background:var(--surface2);">${dir}</div>
         ${groups[dir].map(e => renderTrickRow(e)).join('')}
       </div>`;
     }).join('');
@@ -2082,11 +2082,11 @@ function renderStandort() {
 
   document.getElementById('sb-columns').innerHTML = `
     <div>
-      <div class="sb-col-header mastered">✅ LEARNED TRICKS <span style="opacity:.6;font-size:13px;">(${bList.length})</span></div>
+      <div class="sb-col-header mastered">✅ LEARNED TRICKS <span style="opacity:.6;font-size:14px;">(${bList.length})</span></div>
       <div class="sb-col-body mastered">${renderList(bList, 'No entries yet')}</div>
     </div>
     <div>
-      <div class="sb-col-header goal">🎯 GOALS / IN PROGRESS <span style="opacity:.6;font-size:13px;">(${zList.length})</span></div>
+      <div class="sb-col-header goal">🎯 GOALS / IN PROGRESS <span style="opacity:.6;font-size:14px;">(${zList.length})</span></div>
       <div class="sb-col-body goal">${renderList(zList, 'No goals yet')}</div>
     </div>
   `;
@@ -2220,18 +2220,18 @@ async function loadEntwicklung() {
         <div class="abstand-16">
           <div class="chart-title abstand-12">📊 Trick Statistics</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-            <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
-            <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
+            <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
+            <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
           </div>
-          <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+          <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:14px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
             <option value="">— select trick —</option>
           </select>
-          <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+          <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:14px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
             <option value="">— select session —</option>
           </select>
         </div>
         <div id="ev-trick-analytics"></div>
-        <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5;">QoE (Quality of Execution) = average of the rated categories Take-off · Trick · Grab · Landing — ✗ Miss 0% · ✓ Okay 50% · ⭐ Perfect 100%. Unrated categories are simply left out.</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;">QoE (Quality of Execution) = average of the rated categories Take-off · Trick · Grab · Landing — ✗ Miss 0% · ✓ Okay 50% · ⭐ Perfect 100%. Unrated categories are simply left out.</div>
       </div>
     </div>
     <div id="ev-raw-wrap" style="margin-top:16px;"></div>`;
@@ -2247,19 +2247,19 @@ async function loadEntwicklung() {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <span class="hinweis">Filter:</span>
-          <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
-          <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
-          <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
-          <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
+          <button id="ev-tf-all"  onclick="setTypeFilter('')"                    style="padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">All</button>
+          <button id="ev-tf-bag"  onclick="setTypeFilter('Landing Bag')"         style="padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Bag</button>
+          <button id="ev-tf-jump" onclick="setTypeFilter('Jump On-Snow')"        style="padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">On-Snow</button>
+          <button id="ev-tf-comp" onclick="setTypeFilter('Big Air Competition')" style="padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">Comp</button>
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
-          <span style="font-size:11px;color:var(--muted);white-space:nowrap;">Period:</span>
+          <span style="font-size:12px;color:var(--muted);white-space:nowrap;">Period:</span>
           <input type="text" id="ev-date-from" oninput="setDateRange()" placeholder="DD.MM.YY"
-            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
+            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:12px;font-family:inherit;width:90px;">
           <span class="hinweis">→</span>
           <input type="text" id="ev-date-to" oninput="setDateRange()" placeholder="DD.MM.YY"
-            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-family:Poppins,sans-serif;width:90px;">
-          <button onclick="clearDateRange()" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-family:Poppins,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
+            style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:12px;font-family:inherit;width:90px;">
+          <button onclick="clearDateRange()" style="padding:3px 8px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--muted);">✕</button>
         </div>
       </div>`;
     modeDiv.after(fRow);
@@ -2423,7 +2423,7 @@ async function loadEntwicklung() {
   const landEl = document.getElementById('bars-landing');
   if (landEl) {
     if (!landSorted.length) {
-      landEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No session entries with landing data yet.</div>';
+      landEl.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No session entries with landing data yet.</div>';
     } else {
       landEl.innerHTML = landSorted.map(([label, pct, ja, total]) => {
         const col = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
@@ -2448,7 +2448,7 @@ async function loadEntwicklung() {
       (s.status === 'mastered' || s.status === 'erreicht') && (s.datum || s.created_at)
     );
     if (!sbMitDatum.length) {
-      verlaufEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No mastered tricks in assessment yet.</div>';
+      verlaufEl.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No mastered tricks in assessment yet.</div>';
     } else {
       // Group by date
       const byDate = {};
@@ -2472,18 +2472,18 @@ async function loadEntwicklung() {
       verlaufEl.innerHTML = rows.map((r, i) => {
         const dateStr = new Date(r.date).toLocaleDateString('de-CH', { day:'2-digit', month:'2-digit', year:'numeric' });
         const newBadge = r.newTricks.length > 0
-          ? `<span style="background:rgba(52,211,153,0.15);color:#34d399;border:1px solid #34d399;border-radius:12px;padding:2px 8px;font-size:11px;margin-left:8px;">+${r.newTricks.length} neu</span>`
+          ? `<span style="background:rgba(52,211,153,0.15);color:#34d399;border:1px solid #34d399;border-radius:12px;padding:2px 8px;font-size:12px;margin-left:8px;">+${r.newTricks.length} neu</span>`
           : '';
         const newList = r.newTricks.length > 0
           ? `<div style="margin-top:6px;padding-left:12px;border-left:2px solid #34d399;">${r.newTricks.map(t =>
-              `<span style="display:inline-block;background:rgba(52,211,153,0.12);color:#34d399;border-radius:10px;padding:2px 8px;font-size:11px;margin:2px;">${t}</span>`
+              `<span style="display:inline-block;background:rgba(52,211,153,0.12);color:#34d399;border-radius:10px;padding:2px 8px;font-size:12px;margin:2px;">${t}</span>`
             ).join('')}</div>`
           : '';
         const borderTop = i > 0 ? 'border-top:1px solid var(--border);' : '';
         return `<div style="padding:12px 0;${borderTop}">
           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
-            <span style="font-family:'Poppins',sans-serif;font-size:15px;letter-spacing:1px;color:#ffffff;">${dateStr}</span>
-            <span style="font-size:13px;color:var(--text);font-weight:600;">${r.total} Tricks mastered</span>
+            <span style="font-family:inherit;font-size:16px;letter-spacing:1px;color:#ffffff;">${dateStr}</span>
+            <span style="font-size:14px;color:var(--text);font-weight:600;">${r.total} Tricks mastered</span>
             ${newBadge}
           </div>
           ${newList}
@@ -2501,7 +2501,7 @@ async function loadEntwicklung() {
   if (statsEl) {
     const sessionTricks = tricks.filter(t => t.trickaufbau && t.trickaufbau.includes(' — '));
     if (!sessionTricks.length) {
-      statsEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No session data yet.</div>';
+      statsEl.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No session data yet.</div>';
     } else {
       // Group by trickaufbau + datum
       const byTrick = {};
@@ -2516,12 +2516,12 @@ async function loadEntwicklung() {
 
       const rows = Object.entries(byTrick).sort((a,b) => (qoeAvg(b[1].qoeVals)||0) - (qoeAvg(a[1].qoeVals)||0));
 
-      statsEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+      statsEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:14px;">
         <thead><tr>
-          <th style="text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Trick — Grab</th>
-          <th style="text-align:center;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Date(s)</th>
-          <th style="text-align:center;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Attempts</th>
-          <th style="text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">QoE</th>
+          <th style="text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Trick — Grab</th>
+          <th style="text-align:center;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Date(s)</th>
+          <th style="text-align:center;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Attempts</th>
+          <th style="text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;">QoE</th>
         </tr></thead>
         <tbody>
           ${rows.map(([trick, s]) => {
@@ -2532,19 +2532,19 @@ async function loadEntwicklung() {
             return `<tr style="border-bottom:1px solid var(--border);">
               <td style="padding:10px 12px;">
                 <div style="font-weight:600;color:var(--text);">${parts[0]||trick}</div>
-                ${parts[1] ? `<div style="font-size:11px;color:#39c3d4;margin-top:2px;">Grab: ${parts[1]}</div>` : ''}
+                ${parts[1] ? `<div style="font-size:12px;color:#39c3d4;margin-top:2px;">Grab: ${parts[1]}</div>` : ''}
               </td>
               <td style="padding:10px 12px;text-align:center;color:var(--muted);font-size:12px;">${dates}</td>
               <td style="padding:10px 12px;text-align:center;">
-                <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:15px;color:var(--text);">${s.total}</div>
-                ${s.perfect > 0 ? `<div style="font-size:10px;color:#39c3d4;margin-top:2px;">⭐ ${s.perfect}× perfect</div>` : ''}
+                <div style="font-family:inherit;font-weight:700;font-size:16px;color:var(--text);">${s.total}</div>
+                ${s.perfect > 0 ? `<div style="font-size:12px;color:#39c3d4;margin-top:2px;">⭐ ${s.perfect}× perfect</div>` : ''}
               </td>
               <td style="padding:10px 12px;min-width:120px;">
                 <div style="display:flex;align-items:center;gap:8px;">
                   <div style="flex:1;background:var(--surface2);border-radius:4px;height:8px;overflow:hidden;">
                     <div style="background:${barColor};width:${pct}%;height:8px;border-radius:4px;transition:width .4s;"></div>
                   </div>
-                  <span style="font-weight:700;color:${barColor};min-width:36px;font-size:13px;">${pct}%</span>
+                  <span style="font-weight:700;color:${barColor};min-width:36px;font-size:14px;">${pct}%</span>
                 </div>
               </td>
             </tr>`;
@@ -2675,7 +2675,7 @@ function appendTrendChart(allData, highlightDate) {
     isHighlight: d === highlightDate
   }));
   const hasComp = pts.some(p=>p.grab!==null);
-  const legend = hasComp ? `<div style="display:flex;gap:16px;font-size:11px;margin-bottom:6px;">
+  const legend = hasComp ? `<div style="display:flex;gap:16px;font-size:12px;margin-bottom:6px;">
     <span style="color:#34d399;">● Landing</span><span style="color:#39c3d4;">● Trick</span><span style="color:#f59e0b;">● Grab</span><span style="color:#a78bfa;">● Take-off</span>
   </div>` : '';
   const cid = 'trend-chart-'+Date.now();
@@ -2777,7 +2777,7 @@ function appendTrendChart(allData, highlightDate) {
     if (!tt) {
       tt = document.createElement('div');
       tt.id = 'ta-chart-tooltip';
-      tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:10px;padding:10px 14px;font-size:12px;font-family:Poppins,sans-serif;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+      tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:10px;padding:10px 14px;font-size:12px;font-family:inherit;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
       document.body.appendChild(tt);
     }
     const fmtD = d => { const [y,m,dd]=d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
@@ -2834,15 +2834,15 @@ function renderSessionSummary(data, sessionLabel) {
   const headerHtml = `<div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;">
     <div style="background:var(--surface2);border-radius:10px;padding:12px 18px;text-align:center;flex:1;min-width:80px;">
       <div style="font-size:22px;font-weight:800;color:var(--text);">${total}</div>
-      <div style="font-size:11px;color:var(--muted);">Attempts</div>
+      <div style="font-size:12px;color:var(--muted);">Attempts</div>
     </div>
     <div style="background:var(--surface2);border-radius:10px;padding:12px 18px;text-align:center;flex:1;min-width:80px;">
       <div style="font-size:22px;font-weight:800;color:${totalQoe!==null?colQ(totalQoe):'var(--muted)'};">${totalQoe!==null?totalQoe+'%':'—'}</div>
-      <div style="font-size:11px;color:var(--muted);">Quality of Execution</div>
+      <div style="font-size:12px;color:var(--muted);">Quality of Execution</div>
     </div>
     <div style="background:var(--surface2);border-radius:10px;padding:12px 18px;text-align:center;flex:1;min-width:80px;">
       <div style="font-size:22px;font-weight:800;color:#f59e0b;">${Object.keys(tmap).length}</div>
-      <div style="font-size:11px;color:var(--muted);">Tricks</div>
+      <div style="font-size:12px;color:var(--muted);">Tricks</div>
     </div>
   </div>`;
 
@@ -2856,20 +2856,20 @@ function renderSessionSummary(data, sessionLabel) {
       <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
         ${[['Take-off',toAvg,'#a78bfa'],['Grab',gAvg,'#f59e0b'],['Trick',tAvg,'#39c3d4'],['Landing',lAvg,'#34d399']].map(([lbl,val,col])=>
           val!==null?`<div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:11px;color:var(--muted);min-width:52px;">${lbl}</span>
+            <span style="font-size:12px;color:var(--muted);min-width:52px;">${lbl}</span>
             <div style="flex:1;background:var(--border);border-radius:3px;height:8px;">
               <div style="background:${col};width:${val}%;height:8px;border-radius:3px;"></div>
             </div>
-            <span style="font-size:11px;font-weight:700;color:${col};min-width:32px;text-align:right;">${val}%</span>
+            <span style="font-size:12px;font-weight:700;color:${col};min-width:32px;text-align:right;">${val}%</span>
           </div>`:'').join('')}
       </div>` : '';
 
     return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-        <div style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}${s.perf>0?` <span style="font-size:11px;color:#39c3d4;font-weight:400;">⭐ ${s.perf}×</span>`:''}</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);flex:1;">${trick}${s.perf>0?` <span style="font-size:12px;color:#39c3d4;font-weight:400;">⭐ ${s.perf}×</span>`:''}</div>
         <div style="text-align:right;flex-shrink:0;">
           <div style="font-size:18px;font-weight:800;color:${trickQoe!==null?colQ(trickQoe):'var(--muted)'};">${trickQoe!==null?trickQoe+'%':'—'}</div>
-          <div style="font-size:10px;color:var(--muted);">QoE · ${s.att} att.</div>
+          <div style="font-size:12px;color:var(--muted);">QoE · ${s.att} att.</div>
         </div>
       </div>
       ${compBars}
@@ -2893,9 +2893,9 @@ function renderRawEntries(entries, subtitle) {
   wrap.innerHTML = `
     <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;">
       <button onclick="(function(b,c){c.style.display=c.style.display==='none'?'block':'none';b.querySelector('.raw-arrow').textContent=c.style.display==='none'?'▶':'▼';})(this,document.getElementById('ev-raw-list'))"
-        style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border:none;cursor:pointer;font-family:Poppins,sans-serif;color:var(--muted);font-size:12px;font-weight:600;">
+        style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border:none;cursor:pointer;font-family:inherit;color:var(--muted);font-size:12px;font-weight:600;">
         <span style="display:flex;align-items:center;gap:8px;"><span class="raw-arrow">${open?'▼':'▶'}</span> Raw Entries (${sorted.length})${subtitle?` <span style="font-weight:400;opacity:.7;">— ${subtitle}</span>`:''}</span>
-        <span style="font-size:11px;opacity:.6;">Inspect, edit or delete entries</span>
+        <span style="font-size:12px;opacity:.6;">Inspect, edit or delete entries</span>
       </button>
       <div id="ev-raw-list" style="display:${open?'block':'none'};max-height:420px;overflow-y:auto;">
         ${sorted.length ? sorted.map(e=>{
@@ -2905,19 +2905,19 @@ function renderRawEntries(entries, subtitle) {
           const editForm = isEditing ? `
             <div style="grid-column:1/-1;padding:8px 0 4px;display:flex;flex-direction:column;gap:6px;">
               <input id="raw-edit-trick-${e.id}" type="text" value="${(e.trickaufbau||'').replace(/"/g,'&quot;')}"
-                style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+                style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                <select id="raw-edit-result-${e.id}" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+                <select id="raw-edit-result-${e.id}" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
                   <option value="miss" ${curResult==='miss'?'selected':''}>✗ Miss</option>
                   <option value="landed" ${curResult==='landed'?'selected':''}>✓ Landed</option>
                   <option value="perfect" ${curResult==='perfect'?'selected':''}>⭐ Perfect</option>
                 </select>
-                <button onclick="saveRawEdit(${e.id})" style="padding:5px 12px;border-radius:6px;background:#39c3d4;border:none;color:#060f1a;font-size:12px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;">Save</button>
-                <button onclick="cancelRawEdit()" style="padding:5px 12px;border-radius:6px;background:none;border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button>
+                <button onclick="saveRawEdit(${e.id})" style="padding:5px 12px;border-radius:6px;background:#39c3d4;border:none;color:#060f1a;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Save</button>
+                <button onclick="cancelRawEdit()" style="padding:5px 12px;border-radius:6px;background:none;border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;">Cancel</button>
               </div>
             </div>` : '';
           return `
-          <div id="ev-raw-row-${e.id}" style="display:grid;grid-template-columns:60px 36px 48px 1fr 52px 1fr 28px 28px;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--border);font-size:11px;${isEditing?'background:rgba(57,195,212,0.06);':''}flex-wrap:wrap;">
+          <div id="ev-raw-row-${e.id}" style="display:grid;grid-template-columns:60px 36px 48px 1fr 52px 1fr 28px 28px;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--border);font-size:12px;${isEditing?'background:rgba(57,195,212,0.06);':''}flex-wrap:wrap;">
             <span class="gedaempft">${fmtDate(e.datum)}</span>
             <span class="gedaempft-10">${ts}</span>
             <span class="gedaempft-10">${typShort(e.typ)}</span>
@@ -2925,11 +2925,11 @@ function renderRawEntries(entries, subtitle) {
             ${(() => { const q = qoeOf(e); return q!==null
               ? `<span style="color:${q>=70?'#34d399':q>=40?'#f59e0b':'#e2001a'};font-weight:700;">${q}%</span>`
               : `<span class="gedaempft">—</span>`; })()}
-            <span style="color:var(--muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${fmtKom(e.kommentar)}</span>
+            <span style="color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${fmtKom(e.kommentar)}</span>
             <button onclick="editRawEntry(${e.id})" title="Edit entry"
-              style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;font-size:11px;padding:2px 5px;line-height:1;">✏</button>
+              style="background:none;border:1px solid ${isEditing?'#39c3d4':'var(--border)'};border-radius:6px;color:${isEditing?'#39c3d4':'var(--muted)'};cursor:pointer;font-size:12px;padding:2px 5px;line-height:1;">✏</button>
             <button onclick="deleteRawEntry(${e.id})" title="Delete entry"
-              style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:13px;padding:2px 6px;line-height:1;">🗑</button>
+              style="background:none;border:1px solid #e2001a33;border-radius:6px;color:#e2001a;cursor:pointer;font-size:14px;padding:2px 6px;line-height:1;">🗑</button>
             ${editForm}
           </div>`;
         }).join('')
@@ -3095,12 +3095,12 @@ function renderTrickAnalytics() {
   const trickVisible = sel && sel.style.display !== 'none';
   const sessionVisible = dateSel && dateSel.style.display !== 'none';
   if (trickVisible && !chosen && chosen !== '__ALL__') {
-    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px;">Select a trick to view its progression.</div>';
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px;font-size:14px;">Select a trick to view its progression.</div>';
     renderRawEntries(_taData, 'all entries');
     return;
   }
   if (sessionVisible && !dateKey) {
-    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px;">Select a session to view its tricks.</div>';
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px;font-size:14px;">Select a session to view its tricks.</div>';
     renderRawEntries(_taData, 'all entries');
     return;
   }
@@ -3127,7 +3127,7 @@ function renderTrickAnalytics() {
     const chartIds = [];
     allTricks.forEach((tObj,ti) => {
       if (tObj.dir !== lastDir) {
-        html += `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#39c3d4;margin:${lastDir?'20':'4'}px 0 8px;">${tObj.dir}</div>`;
+        html += `<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#39c3d4;margin:${lastDir?'20':'4'}px 0 8px;">${tObj.dir}</div>`;
         lastDir = tObj.dir;
       }
       const td = baseData.filter(t=>t.trickaufbau===tObj.name);
@@ -3141,7 +3141,7 @@ function renderTrickAnalytics() {
       html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
           <span class="wert-mittel">${tObj.name}</span>
-          <span style="font-size:16px;font-weight:800;color:${colQ(trickQoe)};">${trickQoe}% <span style="font-size:11px;font-weight:400;">QoE · ${totAtt} att.</span></span>
+          <span style="font-size:16px;font-weight:800;color:${colQ(trickQoe)};">${trickQoe}% <span style="font-size:12px;font-weight:400;">QoE · ${totAtt} att.</span></span>
         </div>
         <canvas id="${cid}" style="width:100%;height:100px;"></canvas>
       </div>`;
@@ -3231,19 +3231,19 @@ function renderTrickAnalytics() {
         const trickQoe=qoeAvg(s.qoeVals);
         const bars = hasComp ? [['Take-off',toA,'#a78bfa'],['Grab',gA,'#f59e0b'],['Trick',tA,'#39c3d4'],['Landing',lA,'#34d399']].map(([lbl,val,col])=>
           val!==null?`<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
-            <span style="font-size:10px;color:var(--muted);min-width:48px;">${lbl}</span>
+            <span style="font-size:12px;color:var(--muted);min-width:48px;">${lbl}</span>
             <div style="flex:1;background:var(--border);border-radius:3px;height:7px;">
               <div style="background:${col};width:${val}%;height:7px;border-radius:3px;"></div>
             </div>
-            <span style="font-size:10px;font-weight:700;color:${col};min-width:32px;text-align:right;">${val}%</span>
+            <span style="font-size:12px;font-weight:700;color:${col};min-width:32px;text-align:right;">${val}%</span>
           </div>`:''
         ).join('') : '';
         return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-            <span style="font-size:13px;font-weight:600;color:var(--text);flex:1;">${trick}${s.perf>0?` <span style="font-size:11px;color:#39c3d4;font-weight:400;">⭐ ${s.perf}×</span>`:''}</span>
+            <span style="font-size:14px;font-weight:600;color:var(--text);flex:1;">${trick}${s.perf>0?` <span style="font-size:12px;color:#39c3d4;font-weight:400;">⭐ ${s.perf}×</span>`:''}</span>
             <div style="text-align:right;flex-shrink:0;">
               <span style="font-size:18px;font-weight:800;color:${trickQoe!==null?colQ(trickQoe):'var(--muted)'};">${trickQoe!==null?trickQoe+'%':'—'}</span>
-              <span style="font-size:10px;color:var(--muted);display:block;">QoE · ${s.att} att.</span>
+              <span style="font-size:12px;color:var(--muted);display:block;">QoE · ${s.att} att.</span>
             </div>
           </div>
           ${bars}
@@ -3255,7 +3255,7 @@ function renderTrickAnalytics() {
       cardsHtml +
       (radarTotal > 0 ? `
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:8px;">
-          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
+          <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
           <div style="display:flex;align-items:center;justify-content:center;gap:32px;">
             <div>${sessionDirLegendHtml(dirCnt,SESS_DIRS,SESS_DIR_COL,radarTotal)}</div>
             <div style="width:160px;height:160px;flex-shrink:0;min-width:160px;">
@@ -3277,7 +3277,7 @@ function renderTrickAnalytics() {
       if (notes || rep.comments) {
         const notesDiv = document.createElement('div');
         notesDiv.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:10px;';
-        notesDiv.innerHTML = `<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Coach Notes</div>`
+        notesDiv.innerHTML = `<div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Coach Notes</div>`
           + (rep.comments ? `<div style="color:var(--text);font-size:12px;margin-bottom:8px;padding:6px 10px;background:rgba(57,195,212,0.06);border-radius:6px;">${rep.comments}</div>` : '')
           + notes;
         el.appendChild(notesDiv);
@@ -3286,7 +3286,7 @@ function renderTrickAnalytics() {
 
     const reportBtnDiv = document.createElement('div');
     reportBtnDiv.style.cssText = 'margin-top:12px;text-align:center;';
-    reportBtnDiv.innerHTML = `<button onclick="viewSessionReportByDate('${sessionDate}')" style="padding:10px 22px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">📄 View Session Report</button>`;
+    reportBtnDiv.innerHTML = `<button onclick="viewSessionReportByDate('${sessionDate}')" style="padding:10px 22px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">📄 View Session Report</button>`;
     el.appendChild(reportBtnDiv);
 
     renderRawEntries(sd, label);
@@ -3342,7 +3342,7 @@ function renderTrickAnalytics() {
         <div><div style="font-size:26px;font-weight:800;color:${overallQoe!==null?colQ(overallQoe):'var(--muted)'};">${overallQoe!==null?overallQoe+'%':'—'}</div><div class="hinweis">Quality of Execution</div></div>
       </div>`;
 
-  const legend = hasComp ? `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;font-size:11px;">
+  const legend = hasComp ? `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;font-size:12px;">
     <span class="gut">● Landing</span><span class="akzent">● Trick</span><span class="warnung">● Grab</span><span style="color:#a78bfa;">● Take-off</span>
   </div>` : '';
 
@@ -3368,7 +3368,7 @@ function renderTrickAnalytics() {
   el.innerHTML = statsHtml + legend + `<canvas id="${cid}" style="width:100%;"></canvas>` +
     (!chosen && ovDirTotal>0 ? `
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:16px;">
-        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
+        <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Direction Distribution</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:32px;">
           <div>${sessionDirLegendHtml(ovDirCntFinal,OV_DIRS,OV_DIR_COL,ovDirTotal)}</div>
           <div style="width:160px;height:160px;flex-shrink:0;min-width:160px;">
@@ -3440,7 +3440,7 @@ function renderTrickAnalytics() {
     if (!tt) {
       tt = document.createElement('div');
       tt.id = 'ta-chart-tooltip';
-      tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:10px;padding:10px 14px;font-size:12px;font-family:Poppins,sans-serif;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+      tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:10px;padding:10px 14px;font-size:12px;font-family:inherit;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
       document.body.appendChild(tt);
     }
     const fmtD = d => { const [y,m,dd]=d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
@@ -3469,7 +3469,7 @@ function renderTrickAnalytics() {
       } else {
         html+=`<div class="akzent">QoE: <b>${p.qoe!==null?p.qoe+'%':'—'}</b>${isFirst?'':dSign(p.qoe,pv?.qoe)}</div>`;
       }
-      if(isFirst) html+=`<div style="font-size:10px;color:#6b8299;margin-top:4px;">First session</div>`;
+      if(isFirst) html+=`<div style="font-size:12px;color:#6b8299;margin-top:4px;">First session</div>`;
       tt.innerHTML=html;
       tt.style.display='block';
       const tx = e.clientX+14, ty = e.clientY-10;
@@ -3520,7 +3520,7 @@ function openSbEdit(id){
     pair.style.cssText="display:inline-flex;border-radius:20px;overflow:hidden;border:1px solid #1a3450;";
     const btn=document.createElement('button');
     btn.type='button';btn.dataset.key=g;
-    btn.style.cssText="padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;border:none;border-right:1px solid #1a3450;";
+    btn.style.cssText="padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit;border:none;border-right:1px solid #1a3450;";
     styleFsGrabSeg(btn,g,sbeGrabMatrix[g]);
     btn.onclick=()=>{
       const next=nextGrabState(sbeGrabMatrix[g]);
@@ -3529,7 +3529,7 @@ function openSbEdit(id){
     };
     const lBtn=document.createElement('button');
     lBtn.type='button';lBtn.dataset.key='Lead '+g;
-    lBtn.style.cssText="padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;border:none;";
+    lBtn.style.cssText="padding:5px 8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:none;";
     styleFsGrabSeg(lBtn,'L',sbeGrabMatrix['Lead '+g]);
     lBtn.onclick=()=>{
       const k='Lead '+g;
@@ -3599,7 +3599,7 @@ function initStandortGrabs() {
     // Normal button
     const btn = document.createElement('button');
     btn.type = 'button'; btn.dataset.key = g;
-    btn.style.cssText = "padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;border:none;border-right:1px solid #1a3450;";
+    btn.style.cssText = "padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit;border:none;border-right:1px solid #1a3450;";
     styleFsGrabSeg(btn, g, undefined);
     btn.onclick = () => {
       const next = nextGrabState(sbAssessGrabMatrix[g]);
@@ -3609,7 +3609,7 @@ function initStandortGrabs() {
     // Lead button
     const lBtn = document.createElement('button');
     lBtn.type = 'button'; lBtn.dataset.key = 'Lead ' + g;
-    lBtn.style.cssText = "padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;border:none;";
+    lBtn.style.cssText = "padding:5px 8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:none;";
     styleFsGrabSeg(lBtn, 'L', undefined);
     lBtn.onclick = () => {
       const k = 'Lead ' + g;
@@ -3653,7 +3653,7 @@ const FS_TYPE_FILTERS = [['','All'],['Landing Bag','Bag'],['Big Air Training','B
 
 function fsTypeChipsHtml(current, handler) {
   return `<div style="display:flex;gap:6px;flex-wrap:wrap;">${FS_TYPE_FILTERS.map(([v,l]) =>
-    `<button onclick="${handler}('${v}')" style="padding:6px 14px;border-radius:999px;border:1.5px solid ${current===v?'#39c3d4':'var(--border)'};background:${current===v?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${current===v?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">${l}</button>`).join('')}</div>`;
+    `<button onclick="${handler}('${v}')" style="padding:6px 14px;border-radius:999px;border:1.5px solid ${current===v?'#39c3d4':'var(--border)'};background:${current===v?'rgba(57,195,212,0.18)':'var(--surface2)'};color:${current===v?'#39c3d4':'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">${l}</button>`).join('')}</div>`;
 }
 
 function fsMonLanded(t) {
@@ -3783,14 +3783,14 @@ async function sbMonAthletePdf() {
 }
 
 function monHeaderHtml(title, sub, backable) {
-  const dateInput = id => `<input type="date" id="${id}" value="${id==='mon-date-from'?sbMonFrom:sbMonTo}" onchange="sbMonApplyCustom()" style="padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:'Poppins',sans-serif;">`;
+  const dateInput = id => `<input type="date" id="${id}" value="${id==='mon-date-from'?sbMonFrom:sbMonTo}" onchange="sbMonApplyCustom()" style="padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">`;
   return `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
-    ${backable ? `<button onclick="sbMonBack()" style="padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">← Back</button>` : ''}
+    ${backable ? `<button onclick="sbMonBack()" style="padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">← Back</button>` : ''}
     <div style="flex:1;min-width:160px;">
       <div style="font-size:20px;font-weight:800;color:var(--text);">${title}</div>
       ${sub ? `<div class="hinweis-gross">${sub}</div>` : ''}
     </div>
-    <select onchange="sbMonSetRange(this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+    <select onchange="sbMonSetRange(this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
       <option value="season" ${sbMonRange==='season'?'selected':''}>Current season</option>
       <option value="last" ${sbMonRange==='last'?'selected':''}>Last season</option>
       <option value="all" ${sbMonRange==='all'?'selected':''}>All time</option>
@@ -3823,39 +3823,39 @@ function renderMonTeam() {
       const ringColor = att < 5 || qoe === null ? '#6b8299' : qoe >= 70 ? '#34d399' : qoe >= 50 ? '#f59e0b' : '#e2001a';
       return `<div onclick="sbMonOpenAthlete(${i})" style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <div style="width:34px;height:34px;border-radius:50%;background:rgba(57,195,212,0.15);color:#39c3d4;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">${initials}</div>
+          <div style="width:34px;height:34px;border-radius:50%;background:rgba(57,195,212,0.15);color:#39c3d4;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">${initials}</div>
           <div style="min-width:0;">
-            <div style="font-weight:700;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.name}</div>
-            <div style="font-size:10px;color:${sq.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sq.label}</div>
+            <div style="font-weight:700;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.name}</div>
+            <div style="font-size:12px;color:${sq.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sq.label}</div>
           </div>
         </div>
         <div style="display:flex;justify-content:center;position:relative;margin-bottom:12px;">
           ${sbMonRing((qoe||0)/100, ringColor, 92, 9)}
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-            <div style="font-size:17px;font-weight:800;color:var(--text);">${att && qoe !== null ? qoe+'%' : '—'}</div>
-            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Ø QoE</div>
+            <div style="font-size:16px;font-weight:800;color:var(--text);">${att && qoe !== null ? qoe+'%' : '—'}</div>
+            <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Ø QoE</div>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;text-align:center;border-top:1px solid var(--border);padding-top:10px;">
-          <div><div style="font-size:15px;font-weight:800;color:#34d399;">${cnt.ready}</div><div class="hinweis-winzig">Ready</div></div>
-          <div><div style="font-size:15px;font-weight:800;color:#f59e0b;">${cnt.building}</div><div class="hinweis-winzig">Building</div></div>
-          <div><div style="font-size:15px;font-weight:800;color:#e2001a;">${cnt.critical}</div><div class="hinweis-winzig">Critical</div></div>
+          <div><div style="font-size:16px;font-weight:800;color:#34d399;">${cnt.ready}</div><div class="hinweis-winzig">Ready</div></div>
+          <div><div style="font-size:16px;font-weight:800;color:#f59e0b;">${cnt.building}</div><div class="hinweis-winzig">Building</div></div>
+          <div><div style="font-size:16px;font-weight:800;color:#e2001a;">${cnt.critical}</div><div class="hinweis-winzig">Critical</div></div>
         </div>
-        <div style="text-align:center;font-size:11px;color:#39c3d4;margin-top:10px;">View details →</div>
+        <div style="text-align:center;font-size:12px;color:#39c3d4;margin-top:10px;">View details →</div>
       </div>`;
     }).join('');
     return `<div style="margin-bottom:22px;">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${sq.color};margin-bottom:10px;">${sq.label}</div>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${sq.color};margin-bottom:10px;">${sq.label}</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">${tiles}</div>
     </div>`;
   }).join('');
   root.innerHTML = `<div class="card polster-20">
     ${monHeaderHtml('Team Monitoring', rows.length + ' attempts · ' + sbMonPeriodLabel(), false)}
-    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Ø QoE = average execution quality (Miss 0% · Okay 50% · Perfect 100% per rated category) · Trick status: ≥70% = <b class="gut">Ready</b> · 50–69% = <b class="warnung">Building</b> · &lt;50% = <b class="schlecht">Critical</b> · fewer than 5 attempts = Low data</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Ø QoE = average execution quality (Miss 0% · Okay 50% · Perfect 100% per rated category) · Trick status: ≥70% = <b class="gut">Ready</b> · 50–69% = <b class="warnung">Building</b> · &lt;50% = <b class="schlecht">Critical</b> · fewer than 5 attempts = Low data</div>
     ${sections || '<div class="leer-schmal">No athletes configured.</div>'}
     <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
-      <button onclick="sbMonRealityCheck()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
-      <button onclick="sbMonTeamPdf()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Team PDF</button>
+      <button onclick="sbMonRealityCheck()" style="padding:8px 16px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
+      <button onclick="sbMonTeamPdf()" style="padding:8px 16px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Team PDF</button>
     </div>
   </div>`;
 }
@@ -3875,12 +3875,12 @@ function renderMonAthlete() {
     dirCnt[d] = (dirCnt[d]||0) + 1;
   });
   const balanceBar = att ? `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px;">
-    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:10px;">Direction balance — session data only</div>
+    <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:10px;">Direction balance — session data only</div>
     <div style="display:flex;height:12px;border-radius:999px;overflow:hidden;margin-bottom:10px;">
       ${FS_MON_DIRS.filter(d => dirCnt[d]).map(d => `<div style="width:${(dirCnt[d]/att*100).toFixed(1)}%;background:${FS_MON_DIR_COLORS[d]};"></div>`).join('')}
     </div>
     <div style="display:flex;gap:14px;flex-wrap:wrap;">
-      ${FS_MON_DIRS.filter(d => dirCnt[d]).map(d => `<span style="font-size:11px;color:var(--text);"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${FS_MON_DIR_COLORS[d]};margin-right:5px;vertical-align:0;"></span>${d} <b style="color:${FS_MON_DIR_COLORS[d]};">${Math.round(dirCnt[d]/att*100)}%</b></span>`).join('')}
+      ${FS_MON_DIRS.filter(d => dirCnt[d]).map(d => `<span style="font-size:12px;color:var(--text);"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${FS_MON_DIR_COLORS[d]};margin-right:5px;vertical-align:0;"></span>${d} <b style="color:${FS_MON_DIR_COLORS[d]};">${Math.round(dirCnt[d]/att*100)}%</b></span>`).join('')}
     </div>
   </div>` : '';
 
@@ -3897,26 +3897,26 @@ function renderMonAthlete() {
       const lp = tr.att ? Math.round(tr.landed/tr.att*100) : 0;
       const trend = sbMonTrend(tr.rows);
       return `<div onclick="sbMonOpenTrick(${tr._i})" style="background:var(--surface2);border:1px solid ${st==='critical' ? 'rgba(226,0,26,0.45)' : 'var(--border)'};border-radius:12px;padding:13px 14px;cursor:pointer;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.3;">${tr.trick}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.3;">${tr.trick}</div>
         <div style="display:flex;gap:12px;align-items:center;">
           <div style="flex-shrink:0;text-align:center;">
             <div style="font-size:24px;font-weight:800;color:${qoeCol};">${tr.qoe}%</div>
-            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Ø QoE</div>
+            <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Ø QoE</div>
           </div>
-          <div style="flex:1;font-size:10px;color:var(--muted);line-height:1.7;">
+          <div style="flex:1;font-size:12px;color:var(--muted);line-height:1.7;">
             <div style="display:flex;justify-content:space-between;"><span>Attempts</span><b class="haupttext">${tr.att}</b></div>
             <div style="display:flex;justify-content:space-between;"><span class="gut">Landed</span><b class="gut">${lp}%</b></div>
             <div style="display:flex;justify-content:space-between;"><span class="schlecht">Missed</span><b class="schlecht">${tr.att - tr.landed}</b></div>
           </div>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;">
           ${trend ? sbMonTrendHtml(trend) : '<span></span>'}
           <span style="color:${stInfo.color};font-weight:700;">${stInfo.label}</span>
         </div>
       </div>`;
     }).join('');
     return `<div style="margin-bottom:18px;">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${FS_MON_DIR_COLORS[dir]};margin-bottom:10px;">${dir}</div>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${FS_MON_DIR_COLORS[dir]};margin-bottom:10px;">${dir}</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">${cards}</div>
     </div>`;
   }).join('');
@@ -3926,7 +3926,7 @@ function renderMonAthlete() {
     ${balanceBar}
     ${groups || '<div class="leer-schmal">No session attempts in this period.</div>'}
     <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;display:flex;justify-content:center;">
-      <button onclick="sbMonAthletePdf()" style="padding:8px 16px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Athlete Report (PDF)</button>
+      <button onclick="sbMonAthletePdf()" style="padding:8px 16px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);">📄 Athlete Report (PDF)</button>
     </div>
   </div>`;
 }
@@ -3953,14 +3953,14 @@ function fsMonVariantsHtml(rows) {
     const lp = m.att ? Math.round(m.landed/m.att*100) : 0;
     return `<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:12px;">
       <span style="color:var(--text);line-height:1.3;" title="${full}">${grab}</span>
-      <span style="color:var(--muted);font-size:11px;white-space:nowrap;">${m.att} att.</span>
-      <span style="font-size:11px;white-space:nowrap;color:#34d399;">${lp}% landed</span>
+      <span style="color:var(--muted);font-size:12px;white-space:nowrap;">${m.att} att.</span>
+      <span style="font-size:12px;white-space:nowrap;color:#34d399;">${lp}% landed</span>
       <b style="color:${col};min-width:44px;text-align:right;">${q}%</b>
     </div>`;
   }).join('');
   return `<div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Variants &amp; grabs (${list.length})</div>
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Variants &amp; grabs (${list.length})</div>
       <div class="hinweis-winzig">attempts · landed · Ø QoE</div>
     </div>
     ${rowsHtml}
@@ -3985,7 +3985,7 @@ function renderMonTrick() {
   const catChips = FS_MON_CATS.map(([key, label]) => {
     const pct = fsMonCatAvg(rows, key);
     if (pct === null) return '';
-    return `<span style="border:1px solid ${qoeCol(pct)};color:${qoeCol(pct)};border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;">${label} ${pct}%</span>`;
+    return `<span style="border:1px solid ${qoeCol(pct)};color:${qoeCol(pct)};border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;">${label} ${pct}%</span>`;
   }).filter(Boolean).join(' ')
     || `<span class="hinweis">No category ratings yet — fills up with new session logs</span>`;
 
@@ -3993,7 +3993,7 @@ function renderMonTrick() {
     ${monHeaderHtml(trick, name, true)}
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;">
       <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
-        ${stKey === 'ready' ? '<span style="border:1px solid #34d399;color:#34d399;border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;background:rgba(52,211,153,0.08);">Comp Ready</span>' : `<span style="border:1px solid ${FS_MON_STATUS[stKey].color};color:${FS_MON_STATUS[stKey].color};border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;">${FS_MON_STATUS[stKey].label}</span>`}
+        ${stKey === 'ready' ? '<span style="border:1px solid #34d399;color:#34d399;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;background:rgba(52,211,153,0.08);">Comp Ready</span>' : `<span style="border:1px solid ${FS_MON_STATUS[stKey].color};color:${FS_MON_STATUS[stKey].color};border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;">${FS_MON_STATUS[stKey].label}</span>`}
       </div>
       <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
         <div style="position:relative;flex-shrink:0;">
@@ -4011,29 +4011,29 @@ function renderMonTrick() {
         </div>
       </div>
       <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Category quality (Take-off · Trick · Grab · Landing)</div>
+        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Category quality (Take-off · Trick · Grab · Landing)</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">${catChips}</div>
       </div>
       ${fsMonVariantsHtml(rows)}
     </div>
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;">
-      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Progress over sessions</div>
-      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:8px;">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Progress over sessions</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:8px;">
         <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Volume (attempts)</span>
         <span><span style="display:inline-block;width:14px;height:2px;background:#34d399;vertical-align:3px;"></span> Ø QoE</span>
         <span><span style="display:inline-block;width:14px;height:2px;background:#f59e0b;vertical-align:3px;border-bottom:2px dashed #f59e0b;background:none;"></span> Landed rate</span>
       </div>
       ${sbMonTimeChart(rows)}
-      <div style="font-size:10px;color:var(--muted);margin-top:8px;">⚠ Sessions with fewer than 5 attempts — rates are statistically weak.</div>
-      <div id="mon-time-detail" style="font-size:11px;color:var(--muted);min-height:16px;margin-top:8px;">Tap a bar for session details</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;">⚠ Sessions with fewer than 5 attempts — rates are statistically weak.</div>
+      <div id="mon-time-detail" style="font-size:12px;color:var(--muted);min-height:16px;margin-top:8px;">Tap a bar for session details</div>
     </div>
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px;">
-      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Category quality over sessions</div>
-      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:8px;">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Category quality over sessions</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:8px;">
         ${FS_MON_CATS.map(([key, label]) => `<span><span style="display:inline-block;width:14px;height:2px;background:${FS_MON_CAT_COLORS[key]};vertical-align:3px;"></span> ${label}</span>`).join('')}
       </div>
       ${fsMonCatChart(rows)}
-      <div style="font-size:10px;color:var(--muted);margin-top:8px;">Ø per session and category (Miss 0% · Okay 50% · Perfect 100%). Gaps = category not rated in that session.</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;">Ø per session and category (Miss 0% · Okay 50% · Perfect 100%). Gaps = category not rated in that session.</div>
     </div>
     ${fsMonCoachingHtml(rows)}
   </div>`;
@@ -4053,7 +4053,7 @@ function sbMonTimeChart(rows) {
   let grid = '';
   [0, 25, 50, 75, 100].forEach(p => {
     grid += `<line x1="${PAD}" y1="${yOf(p).toFixed(1)}" x2="${PAD + chartW}" y2="${yOf(p).toFixed(1)}" stroke="var(--border)" stroke-width="1" ${p ? 'stroke-dasharray="2 4"' : ''}/>`;
-    grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
+    grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="11" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
   });
   const qPts = [], lPts = [];
   let bars = '', labels = '';
@@ -4067,12 +4067,12 @@ function sbMonTimeChart(rows) {
     qPts.push([cx, (H - q * (H - 12)).toFixed(1)]);
     lPts.push([cx, (H - lr * (H - 12)).toFixed(1)]);
     bars += `<rect x="${x}" y="${(H - h).toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" rx="3" fill="#4a7dd6" opacity="${(0.35 + 0.65 * nn / maxN).toFixed(2)}" style="cursor:pointer;" onclick="sbMonTimeSel('${d}')"/>`;
-    bars += `<text x="${cx}" y="${(H - h - 3).toFixed(1)}" text-anchor="middle" font-size="8" fill="#4a7dd6" font-family="Poppins,sans-serif">${nn}</text>`;
+    bars += `<text x="${cx}" y="${(H - h - 3).toFixed(1)}" text-anchor="middle" font-size="11" fill="#4a7dd6" font-family="Poppins,sans-serif">${nn}</text>`;
     const lbl = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' : d;
-    labels += `<text x="${cx}" y="${H + 15}" text-anchor="middle" font-size="9" fill="${nn < 5 ? '#f59e0b' : '#6b8299'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
+    labels += `<text x="${cx}" y="${H + 15}" text-anchor="middle" font-size="11" fill="${nn < 5 ? '#f59e0b' : '#6b8299'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
   });
   const line = pts => pts.map(p => p.join(',')).join(' ');
-  const axisTitle = `<text x="${PAD + chartW/2}" y="${H + 30}" text-anchor="middle" font-size="9" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Sessions</text>`;
+  const axisTitle = `<text x="${PAD + chartW/2}" y="${H + 30}" text-anchor="middle" font-size="11" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Sessions</text>`;
   return `<div style="overflow-x:auto;"><svg width="${PAD + chartW}" height="${H + 36}" style="display:block;">
     ${grid}
     ${bars}
@@ -4095,7 +4095,7 @@ function fsMonCatChart(rows) {
   let lines = '', dots = '', labels = '', grid = '';
   [0, 25, 50, 75, 100].forEach(p => {
     grid += `<line x1="${PAD}" y1="${yOf(p).toFixed(1)}" x2="${PAD + chartW}" y2="${yOf(p).toFixed(1)}" stroke="var(--border)" stroke-width="1" ${p ? 'stroke-dasharray="2 4"' : ''}/>`;
-    grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
+    grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="11" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
   });
   FS_MON_CATS.forEach(([key]) => {
     const pts = [];
@@ -4111,9 +4111,9 @@ function fsMonCatChart(rows) {
   dates.forEach((d, i) => {
     const nn = by[d].length;
     const lbl = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' : d;
-    labels += `<text x="${PAD + i * slot + slot/2}" y="${H + 15}" text-anchor="middle" font-size="9" fill="${nn < 5 ? '#f59e0b' : '#6b8299'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
+    labels += `<text x="${PAD + i * slot + slot/2}" y="${H + 15}" text-anchor="middle" font-size="11" fill="${nn < 5 ? '#f59e0b' : '#6b8299'}" font-family="Poppins,sans-serif">${lbl}${nn < 5 ? ' ⚠' : ''}</text>`;
   });
-  const axisTitle = `<text x="${PAD + chartW/2}" y="${H + 30}" text-anchor="middle" font-size="9" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Sessions</text>`;
+  const axisTitle = `<text x="${PAD + chartW/2}" y="${H + 30}" text-anchor="middle" font-size="11" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Sessions</text>`;
   return `<div style="overflow-x:auto;"><svg width="${PAD + chartW}" height="${H + 36}" style="display:block;">${grid}${lines}${dots}${labels}${axisTitle}</svg></div>`;
 }
 
@@ -4155,21 +4155,21 @@ function renderReportsList() {
     return `<div onclick="sbOpenReportInline(${i})" style="display:flex;align-items:center;gap:12px;padding:13px 6px;border-bottom:1px solid var(--border);cursor:pointer;">
       <div style="min-width:64px;font-size:14px;font-weight:700;color:#39c3d4;">${dateStr}</div>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;color:var(--text);font-weight:600;">${typeShort} · ${durStr}${r.location ? ' · '+r.location : ''}</div>
-        <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${athStr}</div>
+        <div style="font-size:14px;color:var(--text);font-weight:600;">${typeShort} · ${durStr}${r.location ? ' · '+r.location : ''}</div>
+        <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${athStr}</div>
       </div>
-      <div style="font-size:11px;color:var(--muted);flex-shrink:0;">${att ? att+' att.' : ''}</div>
+      <div style="font-size:12px;color:var(--muted);flex-shrink:0;">${att ? att+' att.' : ''}</div>
       <div style="color:#39c3d4;font-size:14px;flex-shrink:0;">→</div>
     </div>`;
   }).join('');
-  const dateInput = id => `<input type="date" id="${id}" value="${id==='rep-date-from'?_sbRepFrom:_sbRepTo}" onchange="sbRepApplyCustom()" style="padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;font-family:'Poppins',sans-serif;">`;
+  const dateInput = id => `<input type="date" id="${id}" value="${id==='rep-date-from'?_sbRepFrom:_sbRepTo}" onchange="sbRepApplyCustom()" style="padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">`;
   root.innerHTML = `<div class="card polster-20">
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px;">
       <div style="flex:1;min-width:160px;">
         <div style="font-size:20px;font-weight:800;color:var(--text);">Session Reports</div>
         <div class="hinweis-gross">Tap a session to open the report</div>
       </div>
-      <select onchange="sbRepSetRange(this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+      <select onchange="sbRepSetRange(this.value)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
         <option value="all" ${_sbRepRange==='all'?'selected':''}>All time</option>
         <option value="season" ${_sbRepRange==='season'?'selected':''}>Current season</option>
         <option value="last" ${_sbRepRange==='last'?'selected':''}>Last season</option>
@@ -4204,14 +4204,14 @@ async function sbOpenReportInline(i) {
   root.innerHTML = `<div class="card polster-20">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
       <div style="display:flex;align-items:center;gap:12px;">
-        <button onclick="renderReportsList()" style="padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">← Back</button>
+        <button onclick="renderReportsList()" style="padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">← Back</button>
         <div class="wert-gross">Session Report · ${dateStr}</div>
       </div>
-      <button onclick="sbRVPrintPdf()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">PDF</button>
+      <button onclick="sbRVPrintPdf()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:12px;cursor:pointer;">PDF</button>
     </div>
     ${inner}
     <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px;display:flex;justify-content:center;">
-      <button onclick="sbRepDeleteCurrent()" style="padding:10px 20px;border-radius:8px;background:none;border:1px solid #e2001a;color:#e2001a;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">🗑 Delete session (report + all attempts)</button>
+      <button onclick="sbRepDeleteCurrent()" style="padding:10px 20px;border-radius:8px;background:none;border:1px solid #e2001a;color:#e2001a;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">🗑 Delete session (report + all attempts)</button>
     </div>
   </div>`;
   window.scrollTo(0,0);
@@ -4241,7 +4241,7 @@ function fsTrickChartSvg(g, ai, ti) {
   let grid = '';
   [0, 50, 100].forEach(p => {
     grid += `<line x1="${PAD}" y1="${yOf(p).toFixed(1)}" x2="${PAD + n*slot}" y2="${yOf(p).toFixed(1)}" stroke="var(--border)" stroke-width="1" ${p ? 'stroke-dasharray="2 4"' : ''}/>`;
-    grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
+    grid += `<text x="${PAD - 5}" y="${(yOf(p) + 3).toFixed(1)}" text-anchor="end" font-size="11" fill="#6b8299" font-family="Poppins,sans-serif">${p}%</text>`;
   });
   let qoeSum = 0;
   const pts = [];
@@ -4253,18 +4253,18 @@ function fsTrickChartSvg(g, ai, ti) {
     pts.push([gx + groupW/2, yOf(qoeSum/(i+1)).toFixed(1)]);
     const isMiss = a.result === 'miss';
     if (isMiss) marks += `<rect x="${gx-3}" y="2" width="${groupW+6}" height="${H-2}" fill="rgba(226,0,26,0.05)" rx="3"/>
-      <text x="${gx + groupW/2}" y="11" text-anchor="middle" font-size="9" font-weight="700" fill="#e2001a" font-family="Poppins,sans-serif">✗</text>`;
+      <text x="${gx + groupW/2}" y="11" text-anchor="middle" font-size="11" font-weight="700" fill="#e2001a" font-family="Poppins,sans-serif">✗</text>`;
     FS_RV_CHART_CATS.forEach(([c, col], k) => {
       const v = SCORE[a[c]];
       if (v === undefined) return;
       const h = Math.max(4, v/100 * (H - 8));
       bars += `<rect x="${gx + k*(catW+catGap)}" y="${(H-h).toFixed(1)}" width="${catW}" height="${h.toFixed(1)}" rx="1.5" fill="${col}"/>`;
     });
-    labels += `<text x="${gx + groupW/2}" y="${H + 12}" text-anchor="middle" font-size="8" font-weight="${isMiss?'700':'400'}" fill="${isMiss?'#e2001a':'#6b8299'}" font-family="Poppins,sans-serif">${i+1}</text>`;
+    labels += `<text x="${gx + groupW/2}" y="${H + 12}" text-anchor="middle" font-size="11" font-weight="${isMiss?'700':'400'}" fill="${isMiss?'#e2001a':'#6b8299'}" font-family="Poppins,sans-serif">${i+1}</text>`;
     hits += `<rect x="${gx-3}" y="0" width="${slot}" height="${H+14}" fill="transparent" style="cursor:pointer;" onclick="sbRVShowDetail(${ai},${ti},${i})"/>`;
   });
   const w = PAD + Math.max(n*slot, 40);
-  const axisTitle = `<text x="${PAD + (w-PAD)/2}" y="${H + 24}" text-anchor="middle" font-size="8" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
+  const axisTitle = `<text x="${PAD + (w-PAD)/2}" y="${H + 24}" text-anchor="middle" font-size="11" fill="#6b8299" font-family="Poppins,sans-serif" font-weight="600">Attempts</text>`;
   const lineDots = pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#e8edf2" stroke="#0c1a2b" stroke-width="1"/>`).join('');
   return `<div style="overflow-x:auto;padding:4px 0;"><svg width="${(w*TRICK_CHART_SCALE).toFixed(0)}" height="${((H+28)*TRICK_CHART_SCALE).toFixed(0)}" viewBox="0 0 ${w} ${H+28}" style="display:block;">${grid}${marks}${bars}
     ${n>1?`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#e8edf2" stroke-width="2"/>`:''}
@@ -4294,21 +4294,21 @@ function sbRVShowDetail(ai, ti, i) {
     const seg = (cat, label) => {
       const cur = _sbRVEditCats[cat];
       return `<div style="display:flex;align-items:center;gap:4px;">
-        <span style="font-size:10px;color:var(--muted);min-width:52px;">${label}</span>
+        <span style="font-size:12px;color:var(--muted);min-width:52px;">${label}</span>
         ${['miss','okay','perfect'].map(v => {
           const on = cur === v;
           const col = v==='miss'?'#e2001a':v==='okay'?'#34d399':'#39c3d4';
-          return `<button onclick="sbRVEditCatSet('${cat}','${v}')" style="padding:4px 8px;border-radius:6px;border:1.5px solid ${on?col:'var(--border)'};background:${on?col+'22':'var(--surface2)'};color:${on?col:'var(--muted)'};font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer;">${FS_RV_ICON[v]}</button>`;
+          return `<button onclick="sbRVEditCatSet('${cat}','${v}')" style="padding:4px 8px;border-radius:6px;border:1.5px solid ${on?col:'var(--border)'};background:${on?col+'22':'var(--surface2)'};color:${on?col:'var(--muted)'};font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">${FS_RV_ICON[v]}</button>`;
         }).join('')}
       </div>`;
     };
     el.innerHTML = `<div style="background:var(--surface);border:1px solid #39c3d433;border-radius:10px;padding:10px;margin-top:4px;">
-      <div style="font-size:11px;font-weight:700;color:#39c3d4;margin-bottom:8px;">Edit attempt ${i+1} — ${g.trick} <span style="font-weight:400;color:var(--muted);">(tap again to unset a category)</span></div>
+      <div style="font-size:12px;font-weight:700;color:#39c3d4;margin-bottom:8px;">Edit attempt ${i+1} — ${g.trick} <span style="font-weight:400;color:var(--muted);">(tap again to unset a category)</span></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">${FS_RV_CATS.map(([c,l]) => seg(c,l)).join('')}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-        <button onclick="sbRVEditSave()" style="padding:6px 14px;border-radius:8px;border:2px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Save</button>
-        <button onclick="sbRVEditCancel()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">Cancel</button>
-        <button onclick="sbRVEditDelete()" style="margin-left:auto;padding:6px 12px;border-radius:8px;background:none;border:1px solid #e2001a55;color:#e2001a;font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;">🗑 Delete attempt</button>
+        <button onclick="sbRVEditSave()" style="padding:6px 14px;border-radius:8px;border:2px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Save</button>
+        <button onclick="sbRVEditCancel()" style="padding:6px 12px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;">Cancel</button>
+        <button onclick="sbRVEditDelete()" style="margin-left:auto;padding:6px 12px;border-radius:8px;background:none;border:1px solid #e2001a55;color:#e2001a;font-size:12px;cursor:pointer;font-family:inherit;">🗑 Delete attempt</button>
       </div>
     </div>`;
     return;
@@ -4323,7 +4323,7 @@ function sbRVShowDetail(ai, ti, i) {
   if (a.comment) txt += ` <span class="gedaempft">— ${a.comment}</span>`;
   if (a.time) txt += ` <span class="gedaempft-10">${a.time}</span>`;
   if (_sbRVEditable && _sbRV.report && _sbRV.report.id && a.dbId) {
-    txt += ` <button onclick="sbRVEditStart(${ai},${ti},${i})" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:1px 7px;font-size:10px;">✏️ Edit</button>`;
+    txt += ` <button onclick="sbRVEditStart(${ai},${ti},${i})" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:1px 7px;font-size:12px;">✏️ Edit</button>`;
   }
   el.innerHTML = txt;
 }
@@ -4453,9 +4453,9 @@ function fsReportInnerHtml(report) {
         const a1 = q1.reduce((s,v)=>s+v,0)/q1.length, a2 = q2.reduce((s,v)=>s+v,0)/q2.length;
         if (a2 < a1 - 15) fatigue = `<span class="warnung">↘ QoE drops in 2nd half</span>`;
       }
-      const cmtRows = g.attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💬 <b class="haupttext">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
+      const cmtRows = g.attempts.map((x, ci) => x.comment ? `<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">💬 <b class="haupttext">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
       const cmtCol = cmtRows ? `<div style="flex:0 1 220px;min-width:170px;border-left:1px solid var(--border);padding-left:14px;">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Comments</div>${cmtRows}</div>` : '';
+          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Comments</div>${cmtRows}</div>` : '';
       return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;">
           <div style="font-size:14px;font-weight:700;color:var(--text);">${g.trick}</div>
@@ -4464,8 +4464,8 @@ function fsReportInnerHtml(report) {
         <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
           <div style="flex:1 1 300px;min-width:0;">
             ${fsTrickChartSvg(g, ai, ti)}
-            <div id="sbrv-det-${ai}-${ti}" style="font-size:11px;color:var(--muted);min-height:16px;margin:2px 0 8px;">Tap a bar for details</div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
+            <div id="sbrv-det-${ai}-${ti}" style="font-size:12px;color:var(--muted);min-height:16px;margin:2px 0 8px;">Tap a bar for details</div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;">
               <span><b class="gut">${landed}</b> landed</span>
               <span><b class="schlecht">${missed}</b> missed</span>
               <span>Ø QoE <b style="color:${qoeCol};">${gQoe}%</b></span>
@@ -4478,17 +4478,17 @@ function fsReportInnerHtml(report) {
     }).join('');
     return `<div class="abstand-20">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-        <div style="font-size:17px;font-weight:800;color:#39c3d4;">${a.athlet}</div>
+        <div style="font-size:16px;font-weight:800;color:#39c3d4;">${a.athlet}</div>
         <div class="hinweis">${attempts.length} attempts · ${groups.length} trick${groups.length!==1?'s':''} · ${athLandedPct}% landed · Ø QoE <b class="haupttext">${athQoe}%</b>${a.quali_scores && a.quali_scores.length ? ' · Quali <b class="warnung">' + a.quali_scores.join(' / ') + '</b>' : ''}${a.final_scores && a.final_scores.length ? ' · Final <b class="warnung">' + a.final_scores.join(' / ') + '</b>' : ''}${a.contest_rank ? ' · Rank <b class="warnung">' + a.contest_rank + '</b>' : ''}</div>
       </div>
-      ${a.note ? `<div style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border-left:3px solid #f59e0b;border-radius:8px;padding:8px 10px;margin-bottom:10px;">📝 <b>Coach note:</b> ${a.note}</div>` : ''}
+      ${a.note ? `<div style="font-size:12px;color:#f59e0b;background:rgba(245,158,11,0.08);border-left:3px solid #f59e0b;border-radius:8px;padding:8px 10px;margin-bottom:10px;">📝 <b>Coach note:</b> ${a.note}</div>` : ''}
       ${cards}
     </div>`;
   }).join('');
 
   return `<div class="hinweis-block">${typeShort}${report.location ? ' · '+report.location : ''}${report.duration_min ? ' · '+report.duration_min+' min' : ''}</div>
 ${report.comments ? `<div style="background:var(--surface2);border-left:3px solid #39c3d4;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:14px;"><b class="akzent">Coach comments:</b> ${report.comments}</div>` : ''}
-    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:14px;">
+    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:14px;">
       <span>Bars per attempt (height = rating 0/50/100%):</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#39c3d4;border-radius:2px;vertical-align:-1px;"></span> Take-off</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Trick</span>
@@ -4514,8 +4514,8 @@ function openSessionReportView(report) {
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
       <div class="wert-gross">Session Report · ${dateStr}</div>
       <div style="display:flex;gap:8px;">
-        <button onclick="sbRVPrintPdf()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">PDF</button>
-        <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
+        <button onclick="sbRVPrintPdf()" style="padding:7px 14px;border-radius:8px;background:none;border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:12px;cursor:pointer;">PDF</button>
+        <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
       </div>
     </div>
     ${inner}
@@ -4553,16 +4553,16 @@ function sbRVPrintPdf() {
        color:var(--text);padding:28px 32px;max-width:820px;margin:0 auto;}
   .print-btn{margin-bottom:20px;}
   .print-btn button{padding:9px 22px;background:var(--accent2);color:#060f1a;border:none;border-radius:8px;
-       font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+       font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;}
   h1{font-size:20px;font-weight:800;margin-bottom:10px;}
   .meta{display:flex;flex-wrap:wrap;gap:6px 26px;border-top:1px solid var(--border);
         border-bottom:1px solid var(--border);padding:10px 0;margin-bottom:16px;}
-  .meta div{font-size:11px;color:var(--muted);}
+  .meta div{font-size:12px;color:var(--muted);}
   .meta b{display:block;color:var(--text);font-size:12px;font-weight:600;margin-top:2px;}
   .comments{background:var(--surface2);border-left:3px solid var(--accent2);border-radius:8px;
             padding:10px 12px;font-size:12px;margin-bottom:18px;}
   svg{max-width:100%;height:auto;}
-  footer{margin-top:24px;border-top:1px solid var(--border);padding-top:10px;font-size:10px;
+  footer{margin-top:24px;border-top:1px solid var(--border);padding-top:10px;font-size:12px;
          color:var(--muted);display:flex;justify-content:space-between;}
   @media print{
     .print-btn{display:none;}
@@ -4672,24 +4672,24 @@ function fsMonCoachingHtml(rows) {
 
   const grid = items.map(([label, txt, col]) => `
     <div style="border-left:3px solid ${col};padding-left:10px;">
-      <div style="font-size:9px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600;">${label}</div>
+      <div style="font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600;">${label}</div>
       <div class="wert-mittel">${txt}</div>
     </div>`).join('');
 
   return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px;">
-    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">Coaching Analysis</div>
+    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;">Coaching Analysis</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 24px;">${grid}</div>
     <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;">
-        <span style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:600;">Coach comment · Current status</span>
-        <span id="mon-cmt-ai-tag" style="font-size:10px;color:#4a7dd6;font-weight:600;display:none;">AI summary</span>
-        <a href="#" id="mon-cmt-hist-link" onclick="sbMonToggleHistory();return false;" style="font-size:11px;color:#39c3d4;display:none;margin-left:auto;">History</a>
+        <span style="font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:600;">Coach comment · Current status</span>
+        <span id="mon-cmt-ai-tag" style="font-size:12px;color:#4a7dd6;font-weight:600;display:none;">AI summary</span>
+        <a href="#" id="mon-cmt-hist-link" onclick="sbMonToggleHistory();return false;" style="font-size:12px;color:#39c3d4;display:none;margin-left:auto;">History</a>
       </div>
-      <div id="mon-cmt-status" style="font-size:13px;color:var(--text);min-height:18px;">Loading…</div>
+      <div id="mon-cmt-status" style="font-size:14px;color:var(--text);min-height:18px;">Loading…</div>
       <div id="mon-cmt-history" style="display:none;margin-top:8px;"></div>
       <div style="display:flex;gap:8px;margin-top:10px;align-items:flex-start;">
         <textarea id="mon-cmt-input" rows="2" placeholder="Add new comment" style="flex:1;resize:vertical;"></textarea>
-        <button onclick="sbMonSaveComment()" style="padding:9px 16px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Save</button>
+        <button onclick="sbMonSaveComment()" style="padding:9px 16px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Save</button>
       </div>
     </div>
   </div>`;
@@ -4707,7 +4707,7 @@ function sbMonTimeSel(d) {
     <span class="gut">${landed} landed</span> ·
     <span class="schlecht">${n - landed} missed</span> ·
     Ø QoE <b>${q !== null ? q + '%' : '—'}</b>
-    <button onclick="sbMonOpenTrickReport('${d}')" style="margin-left:8px;padding:3px 10px;border-radius:6px;border:1px solid #39c3d4;background:rgba(57,195,212,0.12);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">Open session view →</button>`;
+    <button onclick="sbMonOpenTrickReport('${d}')" style="margin-left:8px;padding:3px 10px;border-radius:6px;border:1px solid #39c3d4;background:rgba(57,195,212,0.12);color:#39c3d4;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">Open session view →</button>`;
 }
 
 // Fokussierte Session-Ansicht: NUR dieser Trick dieser Athlet:in aus dieser Session (read-only)
@@ -4729,9 +4729,9 @@ function sbMonOpenTrickReport(d) {
   const qoes = attempts.map(qoeOfLogEntry);
   const gQoe = qoes.length ? Math.round(qoes.reduce((s,v)=>s+v,0)/qoes.length) : 0;
   const qoeCol = gQoe >= 70 ? '#34d399' : gQoe >= 50 ? '#f59e0b' : '#e2001a';
-  const cmtRows = attempts.map((x, ci) => x.comment ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💬 <b class="haupttext">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
+  const cmtRows = attempts.map((x, ci) => x.comment ? `<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">💬 <b class="haupttext">Attempt ${ci+1}:</b> ${x.comment}</div>` : '').join('');
   const cmtCol = cmtRows ? `<div style="flex:0 1 220px;min-width:170px;border-left:1px solid var(--border);padding-left:14px;">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Comments</div>${cmtRows}</div>` : '';
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Comments</div>${cmtRows}</div>` : '';
   const fmt = d.length === 10 ? d.slice(8,10) + '.' + d.slice(5,7) + '.' + d.slice(2,4) : d;
   document.getElementById('sbrv-modal')?.remove();
   const modal = document.createElement('div');
@@ -4743,9 +4743,9 @@ function sbMonOpenTrickReport(d) {
         <div class="wert-gross">${g.trick}</div>
         <div class="hinweis-gross">${sbMonView.athlete} · Session ${fmt}</div>
       </div>
-      <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
+      <button onclick="document.getElementById('sbrv-modal').remove()" style="padding:7px 14px;border-radius:8px;background:rgba(57,195,212,0.15);border:1px solid #39c3d4;color:#39c3d4;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Close</button>
     </div>
-    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-bottom:10px;">
+    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:10px;">
       <span>Bars per attempt (height = rating 0/50/100%):</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#39c3d4;border-radius:2px;vertical-align:-1px;"></span> Take-off</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#4a7dd6;border-radius:2px;vertical-align:-1px;"></span> Trick</span>
@@ -4757,8 +4757,8 @@ function sbMonOpenTrickReport(d) {
       <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
         <div style="flex:1 1 300px;min-width:0;">
           ${fsTrickChartSvg(g, 0, 0)}
-          <div id="sbrv-det-0-0" style="font-size:11px;color:var(--muted);min-height:16px;margin:2px 0 8px;">Tap a bar for details</div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
+          <div id="sbrv-det-0-0" style="font-size:12px;color:var(--muted);min-height:16px;margin:2px 0 8px;">Tap a bar for details</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;">
             <span><b class="gut">${landed}</b> landed</span>
             <span><b class="schlecht">${n - landed}</b> missed</span>
             <span>Ø QoE <b style="color:${qoeCol};">${gQoe}%</b></span>
@@ -4920,29 +4920,29 @@ const fragments = {
         <div class="abstand-16">
           <div class="chart-title abstand-12">📊 Trick Statistics</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-            <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
-            <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
+            <button id="ev-mode-trick"   onclick="setStatsMode('trick')"   style="padding:8px 18px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:2px solid #39c3d4;background:rgba(57,195,212,0.2);color:#39c3d4;">Individual Trick</button>
+            <button id="ev-mode-session" onclick="setStatsMode('session')" style="padding:8px 18px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface2);color:var(--muted);">Individual Session</button>
           </div>
-          <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+          <select id="ev-trick-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:14px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
             <option value="">— select trick —</option>
           </select>
-          <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+          <select id="ev-date-sel" onchange="renderTrickAnalytics()" style="display:none;width:100%;font-size:14px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
             <option value="">— select session —</option>
           </select>
         </div>
         <div id="ev-trick-analytics"></div>
-        <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5;">QoE (Quality of Execution) = average of the rated categories Take-off · Trick · Grab · Landing — ✗ Miss 0% · ✓ Okay 50% · ⭐ Perfect 100%. Unrated categories are simply left out.</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;">QoE (Quality of Execution) = average of the rated categories Take-off · Trick · Grab · Landing — ✗ Miss 0% · ✓ Okay 50% · ⭐ Perfect 100%. Unrated categories are simply left out.</div>
       </div>
     </div>`,
   dirRadar: `      <div class="card" style="padding:16px;">
-        <div style="font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Direction Balance</div>
+        <div style="font-family:inherit;font-size:14px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Direction Balance</div>
         
       </div>`,
   dbRankings: `  <div class="card" style="margin-bottom:20px;display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;">
     <div class="hinweis-gross">Compare assessment with actual session data</div>
-    <button onclick="realityCheck()" style="padding:8px 16px;border-radius:8px;font-family:Poppins,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
+    <button onclick="realityCheck()" style="padding:8px 16px;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:1px solid #f59e0b;background:rgba(245,158,11,0.15);color:#f59e0b;">🔍 Reality Check</button>
   </div>`,
-  grabBlock: `        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:10px;color:var(--muted);font-weight:400;">(1× click = ✓ Learned · 2× = 🎯 Goal · 3× = off · L = Lead)</span></label>
+  grabBlock: `        <div class="form-group kicker-field-sb hidden"><label>Grab <span style="font-size:12px;color:var(--muted);font-weight:400;">(1× click = ✓ Learned · 2× = 🎯 Goal · 3× = off · L = Lead)</span></label>
           <div id="sb-grab-wrap" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0;">
             <input type="hidden" id="sb-grab" value="">
           </div>
@@ -4983,7 +4983,7 @@ function init() {
     card.innerHTML = `
       <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:2px;">Raw Entries</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Inspect, edit or delete individual attempts.</div>
-      <select id="dbraw-athlete" onchange="dbRawLoad()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;min-width:200px;">
+      <select id="dbraw-athlete" onchange="dbRawLoad()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;font-family:inherit;min-width:200px;">
         <option value="">— Select athlete —</option>${CFG.athleteOptgroups}
       </select>
       <div id="ev-raw-wrap" style="margin-top:16px;"></div>`;

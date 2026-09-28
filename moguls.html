@@ -11,16 +11,16 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon-moguls.png">
 <link rel="icon" type="image/png" href="icons/icon-moguls-192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="js/ui-regeln.js" defer></script>
 <style>
   :root {
     --bg: #060f1a; --surface: #0c1a2b; --surface2: #112236;
     --border: #1a3450; --accent: #ffffff; --accent2: #39c3d4;
-    --text: #e8edf2; --muted: #6b8299; --success: #2d8a4e; --danger: #e2001a;
+    --text: #e8edf2; --muted: #93a7bb; --success: #2d8a4e; --danger: #e2001a;
     --warn: #f59e0b;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; font-size: 14px; min-height: 100vh; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; font-size: 16px; line-height: 1.45; min-height: 100vh; }
 
   header {
     background: linear-gradient(135deg, #001a2e 0%, #004877 100%);
@@ -28,12 +28,12 @@
     padding: 0 24px; display: flex; align-items: center; gap: 16px;
     height: 60px; position: sticky; top: 0; z-index: 100;
   }
-  header h1 { font-family: 'Poppins', sans-serif; font-size: 26px; letter-spacing: 1px; color: #ffffff; }
+  header h1 { font-family:inherit; font-size: 26px; letter-spacing: 1px; color: #ffffff; }
   .nav-tabs { display: flex; gap: 4px; margin-left: auto; }
   .nav-tab {
     padding: 7px 18px; border-radius: 6px; cursor: pointer; font-weight: 500;
-    font-size: 13px; color: rgba(255,255,255,0.6); border: none; background: none;
-    font-family: 'Poppins', sans-serif; transition: all .2s;
+    font-size: 14px; color: rgba(255,255,255,0.6); border: none; background: none;
+    font-family:inherit; transition: all .2s;
   }
   .nav-tab.active { background: rgba(255,255,255,0.15); color: #ffffff; border: 1px solid rgba(255,255,255,0.3); }
   .nav-tab:hover:not(.active) { color: #ffffff; background: rgba(255,255,255,0.08); }
@@ -42,13 +42,13 @@
   .page.active { display: block; }
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-  .card-title { font-family: 'Poppins', sans-serif; font-size: 18px; letter-spacing: 0.5px; color: var(--accent2); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .card-title { font-family:inherit; font-size: 18px; letter-spacing: 0.5px; color: var(--accent2); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 
   .form-group { display: flex; flex-direction: column; gap: 5px; }
-  label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
   select, input[type="text"], input[type="date"], textarea {
     background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-    color: var(--text); padding: 9px 12px; font-family: 'Poppins', sans-serif;
+    color: var(--text); padding: 9px 12px; font-family:inherit;
     font-size: 14px; outline: none; transition: border-color .2s; width: 100%;
     -webkit-appearance: none; appearance: none; color-scheme: dark;
   }
@@ -66,35 +66,35 @@
 
   .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
   .stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
-  .stat-value { font-family: 'Poppins', sans-serif; font-size: 34px; color: #ffffff; line-height: 1; }
-  .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .stat-value { font-family:inherit; font-size: 34px; color: #ffffff; line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
 
   .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
   table { width: 100%; border-collapse: collapse; }
   thead { background: var(--surface2); }
-  th { padding: 10px 14px; text-align: left; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; white-space: nowrap; }
-  td { padding: 10px 14px; border-top: 1px solid var(--border); font-size: 13px; }
+  th { padding: 10px 14px; text-align: left; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; white-space: nowrap; }
+  td { padding: 10px 14px; border-top: 1px solid var(--border); font-size: 14px; }
   tr:hover td { background: var(--surface2); }
 
-  .badge-typ { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; background: #1a3450; color: #ffffff; white-space: nowrap; }
+  .badge-typ { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; background: #1a3450; color: #ffffff; white-space: nowrap; }
 
   .empty-state { text-align: center; padding: 48px; color: var(--muted); }
   .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
-  .btn-del { background: none; border: 1px solid #e2001a33; border-radius: 6px; color: var(--danger); cursor: pointer; font-size: 13px; padding: 2px 6px; opacity: .7; transition: opacity .2s; }
+  .btn-del { background: none; border: 1px solid #e2001a33; border-radius: 6px; color: var(--danger); cursor: pointer; font-size: 14px; padding: 2px 6px; opacity: .7; transition: opacity .2s; }
   .btn-del:hover { opacity: 1; }
   .btn-secondary {
     background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-    border-radius: 8px; padding: 8px 16px; font-family: 'Poppins', sans-serif;
-    font-size: 13px; cursor: pointer; transition: border-color .2s;
+    border-radius: 8px; padding: 8px 16px; font-family:inherit;
+    font-size: 14px; cursor: pointer; transition: border-color .2s;
   }
   .btn-secondary:hover { border-color: var(--accent); }
 
-  .sess-type-btn { padding:10px 18px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s; }
+  .sess-type-btn { padding:10px 18px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;color:var(--muted);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s; }
   .sess-type-btn.active { background:rgba(57,195,212,0.15);border-color:#39c3d4;color:#39c3d4; }
 
   .rate-btn {
-    padding: 18px 8px; border-radius: 12px; font-family: 'Poppins', sans-serif;
-    font-size: 13px; font-weight: 700; cursor: pointer; transition: all .12s;
+    padding: 18px 8px; border-radius: 12px; font-family:inherit;
+    font-size: 14px; font-weight: 700; cursor: pointer; transition: all .12s;
     -webkit-tap-highlight-color: transparent; border-style: solid;
   }
   .crit-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
@@ -108,7 +108,7 @@
 
   .sb-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .sb-col-header {
-    font-family: 'Poppins', sans-serif; font-size: 15px; letter-spacing: 0.5px;
+    font-family:inherit; font-size: 16px; letter-spacing: 0.5px;
     padding: 10px 14px; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 8px;
   }
   .sb-col-header.mastered { background: rgba(45,138,78,0.15); color: #2d8a4e; border: 1px solid #2d8a4e; border-bottom: none; }
@@ -116,7 +116,7 @@
   .sb-col-body { border-radius: 0 0 8px 8px; min-height: 80px; border: 1px solid var(--border); background: var(--surface2); }
   .sb-col-body.mastered { border-color: #2d8a4e; }
   .sb-col-body.goal { border-color: #f59e0b; }
-  .sb-row { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .sb-row { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
   .sb-row:last-child { border-bottom: none; }
 
   .mobile-nav { display: none; }
@@ -137,7 +137,7 @@
     .mobile-nav-btn {
       flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 3px; border: none; background: none; cursor: pointer; padding: 8px 4px;
-      color: rgba(255,255,255,0.5); font-family: 'Poppins', sans-serif; font-size: 10px;
+      color: rgba(255,255,255,0.5); font-family:inherit; font-size: 12px;
       font-weight: 500; letter-spacing: 0.3px; transition: color .2s;
       -webkit-tap-highlight-color: transparent;
     }
@@ -167,7 +167,7 @@
 <!-- ══════════════════════════════════════════ ASSESSMENT -->
 <div class="page active" id="page-standort">
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
-    <label style="font-size:16px;color:#ffffff;font-family:'Poppins',sans-serif;letter-spacing:0.5px;">ATHLETE</label>
+    <label style="font-size:16px;color:#ffffff;font-family:inherit;letter-spacing:0.5px;">ATHLETE</label>
     <select id="st-athlet" style="max-width:220px;border:2px solid #39c3d4;border-radius:8px;" onchange="loadStandort()">
       <option value="">— select —</option>
     </select>
@@ -181,8 +181,8 @@
   <!-- ── SETUP VIEW ──────────────────────────────────── -->
   <div id="sess-setup">
     <div style="margin-bottom:24px;">
-      <div style="font-family:'Poppins',sans-serif;font-size:26px;font-weight:800;color:var(--text);">New Session</div>
-      <div style="color:var(--muted);font-size:13px;" id="sess-date-label"></div>
+      <div style="font-family:inherit;font-size:26px;font-weight:800;color:var(--text);">New Session</div>
+      <div style="color:var(--muted);font-size:14px;" id="sess-date-label"></div>
     </div>
 
     <div class="card" style="margin-bottom:16px;">
@@ -199,12 +199,12 @@
     <div class="card" style="margin-bottom:16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <div class="card-title" style="margin:0;">Step 2 — Select Athletes (max. 8)</div>
-        <button onclick="clearSessionSelection()" style="padding:6px 14px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">Clear all</button>
+        <button onclick="clearSessionSelection()" style="padding:6px 14px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:inherit;font-size:12px;cursor:pointer;">Clear all</button>
       </div>
       <div id="sess-athlete-grid"></div>
     </div>
 
-    <button id="sess-start-btn" onclick="startSession()" style="display:none;width:100%;padding:18px;background:#39c3d4;color:#060f1a;border:none;border-radius:12px;font-family:'Poppins',sans-serif;font-size:18px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">
+    <button id="sess-start-btn" onclick="startSession()" style="display:none;width:100%;padding:18px;background:#39c3d4;color:#060f1a;border:none;border-radius:12px;font-family:inherit;font-size:18px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">
       ▶ START SESSION
     </button>
   </div>
@@ -213,13 +213,13 @@
   <div id="sess-live" style="display:none;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
       <div>
-        <div style="font-family:'Poppins',sans-serif;font-size:22px;font-weight:800;color:var(--text);">Live Session</div>
+        <div style="font-family:inherit;font-size:22px;font-weight:800;color:var(--text);">Live Session</div>
         <div style="color:var(--muted);font-size:12px;" id="sess-live-date"></div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button onclick="addAthleteToSession()" class="btn-secondary" style="padding:9px 16px;font-size:13px;">⇄ Type / + Athlete</button>
-        <button onclick="cancelSession()" style="padding:9px 16px;background:none;border:1px solid #e2001a;border-radius:8px;color:#e2001a;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✕ Cancel</button>
-        <button onclick="endSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✓ End Session</button>
+        <button onclick="addAthleteToSession()" class="btn-secondary" style="padding:9px 16px;font-size:14px;">⇄ Type / + Athlete</button>
+        <button onclick="cancelSession()" style="padding:9px 16px;background:none;border:1px solid #e2001a;border-radius:8px;color:#e2001a;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">✕ Cancel</button>
+        <button onclick="endSession()" style="padding:9px 18px;background:#2d8a4e;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">✓ End Session</button>
       </div>
     </div>
 
@@ -228,7 +228,7 @@
     <div class="card">
       <div class="card-title" style="margin-bottom:12px;">Session Log</div>
       <div id="sess-log" style="max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
-        <div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;">No entries logged yet.</div>
+        <div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">No entries logged yet.</div>
       </div>
     </div>
   </div>
@@ -277,7 +277,7 @@
   <div id="db-overview"></div>
   <div class="card">
     <div class="card-title">Reports (PDF)</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Reports use the type &amp; season filters above.</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Reports use the type &amp; season filters above.</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
       <select id="rp-athlet" style="max-width:200px;"><option value="">— select athlete —</option></select>
       <button class="btn-secondary" onclick="openAthleteReport()">↓ Athlete PDF</button>
@@ -302,12 +302,12 @@
 <div id="edit-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:20px;">
   <div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:14px;padding:24px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <div style="font-family:'Poppins',sans-serif;font-size:20px;letter-spacing:0.5px;color:#ffffff;">✏️ EDIT ENTRY</div>
+      <div style="font-family:inherit;font-size:20px;letter-spacing:0.5px;color:#ffffff;">✏️ EDIT ENTRY</div>
       <button onclick="closeEdit()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
     </div>
     <div id="edit-body"></div>
     <div style="display:flex;gap:10px;margin-top:18px;">
-      <button onclick="saveEdit()" style="flex:1;padding:12px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Save</button>
+      <button onclick="saveEdit()" style="flex:1;padding:12px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Save</button>
       <button onclick="closeEdit()" class="btn-secondary" style="padding:12px 20px;">Cancel</button>
     </div>
   </div>
@@ -472,12 +472,12 @@ async function loadStandort() {
 
 function stRowHtml(r) {
   const grabBadge = isGrabJump(r.jump)
-    ? '<span class="badge-typ" style="font-size:9px;">Grab</span>'
-    : '<span class="badge-typ" style="font-size:9px;background:#1a3a2a;color:#34d399;">No Grab</span>';
+    ? '<span class="badge-typ" style="font-size:12px;">Grab</span>'
+    : '<span class="badge-typ" style="font-size:12px;background:#1a3a2a;color:#34d399;">No Grab</span>';
   const other = r.status === 'mastered' ? 'goal' : 'mastered';
   return `<div class="sb-row">
     <span style="flex:1;font-weight:600;">${r.jump}</span>${grabBadge}
-    <button onclick="setStandortStatus(${r.id},'${other}')" title="Move to ${other}" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 8px;font-size:11px;">${r.status === 'mastered' ? '→ 🎯' : '→ ✓'}</button>
+    <button onclick="setStandortStatus(${r.id},'${other}')" title="Move to ${other}" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 8px;font-size:12px;">${r.status === 'mastered' ? '→ 🎯' : '→ ✓'}</button>
     ${moVideoBtn(r)}
     <button onclick="deleteStandort(${r.id})" class="btn-del">🗑</button>
   </div>`;
@@ -556,10 +556,10 @@ function renderStandort() {
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
         <div class="form-group" style="flex:1;min-width:160px;"><label>Jump</label>
           <select id="st-jump">${jumpOptions('all', '')}</select></div>
-        <button onclick="addStandort('mastered')" style="padding:11px 20px;background:linear-gradient(135deg,#1a5c38,#2d8a4e);color:#fff;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✓ MASTERED</button>
-        <button onclick="addStandort('goal')" style="padding:11px 20px;background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🎯 GOAL</button>
+        <button onclick="addStandort('mastered')" style="padding:11px 20px;background:linear-gradient(135deg,#1a5c38,#2d8a4e);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">✓ MASTERED</button>
+        <button onclick="addStandort('goal')" style="padding:11px 20px;background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">🎯 GOAL</button>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;">In the live session, the jump dropdown only shows these jumps (goals marked 🎯).</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:10px;">In the live session, the jump dropdown only shows these jumps (goals marked 🎯).</div>
     </div>
     <div class="sb-columns">
       <div>
@@ -674,13 +674,13 @@ function renderAthleteGrid() {
     const athletes = ATHLETES.filter(a => a.squad === sq.key);
     if (!athletes.length) return '';
     return `<div style="margin-bottom:14px;">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${sq.color};margin-bottom:8px;">${sq.label}</div>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${sq.color};margin-bottom:8px;">${sq.label}</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;">
         ${athletes.map(a => {
           const checked = sessSelectedAthletes.includes(a.name);
           return `<label style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface2);border:2px solid ${checked?'#39c3d4':'var(--border)'};border-radius:10px;cursor:pointer;transition:border-color .15s;" id="sess-ath-card-${sid(a.name)}">
             <input type="checkbox" value="${escAttr(a.name)}" onchange="toggleSessionAthlete('${a.name}')" ${checked?'checked':''} style="width:16px;height:16px;accent-color:${sq.color};cursor:pointer;flex-shrink:0;">
-            <span style="font-weight:600;font-size:13px;color:var(--text);">${shortName(a.name)}</span>
+            <span style="font-weight:600;font-size:14px;color:var(--text);">${shortName(a.name)}</span>
           </label>`;
         }).join('')}
       </div>
@@ -801,11 +801,11 @@ function endSession() {
   const modal = document.createElement('div');
   modal.id = 'sess-report-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
-  const lbl = 'font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;';
-  const inp = 'width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:\'Poppins\',sans-serif;font-size:14px;outline:none;';
+  const lbl = 'font-size:12px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;';
+  const inp = 'width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:inherit;font-size:14px;outline:none;';
   modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:28px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;">
-    <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;color:#39c3d4;margin-bottom:4px;">Session Complete</div>
-    <div style="font-size:13px;color:#6b8299;margin-bottom:20px;">${sessLog.length} entries logged · ${duration} min</div>
+    <div style="font-family:inherit;font-size:20px;font-weight:700;color:#39c3d4;margin-bottom:4px;">Session Complete</div>
+    <div style="font-size:14px;color:#6b8299;margin-bottom:20px;">${sessLog.length} entries logged · ${duration} min</div>
     <div style="display:flex;flex-direction:column;gap:14px;">
       <div>
         <label style="${lbl}">Location</label>
@@ -815,7 +815,7 @@ function endSession() {
         <label style="${lbl}">Conditions</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;" id="sr-cond-btns">
           ${[['1','Poor'],['2','Below Avg'],['3','Average'],['4','Good'],['5','Excellent']].map(([v,l]) =>
-            `<button onclick="setSrCondition(${v},this)" style="padding:7px 12px;border-radius:8px;border:2px solid #1a3450;background:#112236;color:#6b8299;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">${v} — ${l}</button>`).join('')}
+            `<button onclick="setSrCondition(${v},this)" style="padding:7px 12px;border-radius:8px;border:2px solid #1a3450;background:#112236;color:#6b8299;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">${v} — ${l}</button>`).join('')}
         </div>
       </div>
       <div>
@@ -826,12 +826,12 @@ function endSession() {
         <label style="${lbl}">Athlete Notes</label>
         ${sessSelectedAthletes.map(n => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
-          <input type="text" id="sr-ath-${sid(n)}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;">
+          <input type="text" id="sr-ath-${sid(n)}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:inherit;font-size:12px;outline:none;">
         </div>`).join('')}
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:20px;">
-      <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
+      <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
@@ -893,7 +893,7 @@ function renderLiveSession() {
       const dot = last ? `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${levelColor(Math.round(last.avg))};margin-right:4px;"></span>` : '';
       const isActive = name === sessActiveAthlete;
       return `<button onclick="selectSessAthlete('${name}')" style="
-        padding:10px 18px;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;
+        padding:10px 18px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;
         background:${isActive?'rgba(57,195,212,0.2)':'var(--surface2)'};
         border:2px solid ${isActive?'#39c3d4':'var(--border)'};
         color:${isActive?'#39c3d4':'var(--muted)'};
@@ -938,11 +938,11 @@ function renderLiveSession() {
     // Criteria rows with Miss / Okay / Perfect buttons
     const crits = liveCriteria(name);
     const critHtml = !crits.length
-      ? `<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px;border:1px dashed var(--border);border-radius:10px;">Select a run first</div>`
+      ? `<div style="color:var(--muted);font-size:14px;text-align:center;padding:24px;border:1px dashed var(--border);border-radius:10px;">Select a run first</div>`
       : `<div style="display:flex;flex-direction:column;gap:12px;">
       ${crits.map(([col, label]) => `
         <div>
-          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">${label}</div>
+          <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">${label}</div>
           <div class="crit-row">
             ${LEVELS.map(l => {
               const active = sessRatings[name][col] === l.val;
@@ -962,7 +962,7 @@ function renderLiveSession() {
       </div>
       ${jumpsHtml}
       ${critHtml}
-      <input type="text" id="sess-comment-${s}" placeholder="Comment before last rating (optional)" style="width:100%;margin-top:14px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+      <input type="text" id="sess-comment-${s}" placeholder="Comment before last rating (optional)" style="width:100%;margin-top:14px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
     </div>`;
   }
 
@@ -1065,24 +1065,24 @@ function ratingDots(e) {
   const crits = critsFor(e);
   if (!crits) return '';
   return crits.map(([col, label, abbr]) =>
-    e[col] ? `<span title="${label}" style="color:${levelColor(e[col])};font-weight:700;font-size:11px;margin-right:6px;">●&hairsp;${abbr}</span>` : ''
+    e[col] ? `<span title="${label}" style="color:${levelColor(e[col])};font-weight:700;font-size:12px;margin-right:6px;">●&hairsp;${abbr}</span>` : ''
   ).join('');
 }
 
 function renderSessionLog() {
   const el = document.getElementById('sess-log');
   if (!sessLog.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;">No entries logged yet.</div>';
+    el.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px;">No entries logged yet.</div>';
     return;
   }
   el.innerHTML = sessLog.slice(0, 40).map((e, i) => {
     const jumps = [e.jump1, e.jump2].filter(Boolean).join(' + ');
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:12px;flex-wrap:wrap;">
       <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(e.name)}</span>
-      <span class="badge-typ" style="font-size:10px;">${e.typ}</span>
-      <span style="flex:1;color:var(--text);min-width:100px;">${jumps || '—'} ${ratingDots(e)}${e.kommentar ? `<span style="color:var(--muted);font-size:10px;"> — ${e.kommentar}</span>` : ''}</span>
-      <span style="color:var(--muted);font-size:11px;">${e.time || ''}</span>
-      <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 7px;font-size:11px;flex-shrink:0;">✏️</button>
+      <span class="badge-typ" style="font-size:12px;">${e.typ}</span>
+      <span style="flex:1;color:var(--text);min-width:100px;">${jumps || '—'} ${ratingDots(e)}${e.kommentar ? `<span style="color:var(--muted);font-size:12px;"> — ${e.kommentar}</span>` : ''}</span>
+      <span style="color:var(--muted);font-size:12px;">${e.time || ''}</span>
+      <button onclick="editLogEntry(${i})" title="Edit" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 7px;font-size:12px;flex-shrink:0;">✏️</button>
       <button onclick="deleteLogEntry(${i})" class="btn-del" style="flex-shrink:0;">🗑</button>
     </div>`;
   }).join('');
@@ -1140,19 +1140,19 @@ function openEdit(entry, meta) {
 
   const critHtml = crits.map(([col, label]) => `
     <div style="margin-bottom:10px;">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">${label}</div>
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">${label}</div>
       <div class="crit-row" id="ed-crit-${col}">
         ${LEVELS.map(l => {
           const active = editCtx.entry[col] === l.val;
           return `<button onclick="setEditRating('${col}',${l.val})" data-val="${l.val}" class="rate-btn"
-            style="padding:10px 8px;font-size:11px;background:${l.bg};border-width:${active?'3px':'2px'};border-color:${l.color};color:${l.color};opacity:${active?1:0.55};"
+            style="padding:10px 8px;font-size:12px;background:${l.bg};border-width:${active?'3px':'2px'};border-color:${l.color};color:${l.color};opacity:${active?1:0.55};"
           >${l.label.toUpperCase()}</button>`;
         }).join('')}
       </div>
     </div>`).join('');
 
   document.getElementById('edit-body').innerHTML = `
-    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+    <div style="font-size:14px;color:var(--muted);margin-bottom:14px;">
       <span style="color:#39c3d4;font-weight:700;">${shortName(entry.athlet || entry.name || '')}</span>
       &nbsp;·&nbsp;<span class="badge-typ">${entry.typ}</span>
     </div>
@@ -1296,8 +1296,8 @@ function statCardHtml(title, metrics, att) {
   const c = pctColor(overall);
   const bg = overall >= 70 ? 'rgba(45,138,78,0.12)' : overall >= 40 ? 'rgba(245,158,11,0.10)' : 'rgba(226,0,26,0.10)';
   return `<div style="border:1px solid ${c};background:${bg};border-radius:10px;padding:10px 12px;">
-    <div style="font-weight:600;font-size:13px;margin-bottom:6px;">${title}</div>
-    <div style="display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11px;font-weight:700;">
+    <div style="font-weight:600;font-size:14px;margin-bottom:6px;">${title}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;font-weight:700;">
       ${valid.map(([l, p]) => `<span style="color:${pctColor(p)};">${Math.round(p)}% ${l}</span>`).join('')}
       <span style="color:var(--muted);font-weight:500;">/ ${att} att.</span>
     </div></div>`;
@@ -1354,7 +1354,7 @@ function renderDBOverview() {
       const byTyp = {};
       aRows.forEach(r => (byTyp[r.typ] = byTyp[r.typ] || []).push(r));
       const sections = Object.keys(TYPES).filter(t => byTyp[t]).map(t =>
-        `<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#39c3d4;margin-bottom:8px;">${t}</div>
+        `<div><div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#39c3d4;margin-bottom:8px;">${t}</div>
           <div style="display:flex;flex-direction:column;gap:8px;">${typeCards(t, byTyp[t])}</div></div>`).join('');
       return `<div style="margin-bottom:20px;${i ? 'border-top:1px solid var(--border);padding-top:16px;' : ''}">
         <div style="font-size:16px;font-weight:800;margin-bottom:10px;">${n}</div>
@@ -1388,16 +1388,16 @@ function openPrintWindow(title, subtitle, bodyHtml) {
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;padding:32px 40px;max-width:900px;margin:0 auto;font-size:13px;}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;padding:32px 40px;max-width:900px;margin:0 auto;font-size:14px;}
   h1{font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:6px;}
   .sub{color:#666;margin-bottom:20px;font-size:12px;}
   h2{font-size:14px;font-weight:700;margin:20px 0 8px;text-transform:uppercase;letter-spacing:.5px;}
   table{width:100%;border-collapse:collapse;margin-bottom:12px;}
-  th{font-size:10px;text-transform:uppercase;letter-spacing:.5px;text-align:left;color:#666;border-bottom:1.5px solid #1a1a1a;padding:5px 8px;}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.5px;text-align:left;color:#666;border-bottom:1.5px solid #1a1a1a;padding:5px 8px;}
   td{padding:5px 8px;border-bottom:1px solid #e0e0e0;font-size:12px;}
   .sum{color:#444;font-size:12px;margin-bottom:8px;}
   .print-btn{margin-bottom:24px;}
-  .print-btn button{padding:9px 22px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;}
+  .print-btn button{padding:9px 22px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:14px;cursor:pointer;}
   .ath{margin-bottom:26px;page-break-inside:avoid;}
   .ath-name{font-size:16px;font-weight:700;border-bottom:1px solid #ccc;padding-bottom:5px;margin-bottom:8px;}
   @media print{.print-btn{display:none;}}
@@ -1529,7 +1529,7 @@ function renderDBTable() {
       <td style="white-space:nowrap;">${ratingDots(r)}</td>
       <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;color:var(--muted);">${r.kommentar || ''}</td>
       <td style="white-space:nowrap;">
-        <button onclick="editDBEntry(${r.id})" title="Edit" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 7px;font-size:11px;">✏️</button>
+        <button onclick="editDBEntry(${r.id})" title="Edit" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;padding:2px 7px;font-size:12px;">✏️</button>
         <button onclick="deleteDBEntry(${r.id})" class="btn-del">🗑</button>
       </td>
     </tr>`;
@@ -1575,7 +1575,7 @@ function anChartHover(e, wrapEl) {
   if (!tt) {
     tt = document.createElement('div');
     tt.id = 'mg-chart-tooltip';
-    tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:10px;padding:10px 14px;font-size:12px;font-family:Poppins,sans-serif;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+    tt.style.cssText = 'position:fixed;background:#0d1f33;border:1px solid #39c3d4;border-radius:10px;padding:10px 14px;font-size:12px;font-family:inherit;pointer-events:none;display:none;z-index:9999;min-width:150px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
     document.body.appendChild(tt);
   }
   if (ni < 0) { tt.style.display = 'none'; return; }
@@ -1598,7 +1598,7 @@ function anChartLeave() {
 
 // SVG bar chart: success % per training day (Miss = 0% · Okay = 50% · Perfect = 100%)
 function trendChartSvg(points) {
-  if (!points.length) return '<div style="color:var(--muted);font-size:13px;">No data.</div>';
+  if (!points.length) return '<div style="color:var(--muted);font-size:14px;">No data.</div>';
   const W = Math.max(320, Math.min(760, points.length * 64 + 70)), H = 190;
   const padL = 34, padR = 12, padT = 16, padB = 34;
   const iw = W - padL - padR, ih = H - padT - padB;
@@ -1607,7 +1607,7 @@ function trendChartSvg(points) {
   const barW = Math.max(10, Math.min(26, iw / points.length * 0.5));
   const grid = [0, 25, 50, 75, 100].map(v =>
     `<line x1="${padL}" y1="${y(v)}" x2="${W - padR}" y2="${y(v)}" stroke="#1a3450" stroke-dasharray="3 3"/>
-     <text x="4" y="${y(v) + 3}" fill="#6b8299" font-size="9">${v}%</text>`).join('');
+     <text x="4" y="${y(v) + 3}" fill="#6b8299" font-size="11">${v}%</text>`).join('');
   const line = points.length > 1
     ? `<polyline fill="none" stroke="#39c3d466" stroke-width="1.5" stroke-dasharray="3 3" points="${points.map((p, i) => x(i) + ',' + y(p.pct)).join(' ')}"/>` : '';
   const bars = points.map((p, i) => {
@@ -1615,13 +1615,13 @@ function trendChartSvg(points) {
     const title = `${p.d.slice(8,10)}.${p.d.slice(5,7)}.${p.d.slice(2,4)} — ${p.n} attempts&#10;⭐ Perfect: ${p.counts[3]}×&#10;✓ Okay: ${p.counts[2]}×&#10;✗ Miss: ${p.counts[1]}×&#10;Ø ${Math.round(p.pct)}%`;
     return `<g><title>${title}</title>
       <rect x="${x(i) - barW / 2}" y="${y(p.pct)}" width="${barW}" height="${Math.max(1.5, p.pct / 100 * ih)}" rx="2" fill="${c}cc"/>
-      <text x="${x(i)}" y="${y(p.pct) - 4}" fill="${c}" font-size="9" font-weight="700" text-anchor="middle">${Math.round(p.pct)}%</text>
+      <text x="${x(i)}" y="${y(p.pct) - 4}" fill="${c}" font-size="11" font-weight="700" text-anchor="middle">${Math.round(p.pct)}%</text>
     </g>`;
   }).join('');
   const step = Math.max(1, Math.ceil(points.length / 10));
   const labels = points.map((p, i) => i % step === 0
-    ? `<text x="${x(i)}" y="${H - 20}" fill="#6b8299" font-size="9" text-anchor="middle">${p.d.slice(8,10)}.${p.d.slice(5,7)}.</text>
-       <text x="${x(i)}" y="${H - 8}" fill="#6b8299" font-size="9" text-anchor="middle">${p.n}×</text>` : '').join('');
+    ? `<text x="${x(i)}" y="${H - 20}" fill="#6b8299" font-size="11" text-anchor="middle">${p.d.slice(8,10)}.${p.d.slice(5,7)}.</text>
+       <text x="${x(i)}" y="${H - 8}" fill="#6b8299" font-size="11" text-anchor="middle">${p.n}×</text>` : '').join('');
   _anChart = { points, xs: points.map((_, i) => x(i)) };
   return `<div style="overflow-x:auto;" onmousemove="anChartHover(event, this)" onmouseleave="anChartLeave()"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${grid}${line}${bars}${labels}</svg></div>`;
 }
@@ -1646,7 +1646,7 @@ function distBar(counts) {
   const seg = v => counts[v] ? `<div style="width:${(counts[v]/total*100)}%;background:${levelColor(v)};"></div>` : '';
   return `<div style="display:flex;align-items:center;gap:8px;">
     <div class="dist-bar" style="flex:1;">${seg(1)}${seg(2)}${seg(3)}</div>
-    <span style="font-size:11px;color:var(--muted);white-space:nowrap;">${counts[1]}/${counts[2]}/${counts[3]}</span>
+    <span style="font-size:12px;color:var(--muted);white-space:nowrap;">${counts[1]}/${counts[2]}/${counts[3]}</span>
   </div>`;
 }
 
@@ -1691,7 +1691,7 @@ function renderAnalytics() {
         return `<tr><td><span class="badge-typ">${tn}</span></td><td>${tRows.length}</td><td>${distBar(counts)}</td></tr>`;
       }).join('')}
       </tbody></table></div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px;">Select a type above for the per-criterion and per-jump breakdown.</div></div>`;
+      <div style="font-size:12px;color:var(--muted);margin-top:10px;">Select a type above for the per-criterion and per-jump breakdown.</div></div>`;
   } else {
     const t = TYPES[typ];
     // Per criterion (jump sessions: union of no-grab + grab criteria)
@@ -1768,7 +1768,7 @@ function renderAnalytics() {
         <select style="max-width:160px;" onchange="anJump=this.value;renderAnalytics()">
           ${jumpNames.map(j => `<option${j===anJump?' selected':''}>${j}</option>`).join('')}
         </select>
-        <span style="font-size:11px;color:var(--muted);">Success per training day (Miss = 0% · Okay = 50% · Perfect = 100%) — follows the filters above</span>
+        <span style="font-size:12px;color:var(--muted);">Success per training day (Miss = 0% · Okay = 50% · Perfect = 100%) — follows the filters above</span>
       </div>
       ${trendChartSvg(points)}</div>`;
   }
@@ -1783,30 +1783,30 @@ function renderAnalytics() {
       const typCounts = {};
       es.forEach(r => typCounts[r.typ] = (typCounts[r.typ] || 0) + 1);
       const open = anOpenDays.has(d);
-      const badges = Object.entries(typCounts).map(([tn, c]) => `<span class="badge-typ" style="font-size:10px;">${tn} · ${c}</span>`).join(' ');
+      const badges = Object.entries(typCounts).map(([tn, c]) => `<span class="badge-typ" style="font-size:12px;">${tn} · ${c}</span>`).join(' ');
       const reps = dbReports.filter(r => r.datum === d);
       const repHint = reps.length
-        ? `<span style="font-size:11px;color:#39c3d4;">📋 ${[reps[0].location, reps[0].conditions ? 'Conditions ' + reps[0].conditions + '/5' : ''].filter(Boolean).join(' · ')}</span>` : '';
+        ? `<span style="font-size:12px;color:#39c3d4;">📋 ${[reps[0].location, reps[0].conditions ? 'Conditions ' + reps[0].conditions + '/5' : ''].filter(Boolean).join(' · ')}</span>` : '';
       const repHtml = !open ? '' : reps.map(rep => `<div style="background:var(--surface2);border:1px solid #39c3d444;border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:6px;">
           <div style="color:var(--text);font-weight:600;margin-bottom:4px;">📋 Session Report${rep.session_type ? ' · ' + rep.session_type : ''}${rep.duration_min ? ' · ' + rep.duration_min + ' min' : ''}</div>
           <div style="color:var(--muted);">${[rep.location ? '📍 ' + rep.location : '', rep.conditions ? 'Conditions ' + rep.conditions + '/5' : ''].filter(Boolean).join(' · ')}</div>
           ${rep.comments ? `<div style="color:var(--text);margin-top:4px;">${rep.comments}</div>` : ''}
-          ${rep.athlete_notes ? Object.entries(rep.athlete_notes).map(([n, note]) => `<div style="margin-top:3px;font-size:11px;"><span style="color:#39c3d4;font-weight:600;">${n}</span> <span style="color:var(--muted);">${note}</span></div>`).join('') : ''}
+          ${rep.athlete_notes ? Object.entries(rep.athlete_notes).map(([n, note]) => `<div style="margin-top:3px;font-size:12px;"><span style="color:#39c3d4;font-weight:600;">${n}</span> <span style="color:var(--muted);">${note}</span></div>`).join('') : ''}
         </div>`).join('');
       const entriesHtml = !open ? '' : `<div style="display:flex;flex-direction:column;gap:6px;padding:4px 0 12px;">
         ${repHtml}
         ${es.slice(0, 200).map(r => `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);border-radius:8px;font-size:12px;flex-wrap:wrap;">
-          <span style="color:var(--muted);font-size:10px;">${(r.created_at || '').slice(11, 16)}</span>
+          <span style="color:var(--muted);font-size:12px;">${(r.created_at || '').slice(11, 16)}</span>
           <span style="color:#39c3d4;font-weight:600;min-width:60px;">${shortName(r.athlet || '')}</span>
-          <span class="badge-typ" style="font-size:10px;">${r.typ}</span>
-          <span style="flex:1;min-width:90px;">${[r.jump1, r.jump2].filter(Boolean).join(' + ') || '—'} ${ratingDots(r)}${r.kommentar ? `<span style="color:var(--muted);font-size:10px;"> — ${r.kommentar}</span>` : ''}</span>
+          <span class="badge-typ" style="font-size:12px;">${r.typ}</span>
+          <span style="flex:1;min-width:90px;">${[r.jump1, r.jump2].filter(Boolean).join(' + ') || '—'} ${ratingDots(r)}${r.kommentar ? `<span style="color:var(--muted);font-size:12px;"> — ${r.kommentar}</span>` : ''}</span>
         </div>`).join('')}
       </div>`;
       return `<div style="border-bottom:1px solid var(--border);">
         <div onclick="toggleAnDay('${d}')" style="display:flex;align-items:center;gap:10px;padding:11px 4px;cursor:pointer;flex-wrap:wrap;">
           <span style="color:var(--muted);width:12px;">${open ? '▾' : '▸'}</span>
           <span style="font-weight:600;">${d}</span>
-          <span style="font-size:11px;color:var(--muted);">${es.length} entries</span>
+          <span style="font-size:12px;color:var(--muted);">${es.length} entries</span>
           <span style="display:flex;gap:6px;flex-wrap:wrap;">${badges}</span>
           ${repHint}
         </div>${entriesHtml}

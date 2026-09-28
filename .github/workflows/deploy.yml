@@ -62,7 +62,7 @@ jobs:
       - name: Stage unified app
         run: mkdir -p stage && cp index.html stil.css manifest-*.webmanifest stage/ && cp -R icons js stage/
       - name: Stage moguls app
-        run: mkdir -p stage-moguls/icons && cp moguls.html stage-moguls/index.html && cp manifest-moguls.webmanifest stage-moguls/ && cp icons/*moguls* stage-moguls/icons/
+        run: mkdir -p stage-moguls/icons && cp moguls.html stage-moguls/index.html && mkdir -p stage-moguls/js && cp js/ui-regeln.js stage-moguls/js/ && cp manifest-moguls.webmanifest stage-moguls/ && cp icons/*moguls* stage-moguls/icons/
       - name: Stage youth app
         run: mkdir -p stage-youth/icons && cp nachwuchs.html stage-youth/index.html && cp sw-youth.js stage-youth/ && cp manifest-youth.webmanifest stage-youth/ && cp icons/*youth* stage-youth/icons/
       - name: Deploy Freeski

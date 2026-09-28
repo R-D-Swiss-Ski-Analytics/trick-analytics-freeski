@@ -40,8 +40,8 @@ function showAuthGate(msg) {
     <input type="email" id="auth-email" autocomplete="username" required style="margin-bottom:12px;">
     <label style="display:block;margin-bottom:4px;">Password</label>
     <input type="password" id="auth-pass" autocomplete="current-password" required style="margin-bottom:6px;">
-    <div id="auth-err" style="min-height:16px;font-size:11px;color:#e2001a;margin-bottom:10px;">${msg||''}</div>
-    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Sign in</button>
+    <div id="auth-err" style="min-height:16px;font-size:12px;color:#e2001a;margin-bottom:10px;">${msg||''}</div>
+    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Sign in</button>
     <div style="text-align:center;margin-top:12px;"><a class="hinweis" href="#" onclick="authForgotPassword();return false;">Forgot password?</a> <span class="hinweis">·</span> <a class="hinweis" href="#" onclick="authHaveCode();return false;">Have a code?</a></div>
   </form>`;
   document.body.appendChild(gate);
@@ -74,8 +74,8 @@ function showSetPasswordGate() {
     <input type="password" id="setpw-1" autocomplete="new-password" required minlength="8" style="margin-bottom:12px;">
     <label style="display:block;margin-bottom:4px;">Repeat password</label>
     <input type="password" id="setpw-2" autocomplete="new-password" required minlength="8" style="margin-bottom:6px;">
-    <div id="setpw-err" style="min-height:16px;font-size:11px;color:#e2001a;margin-bottom:10px;"></div>
-    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Save password</button>
+    <div id="setpw-err" style="min-height:16px;font-size:12px;color:#e2001a;margin-bottom:10px;"></div>
+    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Save password</button>
   </form>`;
   document.body.appendChild(gate);
   document.getElementById('setpw-form').addEventListener('submit', async e => {
@@ -131,8 +131,8 @@ function showOtpGate(email) {
     <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">We sent a code to<br><b>${email}</b> — enter it below.</div>
     <label style="display:block;margin-bottom:4px;">Code</label>
     <input type="text" id="otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required style="margin-bottom:6px;text-align:center;font-size:20px;letter-spacing:4px;">
-    <div id="otp-err" style="min-height:16px;font-size:11px;color:#e2001a;margin-bottom:10px;"></div>
-    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Verify code</button>
+    <div id="otp-err" style="min-height:16px;font-size:12px;color:#e2001a;margin-bottom:10px;"></div>
+    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#39c3d4;color:#06281c;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Verify code</button>
     <div style="text-align:center;margin-top:12px;"><a class="hinweis" href="#" onclick="showAuthGate();return false;">Back to login</a></div>
   </form>`;
   document.body.appendChild(gate);
@@ -471,7 +471,7 @@ async function updateGrabStatus(entryId, gs, localEntry) {
 }
 
 function styleAssessGrabBtn(btn, g, st) {
-  const base = "border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Poppins',sans-serif;";
+  const base = "border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;";
   if (st === 'mastered')  { btn.textContent = '✓ ' + g;  btn.style.cssText = base + `background:${UI_GREEN_BG25};border:1px solid ${UI_GREEN};color:${UI_GREEN_TEXT};`; }
   else if (st === 'goal') { btn.textContent = '🎯 ' + g; btn.style.cssText = base + "background:rgba(245,158,11,0.2);border:1px solid #f59e0b;color:#f59e0b;"; }
   else                    { btn.textContent = g;         btn.style.cssText = base + "background:#112236;border:1px solid #1a3450;color:#6b8299;"; }
@@ -490,7 +490,7 @@ function grabChipsHtml(e) {
     const col  = st === 'mastered' ? UI_GREEN_TEXT : '#f59e0b';
     const bg   = st === 'mastered' ? UI_GREEN_BG20 : 'rgba(245,158,11,0.15)';
     const icon = st === 'mastered' ? '✓' : '🎯';
-    return `<span onclick="event.stopPropagation();cycleGrabStatus(${e.id},'${g.replace(/'/g,"\\'")}')" title="Tap: ✓ ${SPORT==='snowboard'?'Learned':'Mastered'} → 🎯 Goal → remove" style="cursor:pointer;font-size:10px;padding:2px 8px;border-radius:10px;background:${bg};border:1px solid ${col};color:${col};white-space:nowrap;">${icon} ${g}</span>`;
+    return `<span onclick="event.stopPropagation();cycleGrabStatus(${e.id},'${g.replace(/'/g,"\\'")}')" title="Tap: ✓ ${SPORT==='snowboard'?'Learned':'Mastered'} → 🎯 Goal → remove" style="cursor:pointer;font-size:12px;padding:2px 8px;border-radius:10px;background:${bg};border:1px solid ${col};color:${col};white-space:nowrap;">${icon} ${g}</span>`;
   }).join('');
   return `<span style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;align-items:center;">${chips}</span>`;
 }
@@ -515,8 +515,8 @@ function splitTrickGrab(label) {
 function grabSelectHtml(id, grabs, current) {
   const opts = [...grabs];
   if (current && !opts.includes(current)) opts.unshift(current);
-  return `<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--muted);min-width:36px;">Grab</span>
-    <select id="${id}" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
+  return `<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;color:var(--muted);min-width:36px;">Grab</span>
+    <select id="${id}" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;">
       <option value="">— No Grab —</option>
       ${opts.map(g => `<option value="${g.replace(/"/g,'&quot;')}"${g === current ? ' selected' : ''}>${g}</option>`).join('')}
     </select></div>`;
@@ -604,12 +604,12 @@ async function initSessionSetup() {
   grid.innerHTML = SESS_SQUADS.map(sq => {
     const athletes = SESS_ALL_ATHLETES.filter(a => a.squad === sq.key);
     return `<div style="margin-bottom:14px;">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${sq.color};margin-bottom:8px;">${sq.label}</div>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${sq.color};margin-bottom:8px;">${sq.label}</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;">
         ${athletes.map(a => `
           <label style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s;" id="sess-ath-card-${a.name.replace(/\s/g,'_')}">
             <input type="checkbox" value="${a.name}" onchange="toggleSessionAthlete('${a.name}')" style="width:16px;height:16px;accent-color:${sq.color};cursor:pointer;flex-shrink:0;">
-            <span style="font-weight:600;font-size:13px;color:var(--text);">${shortName(a.name)}</span>
+            <span style="font-weight:600;font-size:14px;color:var(--text);">${shortName(a.name)}</span>
           </label>`).join('')}
       </div>
     </div>`;
@@ -740,7 +740,7 @@ function sessionDirLegendHtml(dirCnt, dirs, dirColors, total) {
       <div style="width:12px;height:12px;border-radius:3px;background:${dirColors[d]};flex-shrink:0;"></div>
       <div>
         <div style="font-size:12px;font-weight:600;color:var(--text);">${d} <span style="font-weight:800;color:${dirColors[d]};">${pct}%</span></div>
-        <div style="font-size:11px;color:var(--muted);">${dirCnt[d].tricks} trick${dirCnt[d].tricks!==1?'s':''} &middot; ${dirCnt[d].att} att.</div>
+        <div style="font-size:12px;color:var(--muted);">${dirCnt[d].tricks} trick${dirCnt[d].tricks!==1?'s':''} &middot; ${dirCnt[d].att} att.</div>
       </div>
     </div>`;
   }).join('');
@@ -762,7 +762,7 @@ function renderAthleteDirBalance(wrap, dirs, colors, dirOf) {
   const total = dirs.reduce((s,d) => s + counts[d], 0);
   if (!total) { bal.innerHTML = ''; return; }
   bal.innerHTML = '<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">'
-    + '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Direction Balance — Session Data Only</div>'
+    + '<div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:10px;">Direction Balance — Session Data Only</div>'
     + dirs.map(dir => {
         const pct = Math.round(counts[dir] / total * 100);
         const col = colors[dir];
@@ -774,7 +774,7 @@ function renderAthleteDirBalance(wrap, dirs, colors, dirOf) {
           + '<div style="background:' + col + ';width:' + pct + '%;height:7px;border-radius:4px;transition:width .4s;"></div>'
           + '</div></div>';
       }).join('')
-    + '<div style="font-size:10px;color:var(--muted);margin-top:6px;">Based on logged session attempts only — assessment entries are not included.</div>'
+    + '<div style="font-size:12px;color:var(--muted);margin-top:6px;">Based on logged session attempts only — assessment entries are not included.</div>'
     + '</div>';
 }
 
@@ -987,7 +987,7 @@ function drawRadarSplit(canvasId, labels, valsT, valsS, rawT, rawS) {
 
 function drawBarsSplit(containerId, entries) {
   const el = document.getElementById(containerId);
-  if (!el || !entries.length) { if(el) el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px;">No data</div>'; return; }
+  if (!el || !entries.length) { if(el) el.innerHTML='<div style="color:var(--muted);font-size:14px;padding:8px;">No data</div>'; return; }
   const max = Math.max(...entries.map(e=>e[1]+e[2]), 1);
   el.innerHTML = entries.map(([label, cT, cS]) => {
     const pctT = Math.round(cT/max*100);
@@ -1007,7 +1007,7 @@ function drawBarsSplit(containerId, entries) {
 
 function drawBarsRating(containerId, entries) {
   const el = document.getElementById(containerId);
-  if (!el || !entries.length) { if(el) el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px;">No rating data</div>'; return; }
+  if (!el || !entries.length) { if(el) el.innerHTML='<div style="color:var(--muted);font-size:14px;padding:8px;">No rating data</div>'; return; }
   el.innerHTML = entries.map(([label, avg], i) => {
     const pct = Math.round(avg/10*100);
     const col = avg>=8?'#10b981':avg>=6?'#84cc16':'#f59e0b';
@@ -1383,58 +1383,58 @@ function endSession() {
   modal.id = 'sess-report-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;';
   modal.innerHTML = `<div style="background:#0c1a2b;border:1px solid #1a3450;border-radius:16px;padding:28px;max-width:480px;width:100%;max-height:92vh;overflow-y:auto;">
-    <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;color:#39c3d4;margin-bottom:4px;">Session Complete</div>
-    <div style="font-size:13px;color:#6b8299;margin-bottom:20px;">${sessLog.length} attempts logged ·
-      <input id="sr-duration" type="number" min="5" step="5" value="${duration}" style="width:70px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:3px 6px;font-family:'Poppins',sans-serif;font-size:13px;text-align:center;"> min
-      <span style="font-size:10px;">(editable)</span></div>
+    <div style="font-family:inherit;font-size:20px;font-weight:700;color:#39c3d4;margin-bottom:4px;">Session Complete</div>
+    <div style="font-size:14px;color:#6b8299;margin-bottom:20px;">${sessLog.length} attempts logged ·
+      <input id="sr-duration" type="number" min="5" step="5" value="${duration}" style="width:70px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:3px 6px;font-family:inherit;font-size:14px;text-align:center;"> min
+      <span style="font-size:12px;">(editable)</span></div>
     <div style="display:flex;flex-direction:column;gap:14px;">
       <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;">
         <div>
-          <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Location</label>
-          <input id="sr-location" type="text" placeholder="e.g. Laax" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
+          <label style="font-size:12px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Location</label>
+          <input id="sr-location" type="text" placeholder="e.g. Laax" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:inherit;font-size:14px;outline:none;">
         </div>
         <div style="${sessType && (sessType.startsWith('Slopestyle') || sessType.startsWith('Halfpipe')) ? 'display:none;' : ''}">
-          <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Jump Size</label>
-          <select id="sr-jumpsize" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;">
+          <label style="font-size:12px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Jump Size</label>
+          <select id="sr-jumpsize" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:inherit;font-size:14px;outline:none;">
             <option value="">—</option><option>M</option><option>L</option><option>XL</option>
           </select>
         </div>
       </div>
       <div>
-        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Conditions</label>
+        <label style="font-size:12px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Conditions</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;" id="sr-cond-btns">
-          ${[['1','Poor'],['2','Below Avg'],['3','Average'],['4','Good'],['5','Excellent']].map(([v,l])=>`<button onclick="setSrCondition(${v},this)" data-val="${v}" style="padding:7px 12px;border-radius:8px;border:2px solid #1a3450;background:#112236;color:#6b8299;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">${v} — ${l}</button>`).join('')}
+          ${[['1','Poor'],['2','Below Avg'],['3','Average'],['4','Good'],['5','Excellent']].map(([v,l])=>`<button onclick="setSrCondition(${v},this)" data-val="${v}" style="padding:7px 12px;border-radius:8px;border:2px solid #1a3450;background:#112236;color:#6b8299;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;">${v} — ${l}</button>`).join('')}
         </div>
       </div>
       <div>
-        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Comments</label>
-        <textarea id="sr-comments" placeholder="Coach notes, observations…" rows="2" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;resize:vertical;"></textarea>
+        <label style="font-size:12px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Comments</label>
+        <textarea id="sr-comments" placeholder="Coach notes, observations…" rows="2" style="width:100%;background:#112236;border:1px solid #1a3450;border-radius:8px;color:#e8edf2;padding:9px 12px;font-family:inherit;font-size:14px;outline:none;resize:vertical;"></textarea>
       </div>
       <div>
-        <label style="font-size:11px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Athlete Notes</label>
+        <label style="font-size:12px;color:#6b8299;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Athlete Notes</label>
         ${sessSelectedAthletes.map(n => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
-          <input type="text" id="sr-ath-${n.replace(/\s/g,'_')}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;">
+          <input type="text" id="sr-ath-${n.replace(/\s/g,'_')}" placeholder="Short note…" style="flex:1;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 10px;font-family:inherit;font-size:12px;outline:none;">
         </div>`).join('')}
       </div>
       ${sessType && sessType.includes('Competition') ? (() => {
         const nFinal = sessType.startsWith('Slopestyle') ? 2 : 3;   // BA/HP: 2 Quali + 3 Final · SS: 2 + 2
-        const inp = (id, ph) => `<input type="number" step="0.01" min="0" id="${id}" placeholder="${ph}" style="width:76px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;text-align:center;">`;
+        const inp = (id, ph) => `<input type="number" step="0.01" min="0" id="${id}" placeholder="${ph}" style="width:76px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:inherit;font-size:12px;outline:none;text-align:center;">`;
         return `<div>
-        <label style="font-size:11px;color:#f59e0b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Contest Results <span style="text-transform:none;font-weight:400;">(Final empty if not reached)</span></label>
+        <label style="font-size:12px;color:#f59e0b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">Contest Results <span style="text-transform:none;font-weight:400;">(Final empty if not reached)</span></label>
         ${sessSelectedAthletes.map(n => { const sid = n.replace(/\s/g,'_'); return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
           <span style="font-size:12px;font-weight:600;color:#39c3d4;min-width:70px;">${shortName(n)}</span>
-          <span style="font-size:10px;color:#6b8299;font-weight:600;">QUALI</span>
+          <span style="font-size:12px;color:#6b8299;font-weight:600;">QUALI</span>
           ${inp('sr-q1-'+sid,'Run 1')}${inp('sr-q2-'+sid,'Run 2')}
-          <span style="font-size:10px;color:#6b8299;font-weight:600;margin-left:6px;">FINAL</span>
+          <span style="font-size:12px;color:#6b8299;font-weight:600;margin-left:6px;">FINAL</span>
           ${inp('sr-f1-'+sid,'Run 1')}${inp('sr-f2-'+sid,'Run 2')}${nFinal === 3 ? inp('sr-f3-'+sid,'Run 3') : ''}
-          <span style="font-size:10px;color:#6b8299;font-weight:600;margin-left:6px;">RANK</span>
-          <input type="number" step="1" min="1" id="sr-rank-${sid}" placeholder="#" style="width:56px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:'Poppins',sans-serif;font-size:12px;outline:none;text-align:center;">
+          <span style="font-size:12px;color:#6b8299;font-weight:600;margin-left:6px;">RANK</span>
+          <input type="number" step="1" min="1" id="sr-rank-${sid}" placeholder="#" style="width:56px;background:#112236;border:1px solid #1a3450;border-radius:6px;color:#e8edf2;padding:7px 8px;font-family:inherit;font-size:12px;outline:none;text-align:center;">
         </div>`; }).join('')}
       </div>`; })() : ''}
     </div>
     <div style="display:flex;gap:10px;margin-top:20px;">
-      <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
+      <button onclick="submitSessionReport(${duration})" style="flex:1;padding:13px;background:#39c3d4;color:#060f1a;border:none;border-radius:8px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;">Save &amp; Close</button>
       
     </div>
   </div>`;
@@ -1540,28 +1540,28 @@ function sbRunCardHtml(name, d, trickOptions) {
   const sid = name.replace(/\s/g,'_');
   const elRows = r.elements.map((el, i) => {
     const rate = r.ratings[i] || null;
-    const btn = (val, icon, col) => `<button onclick="sbRunRate('${name}',${i},'${val}')" style="padding:8px 12px;border-radius:8px;border:2px solid ${rate===val?col:'var(--border)'};background:${rate===val?col+'22':'var(--surface2)'};color:${rate===val?col:'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;">${icon}</button>`;
+    const btn = (val, icon, col) => `<button onclick="sbRunRate('${name}',${i},'${val}')" style="padding:8px 12px;border-radius:8px;border:2px solid ${rate===val?col:'var(--border)'};background:${rate===val?col+'22':'var(--surface2)'};color:${rate===val?col:'var(--muted)'};font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;">${icon}</button>`;
     const hasNote = (el.tags && el.tags.length) || el.note;
     const noteLine = hasNote ? `<div style="margin:-2px 0 6px 62px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-        ${(el.tags||[]).map(t => `<span style="font-size:10px;color:#f59e0b;border:1px solid #f59e0b55;border-radius:999px;padding:2px 8px;">${t}</span>`).join('')}
+        ${(el.tags||[]).map(t => `<span style="font-size:12px;color:#f59e0b;border:1px solid #f59e0b55;border-radius:999px;padding:2px 8px;">${t}</span>`).join('')}
         ${el.note ? `<span class="hinweis">${el.note}</span>` : ''}
       </div>` : '';
     const notePanel = r.noteOpen === i ? `<div style="margin:0 0 8px 30px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;">
-        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Tags</div>
+        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Tags</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
-          ${sbAllFailReasons().map(t => { const on = (el.tags||[]).includes(t); return `<button onclick="sbRunTagToggle('${name}',${i},'${t.replace(/'/g,"\\'")}')" style="padding:5px 10px;border-radius:999px;border:1.5px solid ${on?'#f59e0b':'var(--border)'};background:${on?'rgba(245,158,11,0.15)':'none'};color:${on?'#f59e0b':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">${t}</button>`; }).join('')}
+          ${sbAllFailReasons().map(t => { const on = (el.tags||[]).includes(t); return `<button onclick="sbRunTagToggle('${name}',${i},'${t.replace(/'/g,"\\'")}')" style="padding:5px 10px;border-radius:999px;border:1.5px solid ${on?'#f59e0b':'var(--border)'};background:${on?'rgba(245,158,11,0.15)':'none'};color:${on?'#f59e0b':'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">${t}</button>`; }).join('')}
         </div>
         <div style="display:flex;gap:8px;">
-          <input value="${(el.note||'').replace(/"/g,'&quot;')}" oninput="sbRunNoteInput('${name}',${i},this.value)" placeholder="Comment (optional)" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-family:'Poppins',sans-serif;">
-          <button onclick="sbRunNoteToggle('${name}',null)" style="padding:8px 14px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Done</button>
+          <input value="${(el.note||'').replace(/"/g,'&quot;')}" oninput="sbRunNoteInput('${name}',${i},this.value)" placeholder="Comment (optional)" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-family:inherit;">
+          <button onclick="sbRunNoteToggle('${name}',null)" style="padding:8px 14px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">Done</button>
         </div>
       </div>` : '';
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);">
-      <span style="width:20px;height:20px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0;">${i+1}</span>
-      <span style="flex-shrink:0;font-size:9px;font-weight:700;letter-spacing:.5px;color:${el.kind==='rail'?'#a78bfa':'#39c3d4'};border:1px solid ${el.kind==='rail'?'#a78bfa':'#39c3d4'};border-radius:4px;padding:2px 5px;">${el.kind==='rail'?'RAIL':(sessType && sessType.startsWith('Halfpipe')?'HIT':'JUMP')}</span>
+      <span style="width:20px;height:20px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0;">${i+1}</span>
+      <span style="flex-shrink:0;font-size:12px;font-weight:700;letter-spacing:.5px;color:${el.kind==='rail'?'#a78bfa':'#39c3d4'};border:1px solid ${el.kind==='rail'?'#a78bfa':'#39c3d4'};border-radius:4px;padding:2px 5px;">${el.kind==='rail'?'RAIL':(sessType && sessType.startsWith('Halfpipe')?'HIT':'JUMP')}</span>
       <span style="flex:1;font-size:12px;font-weight:600;color:var(--text);line-height:1.3;">${el.label}</span>
       ${btn('failed','✗','#e2001a')}${btn('landed','✓','#34d399')}${btn('stomped','★','#39c3d4')}
-      <button onclick="sbRunNoteToggle('${name}',${i})" title="Tags / comment" style="background:none;border:1px solid ${hasNote || r.noteOpen === i ?'#f59e0b':'var(--border)'};border-radius:8px;color:${hasNote || r.noteOpen === i ?'#f59e0b':'var(--muted)'};cursor:pointer;font-size:13px;padding:6px 9px;">✎</button>
+      <button onclick="sbRunNoteToggle('${name}',${i})" title="Tags / comment" style="background:none;border:1px solid ${hasNote || r.noteOpen === i ?'#f59e0b':'var(--border)'};border-radius:8px;color:${hasNote || r.noteOpen === i ?'#f59e0b':'var(--muted)'};cursor:pointer;font-size:14px;padding:6px 9px;">✎</button>
       <button onclick="sbRunRemoveEl('${name}',${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 4px;">✕</button>
     </div>${noteLine}${notePanel}`;
   }).join('');
@@ -1569,23 +1569,23 @@ function sbRunCardHtml(name, d, trickOptions) {
   let addPanel = '';
   if (r.addMode === 'jump') {
     addPanel = `<div style="margin-top:10px;">
-      <select onchange="sbRunAddJump('${name}', this.value)" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+      <select onchange="sbRunAddJump('${name}', this.value)" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #39c3d4;background:var(--surface2);color:var(--text);font-size:14px;font-family:inherit;">
         <option value="">— select ${sessType && sessType.startsWith('Halfpipe') ? 'hit' : 'jump'} trick —</option>
         ${trickOptions}
       </select>
     </div>`;
   } else if (r.addMode === 'rail') {
     addPanel = `<div style="margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Rail type</div>
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Rail type</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-        ${sbAllRailTypes().map(t => `<button onclick="sbRunSetRailType('${name}','${t.replace(/'/g,"\\'")}')" style="padding:6px 12px;border-radius:999px;border:1.5px solid ${r.railType===t?'#39c3d4':'var(--border)'};background:${r.railType===t?'rgba(57,195,212,0.18)':'none'};color:${r.railType===t?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">${t}</button>`).join('')}
-        <button onclick="sbRunNewRailType('${name}')" style="padding:6px 12px;border-radius:999px;border:1.5px dashed #39c3d4;background:none;color:#39c3d4;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">+ New</button>
+        ${sbAllRailTypes().map(t => `<button onclick="sbRunSetRailType('${name}','${t.replace(/'/g,"\\'")}')" style="padding:6px 12px;border-radius:999px;border:1.5px solid ${r.railType===t?'#39c3d4':'var(--border)'};background:${r.railType===t?'rgba(57,195,212,0.18)':'none'};color:${r.railType===t?'#39c3d4':'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">${t}</button>`).join('')}
+        <button onclick="sbRunNewRailType('${name}')" style="padding:6px 12px;border-radius:999px;border:1.5px dashed #39c3d4;background:none;color:#39c3d4;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">+ New</button>
       </div>
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Trick (free text, with suggestions)</div>
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Trick (free text, with suggestions)</div>
       <div style="display:flex;gap:8px;">
-        <input id="run-rail-trick-${sid}" list="run-rail-suggest" placeholder="e.g. Front 270 on" style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-family:'Poppins',sans-serif;">
+        <input id="run-rail-trick-${sid}" list="run-rail-suggest" placeholder="e.g. Front 270 on" style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;">
         <datalist id="run-rail-suggest">${sbAllRailTricks().map(s => `<option value="${s}">`).join('')}</datalist>
-        <button onclick="sbRunAddRailCommit('${name}')" style="padding:9px 16px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Add</button>
+        <button onclick="sbRunAddRailCommit('${name}')" style="padding:9px 16px;border-radius:8px;border:1px solid #39c3d4;background:rgba(57,195,212,0.15);color:#39c3d4;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">Add</button>
       </div>
     </div>`;
   }
@@ -1594,18 +1594,18 @@ function sbRunCardHtml(name, d, trickOptions) {
   return `<div class="card" style="padding:24px;" id="sess-col-${sid}">
     <div style="font-size:28px;font-weight:800;color:#39c3d4;margin-bottom:4px;text-align:center;">${shortName(name)}</div>
     <div style="text-align:center;margin-bottom:14px;">
-      <span style="background:rgba(167,139,250,0.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:999px;padding:4px 14px;font-size:11px;font-weight:700;">${sessType && sessType.startsWith('Halfpipe') ? 'HALFPIPE' : 'SLOPESTYLE'} RUN #${r.no}</span>
+      <span style="background:rgba(167,139,250,0.15);border:1px solid #a78bfa;color:#a78bfa;border-radius:999px;padding:4px 14px;font-size:12px;font-weight:700;">${sessType && sessType.startsWith('Halfpipe') ? 'HALFPIPE' : 'SLOPESTYLE'} RUN #${r.no}</span>
 
     </div>
-    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Run setup — ${r.elements.length}/${sbRunMaxEl()} ${sessType && sessType.startsWith('Halfpipe') ? 'hits' : 'elements'}</div>
+    <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;">Run setup — ${r.elements.length}/${sbRunMaxEl()} ${sessType && sessType.startsWith('Halfpipe') ? 'hits' : 'elements'}</div>
     ${elRows || '<div style="color:var(--muted);font-size:12px;padding:10px 0;">No elements yet — build the run below.</div>'}
     <div style="display:flex;gap:8px;margin-top:10px;">
-      <button onclick="sbRunToggleAdd('${name}','jump')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='jump'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='jump'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='jump'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">${sessType && sessType.startsWith('Halfpipe') ? '+ Hit' : '+ Jump'}</button>
-      ${sessType && sessType.startsWith('Halfpipe') ? '' : `<button onclick="sbRunToggleAdd('${name}','rail')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='rail'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='rail'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='rail'?'#39c3d4':'var(--muted)'};font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">+ Rail</button>`}
+      <button onclick="sbRunToggleAdd('${name}','jump')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='jump'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='jump'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='jump'?'#39c3d4':'var(--muted)'};font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">${sessType && sessType.startsWith('Halfpipe') ? '+ Hit' : '+ Jump'}</button>
+      ${sessType && sessType.startsWith('Halfpipe') ? '' : `<button onclick="sbRunToggleAdd('${name}','rail')" style="flex:1;padding:11px;border-radius:10px;border:2px ${r.addMode==='rail'?'solid #39c3d4':'dashed var(--border)'};background:${r.addMode==='rail'?'rgba(57,195,212,0.12)':'none'};color:${r.addMode==='rail'?'#39c3d4':'var(--muted)'};font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">+ Rail</button>`}
     </div>
     ${addPanel}
-    <button onclick="sbRunSave('${name}')" ${r.elements.length && rated === r.elements.length ? '' : 'disabled'} style="width:100%;margin-top:14px;padding:14px;border-radius:10px;border:none;background:${r.elements.length && rated === r.elements.length ? '#34d399' : 'var(--surface2)'};color:${r.elements.length && rated === r.elements.length ? '#06281c' : 'var(--muted)'};font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Save Run #${r.no} (${rated}/${r.elements.length} rated)</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;">Each element is saved as one attempt (tagged «Run ${r.no} · position»).${sessType && sessType.startsWith('Halfpipe') ? '' : ` New rail tricks are added to the athlete's Assessment automatically as Goal.`}</div>
+    <button onclick="sbRunSave('${name}')" ${r.elements.length && rated === r.elements.length ? '' : 'disabled'} style="width:100%;margin-top:14px;padding:14px;border-radius:10px;border:none;background:${r.elements.length && rated === r.elements.length ? '#34d399' : 'var(--surface2)'};color:${r.elements.length && rated === r.elements.length ? '#06281c' : 'var(--muted)'};font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">Save Run #${r.no} (${rated}/${r.elements.length} rated)</button>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;">Each element is saved as one attempt (tagged «Run ${r.no} · position»).${sessType && sessType.startsWith('Halfpipe') ? '' : ` New rail tricks are added to the athlete's Assessment automatically as Goal.`}</div>
   </div>`;
 }
 
