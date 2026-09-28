@@ -1473,7 +1473,7 @@ function entryRow(e, opts2={}){
       <div class="chips">${statusChip(e)}${e.video_path ? `<button class="chip" style="cursor:pointer" onclick="playVideo('${e.id}')">▶ Video</button>` : ''}
         ${mine.map(x => `<span class="chip dark">✓ ${x.level} · ${esc(x.text)}</span>`).join('')}${covered ? `<span class="chip">${ath.level} · already covered by another trick</span>` : ''}${others ? `<span class="chip">+${others} in other levels</span>` : ''}${!(staff ? m.length : ownMatch) ? '<span class="chip">Free trick</span>' : ''}</div>
       ${e.note ? `<div class="small" style="margin-top:6px">💬 ${esc(e.note)}</div>` : ''}
-      ${e.review_note ? `<div class="small" style="margin-top:6px;color:var(--char)">🧑‍🏫 ${esc(e.review_note)}</div>` : ''}
+      ${e.review_note ? `<div class="small" style="margin-top:6px;color:var(--char)"><b>Coach:</b> ${esc(e.review_note)}</div>` : ''}
     </div>
     <div class="acts">
       ${staff ? `<button class="btn ${e.status==='pending'?'red':'ghost'} sm" onclick="openReview('${e.id}')">${e.status==='reviewed'?'Edit rating':'Rate'}</button>` : ''}
@@ -1502,7 +1502,7 @@ function asRow(e){
         ${e.video_path ? `<a class="tiny" href="#" onclick="playVideo('${e.id}');return false" style="color:var(--cyan);font-weight:700">▶ Video</a>` : ''}
       </div>
       ${e.note ? `<div class="tiny" style="margin-top:4px">💬 ${esc(e.note)}</div>` : ''}
-      ${e.review_note ? `<div class="tiny" style="margin-top:4px;color:#C96A1F">🎓 ${esc(e.review_note)}</div>` : ''}
+      ${e.review_note ? `<div class="tiny" style="margin-top:4px;color:#C96A1F"><b>Coach:</b> ${esc(e.review_note)}</div>` : ''}
       <div class="row" style="gap:6px;margin-top:6px">
         ${staff && e.status!=='goal' ? `<button class="btn ${e.status==='pending'?'red':'ghost'} xs" onclick="openReview('${e.id}')">${e.status==='reviewed'?'Edit rating':'Rate'}</button>` : ''}
         ${!staff && e.status==='goal' ? `<button class="btn red xs" onclick="submitGoal('${e.id}')">✓ Learned · submit</button>` : ''}

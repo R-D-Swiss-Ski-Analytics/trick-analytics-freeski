@@ -2041,7 +2041,7 @@ function renderStandort() {
         <span style="display:flex;gap:8px;align-items:center;margin-top:2px;">
           ${e.datum ? `<span class="hinweis-klein">${e.datum}</span>` : ''}
           ${e.notiz ? `<span class="hinweis-klein">${e.notiz}</span>` : ''}
-          ${e.coach_kommentar ? `<div style="font-size:10px;color:#f59e0b;margin-top:3px;">🎓 ${e.coach_kommentar}</div>` : ''}
+          ${e.coach_kommentar ? `<div style="font-size:10px;color:#f59e0b;margin-top:3px;"><b>Coach:</b> ${e.coach_kommentar}</div>` : ''}
           ${e.coach_video ? `<div style="font-size:10px;"><a class="warnung" href="${e.coach_video}" target="_blank">▶ Video</a></div>` : ''}
         </span>
         ${grabChipsHtml(e)}
@@ -2103,7 +2103,7 @@ function renderStandort() {
             <span class="sb-status-erreicht" style="margin-left:6px;">✓ Achieved</span>
           </div>
           ${e.notiz ? `<div class="timeline-meta">${e.notiz}</div>` : ''}
-          ${e.coach_kommentar ? `<div class="timeline-meta warnung">🎓 ${e.coach_kommentar}</div>` : ''}
+          ${e.coach_kommentar ? `<div class="timeline-meta warnung"><b>Coach:</b> ${e.coach_kommentar}</div>` : ''}
           <div class="timeline-meta">Logged: ${fmtDate(e.created_at)}</div>
         </div>
       </div>`).join('');
