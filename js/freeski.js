@@ -2041,7 +2041,7 @@ function renderStandort() {
         <span style="display:flex;gap:8px;align-items:center;margin-top:2px;">
           ${e.datum ? `<span class="hinweis-klein">📅 ${e.datum}</span>` : ''}
           ${e.notiz ? `<span class="hinweis-klein">${e.notiz}</span>` : ''}
-          ${e.coach_kommentar ? `<div style="font-size:10px;color:#f59e0b;margin-top:3px;">🎓 ${e.coach_rating ? e.coach_rating+'/10 · ' : ''}${e.coach_kommentar}</div>` : ''}
+          ${e.coach_kommentar ? `<div style="font-size:10px;color:#f59e0b;margin-top:3px;">🎓 ${e.coach_kommentar}</div>` : ''}
           ${e.coach_video ? `<div style="font-size:10px;"><a class="warnung" href="${e.coach_video}" target="_blank">▶ Video</a></div>` : ''}
         </span>
         ${grabChipsHtml(e)}
@@ -2103,7 +2103,7 @@ function renderStandort() {
             <span class="sb-status-erreicht" style="margin-left:6px;">✓ Achieved</span>
           </div>
           ${e.notiz ? `<div class="timeline-meta">${e.notiz}</div>` : ''}
-          ${e.coach_kommentar ? `<div class="timeline-meta warnung">🎓 ${e.coach_rating ? e.coach_rating+'/10 · ' : ''}${e.coach_kommentar}</div>` : ''}
+          ${e.coach_kommentar ? `<div class="timeline-meta warnung">🎓 ${e.coach_kommentar}</div>` : ''}
           <div class="timeline-meta">Logged: ${fmtDate(e.created_at)}</div>
         </div>
       </div>`).join('');
@@ -3504,7 +3504,7 @@ function openSbEdit(id){
   sv('sbe-bringback',e.bringback);sv('sbe-railart',e.railart);
   sv('sbe-slideform',e.slideform);sv('sbe-inspin',e.inspin);
   sv('sbe-outspin',e.outspin);sv('sbe-notiz',e.notiz);
-  sv('sbe-status',e.status);sv('sbe-coach-rating',e.coach_rating);sv('sbe-coach-kommentar',e.coach_kommentar);
+  sv('sbe-status',e.status);sv('sbe-coach-kommentar',e.coach_kommentar);
   // Grab-Ampel wie im Erfassungs-Formular: 1×=✓ Mastered, 2×=🎯 Goal, 3×=aus, L=Lead
   const wrap=document.getElementById('sbe-grab-wrap');
   sbeGrabMatrix={...effGrabStatus(e)};
@@ -3553,7 +3553,7 @@ async function saveSbEdit(){
     absprung:gv('sbe-absprung'),bringback:gv('sbe-bringback'),
     railart:gv('sbe-railart'),slideform:gv('sbe-slideform'),
     inspin:gv('sbe-inspin'),outspin:gv('sbe-outspin'),notiz:gv('sbe-notiz'),
-    status:gv('sbe-status'),coach_rating:gv('sbe-coach-rating')||null,coach_kommentar:gv('sbe-coach-kommentar')||null,
+    status:gv('sbe-status'),coach_kommentar:gv('sbe-coach-kommentar')||null,
     grab:Object.keys(sbeGrabMatrix).join(', ')||null,
   };
   const isK=['Jump','Halfpipe','Landing Bag'].includes(updates.disziplin);
@@ -4946,9 +4946,7 @@ const fragments = {
             <input type="hidden" id="sb-grab" value="">
           </div>
         </div>`,
-  coachFields: `      <div class="form-group"><label>Coach Rating (1–10)</label>
-        <input type="number" id="sbe-coach-rating" min="1" max="10" placeholder="1–10"></div>
-      <div class="form-group full"><label>Coach Comment</label>
+  coachFields: `      <div class="form-group full"><label>Coach Comment</label>
         <textarea id="sbe-coach-kommentar" rows="2" placeholder="Coach comment..."></textarea></div>`,
 };
 function init() {
