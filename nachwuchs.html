@@ -498,6 +498,10 @@ main svg text{font-size:var(--fs-label)}
 #outbox-bar.err{background:var(--red)}
 #outbox-bar button{border:0;background:rgba(255,255,255,.22);color:#fff;border-radius:999px;padding:5px 12px;font-weight:700;cursor:pointer}
 @media (min-width:769px){#outbox-bar{bottom:24px}}
+.sel-banner{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;padding:12px 16px;border-radius:12px;background:#EAF1F8;border:1px solid #cddcec;color:#23466b}
+.sel-banner b{font-size:var(--fs-item)} .sel-banner span{font-size:var(--fs-meta)}
+.sel-banner.frozen{background:#fdeceb;border-color:#f3c8c5;color:#8B0E13}
+.rv-log{margin:10px 0 0;font-size:var(--fs-meta)} .rv-log summary{cursor:pointer;font-weight:700;color:var(--char)} .rv-log ul{margin:6px 0 0;padding-left:18px}
 </style>
 </head>
 <body>
@@ -530,6 +534,7 @@ main svg text{font-size:var(--fs-label)}
     <section class="page" id="page-monitoring"></section>
     <section class="page" id="page-reviews"></section>
     <section class="page" id="page-team"></section>
+    <section class="page" id="page-selection"></section>
   </main>
 </div>
 
@@ -709,6 +714,12 @@ const I18N = {
   'A rating is only possible with a video':['Bewerten ist nur mit Video möglich','L’évaluation n’est possible qu’avec une vidéo','La valutazione è possibile solo con un video'], 'Request video':['Video anfordern','Demander une vidéo','Richiedi video'], '⬆ Upload video':['⬆ Video hochladen','⬆ Télécharger une vidéo','⬆ Carica video'],
   'Trick status (stomp rate)':['Trick-Status (Stomp-Rate)','Statut du trick (taux de stomp)','Stato del trick (stomp rate)'], '< 5 attempts':['< 5 Versuche','< 5 essais','< 5 tentativi'], 'Stomped = all criteria met':['Stomped = alle Kriterien erfüllt','Stomped = tous les critères remplis','Stomped = tutti i criteri soddisfatti'],
   'Send now':['Jetzt senden','Envoyer','Invia ora'],
+  'Selection':['Selektion','Sélection','Selezione'], 'Admins only.':['Nur für Admins.','Réservé aux admins.','Solo per admin.'], 'History':['Verlauf','Historique','Cronologia'], 'Submitted':['Eingereicht','Envoyé','Inviato'], 'Deleted':['Gelöscht','Supprimé','Eliminato'],
+  'Selection status at the deadline. Later ratings do not count.':['Selektionsstand am Stichtag. Spätere Bewertungen zählen nicht.','État de la sélection à la date limite. Les évaluations ultérieures ne comptent pas.','Stato della selezione alla scadenza. Le valutazioni successive non contano.'],
+  '(History not yet active: ratings up to the deadline.)':['(Verlauf noch nicht aktiv: Bewertungen bis zum Stichtag.)','(Historique pas encore actif : évaluations jusqu’à la date limite.)','(Cronologia non ancora attiva: valutazioni fino alla scadenza.)'],
+  'Ranking by Skills-Check total, tie-break: stomp rate from sessions':['Rangierung nach Skills-Check-Total, bei Gleichstand: Stomp-Rate aus den Sessions','Classement selon le total Skills-Check, en cas d’égalité : stomp rate des sessions','Classifica per totale Skills-Check, in caso di parità: stomp rate delle sessioni'],
+  'Only tricks rated with video count':['Es zählen nur mit Video bewertete Tricks','Seuls les tricks évalués avec vidéo comptent','Contano solo i trick valutati con video'], 'Stomp rate is shown from 5 attempts':['Stomp-Rate ab 5 Versuchen','Stomp rate à partir de 5 essais','Stomp rate da 5 tentativi'],
+  'Videos':['Videos','Vidéos','Video'], 'Stomp rate':['Stomp-Rate','Stomp rate','Stomp rate'], 'Women':['Frauen','Femmes','Donne'], 'Men':['Männer','Hommes','Uomini'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
@@ -831,6 +842,11 @@ const I18N_DE = {
 };
 // Texte mit Zahlen/Namen
 const I18N_PAT = [
+  [/^Frozen as of (.+)$/, (m, i) => [`Eingefroren per ${m[1]}`, `Figé au ${m[1]}`, `Congelato al ${m[1]}`][i]],
+  [/^Deadline (\d.+)$/, (m, i) => [`Stichtag ${m[1]}`, `Date limite ${m[1]}`, `Scadenza ${m[1]}`][i]],
+  [/^(\d+) days left · live status, freezes automatically at the deadline$/, (m, i) => [`noch ${m[1]} Tage · aktueller Stand, wird am Stichtag automatisch eingefroren`, `encore ${m[1]} jours · état actuel, figé automatiquement à la date limite`, `ancora ${m[1]} giorni · stato attuale, congelato automaticamente alla scadenza`][i]],
+  [/^Ranking (T\d) (Women|Men)$/, (m, i) => [`Rangliste ${m[1]} ${m[2]==='Women'?'Frauen':'Männer'}`, `Classement ${m[1]} ${m[2]==='Women'?'Femmes':'Hommes'}`, `Classifica ${m[1]} ${m[2]==='Women'?'Donne':'Uomini'}`][i]],
+  [/^History \((\d+)\)$/, (m, i) => [`Verlauf (${m[1]})`, `Historique (${m[1]})`, `Cronologia (${m[1]})`][i]],
   [/^Saved offline: (\d+)$/, (m, i) => [`${m[1]} offline gespeichert, wird automatisch gesendet`, `${m[1]} enregistré(s) hors ligne, envoi automatique`, `${m[1]} salvati offline, invio automatico`][i]],
   [/^Not sent: (\d+)$/, (m, i) => [`${m[1]} nicht gesendet: bitte prüfen`, `${m[1]} non envoyé(s) : à vérifier`, `${m[1]} non inviati: da verificare`][i]],
   [/^↗ rising, (\+\d+)%$/, (m, i) => [`↗ steigend, ${m[1]}%`, `↗ en hausse, ${m[1]}%`, `↗ in crescita, ${m[1]}%`][i]],
@@ -1585,6 +1601,7 @@ const DemoStore = {
   async deleteSession(id){ this.data.sessions = this.data.sessions.filter(s => s.id!==id); this.data.attempts = this.data.attempts.filter(a => a.session_id!==id); this.save(); },
   async saveAttempt(me, a){ return this._upsert(this.data.attempts, {...a}, me); },
   async deleteAttempt(id){ this.data.attempts = this.data.attempts.filter(a => a.id!==id); this.save(); },
+  async entryLog(){ return null; },
   async listComments(athId, key){ return (this.data.comments || []).filter(c => c.athlete_id===athId && c.trick_key===key).sort((a,b) => b.created_at.localeCompare(a.created_at)); },
   async addComment(me, athId, key, text){ (this.data.comments ||= []).push({id:Date.now(), athlete_id:athId, trick_key:key, comment:text, created_by:me.id, created_at:nowIso()}); this.save(); },
   async trickStatus(){ return null; },
@@ -1733,6 +1750,8 @@ const SupaStore = {
     try { const { error } = await db.from('attempts').delete().eq('id', id); if (error) throw error; }
     catch (err){ if (!isNetErr(err)) throw err; Outbox.add({op:'delete', table:'attempts', id, t:Date.now()}); }
   },
+  // Änderungsverlauf (Update 4); null = Tabelle fehlt noch
+  async entryLog(opts={}){ let q = db.from('entry_log').select('*').order('changed_at', {ascending:true}); if (opts.entryId) q = q.eq('entry_id', opts.entryId); if (opts.until) q = q.lte('changed_at', opts.until); const { data, error } = await q.limit(20000); if (error){ console.warn('entry_log', error.message); return null; } return data; },
   async listComments(athId, key){ const { data, error } = await db.from('trick_comments').select('*').eq('athlete_id', athId).eq('trick_key', key).order('created_at', {ascending:false}); if (error) throw error; return data; },
   async addComment(me, athId, key, text){ const { error } = await db.from('trick_comments').insert({athlete_id:athId, trick_key:key, comment:text}); if (error) throw error; },
   async trickStatus(athId, key){ const { data } = await db.from('trick_status').select('status_text,updated_at').eq('athlete_id', athId).eq('trick_key', `${key}@${LANG}`).maybeSingle(); return data; },
@@ -1802,6 +1821,7 @@ function visibleAthleteIds(me, profiles){
   return new Set([me.id]);
 }
 const isStaff = () => ST.me && ST.me.role !== 'athlete';
+const isAdmin = () => !!ST.me && (ADMIN_IDS.includes(ST.me.id) || (DEMO && ST.me.role==='dvlp'));
 const prof = id => ST.profiles.find(p => p.id===id);
 const groupName = id => ST.groups.find(g => g.id===id)?.name || '–';
 function visibleAthletes(){
@@ -1854,6 +1874,7 @@ function pendingForMe(){ const ids = visibleAthleteIds(ST.me, ST.profiles); retu
 const NAV_ICONS = (() => {
   const i = d => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   return {
+    selection: i('<path d="M8 4h8v5a4 4 0 01-8 0zM8 6H4.5v1a3 3 0 003 3M16 6h3.5v1a3 3 0 01-3 3M12 13v4M8 20h8M9.5 17h5"/>'),
     assessment: i('<path d="M9 5h11M9 12h11M9 19h11"/><path d="M4 5h.01M4 12h.01M4 19h.01"/>'),
     skills: i('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>'),
     session: i('<circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4z"/>'),
@@ -1864,7 +1885,7 @@ const NAV_ICONS = (() => {
   };
 })();
 // Modus nur fürs Handy: welche Tabs unten erscheinen (Assessment ist in beiden)
-const MODE_PAGES = {skills:['assessment','skills','reviews','team'], monitoring:['assessment','session','reports','monitoring']};
+const MODE_PAGES = {skills:['assessment','skills','reviews','team','selection'], monitoring:['assessment','session','reports','monitoring']};
 ST.mode = (() => { try { const m = localStorage.getItem('nw-mode'); if (MODE_PAGES[m]) return m; } catch {} return 'skills'; })();
 function setMode(m){
   ST.mode = m; try { localStorage.setItem('nw-mode', m); } catch {}
@@ -1884,7 +1905,7 @@ function renderChrome(){
     <button class="iconbtn logout-btn" onclick="logout()" title="Log out"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Log out</span></button>`;
   const tabs = [['assessment','Assessment'], ['skills','Skills-Check']];
   // Reihenfolge: Skills-Check-Teil │ Session-Erfassung
-  if (isStaff()) tabs.push(['reviews','Reviews'], ['team','Team'], ['|'], ['session','Session'], ['reports','Reports'], ['monitoring','Monitoring']);
+  if (isStaff()) tabs.push(['reviews','Reviews'], ['team','Team'], ...(isAdmin() ? [['selection','Selection']] : []), ['|'], ['session','Session'], ['reports','Reports'], ['monitoring','Monitoring']);
   const pend = isStaff() ? pendingForMe().length : 0;
   const bn = $('#bottom-nav'); bn.hidden = false;
   const ms = $('#mode-sw');
@@ -1933,6 +1954,7 @@ function render(){
   else if (ST.page==='session') renderSession();
   else if (ST.page==='reports') renderReports();
   else if (ST.page==='monitoring') renderMonitoring();
+  else if (ST.page==='selection') renderSelection();
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2324,8 +2346,7 @@ function renderAssessment(){
 const FOCUS = {'':'All disciplines', park:'Jumps & Rails only', hp:'Halfpipe only'};
 const FOCUS_DISCS = {park:['Jump','Rail'], hp:['Halfpipe']};
 const focusDiscs = (ath, level) => level==='T4' && FOCUS_DISCS[ath.focus] ? FOCUS_DISCS[ath.focus] : DISCS;
-function levelTotals(ath, level){
-  const ents = entriesOf(ath.id);
+function levelTotals(ath, level, ents = entriesOf(ath.id)){
   const incl = focusDiscs(ath, level);
   const r = {pts:0, max:0, done:0, n:0, pending:0, by:{}, incl};
   for (const d of DISCS){
@@ -2424,6 +2445,7 @@ async function openReview(id){
     ${e.note ? `<div class="small" style="margin-bottom:6px">💬 <b>Athlete:</b> ${esc(e.note)}</div>` : ''}
     <div id="rv-crit" ${e.video_path ? '' : 'hidden'}></div>
     <div class="tiny muted" style="margin-top:6px" ${e.video_path ? '' : 'hidden'}>Based on the FIS Park & Pipe Judges Handbook, ch. 8.1 Execution and 8.3 Amplitude</div>
+    <div id="rv-log"></div>
     <label class="f" style="margin-top:12px">Feedback for the athlete<textarea id="rv-note" placeholder="What was good, what to work on?">${esc(e.review_note||'')}</textarea></label>
     <div class="btnrow" style="align-items:center">
       ${e.video_path ? `<button class="btn red" id="rv-save" onclick="saveReview()">Save rating</button>` : `<button class="btn red" onclick="closeModal();pickVideo('${e.id}')">⬆ Upload video</button>`}
@@ -2432,6 +2454,7 @@ async function openReview(id){
       <span class="grow"></span><div class="score-big" id="rv-score"></div>
     </div>`);
   renderCrit();
+  Store.entryLog({entryId:e.id}).then(log => { const el = $('#rv-log'); if (el && log?.length) el.innerHTML = logHtml(log); });
   if (e.video_path){
     try { const url = await Store.videoUrl(e.video_path);
       $('#rv-video').innerHTML = url ? `<video src="${esc(url)}" controls playsinline></video>` : `<div class="rule" style="margin:14px 0">${DEMO ? 'Demo mode: the video was uploaded in another session and is no longer available.' : 'Video not found.'}</div>`; }
@@ -2522,6 +2545,69 @@ function teamSkillsPdf(){
   const filt = [TF.sex==='W' ? 'Women only' : TF.sex==='M' ? 'Men only' : '', TF.level || ''].filter(Boolean).join(' · ');
   openPrintWindow('Skills-Check Team', `${rows.length} athletes${filt ? ' · ' + filt : ''}`,
     `<div class="card"><table class="tbl"><thead><tr><th>Athlete</th><th>Sex</th><th>Level</th><th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th></tr></thead><tbody>${body}</tbody></table></div>`);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SELEKTION (nur Admin): Rangliste pro Stufe und Geschlecht, Stichtag 30. April
+   Vor dem Stichtag: aktueller Stand. Danach: eingefrorener Stand per Stichtag
+   (aus dem Änderungsverlauf; ohne Verlauf: Bewertungen bis zum Stichtag).
+   ══════════════════════════════════════════════════════════════════════ */
+function selectionDeadline(d = new Date()){
+  const y = d.getMonth() >= 7 ? d.getFullYear() + 1 : d.getFullYear();   // Saison Aug–Jul → Stichtag 30.4. im Saison-Endjahr
+  return new Date(Date.UTC(y, 3, 30, 21, 59, 59));   // 30.4. 23:59:59 Schweizer Zeit (MESZ)
+}
+const selFrozen = () => Date.now() > selectionDeadline().getTime();
+function logHtml(log){
+  const nm = id => prof(id)?.name || '–';
+  const lab = r => r.status==='reviewed' ? `${r.score}/${maxFor(r.discipline)}` : r.status==='rework' ? 'New video requested' : r.status==='pending' ? 'Submitted' : r.status==='goal' ? 'Goal' : r.action==='delete' ? 'Deleted' : r.status;
+  return `<details class="rv-log"><summary>History (${log.length})</summary><ul>${log.slice().reverse().map(r => `<li><span class="tiny muted">${fmtDate(r.changed_at)} ${new Date(r.changed_at).toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'})}</span> <b>${esc(lab(r))}</b> <span class="muted">· ${esc(nm(r.changed_by))}</span></li>`).join('')}</ul></details>`;
+}
+async function loadSelectionSnapshot(){
+  const dl = selectionDeadline();
+  if (!selFrozen()){ ST.sel = {frozen:false, ents:ST.entries}; return; }
+  const log = await Store.entryLog({until:dl.toISOString()});
+  let ents;
+  if (log){
+    const last = new Map(); for (const r of log) last.set(r.entry_id, r);   // aufsteigend sortiert → letzter Stand vor Stichtag
+    ents = [...last.values()].filter(r => r.action!=='delete').map(r => ({id:r.entry_id, athlete_id:r.athlete_id, discipline:r.discipline, label:r.label, status:r.status, crit:r.crit, score:r.score, video_path:r.video_path,
+      trick:ST.entries.find(e => e.id===r.entry_id)?.trick || null})).filter(e => e.trick);
+  } else ents = ST.entries.filter(e => e.status==='reviewed' && e.reviewed_at && e.reviewed_at <= dl.toISOString());
+  ST.sel = {frozen:true, ents, fromLog:!!log};
+}
+async function renderSelection(){
+  const root = $('#page-selection');
+  if (!isAdmin()){ root.innerHTML = '<div class="card"><div class="empty">Admins only.</div></div>'; return; }
+  if (!ST.sel || ST.sel.rev !== ST._rev){ root.innerHTML = '<div class="card"><div class="empty">Loading…</div></div>'; await loadSelectionSnapshot(); ST.sel.rev = ST._rev; }
+  const F = ST.selF || (ST.selF = {level:'T3', sex:'W'});
+  const dl = selectionDeadline(), frozen = ST.sel.frozen;
+  const days = Math.ceil((dl.getTime() - Date.now()) / 86400000);
+  const atts = ST.attempts.filter(a => !frozen || a.created_at <= dl.toISOString());
+  const rows = ST.profiles.filter(p => p.role==='athlete' && p.level===F.level && p.gender===F.sex).map(a => {
+    const ents = ST.sel.ents.filter(e => e.athlete_id===a.id && (e.status!=='reviewed' || e.video_path));   // Selektion: nur Bewertungen mit Video
+    const t = levelTotals(a, a.level, ents);
+    const vids = ents.filter(e => e.status==='reviewed' && e.video_path).length, rated = ents.filter(e => e.status==='reviewed').length;
+    const my = atts.filter(x => x.athlete_id===a.id), st = my.filter(x => outcomeOf(x)==='stomped').length;
+    return {a, t, vids, rated, n:my.length, stomp: my.length >= 5 ? Math.round(st / my.length * 100) : null};
+  }).sort((x, y) => y.t.pct - x.t.pct || (y.stomp ?? -1) - (x.stomp ?? -1) || x.a.name.localeCompare(y.a.name));
+  const dc = (t, d) => !t.by[d] ? '<td class="num">–</td>' : t.incl.includes(d) ? pdfPctCell(pct(t.by[d].pts, t.by[d].max), 70, 40) : '<td class="num"><span class="tiny muted">not in focus</span></td>';
+  ST._selRows = rows;
+  root.innerHTML = `
+    <div class="sel-banner ${frozen ? 'frozen' : ''}">${frozen
+      ? `<b>Frozen as of ${fmtDate(dl.toISOString())}</b><span>Selection status at the deadline. Later ratings do not count.</span>${ST.sel.fromLog ? '' : '<span>(History not yet active: ratings up to the deadline.)</span>'}`
+      : `<b>Deadline ${fmtDate(dl.toISOString())}</b><span>${days} days left · live status, freezes automatically at the deadline</span>`}</div>
+    <div class="row team-filters" style="margin:14px 0 16px;gap:8px">
+      <select onchange="ST.selF.sex=this.value;renderSelection()">${opts([['W','Women'],['M','Men']], F.sex)}</select>
+      <select onchange="ST.selF.level=this.value;renderSelection()">${opts(LEVELS.map(l => [l, l]), F.level)}</select>
+      <span class="grow"></span><button class="btn ghost" onclick="selectionPdf()">📄 PDF</button></div>
+    <div class="card"><h2>Ranking ${F.level} ${F.sex==='W' ? 'Women' : 'Men'} <span class="muted" style="letter-spacing:0;font-weight:600">${rows.length}</span></h2>
+      <ul class="hints"><li>Ranking by Skills-Check total, tie-break: stomp rate from sessions</li><li>Only tricks rated with video count</li><li>Stomp rate is shown from 5 attempts</li></ul>
+      <div class="scroll-x"><table class="tbl sel-tbl"><thead><tr><th>#</th><th>Athlete</th><th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th><th class="num">Videos</th><th class="num">Stomp rate</th></tr></thead>
+      <tbody>${rows.map((r, i) => `<tr class="click" onclick="ST.athleteId='${r.a.id}';ST.level=null;go('skills')"><td class="num"><b>${i + 1}</b></td><td><b>${esc(r.a.name)}</b><div class="tiny muted">${esc(groupName(r.a.group_id))}</div></td>${dc(r.t,'Jump')}${dc(r.t,'Rail')}${dc(r.t,'Halfpipe')}${pdfPctCell(r.t.pct, 70, 40)}<td class="num">${r.vids}/${r.rated}</td><td class="num">${r.stomp==null ? `<span class="tiny muted">${r.n} att.</span>` : r.stomp + '%'}</td></tr>`).join('') || '<tr><td colspan="8" class="empty">No athletes.</td></tr>'}</tbody></table></div></div>`;
+}
+function selectionPdf(){
+  const F = ST.selF, rows = ST._selRows || [], dl = selectionDeadline();
+  const tbl = document.querySelector('#page-selection .sel-tbl')?.outerHTML || '';
+  openPrintWindow(`Selection ${F.level} ${F.sex==='W' ? 'Women' : 'Men'}`, `${ST.sel?.frozen ? 'Frozen as of' : 'Live status, deadline'} ${fmtDate(dl.toISOString())} · ${rows.length} athletes`, `<div class="card">${tbl}</div>`);
 }
 function setTeamFilter(k, v){ (ST.teamFilter ||= {sex:'', level:'', sort:'name'})[k] = v; renderTeam(); }
 function openAddAthlete(){
