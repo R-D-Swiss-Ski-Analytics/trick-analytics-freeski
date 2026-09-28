@@ -2562,7 +2562,7 @@ function renderStandort() {
       <span class="sb-trick-name">
         <span style="font-weight:500;">${normSbTrick((e.trick_label||'').replace(/\bNone\b/gi,'').replace(/\s{2,}/g,' ').trim())}</span>
         <span style="display:flex;gap:8px;align-items:center;margin-top:2px;">
-          ${e.datum ? `<span class="hinweis-klein">📅 ${e.datum}</span>` : ''}
+          ${e.datum ? `<span class="hinweis-klein">${e.datum}</span>` : ''}
           ${e.notiz ? `<span class="hinweis-klein">${e.notiz}</span>` : ''}
         </span>
         ${grabChipsHtml(e)}
@@ -3398,7 +3398,7 @@ function renderTrickAnalytics() {
     }).join('');
 
     el.innerHTML =
-      `<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">📅 ${label} — ${sd.length} attempts, ${Object.keys(tmap).length} tricks</div>` +
+      `<div style="font-size:12px;color:var(--muted);margin-bottom:16px;">${label} — ${sd.length} attempts, ${Object.keys(tmap).length} tricks</div>` +
       cardsHtml +
       (radarTotal > 0 ? `
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:8px;">

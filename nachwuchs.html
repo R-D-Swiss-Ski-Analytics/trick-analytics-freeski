@@ -1497,7 +1497,7 @@ function asRow(e){
     <div class="sb-trick-name">
       <div style="font-weight:600;color:var(--char)">${esc(e.label)}</div>
       <div class="row" style="gap:6px;margin-top:4px">
-        <span class="tiny muted">📅 ${fmtDate(e.created_at)}</span>${e.status!=='goal' ? statusChip(e) : goalLandedHint(e)}
+        <span class="tiny muted">${fmtDate(e.created_at)}</span>${e.status!=='goal' ? statusChip(e) : goalLandedHint(e)}
         ${mine.map(x => `<span class="chip dark">✓ ${x.level} · ${esc(x.text)}</span>`).join('')}${!mine.length && m.some(x => x.level===ath?.level) ? `<span class="chip">${ath.level} · already covered</span>` : ''}${!m.length ? '<span class="chip">Free trick</span>' : ''}
         ${e.video_path ? `<a class="tiny" href="#" onclick="playVideo('${e.id}');return false" style="color:var(--cyan);font-weight:700">▶ Video</a>` : ''}
       </div>
