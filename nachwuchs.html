@@ -410,6 +410,21 @@ details summary{cursor:pointer;font-size:var(--fs-label);font-weight:700;color:v
   .team-tbl .c-pend:empty{display:none}
   .team-tbl td .name-in{width:100%}
   .team-tbl tr .empty{grid-column:1/-1}
+  /* nichts darf breiter als der Bildschirm werden */
+  .chip{white-space:normal;max-width:100%;overflow-wrap:anywhere}
+  .form-grid > *,.grid > *,.row > *{min-width:0}
+  input[type=file]{max-width:100%}
+  .item .main,.item .t,.item .m{min-width:0;overflow-wrap:anywhere}
+  /* Selektion als Karten */
+  .sel-tbl{min-width:0!important;width:100%}
+  .sel-tbl thead{display:none}
+  .sel-tbl tbody{display:block}
+  .sel-tbl tr{display:grid;grid-template-columns:28px repeat(3,minmax(0,1fr));gap:6px 8px;padding:12px 0;border-bottom:1px solid var(--line);align-items:start}
+  .sel-tbl td{display:block;padding:0!important;border:0!important;text-align:left!important;min-width:0}
+  .sel-tbl td:nth-child(1){grid-row:1 / span 3}
+  .sel-tbl td:nth-child(2){grid-column:2 / -1}
+  .sel-tbl td[data-l]::before{content:attr(data-l);display:block;font-size:10px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+  .sel-tbl .minibar{display:block;width:100%!important;margin:3px 0 0}
   .disc-seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
   .disc-seg button{justify-content:center;gap:5px;padding:9px 4px;font-size:var(--fs-meta);border-radius:12px}
   .disc-seg button b{padding:1px 6px}
@@ -504,6 +519,13 @@ main svg text{font-size:var(--fs-label)}
 .rv-log{margin:10px 0 0;font-size:var(--fs-meta)} .rv-log summary{cursor:pointer;font-weight:700;color:var(--char)} .rv-log ul{margin:6px 0 0;padding-left:18px}
 .push-banner{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;margin:0 0 16px;padding:12px 14px;border-radius:12px;background:#EAF1F8;border:1px solid #cddcec}
 .push-banner > div{flex:1 1 220px;display:flex;flex-direction:column;gap:2px} .push-banner b{font-size:var(--fs-item);color:#23466b} .push-banner span{font-size:var(--fs-meta);color:#23466b}
+.sel-tbl{table-layout:fixed;width:100%}
+.sel-tbl th:nth-child(1){width:44px}.sel-tbl th:nth-child(2){width:24%}
+.sel-tbl th.num,.sel-tbl td.num{text-align:left}
+.sel-tbl td.num b{display:block}
+.sel-tbl td .minibar{display:block;width:80%;max-width:110px;margin:5px 0 0}
+.sel-tbl td{vertical-align:middle}
+@media (min-width:769px){.team-filters > select{width:auto;min-width:170px;max-width:260px}}
 </style>
 </head>
 <body>
@@ -2650,7 +2672,7 @@ async function renderSelection(){
     <div class="card"><h2>Ranking ${F.level} ${F.sex==='W' ? 'Women' : 'Men'} <span class="muted" style="letter-spacing:0;font-weight:600">${rows.length}</span></h2>
       <ul class="hints"><li>Ranking by Skills-Check total, tie-break: stomp rate from sessions</li><li>Only tricks rated with video count</li><li>Stomp rate is shown from 5 attempts</li></ul>
       <div class="scroll-x"><table class="tbl sel-tbl"><thead><tr><th>#</th><th>Athlete</th><th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th><th class="num">Videos</th><th class="num">Stomp rate</th></tr></thead>
-      <tbody>${rows.map((r, i) => `<tr class="click" onclick="ST.athleteId='${r.a.id}';ST.level=null;go('skills')"><td class="num"><b>${i + 1}</b></td><td><b>${esc(r.a.name)}</b><div class="tiny muted">${esc(groupName(r.a.group_id))}</div></td>${dc(r.t,'Jump')}${dc(r.t,'Rail')}${dc(r.t,'Halfpipe')}${pdfPctCell(r.t.pct, 70, 40)}<td class="num">${r.vids}/${r.rated}</td><td class="num">${r.stomp==null ? `<span class="tiny muted">${r.n} att.</span>` : r.stomp + '%'}</td></tr>`).join('') || '<tr><td colspan="8" class="empty">No athletes.</td></tr>'}</tbody></table></div></div>`;
+      <tbody>${rows.map((r, i) => `<tr class="click" onclick="ST.athleteId='${r.a.id}';ST.level=null;go('skills')"><td class="num"><b>${i + 1}</b></td><td><b>${esc(r.a.name)}</b><div class="tiny muted">${esc(groupName(r.a.group_id))}</div></td>${[dc(r.t,'Jump'), dc(r.t,'Rail'), dc(r.t,'Halfpipe'), pdfPctCell(r.t.pct, 70, 40)].map((h, k) => h.replace('<td class="num"', `<td class="num" data-l="${['Jumps','Rails','HP','Total'][k]}"`)).join('')}<td class="num" data-l="Videos">${r.vids}/${r.rated}</td><td class="num" data-l="Stomp rate">${r.stomp==null ? `<span class="tiny muted">${r.n} att.</span>` : r.stomp + '%'}</td></tr>`).join('') || '<tr><td colspan="8" class="empty">No athletes.</td></tr>'}</tbody></table></div></div>`;
 }
 function selectionPdf(){
   const F = ST.selF, rows = ST._selRows || [], dl = selectionDeadline();
