@@ -755,6 +755,7 @@ const I18N = {
   'Set the new levels in the Team tab first':['Zuerst im Team-Tab die neuen Stufen setzen','D’abord définir les nouveaux niveaux dans l’onglet Team','Prima impostare i nuovi livelli nella scheda Team'],
   'No videos to clean up.':['Keine Videos zum Aufräumen.','Aucune vidéo à nettoyer.','Nessun video da pulire.'],
   'Video clean-up: from today you can delete videos that are no longer required in the Selection tab.':['Video-Aufräumen: Ab heute kannst du im Tab «Selektion» die nicht mehr verlangten Videos löschen.','Nettoyage des vidéos : dès aujourd’hui, tu peux supprimer les vidéos qui ne sont plus exigées dans l’onglet Sélection.','Pulizia video: da oggi puoi eliminare i video non più richiesti nella scheda Selezione.'],
+  'Runs automatically every year from 31 May (after selection and appeal period), only for videos uploaded before 31 May':['Läuft jedes Jahr ab 31. Mai automatisch (nach Selektion und Rekursfrist), nur für Videos, die vor dem 31. Mai hochgeladen wurden','S’exécute automatiquement chaque année dès le 31 mai (après la sélection et le délai de recours), uniquement pour les vidéos téléchargées avant le 31 mai','Si esegue automaticamente ogni anno dal 31 maggio (dopo la selezione e il termine di ricorso), solo per i video caricati prima del 31 maggio'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
@@ -2692,9 +2693,12 @@ async function renderSelection(){
    Videos von Tricks, die auf der aktuellen Stufe der Athlet:in nicht mehr explizit verlangt sind,
    werden gelöscht. Eintrag und Bewertung bleiben erhalten (auch im Verlauf). ── */
 function cleanupDate(){ const d = selectionDeadline(); return new Date(Date.UTC(d.getUTCFullYear(), 4, 30, 22, 0, 0)); }   // 31.5. 00:00 Schweizer Zeit
-function cleanupCandidates(){
+// Upload-Zeitpunkt steht im Dateinamen: <athlet>/<eintrag>-<ms>.<ext>
+const videoTs = p => +((/-(\d{12,})\.[a-z0-9]+$/i.exec(p || '') || [])[1] || 0);
+function cleanupCandidates(onlyBefore){
   return ST.entries.filter(e => {
     if (!e.video_path) return false;
+    if (onlyBefore && !(videoTs(e.video_path) && videoTs(e.video_path) < onlyBefore)) return false;   // nur Videos von vor dem 31. Mai
     const a = prof(e.athlete_id); if (!a?.level || !a.gender) return false;
     return !directMatches(e.discipline, a.gender, e.trick).some(x => x.level === a.level);
   });
@@ -2703,11 +2707,25 @@ function cleanupCard(){
   const due = Date.now() >= cleanupDate().getTime(), list = cleanupCandidates();
   const byAth = {}; list.forEach(e => (byAth[e.athlete_id] ||= []).push(e));
   return `<div class="card"><h2>Video clean-up <span class="muted" style="letter-spacing:0;font-weight:600">${list.length}</span></h2>
-    <ul class="hints"><li>Every year from 31 May (after selection and appeal period)</li><li>Deletes videos of tricks that are no longer required at the athlete's current level</li><li>Entry and rating stay, only the video is removed</li><li>Set the new levels in the Team tab first</li></ul>
+    <ul class="hints"><li>Runs automatically every year from 31 May (after selection and appeal period), only for videos uploaded before 31 May</li><li>Deletes videos of tricks that are no longer required at the athlete's current level</li><li>Entry and rating stay, only the video is removed</li><li>Set the new levels in the Team tab first</li></ul>
     ${list.length ? `<details><summary>Show videos (${list.length})</summary><ul class="small">${Object.entries(byAth).map(([id, l]) => `<li><b>${esc(prof(id)?.name)}</b> (${prof(id)?.level}): ${l.map(e => esc(e.label)).join(', ')}</li>`).join('')}</ul></details>` : '<div class="empty">No videos to clean up.</div>'}
     <div class="btnrow">${due
       ? `<button class="btn red" ${list.length ? '' : 'disabled'} onclick="runVideoCleanup()">Delete ${list.length} videos</button>`
       : `<span class="tiny muted">Available from ${fmtDate(cleanupDate().toISOString())}</span>`}</div></div>`;
+}
+// Automatisch: ab 31. Mai bis Ende Juli bei jedem App-Start von DVLP/Admin (ohne Rückfrage).
+// Gelöscht werden nur Videos, die vor dem 31. Mai hochgeladen wurden: neue Uploads bleiben.
+async function autoVideoCleanup(){
+  if (DEMO || !ST.me || ST.me.role !== 'dvlp') return;
+  const cd = cleanupDate().getTime(), now = Date.now(), end = Date.UTC(new Date(cd).getUTCFullYear(), 7, 1);
+  if (now < cd || now >= end) return;
+  const list = cleanupCandidates(cd);
+  if (!list.length) return;
+  try {
+    await Store.removeVideos(list.map(e => e.video_path));
+    for (const e of list) upsertLocal(await Store.saveEntry(ST.me, {...e, video_path:null}));
+    if (isAdmin()) toast(`${list.length} videos deleted`);
+  } catch (err){ console.warn('auto clean-up', err); }
 }
 async function runVideoCleanup(){
   const list = cleanupCandidates();
@@ -3985,7 +4003,7 @@ async function startApp(){
     ST.me = await Store.currentUser();
     if (!ST.me){ DEMO ? showDemoGate() : showLoginGate(); return; }
     await loadData();
-    if (!DEMO){ Outbox.applyLocal(); renderOutboxBar(); Outbox.flush(); registerSW().then(syncPush); }
+    if (!DEMO){ Outbox.applyLocal(); renderOutboxBar(); Outbox.flush(); registerSW().then(syncPush); setTimeout(autoVideoCleanup, 4000); }
     restoreSX();
   } catch (err){
     console.error(err);
