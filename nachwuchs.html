@@ -538,6 +538,9 @@ main svg text{font-size:var(--fs-label)}
 .sport-sw button.on{background:var(--red);color:#fff}
 @media (max-width:768px){.sport-sw button{padding:4px 8px;font-size:11px}}
 .sport-bar{display:none}
+.first-time{margin-top:18px;padding:14px;border-radius:12px;background:#f3f7fb;border:1px solid #d9e4f0;display:grid;gap:6px;font-size:var(--fs-meta)}
+.first-time span{color:var(--muted)}
+.first-time .btn{justify-self:start;margin-top:4px}
 .chip .x{border:0;background:none;padding:0 0 0 4px;cursor:pointer;color:inherit;font-size:11px}
 .chip.elite{background:#eef3fb;color:#2c5a8f;border-color:#cddcf0}
 @media (max-width:768px){
@@ -668,7 +671,7 @@ const I18N = {
   '✓ Learned · submit':['✓ Gelernt · senden','✓ Acquis · envoyer','✓ Imparato · invia'], 'Move to learned':['Zu «gelernt» verschieben','Déplacer vers acquis','Sposta in imparati'],
   'Video':['Video','Vidéo','Video'], 'New video':['Neues Video','Nouvelle vidéo','Nuovo video'], 'Upload video':['Video hochladen','Télécharger une vidéo','Carica video'], '▶ Video':['▶ Video','▶ Vidéo','▶ Video'],
   'Edit':['Bearbeiten','Modifier','Modifica'], 'Remove':['Entfernen','Supprimer','Rimuovi'], 'Delete':['Löschen','Supprimer','Elimina'], 'Close':['Schliessen','Fermer','Chiudi'],
-  'Coach:':['Coach:','Coach :','Coach:'], 'Season':['Saison','Saison','Stagione'], 'Extra athletes':['Zusätzliche Athlet:innen','Athlètes supplémentaires','Atleti aggiuntivi'], '+ athlete':['+ Athlet:in','+ athlète','+ atleta'], 'Last 30 days':['Letzte 30 Tage','30 derniers jours','Ultimi 30 giorni'], 'Elite app':['Elite-App','App Elite','App Elite'], 'Elite app · learned there':['Elite-App · dort gelernt','App Elite · acquis là-bas','App Elite · imparato lì'], 'All sources':['Alle Quellen','Toutes les sources','Tutte le fonti'], 'Rated in the Elite app:':['Bewertung Elite-App:','Évaluation app Elite :','Valutazione app Elite:'], 'Read only: this session comes from the Elite app and is changed there.':['Nur lesbar: Diese Session stammt aus der Elite-App und wird dort geändert.','Lecture seule : cette session vient de l’app Elite et se modifie là-bas.','Solo lettura: questa sessione proviene dall’app Elite e si modifica lì.'], 'Athlete:':['Athlet:in:','Athlète :','Atleta:'], 'submitted':['eingereicht','envoyé','inviato'], 'Progress: Goals Achieved':['Fortschritt: erreichte Ziele','Progrès: objectifs atteints','Progressi: obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
+  'Coach:':['Coach:','Coach :','Coach:'], 'Season':['Saison','Saison','Stagione'], 'First time here?':['Erstes Mal hier?','Première fois ici ?','Prima volta qui?'], 'Your coach or Swiss-Ski has registered your e-mail. Enter it above and activate your account.':['Dein Coach oder Swiss-Ski hat deine E-Mail hinterlegt. Gib sie oben ein und aktiviere dein Konto.','Ton coach ou Swiss-Ski a enregistré ton e-mail. Saisis-le ci-dessus et active ton compte.','Il tuo coach o Swiss-Ski ha registrato la tua e-mail. Inseriscila sopra e attiva il tuo account.'], 'Activate account':['Konto aktivieren','Activer le compte','Attiva account'], 'Enter your e-mail above first, then tap «Activate account» again.':['Gib zuerst oben deine E-Mail ein und tippe dann nochmals auf «Konto aktivieren».','Saisis d’abord ton e-mail ci-dessus, puis touche à nouveau «Activer le compte».','Inserisci prima la tua e-mail sopra, poi tocca di nuovo «Attiva account».'], 'Checking…':['Wird geprüft…','Vérification…','Verifica…'], 'This e-mail is not registered or already has an account. Already have one? Use «Forgot password?». Otherwise contact your coach.':['Diese E-Mail ist nicht hinterlegt oder hat schon ein Konto. Schon ein Konto? Dann «Passwort vergessen?». Sonst melde dich bei deinem Coach.','Cet e-mail n’est pas enregistré ou a déjà un compte. Déjà un compte ? Utilise «Mot de passe oublié ?». Sinon contacte ton coach.','Questa e-mail non è registrata o ha già un account. Hai già un account? Usa «Password dimenticata?». Altrimenti contatta il tuo coach.'], 'Extra athletes':['Zusätzliche Athlet:innen','Athlètes supplémentaires','Atleti aggiuntivi'], '+ athlete':['+ Athlet:in','+ athlète','+ atleta'], 'Last 30 days':['Letzte 30 Tage','30 derniers jours','Ultimi 30 giorni'], 'Elite app':['Elite-App','App Elite','App Elite'], 'Elite app · learned there':['Elite-App · dort gelernt','App Elite · acquis là-bas','App Elite · imparato lì'], 'All sources':['Alle Quellen','Toutes les sources','Tutte le fonti'], 'Rated in the Elite app:':['Bewertung Elite-App:','Évaluation app Elite :','Valutazione app Elite:'], 'Read only: this session comes from the Elite app and is changed there.':['Nur lesbar: Diese Session stammt aus der Elite-App und wird dort geändert.','Lecture seule : cette session vient de l’app Elite et se modifie là-bas.','Solo lettura: questa sessione proviene dall’app Elite e si modifica lì.'], 'Athlete:':['Athlet:in:','Athlète :','Atleta:'], 'submitted':['eingereicht','envoyé','inviato'], 'Progress: Goals Achieved':['Fortschritt: erreichte Ziele','Progrès: objectifs atteints','Progressi: obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
   'Please keep the app open until the upload is finished.':['Bitte die App offen lassen, bis der Upload fertig ist.','Merci de laisser l’app ouverte jusqu’à la fin du téléchargement.','Tieni aperta l’app finché il caricamento non è terminato.'],
   'Your coach can now watch it.':['Dein Coach kann es jetzt anschauen.','Ton coach peut maintenant la regarder.','Il tuo coach ora può guardarlo.'],
   'The video is attached to the trick.':['Das Video ist beim Trick gespeichert.','La vidéo est enregistrée avec le trick.','Il video è salvato con il trick.'],
@@ -4093,7 +4096,8 @@ function showLoginGate(msg){
       </div>
       <div class="small" id="lg-msg" style="margin-top:10px;min-height:18px;color:var(--red)">${esc(msg||'')}</div>
       <div class="btnrow"><button class="btn red" onclick="doLogin()">Log in</button></div>
-      <div class="small" style="margin-top:14px;text-align:center"><a href="#" onclick="authForgotPassword();return false">Forgot password?</a> <span class="muted">·</span> <a href="#" onclick="authHaveCode();return false">Have a code?</a></div></div>`);
+      <div class="small" style="margin-top:14px;text-align:center"><a href="#" onclick="authForgotPassword();return false">Forgot password?</a> <span class="muted">·</span> <a href="#" onclick="authHaveCode();return false">Have a code?</a></div>
+      <div class="first-time"><b>First time here?</b><span>Your coach or Swiss-Ski has registered your e-mail. Enter it above and activate your account.</span><button class="btn ghost" onclick="authActivate()">Activate account</button></div></div>`);
   $('#gate').hidden = false; $('#app').hidden = true;
 }
 async function doLogin(){
@@ -4110,13 +4114,26 @@ async function authForgotPassword(){
   if (error){ loginMsg('Error: ' + error.message); return; }
   showOtpGate(email);
 }
+// Erstes Mal: Konto selbst aktivieren (nur hinterlegte E-Mails, siehe Update 11)
+async function authActivate(){
+  const email = ($('#lg-mail')?.value || '').trim().toLowerCase();
+  if (!email){ loginMsg('Enter your e-mail above first, then tap «Activate account» again.'); return; }
+  loginMsg('Checking…', true);
+  const { data:ok, error:e1 } = await db.rpc('can_register', {p_email:email});
+  if (e1){ loginMsg('Error: ' + e1.message); return; }
+  if (!ok){ loginMsg('This e-mail is not registered or already has an account. Already have one? Use «Forgot password?». Otherwise contact your coach.'); return; }
+  loginMsg('Sending code…', true);
+  const { error } = await db.auth.signInWithOtp({email, options:{shouldCreateUser:true}});
+  if (error){ loginMsg('Error: ' + error.message); return; }
+  showOtpGate(email, 'email');
+}
 // Code-Eingabe öffnen, ohne eine neue Mail auszulösen (Mail-Limit, verspätete Mail)
 function authHaveCode(){
   const email = ($('#lg-mail')?.value || '').trim();
   if (!email){ loginMsg('Enter your e-mail above first, then tap the link again.'); return; }
   showOtpGate(email);
 }
-function showOtpGate(email){
+function showOtpGate(email, type='recovery'){
   $('#gate').innerHTML = gateShell(`
     <div class="card"><h2>Enter code</h2>
       <p class="lead">We sent a code to</p><p style="margin:2px 0 12px"><b>${esc(email)}</b></p>
@@ -4125,14 +4142,15 @@ function showOtpGate(email){
       <div class="btnrow"><button class="btn red" id="otp-btn" onclick="doVerifyOtp()">Verify code</button></div>
       <div class="small" style="margin-top:14px;text-align:center"><a href="#" onclick="showLoginGate();return false">Back to login</a></div></div>`);
   $('#gate').hidden = false; $('#app').hidden = true;
-  ST._otpMail = email; $('#otp-code').focus();
+  ST._otpMail = email; ST._otpType = type; $('#otp-code').focus();
 }
 async function doVerifyOtp(){
   const b = $('#otp-btn'); b.disabled = true;
-  const { error } = await db.auth.verifyOtp({email:ST._otpMail, token:$('#otp-code').value.trim(), type:'recovery'});
+  const type = ST._otpType || 'recovery';
+  const { error } = await db.auth.verifyOtp({email:ST._otpMail, token:$('#otp-code').value.trim(), type});
   b.disabled = false;
   if (error){ $('#otp-msg').textContent = 'Code invalid or expired. Go back and request a new one.'; return; }
-  showSetPasswordGate(true);
+  showSetPasswordGate(type === 'recovery');
 }
 function showSetPasswordGate(reset){
   $('#gate').innerHTML = gateShell(`
