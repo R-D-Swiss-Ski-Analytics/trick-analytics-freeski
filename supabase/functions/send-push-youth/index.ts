@@ -36,7 +36,7 @@ const T: Record<string, Record<Lang, (x: string) => [string, string]>> = {
     en: () => ["Video clean-up", "From today you can delete videos that are no longer required in the «Selection» tab."],
   },
   kudos: {
-    de: (x) => kudos(x, { well_done: "Stark!", progress: "Riesen-Fortschritt!", style: "Toller Style!" }, "Kudos von deinem Coach"),
+    de: (x) => kudos(x, { well_done: "Stark!", progress: "Riesenfortschritt!", style: "Toller Style!" }, "Kudos von deinem Coach"),
     fr: (x) => kudos(x, { well_done: "Bravo !", progress: "Énorme progrès !", style: "Super style !" }, "Ton coach te félicite"),
     it: (x) => kudos(x, { well_done: "Grande!", progress: "Enorme progresso!", style: "Stile fantastico!" }, "Complimenti dal tuo coach"),
     en: (x) => kudos(x, { well_done: "Well done!", progress: "Huge progress!", style: "Great style!" }, "Kudos from your coach"),
