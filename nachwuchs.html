@@ -1936,7 +1936,7 @@ function visibleAthletes(){
 const entriesOf = id => ST.entries.filter(e => e.athlete_id===id);
 const ROLE_LABEL = {athlete:'Athlete', coach:'Coach', dvlp:'DVLP'};
 // App-Admin (Profil-ID, keine Personendaten im öffentlichen Repo): wird statt «DVLP» als «Admin» angezeigt
-const ADMIN_IDS = ['b953c49f-3033-4323-9247-af07c52c26a3'];
+const ADMIN_IDS = ['b953c49f-3033-4323-9247-af07c52c26a3', '170d49e5-208e-4e13-ae2c-29297b56cdff', '5a7a82c5-f751-4545-8b8b-7b115488b795', '3f098653-c29e-4d5c-9f11-e9b04c3f6477', '3743eccd-fc1e-4b3b-b323-4fe323b4b0cf'];
 const roleLabel = p => ADMIN_IDS.includes(p?.id) ? 'Admin' : ROLE_LABEL[p?.role];
 
 /* ══════════════════════════════════════════════════════════════════════
