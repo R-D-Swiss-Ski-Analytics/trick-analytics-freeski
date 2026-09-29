@@ -29,7 +29,24 @@ Deno.serve(async (req) => {
     if (me?.role !== "dvlp") return json({ error: "admins only" }, 403);
 
     const body = await req.json().catch(() => ({}));
-    let q = admin.from("profiles").select("id,name,email,role,sport,level,group_id").is("user_id", null).not("email", "is", null).in("role", Array.isArray(body.roles) && body.roles.length ? body.roles.filter((r: string) => ["athlete", "coach"].includes(r)) : ["athlete", "coach"]);
+    const roles = Array.isArray(body.roles) && body.roles.length ? body.roles.filter((r: string) => ["athlete", "coach"].includes(r)) : ["athlete", "coach"];
+
+    // Neue Startpasswörter für Konten, die sich noch nie eingeloggt haben (Startpasswort noch nicht geändert)
+    if (body.reset) {
+      const { data: profs, error } = await admin.from("profiles").select("id,name,email,role,sport,level,group_id,user_id").not("user_id", "is", null).in("role", roles);
+      if (error) throw error;
+      const created: unknown[] = [], failed: unknown[] = [];
+      for (const p of profs ?? []) {
+        const { data: au } = await admin.auth.admin.getUserById(p.user_id);
+        if (!au?.user?.user_metadata?.must_change_password) continue;   // hat schon ein eigenes Passwort
+        const pw = password();
+        const { error: e } = await admin.auth.admin.updateUserById(p.user_id, { password: pw });
+        if (e) failed.push({ name: p.name, email: p.email, error: e.message });
+        else created.push({ id: p.id, name: p.name, email: p.email, role: p.role, sport: p.sport, level: p.level, group_id: p.group_id, password: pw });
+      }
+      return json({ created, failed });
+    }
+    let q = admin.from("profiles").select("id,name,email,role,sport,level,group_id").is("user_id", null).not("email", "is", null).in("role", roles);
     if (Array.isArray(body.ids) && body.ids.length) q = q.in("id", body.ids);
     const { data: profs, error } = await q;
     if (error) throw error;
