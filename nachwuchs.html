@@ -2188,6 +2188,11 @@ function formFields(disc, F, fn='formSet'){
   // Aufbau wie Freeski-Assessment: zweispaltiges form-grid, Grab als Button-Auswahl
   const f = [];
   const add = (k, label, list, show=true) => { if (show) f.push(`<div class="form-group"><label>${label}</label><select onchange="${fn}('${k}', this.value)">${opts(list, F[k])}</select></div>`); };
+  // Direction mit Switch in einem Feld (wie Jumps und Elite-App): setzt Seite und Forward/Switch zusammen
+  const dir4 = (sideKey, swKey, swOn, swOff) => {
+    const cur = (F[swKey]===swOn ? 'S' : '') + (F[sideKey] || 'L');
+    f.push(`<div class="form-group"><label>Direction</label><select onchange="${fn}('${swKey}', this.value[0]==='S' ? '${swOn}' : '${swOff}', true);${fn}('${sideKey}', this.value.slice(-1))">${opts([['L', SIDE.L], ['R', SIDE.R], ['SL', 'Switch ' + SIDE.L], ['SR', 'Switch ' + SIDE.R]], cur)}</select></div>`);
+  };
   const grabBlock = () => f.push(`<div class="form-group full"><label>Grab <span class="lbl-hint">(click to select · click again = no grab)</span></label>
     <div class="grabchips">${GRABS.map((g, i) => `<button type="button" class="gchip ${F.grab===g?'on':''}" onclick="${fn}('grab', F_GRAB(${i}, ${esc(JSON.stringify(F.grab||''))}))">${esc(g)}</button>`).join('')}</div></div>`);
   if (disc==='Jump'){
@@ -2223,8 +2228,7 @@ function formFields(disc, F, fn='formSet'){
     const customRail = [...new Set(ST.entries.map(e => e.trick?.railType).filter(Boolean))].filter(t => !RAIL_TYPES.includes(t));
     const transfers = [...new Set(ST.entries.map(e => e.trick?.transfer).filter(Boolean))];
     f.push(`<div class="form-group"><label>Rail Type <span class="lbl-hint">(Skills-Check: ${esc(railLevel(F.railType))})</span></label><select onchange="${fn}('railType', this.value==='__add__' ? (prompt('New rail type:')||'${esc(F.railType)}') : this.value)">${opts([...RAIL_TYPES, ...customRail, ...(F.railType && !RAIL_TYPES.includes(F.railType) && !customRail.includes(F.railType) ? [F.railType] : []), ['__add__','＋ Add new…']], F.railType)}</select></div>`);
-    add('side', 'Direction', [['L','Left'],['R','Right']]);
-    add('approach', 'Stance', [['F','Forward'],['S','Switch']]);
+    dir4('side', 'approach', 'S', 'F');
     add('on', 'In-Spin / Slide Form', RAIL_ON.map(o => [o, railOnName({approach:F.approach, on:o})]));
     add('swap', 'Swap', [['','–'], ...RAIL_SWAP]);
     f.push(`<div class="form-group"><label>Transfer</label><select onchange="${fn}('transfer', this.value==='__add__' ? (prompt('New transfer:')||'') : this.value)">${opts([['','–'], ...transfers, ...(F.transfer && !transfers.includes(F.transfer) ? [F.transfer] : []), ['__add__','＋ Add new…']], F.transfer)}</select></div>`);
@@ -2240,8 +2244,7 @@ function formFields(disc, F, fn='formSet'){
       add('basic', 'Basic', HP_BASICS);
       add('side', 'Side', [['L','Left'],['R','Right']], /drop in/i.test(F.basic));
     } else {
-      add('dir', 'Direction', [['L','Left'],['R','Right']]);
-      add('sw', 'Stance', [['','Forward'],['1','Switch']]);
+      dir4('dir', 'sw', '1', '');
       add('ao', 'Alley-oop', [['','No (down the pipe)'],['1','Yes']]);
       add('flips', 'Flips', [['1','Single'],['2','Double'],['3','Triple']], (SB ? OFFAX : ['Cork','Bio/Misty','Flat Spin','Rodeo']).includes(F.axis));
       add('axis', 'Axis', SB ? [{group:'Off-Axis', items:OFFAX}, {group:'Upright Spins (Longitudinal Axis)', items:[['Upright','Upright Spins']]}]
