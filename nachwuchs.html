@@ -2759,7 +2759,8 @@ function renderSkills(){
     <div class="kpis">
       <div class="kpi"><div class="k">Total ${level}</div><div class="v">${tot.pct}<small>%</small></div>
         <div class="bar"><i class="b-done" style="width:${tot.pct}%"></i></div>
-        <div class="tiny muted" style="margin-top:6px">${tot.incl.length===3 ? 'Jumps, Rails & Halfpipe count ⅓ each' : `Focus: ${FOCUS[ath.focus]}`} · ${tot.done} of ${tot.n} fully achieved${tot.pending?` · ${tot.pending} waiting`:''}</div></div>
+        <div class="tiny muted" style="margin-top:6px">${tot.incl.length===3 ? 'Jumps, Rails & Halfpipe count ⅓ each' : `Focus: ${FOCUS[ath.focus]}`}</div>
+        <div class="tiny muted">${tot.done} of ${tot.n} fully achieved${tot.pending?` · ${tot.pending} waiting`:''}</div></div>
       ${DISCS.map(d => { const e2 = tot.by[d], on = tot.incl.includes(d); return `<div class="kpi click ${d===disc?'sel':''}" style="${on?'':'opacity:.45'}" onclick="ST.disc='${d}';renderSkills()">
         <div class="k">${DISC_LABEL[d]} · ${on ? ['','1','½','⅓'][tot.incl.length] : 'not in focus'}</div><div class="v">${pct(e2.pts, e2.max)}<small>% · ${e2.pts}/${e2.max} pts</small></div>${progressBar(e2)}
         <div class="tiny muted" style="margin-top:6px">${e2.done}/${e2.n} achieved${e2.pending?` · ${e2.pending} ⏳`:''}</div></div>`; }).join('')}
