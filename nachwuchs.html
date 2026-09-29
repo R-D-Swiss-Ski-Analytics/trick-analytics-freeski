@@ -666,7 +666,7 @@ const I18N = {
   '✓ Learned · submit':['✓ Gelernt · senden','✓ Acquis · envoyer','✓ Imparato · invia'], 'Move to learned':['Zu «gelernt» verschieben','Déplacer vers acquis','Sposta in imparati'],
   'Video':['Video','Vidéo','Video'], 'New video':['Neues Video','Nouvelle vidéo','Nuovo video'], 'Upload video':['Video hochladen','Télécharger une vidéo','Carica video'], '▶ Video':['▶ Video','▶ Vidéo','▶ Video'],
   'Edit':['Bearbeiten','Modifier','Modifica'], 'Remove':['Entfernen','Supprimer','Rimuovi'], 'Delete':['Löschen','Supprimer','Elimina'], 'Close':['Schliessen','Fermer','Chiudi'],
-  'Coach:':['Coach:','Coach :','Coach:'], 'Progress: Goals Achieved':['Fortschritt: erreichte Ziele','Progrès: objectifs atteints','Progressi: obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
+  'Coach:':['Coach:','Coach :','Coach:'], 'Athlete:':['Athlet:in:','Athlète :','Atleta:'], 'submitted':['eingereicht','envoyé','inviato'], 'Progress: Goals Achieved':['Fortschritt: erreichte Ziele','Progrès: objectifs atteints','Progressi: obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
   'Please keep the app open until the upload is finished.':['Bitte die App offen lassen, bis der Upload fertig ist.','Merci de laisser l’app ouverte jusqu’à la fin du téléchargement.','Tieni aperta l’app finché il caricamento non è terminato.'],
   'Your coach can now watch it.':['Dein Coach kann es jetzt anschauen.','Ton coach peut maintenant la regarder.','Il tuo coach ora può guardarlo.'],
   'The video is attached to the trick.':['Das Video ist beim Trick gespeichert.','La vidéo est enregistrée avec le trick.','Il video è salvato con il trick.'],
@@ -2629,7 +2629,7 @@ async function openReview(id){
   RV = {id, crit:Object.fromEntries(set.map(c => [c.k, e.crit ? !!e.crit[c.k] : null]))};
   const ath = prof(e.athlete_id);
   const m = ath?.gender ? directMatches(e.discipline, ath.gender, e.trick) : [];
-  modal(`<div class="muted small">${esc(ath?.name)} · ${ath?.level||'–'} · ${DISC_LABEL[e.discipline]} · submitted ${fmtAgo(e.created_at)}</div>
+  modal(`<div class="muted small">${esc(ath?.name)} · ${ath?.level||'–'} · ${DISC_LABEL[e.discipline]} · ${trString('submitted')} ${fmtAgo(e.created_at)}</div>
     <h3>${esc(e.label)}</h3>
     <div class="chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${m.map(x => `<span class="chip ${x.level===ath.level?'dark':''}">${x.level} · ${esc(x.text)}</span>`).join('') || (HAS_SC ? '<span class="chip">Free trick</span>' : '')}</div>
     <div id="rv-video">${e.video_path ? '<div class="empty">Loading video…</div>' : '<div class="rule" style="margin:14px 0">📵 No video attached. A rating is only possible with a video: request one from the athlete or upload it yourself.</div>'}</div>
