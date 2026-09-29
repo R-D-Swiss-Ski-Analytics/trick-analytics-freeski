@@ -1,0 +1,46 @@
+// Supabase Edge Function «create-accounts» im Youth-Projekt.
+// Legt für alle Profile mit hinterlegter E-Mail und ohne Login ein Konto mit zufälligem Startpasswort an.
+// Nur für Admins (Rolle DVLP). Die Startpasswörter werden NICHT gespeichert, sondern nur einmal an den Admin
+// zurückgegeben (die App macht daraus die PDF-Liste pro Club). Beim ersten Login verlangt die App ein neues Passwort.
+// Einstellung der Function: «Enforce JWT verification» EIN (Standard).
+
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const WORDS = ["Kite", "Rail", "Pipe", "Grab", "Spin", "Flip", "Park", "Snow", "Berg", "Tal", "Sonne", "Wind", "Blau", "Rot", "Gelb", "Gruen",
+  "Adler", "Fuchs", "Luchs", "Wolf", "Baer", "Gams", "Dachs", "Hase", "Eis", "Firn", "Pulver", "Gipfel", "Hang", "Kante", "Sprung", "Welle",
+  "Stern", "Mond", "Wolke", "Blitz", "Nebel", "Regen", "Feuer", "Stein", "Fels", "Grat", "Pass", "See", "Fluss", "Wald", "Tanne", "Birke",
+  "Kicker", "Box", "Tube", "Drop", "Air", "Cork", "Misty", "Butter", "Press", "Slide", "Carve", "Pop", "Style", "Flow", "Line", "Session"];
+const pick = (n: number) => crypto.getRandomValues(new Uint32Array(1))[0] % n;
+const password = () => `${WORDS[pick(64)]}-${WORDS[pick(64)]}-${WORDS[pick(64)]}-${10 + pick(90)}`;
+
+Deno.serve(async (req) => {
+  const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...cors, "Content-Type": "application/json" } });
+  try {
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+    // Aufrufer prüfen: eingeloggt und Rolle DVLP (Admin)
+    const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer /, "");
+    const { data: u } = await admin.auth.getUser(token);
+    if (!u?.user) return json({ error: "not logged in" }, 401);
+    const { data: me } = await admin.from("profiles").select("role").eq("user_id", u.user.id).maybeSingle();
+    if (me?.role !== "dvlp") return json({ error: "admins only" }, 403);
+
+    const body = await req.json().catch(() => ({}));
+    let q = admin.from("profiles").select("id,name,email,role,sport,level,group_id").is("user_id", null).not("email", "is", null).in("role", ["athlete", "coach"]);
+    if (Array.isArray(body.ids) && body.ids.length) q = q.in("id", body.ids);
+    const { data: profs, error } = await q;
+    if (error) throw error;
+
+    const created: unknown[] = [], failed: unknown[] = [];
+    for (const p of profs ?? []) {
+      const pw = password();
+      const { error: e } = await admin.auth.admin.createUser({ email: p.email.trim().toLowerCase(), password: pw, email_confirm: true, user_metadata: { must_change_password: true, name: p.name } });
+      if (e) failed.push({ name: p.name, email: p.email, error: e.message });
+      else created.push({ id: p.id, name: p.name, email: p.email, role: p.role, sport: p.sport, level: p.level, group_id: p.group_id, password: pw });
+    }
+    return json({ created, failed });
+  } catch (e) {
+    return json({ error: String((e as Error)?.message ?? e) }, 500);
+  }
+});

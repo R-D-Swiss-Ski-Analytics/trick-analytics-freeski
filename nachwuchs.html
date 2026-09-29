@@ -497,9 +497,10 @@ main svg text{font-size:var(--fs-label)}
 .ico-alert{color:#C96A1F}
 .ico-clock{color:var(--cblue, #396FA8)}
 .ico-target{color:#C96A1F}
-.pdf-doc{width:780px;background:#fff;padding:8px 4px;color:var(--ink);font-size:var(--fs-meta)}
+.pdf-doc{width:718px;background:#fff;padding:0;color:var(--ink);font-size:var(--fs-meta)}
 .pdf-doc .noprint,.pdf-doc .btn,.pdf-doc .icon-btn,.pdf-doc details,.pdf-doc select{display:none!important}
 .pdf-doc .card{border-color:#ddd;box-shadow:none}
+.pdf-doc .tbl{min-width:0!important;width:100%!important;table-layout:auto}.pdf-doc .tbl th,.pdf-doc .tbl td{padding:5px 6px!important;white-space:normal!important;min-width:0!important}.pdf-doc .minibar{width:36px!important;min-width:0!important}.pdf-doc .dist-bar{min-width:0!important}.pdf-doc .scroll-x{overflow:visible!important}
 .pdf-doc .pdf-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:16px}
 .pdf-doc .pdf-head h1{font-size:26px}.pdf-doc .pdf-head svg{width:120px}
 .pdf-doc .pdf-foot{margin-top:20px;padding-top:8px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
@@ -671,7 +672,7 @@ const I18N = {
   '✓ Learned · submit':['✓ Gelernt · senden','✓ Acquis · envoyer','✓ Imparato · invia'], 'Move to learned':['Zu «gelernt» verschieben','Déplacer vers acquis','Sposta in imparati'],
   'Video':['Video','Vidéo','Video'], 'New video':['Neues Video','Nouvelle vidéo','Nuovo video'], 'Upload video':['Video hochladen','Télécharger une vidéo','Carica video'], '▶ Video':['▶ Video','▶ Vidéo','▶ Video'],
   'Edit':['Bearbeiten','Modifier','Modifica'], 'Remove':['Entfernen','Supprimer','Rimuovi'], 'Delete':['Löschen','Supprimer','Elimina'], 'Close':['Schliessen','Fermer','Chiudi'],
-  'Coach:':['Coach:','Coach :','Coach:'], 'Season':['Saison','Saison','Stagione'], 'First time here?':['Erstes Mal hier?','Première fois ici ?','Prima volta qui?'], 'Your coach or Swiss-Ski has registered your e-mail. Enter it above and activate your account.':['Dein Coach oder Swiss-Ski hat deine E-Mail hinterlegt. Gib sie oben ein und aktiviere dein Konto.','Ton coach ou Swiss-Ski a enregistré ton e-mail. Saisis-le ci-dessus et active ton compte.','Il tuo coach o Swiss-Ski ha registrato la tua e-mail. Inseriscila sopra e attiva il tuo account.'], 'Activate account':['Konto aktivieren','Activer le compte','Attiva account'], 'Enter your e-mail above first, then tap «Activate account» again.':['Gib zuerst oben deine E-Mail ein und tippe dann nochmals auf «Konto aktivieren».','Saisis d’abord ton e-mail ci-dessus, puis touche à nouveau «Activer le compte».','Inserisci prima la tua e-mail sopra, poi tocca di nuovo «Attiva account».'], 'Checking…':['Wird geprüft…','Vérification…','Verifica…'], 'This e-mail is not registered or already has an account. Already have one? Use «Forgot password?». Otherwise contact your coach.':['Diese E-Mail ist nicht hinterlegt oder hat schon ein Konto. Schon ein Konto? Dann «Passwort vergessen?». Sonst melde dich bei deinem Coach.','Cet e-mail n’est pas enregistré ou a déjà un compte. Déjà un compte ? Utilise «Mot de passe oublié ?». Sinon contacte ton coach.','Questa e-mail non è registrata o ha già un account. Hai già un account? Usa «Password dimenticata?». Altrimenti contatta il tuo coach.'], 'Extra athletes':['Zusätzliche Athlet:innen','Athlètes supplémentaires','Atleti aggiuntivi'], '+ athlete':['+ Athlet:in','+ athlète','+ atleta'], 'Last 30 days':['Letzte 30 Tage','30 derniers jours','Ultimi 30 giorni'], 'Elite app':['Elite-App','App Elite','App Elite'], 'Elite app · learned there':['Elite-App · dort gelernt','App Elite · acquis là-bas','App Elite · imparato lì'], 'All sources':['Alle Quellen','Toutes les sources','Tutte le fonti'], 'Rated in the Elite app:':['Bewertung Elite-App:','Évaluation app Elite :','Valutazione app Elite:'], 'Read only: this session comes from the Elite app and is changed there.':['Nur lesbar: Diese Session stammt aus der Elite-App und wird dort geändert.','Lecture seule : cette session vient de l’app Elite et se modifie là-bas.','Solo lettura: questa sessione proviene dall’app Elite e si modifica lì.'], 'Athlete:':['Athlet:in:','Athlète :','Atleta:'], 'submitted':['eingereicht','envoyé','inviato'], 'Progress: Goals Achieved':['Fortschritt: erreichte Ziele','Progrès: objectifs atteints','Progressi: obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
+  'Coach:':['Coach:','Coach :','Coach:'], 'Season':['Saison','Saison','Stagione'], 'Create accounts with a start password for all coaches and athletes with an e-mail and no login yet? You get the start passwords only once: save the PDF right away.':['Konten mit Startpasswort für alle Coaches und Athlet:innen mit E-Mail und ohne Login anlegen? Die Startpasswörter bekommst du nur einmal: speichere das PDF sofort.','Créer des comptes avec mot de passe initial pour tous les coachs et athlètes avec e-mail et sans login ? Tu reçois les mots de passe une seule fois : enregistre le PDF tout de suite.','Creare account con password iniziale per tutti i coach e atleti con e-mail e senza login? Ricevi le password una sola volta: salva subito il PDF.'], 'Create accounts':['Konten anlegen','Créer les comptes','Crea account'], 'Accounts created:':['Konten angelegt:','Comptes créés :','Account creati:'], 'Start passwords':['Startpasswörter','Mots de passe initiaux','Password iniziali'], 'Start password':['Startpasswort','Mot de passe initial','Password iniziale'], 'Log in with your e-mail and the start password':['Melde dich mit deiner E-Mail und dem Startpasswort an','Connecte-toi avec ton e-mail et le mot de passe initial','Accedi con la tua e-mail e la password iniziale'], 'At the first login you choose your own password (at least 8 characters)':['Beim ersten Login wählst du dein eigenes Passwort (mindestens 8 Zeichen)','À la première connexion, tu choisis ton propre mot de passe (au moins 8 caractères)','Al primo accesso scegli la tua password (almeno 8 caratteri)'], 'Coaches: give each athlete only their own line':['Coaches: jeder Athlet:in nur die eigene Zeile weitergeben','Coachs : ne donner à chaque athlète que sa propre ligne','Coach: dare a ogni atleta solo la propria riga'], 'This list with the start passwords is shown only now':['Diese Liste mit den Startpasswörtern wird nur jetzt angezeigt','Cette liste avec les mots de passe initiaux n’est affichée que maintenant','Questo elenco con le password iniziali viene mostrato solo ora'], 'Save the PDF (one page per club) and give each coach their page':['Speichere das PDF (eine Seite pro Club) und gib jedem Coach seine Seite','Enregistre le PDF (une page par club) et donne à chaque coach sa page','Salva il PDF (una pagina per club) e dai a ogni coach la sua pagina'], 'Delete the list once everyone has logged in':['Lösche die Liste, sobald alle eingeloggt sind','Supprime la liste dès que tout le monde s’est connecté','Elimina l’elenco quando tutti hanno effettuato l’accesso'], 'PDF per club':['PDF pro Club','PDF par club','PDF per club'], 'one page per club':['eine Seite pro Club','une page par club','una pagina per club'], 'First time here?':['Erstes Mal hier?','Première fois ici ?','Prima volta qui?'], 'Your coach or Swiss-Ski has registered your e-mail. Enter it above and activate your account.':['Dein Coach oder Swiss-Ski hat deine E-Mail hinterlegt. Gib sie oben ein und aktiviere dein Konto.','Ton coach ou Swiss-Ski a enregistré ton e-mail. Saisis-le ci-dessus et active ton compte.','Il tuo coach o Swiss-Ski ha registrato la tua e-mail. Inseriscila sopra e attiva il tuo account.'], 'Activate account':['Konto aktivieren','Activer le compte','Attiva account'], 'Enter your e-mail above first, then tap «Activate account» again.':['Gib zuerst oben deine E-Mail ein und tippe dann nochmals auf «Konto aktivieren».','Saisis d’abord ton e-mail ci-dessus, puis touche à nouveau «Activer le compte».','Inserisci prima la tua e-mail sopra, poi tocca di nuovo «Attiva account».'], 'Checking…':['Wird geprüft…','Vérification…','Verifica…'], 'This e-mail is not registered or already has an account. Already have one? Use «Forgot password?». Otherwise contact your coach.':['Diese E-Mail ist nicht hinterlegt oder hat schon ein Konto. Schon ein Konto? Dann «Passwort vergessen?». Sonst melde dich bei deinem Coach.','Cet e-mail n’est pas enregistré ou a déjà un compte. Déjà un compte ? Utilise «Mot de passe oublié ?». Sinon contacte ton coach.','Questa e-mail non è registrata o ha già un account. Hai già un account? Usa «Password dimenticata?». Altrimenti contatta il tuo coach.'], 'Extra athletes':['Zusätzliche Athlet:innen','Athlètes supplémentaires','Atleti aggiuntivi'], '+ athlete':['+ Athlet:in','+ athlète','+ atleta'], 'Last 30 days':['Letzte 30 Tage','30 derniers jours','Ultimi 30 giorni'], 'Elite app':['Elite-App','App Elite','App Elite'], 'Elite app · learned there':['Elite-App · dort gelernt','App Elite · acquis là-bas','App Elite · imparato lì'], 'All sources':['Alle Quellen','Toutes les sources','Tutte le fonti'], 'Rated in the Elite app:':['Bewertung Elite-App:','Évaluation app Elite :','Valutazione app Elite:'], 'Read only: this session comes from the Elite app and is changed there.':['Nur lesbar: Diese Session stammt aus der Elite-App und wird dort geändert.','Lecture seule : cette session vient de l’app Elite et se modifie là-bas.','Solo lettura: questa sessione proviene dall’app Elite e si modifica lì.'], 'Athlete:':['Athlet:in:','Athlète :','Atleta:'], 'submitted':['eingereicht','envoyé','inviato'], 'Progress: Goals Achieved':['Fortschritt: erreichte Ziele','Progrès: objectifs atteints','Progressi: obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
   'Please keep the app open until the upload is finished.':['Bitte die App offen lassen, bis der Upload fertig ist.','Merci de laisser l’app ouverte jusqu’à la fin du téléchargement.','Tieni aperta l’app finché il caricamento non è terminato.'],
   'Your coach can now watch it.':['Dein Coach kann es jetzt anschauen.','Ton coach peut maintenant la regarder.','Il tuo coach ora può guardarlo.'],
   'The video is attached to the trick.':['Das Video ist beim Trick gespeichert.','La vidéo est enregistrée avec le trick.','Il video è salvato con il trick.'],
@@ -2724,7 +2725,7 @@ function renderTeam(){
       <select onchange="setTeamFilter('level',this.value)">${opts([['','All levels'], ...LEVELS.map(l => [l, l])], TF.level)}</select>
       <select onchange="setTeamFilter('sort',this.value)">${opts([['name','Sort: name A–Z'],['total_desc','Total: strongest first'],['total_asc','Total: weakest first'],['jump','Jumps: strongest first'],['rail','Rails: strongest first'],['hp','Halfpipe: strongest first']], TF.sort)}</select>
       ${filtered || TF.sort!=='name' ? `<button class="btn ghost sm" onclick="ST.teamFilter=null;renderTeam()">Reset filters</button>` : ''}
-      <span class="grow"></span><button class="btn ghost" onclick="teamSkillsPdf()">📄 PDF</button><button class="btn red" onclick="openAddAthlete()">+ Add athlete</button></div>
+      <span class="grow"></span>${dv && !DEMO && noLoginYet().length ? `<button class="btn ghost" onclick="createAccounts()"><span>Create accounts</span> (${noLoginYet().length})</button>` : ''}<button class="btn ghost" onclick="teamSkillsPdf()">📄 PDF</button><button class="btn red" onclick="openAddAthlete()">+ Add athlete</button></div>
     <div class="card"><h2>${dv ? 'All athletes' : esc(groupName(myGid()))} <span class="muted" style="letter-spacing:0;font-weight:600">${filtered ? `${aths.length} / ${all.length}` : aths.length}</span></h2>
       <ul class="hints"><li>Skills-Check at each athlete's own level</li><li>Total = Jumps, Rails and Halfpipe, ⅓ each</li><li>From T4: focus possible (Halfpipe only, or Jumps & Rails only)</li><li>Click a row to open the Skills-Check</li></ul>
       <div class="scroll-x"><table class="tbl team-tbl"><thead><tr><th>Athlete</th><th>Sex</th><th>Level</th><th>Focus</th>${dv?'<th>Group</th>':''}<th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th><th></th></tr></thead>
@@ -2750,6 +2751,44 @@ function extraAthletesCell(c){
 function setExtraCoach(aid, cid, on){
   const cur = prof(aid)?.extra_coach_ids || [];
   setProfile(aid, 'extra_coach_ids', on ? [...new Set([...cur, cid])] : cur.filter(x => x !== cid));
+}
+// Konten mit Startpasswort anlegen (nur Admins, Edge Function «create-accounts»)
+const noLoginYet = () => (ST.allProfiles||[]).filter(p => ['athlete','coach'].includes(p.role) && p.email && !p.user_id);
+async function createAccounts(){
+  const n = noLoginYet().length;
+  if (!confirm(`${n} · ` + trString('Create accounts with a start password for all coaches and athletes with an e-mail and no login yet? You get the start passwords only once: save the PDF right away.'))) return;
+  toast('Creating accounts…');
+  const { data, error } = await db.functions.invoke('create-accounts', {body:{}});
+  if (error || data?.error){ toast('Could not create accounts: ' + (data?.error || error.message), true); return; }
+  ST._newAccounts = data.created || [];
+  const gname = id => (ST.allGroups||[]).find(g => g.id===id)?.name || '–';
+  modal(`<h2><span>Accounts created:</span> ${data.created.length}</h2>
+    <ul class="hints"><li>This list with the start passwords is shown only now</li><li>Save the PDF (one page per club) and give each coach their page</li><li>Delete the list once everyone has logged in</li></ul>
+    ${data.failed.length ? `<div class="rule" style="margin:10px 0">Not created: ${data.failed.map(f => esc(f.name) + ' (' + esc(f.error) + ')').join(', ')}</div>` : ''}
+    <div class="btnrow"><button class="btn red" onclick="accountsPdf()">📄 PDF per club</button><button class="btn ghost" onclick="accountsCsv()">CSV</button><button class="btn ghost" onclick="closeModal();loadData().then(render)">Close</button></div>
+    <div class="scroll-x" style="margin-top:12px"><table class="tbl"><thead><tr><th>Name</th><th>Club</th><th>E-mail</th><th>Start password</th></tr></thead><tbody>
+    ${data.created.map(a => `<tr><td>${esc(a.name)}</td><td>${esc(gname(a.group_id))}</td><td>${esc(a.email)}</td><td><code>${esc(a.password)}</code></td></tr>`).join('')}</tbody></table></div>`);
+  document.querySelector('.modal-bg')?.removeAttribute('onclick');   // nicht versehentlich schliessen: Passwörter gibt es nur jetzt
+}
+function accountsPdf(){
+  const gname = id => (ST.allGroups||[]).find(g => g.id===id)?.name || 'No club';
+  const by = {};
+  for (const a of ST._newAccounts || []) (by[gname(a.group_id)] ||= []).push(a);
+  const url = location.origin + location.pathname;
+  const html = Object.keys(by).sort().map((club, i) => `<div style="${i ? 'page-break-before:always;' : ''}padding-top:4px">
+    <h2>${esc(club)}</h2>
+    <ul class="hints"><li>App: ${esc(url)}</li><li>Log in with your e-mail and the start password</li><li>At the first login you choose your own password (at least 8 characters)</li><li>Coaches: give each athlete only their own line</li></ul>
+    <table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Sport</th><th>E-mail</th><th>Start password</th></tr></thead><tbody>
+    ${by[club].sort((a,b) => (a.role > b.role ? -1 : a.role < b.role ? 1 : a.name.localeCompare(b.name))).map(a => `<tr><td>${esc(a.name)}</td><td>${a.role==='coach' ? 'Coach' : 'Athlete ' + esc(a.level||'')}</td><td>${a.sport==='snowboard' ? 'Snowboard' : 'Freeski'}</td><td>${esc(a.email)}</td><td><b>${esc(a.password)}</b></td></tr>`).join('')}
+    </tbody></table></div>`).join('');
+  openPrintWindow('Start passwords', 'Trick Analyses Youth · one page per club', html);
+}
+function accountsCsv(){
+  const gname = id => (ST.allGroups||[]).find(g => g.id===id)?.name || '';
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = [['Club','Name','Role','Sport','Level','E-mail','Start password'], ...(ST._newAccounts||[]).map(a => [gname(a.group_id), a.name, a.role, a.sport, a.level, a.email, a.password])];
+  const blob = new Blob(['\ufeff' + rows.map(r => r.map(q).join(';')).join('\n')], {type:'text/csv'});
+  const l = document.createElement('a'); l.href = URL.createObjectURL(blob); l.download = 'Youth_start_passwords.csv'; l.click();
 }
 function teamSkillsPdf(){
   const TF = ST.teamFilter || {}, rows = ST._teamView || [];
@@ -3901,14 +3940,17 @@ async function openPrintWindow(title, sub, html){
   box.innerHTML = `<div class="pdf-head"><div><h1>${esc(title)}<span class="dot">.</span></h1><div class="sub">${sub}</div></div><div>${logo}</div></div>
     ${html}<div class="pdf-foot">${APP_TITLE} · Swiss-Ski · created ${fmtDate(nowIso())}</div>`;
   i18nNode(box);   // übersetzen + Icons, bevor html2pdf den Inhalt kopiert (Container ist nicht im DOM)
+  // html2canvas rechnet mit der Scroll-Position: kurz nach oben, danach zurück
+  const sx = scrollX, sy = scrollY; window.scrollTo(0, 0);
   try {
     const h2p = await loadHtml2Pdf();
     const file = title.replace(/[^\wÀ-ÿ\- ]+/g, '').trim().replace(/\s+/g, '_') + '.pdf';
     await h2p().set({margin:[10, 10, 12, 10], filename:file, image:{type:'jpeg', quality:0.95},
-      html2canvas:{scale:2, useCORS:true, backgroundColor:'#ffffff', windowWidth:820},
+      html2canvas:{scale:2, useCORS:true, backgroundColor:'#ffffff', ...(innerWidth < 760 ? {windowWidth:760} : {})},   // Breite 718 px = A4 minus Rand; windowWidth nur auf schmalen Bildschirmen (Desktop-Layout)
       jsPDF:{unit:'mm', format:'a4', orientation:'portrait'}, pagebreak:{mode:['css'], avoid:['tr','.trick-block','.kpi','.pdf-head','.legend']}}).from(box).save();
     toast('PDF saved');
   } catch (err){ console.error(err); toast('Could not create PDF: ' + (err.message||err), true); }
+  finally { window.scrollTo(sx, sy); }
 }
 function reportPdf(id){
   const s = sessById(id); if (!s) return;
@@ -4168,7 +4210,7 @@ async function doSetPassword(){
   const p1 = $('#sp-pw').value, p2 = $('#sp-pw2').value;
   if (p1.length < 8){ $('#sp-msg').textContent = 'At least 8 characters.'; return; }
   if (p1 !== p2){ $('#sp-msg').textContent = 'Passwords do not match.'; return; }
-  const { error } = await db.auth.updateUser({password:p1});
+  const { error } = await db.auth.updateUser({password:p1, data:{must_change_password:false}});
   if (error){ $('#sp-msg').textContent = 'Error: ' + error.message; return; }
   history.replaceState(null, '', location.pathname + location.search); toast('Password saved'); await startApp();
 }
@@ -4189,6 +4231,7 @@ async function loadData(){
     const own = ST.mySports.includes(SPORT) ? SPORT : me0.role==='coach' && g0 ? (g0.sport || 'freeski') : (me0.sport || g0?.sport || 'freeski');
     if (own !== SPORT){ location.replace(location.pathname + '?sport=' + own); await new Promise(() => {}); }
   }
+  ST.allProfiles = d.profiles; ST.allGroups = d.groups;
   const sp = x => DEMO || (x?.sport || 'freeski') === SPORT;
   const groups = d.groups.filter(sp), gids = new Set(groups.map(g => g.id));
   const profiles = d.profiles.filter(p => p.role !== 'athlete' ? (!p.group_id || gids.has(p.group_id) || p.role==='dvlp') : sp(p));
@@ -4205,6 +4248,7 @@ async function startApp(){
   try {
     ST.me = await Store.currentUser();
     if (!ST.me){ DEMO ? showDemoGate() : showLoginGate(); return; }
+    if (!DEMO){ const { data } = await db.auth.getUser(); if (data?.user?.user_metadata?.must_change_password){ showSetPasswordGate(false); return; } }
     await loadData();
     if (!DEMO){ Outbox.applyLocal(); renderOutboxBar(); Outbox.flush(); registerSW().then(syncPush); setTimeout(autoVideoCleanup, 4000); }
     restoreSX();
