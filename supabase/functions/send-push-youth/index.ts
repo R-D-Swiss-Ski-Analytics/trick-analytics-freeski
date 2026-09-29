@@ -10,6 +10,11 @@ import webpush from "npm:web-push@3.6.7";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 type Lang = "de" | "fr" | "it" | "en";
+// Kudos-Text «Art|Trick|Nachricht» → [Titel, Text]
+const kudos = (x: string, K: Record<string, string>, who: string): [string, string] => {
+  const [k, label, msg] = x.split("|");
+  return [`${K[k] ?? K.well_done} ${who}`, [label, msg ? `«${msg}»` : ""].filter(Boolean).join(": ")];
+};
 // Texte pro Art und Sprache; Trick-Namen bleiben Englisch
 const T: Record<string, Record<Lang, (x: string) => [string, string]>> = {
   submitted: {
@@ -31,8 +36,10 @@ const T: Record<string, Record<Lang, (x: string) => [string, string]>> = {
     en: () => ["Video clean-up", "From today you can delete videos that are no longer required in the «Selection» tab."],
   },
   kudos: {
-    de: (x) => ["Stark! Kudos von deinem Coach", x], fr: (x) => ["Bravo ! Ton coach te félicite", x],
-    it: (x) => ["Grande! Complimenti dal tuo coach", x], en: (x) => ["Well done! Kudos from your coach", x],
+    de: (x) => kudos(x, { well_done: "Stark!", progress: "Riesen-Fortschritt!", style: "Toller Style!" }, "Kudos von deinem Coach"),
+    fr: (x) => kudos(x, { well_done: "Bravo !", progress: "Énorme progrès !", style: "Super style !" }, "Ton coach te félicite"),
+    it: (x) => kudos(x, { well_done: "Grande!", progress: "Enorme progresso!", style: "Stile fantastico!" }, "Complimenti dal tuo coach"),
+    en: (x) => kudos(x, { well_done: "Well done!", progress: "Huge progress!", style: "Great style!" }, "Kudos from your coach"),
   },
   review: {
     de: () => ["Dein Saison-Rückblick ist da", "Schau, was du diese Saison erreicht hast."], fr: () => ["Ton bilan de saison est là", "Découvre ce que tu as accompli cette saison."],
