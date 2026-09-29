@@ -2218,7 +2218,8 @@ function formFields(disc, F, fn='formSet'){
   if (disc==='Jump'){
     f.push('<div class="section-divider">Jump</div>');
     const noRot = NOROT.includes(F.axis);
-    add('dir', 'Direction', noRot ? [['F','Forward'],['S','Switch']] : D4.map(d => [d, DIRN[d]]));
+    // ohne Achse: alle Richtungen inkl. Forward/Switch (für Frontflip, Backflip usw.); mit Achse passend eingeschränkt
+    add('dir', 'Direction', noRot ? [['F','Forward'],['S','Switch']] : F.axis ? D4.map(d => [d, DIRN[d]]) : [...D4.map(d => [d, DIRN[d]]), ['F','Forward'], ['S','Switch']]);
     add('flips', 'Flips', [['1','Single'],['2','Double'],['3','Triple'],['4','Quad']], OFFAX.includes(F.axis));
     add('axis', 'Axis', SB ? [{group:'Off-Axis', items:OFFAX},
       {group:'Upright Spins (Longitudinal Axis)', items:[['Upright','Upright Spins']]},
