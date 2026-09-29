@@ -542,6 +542,8 @@ main svg text{font-size:var(--fs-label)}
 .first-time{margin-top:18px;padding:14px;border-radius:12px;background:#f3f7fb;border:1px solid #d9e4f0;display:grid;gap:6px;font-size:var(--fs-meta)}
 .first-time span{color:var(--muted)}
 .first-time .btn{justify-self:start;margin-top:4px}
+.mon-src-h{display:grid;gap:2px;margin:6px 0 14px;padding:10px 12px;border-radius:10px;border-left:4px solid var(--char);background:#f6f3f2}
+.mon-src-h.elite{border-left-color:#2c5a8f;background:#eef3fb}.mon-src-h.youth{border-left-color:var(--red)}
 .chip .x{border:0;background:none;padding:0 0 0 4px;cursor:pointer;color:inherit;font-size:11px}
 .chip.elite{background:#eef3fb;color:#2c5a8f;border-color:#cddcf0}
 @media (max-width:768px){
@@ -672,7 +674,7 @@ const I18N = {
   '✓ Learned · submit':['✓ Gelernt · senden','✓ Acquis · envoyer','✓ Imparato · invia'], 'Move to learned':['Zu «gelernt» verschieben','Déplacer vers acquis','Sposta in imparati'],
   'Video':['Video','Vidéo','Video'], 'New video':['Neues Video','Nouvelle vidéo','Nuovo video'], 'Upload video':['Video hochladen','Télécharger une vidéo','Carica video'], '▶ Video':['▶ Video','▶ Vidéo','▶ Video'],
   'Edit':['Bearbeiten','Modifier','Modifica'], 'Remove':['Entfernen','Supprimer','Rimuovi'], 'Delete':['Löschen','Supprimer','Elimina'], 'Close':['Schliessen','Fermer','Chiudi'],
-  'Coach:':['Coach:','Coach :','Coach:'], 'Season':['Saison','Saison','Stagione'], 'Create accounts with a start password for all coaches and athletes with an e-mail and no login yet? You get the start passwords only once: save the PDF right away.':['Konten mit Startpasswort für alle Coaches und Athlet:innen mit E-Mail und ohne Login anlegen? Die Startpasswörter bekommst du nur einmal: speichere das PDF sofort.','Créer des comptes avec mot de passe initial pour tous les coachs et athlètes avec e-mail et sans login ? Tu reçois les mots de passe une seule fois : enregistre le PDF tout de suite.','Creare account con password iniziale per tutti i coach e atleti con e-mail e senza login? Ricevi le password una sola volta: salva subito il PDF.'], 'Create accounts':['Konten anlegen','Créer les comptes','Crea account'], 'Accounts created:':['Konten angelegt:','Comptes créés :','Account creati:'], 'Start passwords':['Startpasswörter','Mots de passe initiaux','Password iniziali'], 'Start password':['Startpasswort','Mot de passe initial','Password iniziale'], 'Log in with your e-mail and the start password':['Melde dich mit deiner E-Mail und dem Startpasswort an','Connecte-toi avec ton e-mail et le mot de passe initial','Accedi con la tua e-mail e la password iniziale'], 'At the first login you choose your own password (at least 8 characters)':['Beim ersten Login wählst du dein eigenes Passwort (mindestens 8 Zeichen)','À la première connexion, tu choisis ton propre mot de passe (au moins 8 caractères)','Al primo accesso scegli la tua password (almeno 8 caratteri)'], 'Coaches: give each athlete only their own line':['Coaches: jeder Athlet:in nur die eigene Zeile weitergeben','Coachs : ne donner à chaque athlète que sa propre ligne','Coach: dare a ogni atleta solo la propria riga'], 'This list with the start passwords is shown only now':['Diese Liste mit den Startpasswörtern wird nur jetzt angezeigt','Cette liste avec les mots de passe initiaux n’est affichée que maintenant','Questo elenco con le password iniziali viene mostrato solo ora'], 'Save the PDF (one page per club) and give each coach their page':['Speichere das PDF (eine Seite pro Club) und gib jedem Coach seine Seite','Enregistre le PDF (une page par club) et donne à chaque coach sa page','Salva il PDF (una pagina per club) e dai a ogni coach la sua pagina'], 'Delete the list once everyone has logged in':['Lösche die Liste, sobald alle eingeloggt sind','Supprime la liste dès que tout le monde s’est connecté','Elimina l’elenco quando tutti hanno effettuato l’accesso'], 'PDF per club':['PDF pro Club','PDF par club','PDF per club'], 'one page per club':['eine Seite pro Club','une page par club','una pagina per club'], 'First time here?':['Erstes Mal hier?','Première fois ici ?','Prima volta qui?'], 'Your coach or Swiss-Ski has registered your e-mail. Enter it above and activate your account.':['Dein Coach oder Swiss-Ski hat deine E-Mail hinterlegt. Gib sie oben ein und aktiviere dein Konto.','Ton coach ou Swiss-Ski a enregistré ton e-mail. Saisis-le ci-dessus et active ton compte.','Il tuo coach o Swiss-Ski ha registrato la tua e-mail. Inseriscila sopra e attiva il tuo account.'], 'Activate account':['Konto aktivieren','Activer le compte','Attiva account'], 'Enter your e-mail above first, then tap «Activate account» again.':['Gib zuerst oben deine E-Mail ein und tippe dann nochmals auf «Konto aktivieren».','Saisis d’abord ton e-mail ci-dessus, puis touche à nouveau «Activer le compte».','Inserisci prima la tua e-mail sopra, poi tocca di nuovo «Attiva account».'], 'Checking…':['Wird geprüft…','Vérification…','Verifica…'], 'This e-mail is not registered or already has an account. Already have one? Use «Forgot password?». Otherwise contact your coach.':['Diese E-Mail ist nicht hinterlegt oder hat schon ein Konto. Schon ein Konto? Dann «Passwort vergessen?». Sonst melde dich bei deinem Coach.','Cet e-mail n’est pas enregistré ou a déjà un compte. Déjà un compte ? Utilise «Mot de passe oublié ?». Sinon contacte ton coach.','Questa e-mail non è registrata o ha già un account. Hai già un account? Usa «Password dimenticata?». Altrimenti contatta il tuo coach.'], 'Extra athletes':['Zusätzliche Athlet:innen','Athlètes supplémentaires','Atleti aggiuntivi'], '+ athlete':['+ Athlet:in','+ athlète','+ atleta'], 'Last 30 days':['Letzte 30 Tage','30 derniers jours','Ultimi 30 giorni'], 'Elite app':['Elite-App','App Elite','App Elite'], 'Elite app · learned there':['Elite-App · dort gelernt','App Elite · acquis là-bas','App Elite · imparato lì'], 'All sources':['Alle Quellen','Toutes les sources','Tutte le fonti'], 'Rated in the Elite app:':['Bewertung Elite-App:','Évaluation app Elite :','Valutazione app Elite:'], 'Read only: this session comes from the Elite app and is changed there.':['Nur lesbar: Diese Session stammt aus der Elite-App und wird dort geändert.','Lecture seule : cette session vient de l’app Elite et se modifie là-bas.','Solo lettura: questa sessione proviene dall’app Elite e si modifica lì.'], 'Athlete:':['Athlet:in:','Athlète :','Atleta:'], 'submitted':['eingereicht','envoyé','inviato'], 'Progress: Goals Achieved':['Fortschritt: erreichte Ziele','Progrès: objectifs atteints','Progressi: obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
+  'Coach:':['Coach:','Coach :','Coach:'], 'Season':['Saison','Saison','Stagione'], 'Evaluation Elite app (as in the Elite app)':['Auswertung Elite-App (wie in der Elite-App)','Évaluation app Elite (comme dans l’app Elite)','Valutazione app Elite (come nell’app Elite)'], 'Evaluation Youth app':['Auswertung Youth-App','Évaluation app Youth','Valutazione app Youth'], 'Youth app':['Youth-App','App Youth','App Youth'], 'Trick status (Ø QoE, as in the Elite app)':['Trick-Status (Ø QoE, wie in der Elite-App)','Statut du trick (Ø QoE, comme dans l’app Elite)','Stato del trick (Ø QoE, come nell’app Elite)'], 'Stomped = overall rating «perfect» in the Elite app':['Stomped = Gesamturteil «perfect» in der Elite-App','Stomped = note globale «perfect» dans l’app Elite','Stomped = giudizio complessivo «perfect» nell’app Elite'], 'Team Monitoring · Elite app':['Team-Monitoring · Elite-App','Monitoring d’équipe · App Elite','Monitoring team · App Elite'], 'Stomped (overall «perfect»)':['Stomped (Gesamturteil «perfect»)','Stomped (note globale «perfect»)','Stomped (giudizio «perfect»)'], 'Ø QoE (status as in the Elite app)':['Ø QoE (Status wie in der Elite-App)','Ø QoE (statut comme dans l’app Elite)','Ø QoE (stato come nell’app Elite)'], 'Create accounts with a start password for all coaches and athletes with an e-mail and no login yet? You get the start passwords only once: save the PDF right away.':['Konten mit Startpasswort für alle Coaches und Athlet:innen mit E-Mail und ohne Login anlegen? Die Startpasswörter bekommst du nur einmal: speichere das PDF sofort.','Créer des comptes avec mot de passe initial pour tous les coachs et athlètes avec e-mail et sans login ? Tu reçois les mots de passe une seule fois : enregistre le PDF tout de suite.','Creare account con password iniziale per tutti i coach e atleti con e-mail e senza login? Ricevi le password una sola volta: salva subito il PDF.'], 'Create accounts':['Konten anlegen','Créer les comptes','Crea account'], 'Accounts created:':['Konten angelegt:','Comptes créés :','Account creati:'], 'Start passwords':['Startpasswörter','Mots de passe initiaux','Password iniziali'], 'Start password':['Startpasswort','Mot de passe initial','Password iniziale'], 'Log in with your e-mail and the start password':['Melde dich mit deiner E-Mail und dem Startpasswort an','Connecte-toi avec ton e-mail et le mot de passe initial','Accedi con la tua e-mail e la password iniziale'], 'At the first login you choose your own password (at least 8 characters)':['Beim ersten Login wählst du dein eigenes Passwort (mindestens 8 Zeichen)','À la première connexion, tu choisis ton propre mot de passe (au moins 8 caractères)','Al primo accesso scegli la tua password (almeno 8 caratteri)'], 'Coaches: give each athlete only their own line':['Coaches: jeder Athlet:in nur die eigene Zeile weitergeben','Coachs : ne donner à chaque athlète que sa propre ligne','Coach: dare a ogni atleta solo la propria riga'], 'This list with the start passwords is shown only now':['Diese Liste mit den Startpasswörtern wird nur jetzt angezeigt','Cette liste avec les mots de passe initiaux n’est affichée que maintenant','Questo elenco con le password iniziali viene mostrato solo ora'], 'Save the PDF (one page per club) and give each coach their page':['Speichere das PDF (eine Seite pro Club) und gib jedem Coach seine Seite','Enregistre le PDF (une page par club) et donne à chaque coach sa page','Salva il PDF (una pagina per club) e dai a ogni coach la sua pagina'], 'Delete the list once everyone has logged in':['Lösche die Liste, sobald alle eingeloggt sind','Supprime la liste dès que tout le monde s’est connecté','Elimina l’elenco quando tutti hanno effettuato l’accesso'], 'PDF per club':['PDF pro Club','PDF par club','PDF per club'], 'one page per club':['eine Seite pro Club','une page par club','una pagina per club'], 'First time here?':['Erstes Mal hier?','Première fois ici ?','Prima volta qui?'], 'Your coach or Swiss-Ski has registered your e-mail. Enter it above and activate your account.':['Dein Coach oder Swiss-Ski hat deine E-Mail hinterlegt. Gib sie oben ein und aktiviere dein Konto.','Ton coach ou Swiss-Ski a enregistré ton e-mail. Saisis-le ci-dessus et active ton compte.','Il tuo coach o Swiss-Ski ha registrato la tua e-mail. Inseriscila sopra e attiva il tuo account.'], 'Activate account':['Konto aktivieren','Activer le compte','Attiva account'], 'Enter your e-mail above first, then tap «Activate account» again.':['Gib zuerst oben deine E-Mail ein und tippe dann nochmals auf «Konto aktivieren».','Saisis d’abord ton e-mail ci-dessus, puis touche à nouveau «Activer le compte».','Inserisci prima la tua e-mail sopra, poi tocca di nuovo «Attiva account».'], 'Checking…':['Wird geprüft…','Vérification…','Verifica…'], 'This e-mail is not registered or already has an account. Already have one? Use «Forgot password?». Otherwise contact your coach.':['Diese E-Mail ist nicht hinterlegt oder hat schon ein Konto. Schon ein Konto? Dann «Passwort vergessen?». Sonst melde dich bei deinem Coach.','Cet e-mail n’est pas enregistré ou a déjà un compte. Déjà un compte ? Utilise «Mot de passe oublié ?». Sinon contacte ton coach.','Questa e-mail non è registrata o ha già un account. Hai già un account? Usa «Password dimenticata?». Altrimenti contatta il tuo coach.'], 'Extra athletes':['Zusätzliche Athlet:innen','Athlètes supplémentaires','Atleti aggiuntivi'], '+ athlete':['+ Athlet:in','+ athlète','+ atleta'], 'Last 30 days':['Letzte 30 Tage','30 derniers jours','Ultimi 30 giorni'], 'Elite app':['Elite-App','App Elite','App Elite'], 'Elite app · learned there':['Elite-App · dort gelernt','App Elite · acquis là-bas','App Elite · imparato lì'], 'All sources':['Alle Quellen','Toutes les sources','Tutte le fonti'], 'Rated in the Elite app:':['Bewertung Elite-App:','Évaluation app Elite :','Valutazione app Elite:'], 'Read only: this session comes from the Elite app and is changed there.':['Nur lesbar: Diese Session stammt aus der Elite-App und wird dort geändert.','Lecture seule : cette session vient de l’app Elite et se modifie là-bas.','Solo lettura: questa sessione proviene dall’app Elite e si modifica lì.'], 'Athlete:':['Athlet:in:','Athlète :','Atleta:'], 'submitted':['eingereicht','envoyé','inviato'], 'Progress: Goals Achieved':['Fortschritt: erreichte Ziele','Progrès: objectifs atteints','Progressi: obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
   'Please keep the app open until the upload is finished.':['Bitte die App offen lassen, bis der Upload fertig ist.','Merci de laisser l’app ouverte jusqu’à la fin du téléchargement.','Tieni aperta l’app finché il caricamento non è terminato.'],
   'Your coach can now watch it.':['Dein Coach kann es jetzt anschauen.','Ton coach peut maintenant la regarder.','Il tuo coach ora può guardarlo.'],
   'The video is attached to the trick.':['Das Video ist beim Trick gespeichert.','La vidéo est enregistrée avec le trick.','Il video è salvato con il trick.'],
@@ -3630,6 +3632,28 @@ const MON_DIR_COL = {'Left':'#148FA0', 'Right':'#396FA8', 'Switch Left':'#8E5BB8
 const MON_DIR_ORDER = ['Left','Right','Switch Left','Switch Right','Forward','Switch','Rails','Basics','Other'];
 const MON_PLATEAU_TOL = 5;
 const monStatus = (n, s) => n < 5 ? 'lowdata' : s / n >= .7 ? 'ready' : s / n >= .4 ? 'building' : 'critical';
+// Quelle im Monitoring: Youth- und Elite-Daten werden NIE vermischt (Emilie). Elite wird gerechnet wie in der Elite-App.
+const monSrc = () => ST.mon.src === 'elite' ? 'elite' : 'youth';
+const monQoeMode = () => monSrc()==='elite' && !SB;   // Freeski Elite: Status nach Ø QoE (≥70 / 50–69 / <50)
+function eliteQoe(a){
+  const r = a.ext_rating || {}, S = {miss:0, okay:50, perfect:100};
+  const v = [...String(r.kommentar||'').matchAll(/(Takeoff|Grab|Trick|Landing):(\w+)/g)].map(m => S[m[2]]).filter(x => x !== undefined);
+  if (v.length) return Math.round(v.reduce((x, y) => x + y, 0) / v.length);
+  return r.gesamt == null ? null : r.gesamt >= 10 ? 100 : r.gesamt >= 7 ? 50 : 0;
+}
+// Kennzahl und Status einer Liste von Versuchen: Stomp-Rate (Youth, Snowboard Elite) oder Ø QoE (Freeski Elite)
+function monMetric(list){
+  const c = monCounts(list);
+  if (monQoeMode()){
+    const q = list.map(eliteQoe).filter(x => x != null), v = q.length ? Math.round(q.reduce((x, y) => x + y, 0) / q.length) : 0;
+    return {v, c, st: c.n < 5 ? 'lowdata' : v >= 70 ? 'ready' : v >= 50 ? 'building' : 'critical', lbl:'Ø QoE'};
+  }
+  return {v: pctR(c.s, c.n), c, st: monStatus(c.n, c.s), lbl:'stomp rate'};
+}
+const monStatusKey = () => monQoeMode()
+  ? ['Trick status (Ø QoE, as in the Elite app)', [['ready','≥ 70%'],['building','50–69%'],['critical','< 50%'],['lowdata','< 5 attempts']]]
+  : ['Trick status (stomp rate)', [['ready','≥ 70%'],['building','40–69%'],['critical','< 40%'],['lowdata','< 5 attempts']]];
+const hasEliteFor = id => ST.attempts.some(a => a.athlete_id===id && isElite(sessById(a.session_id)));
 const monCounts = list => { const c = {n:list.length, s:0, l:0, f:0}; list.forEach(a => { const o = outcomeOf(a); if (o==='stomped') c.s++; else if (o==='landed') c.l++; else c.f++; }); return c; };
 const pctR = (a, b) => b ? Math.round(a / b * 100) : 0;
 function monDir(a){
@@ -3653,7 +3677,7 @@ function monPeriodLabel(){
 function monAttempts(){
   const vis = visibleAthleteIds(ST.me, ST.profiles), [from, to] = monBounds(), typ = ST.mon.typ;
   return ST.attempts.filter(a => vis.has(a.athlete_id) && (!from || sessDate(a) >= from) && (!to || sessDate(a) <= to)
-    && (!typ || normType(sessById(a.session_id)?.type)===typ) && srcOk(sessById(a.session_id), ST.mon.src));
+    && (!typ || normType(sessById(a.session_id)?.type)===typ) && srcOk(sessById(a.session_id), monSrc()));
 }
 // Sessions = Trainingstage (wie Snowboard), aufsteigend
 function monDates(list){ return [...new Set(list.map(sessDate))].sort(); }
@@ -3688,9 +3712,9 @@ function monDonut(s, l, f, size=130){
 }
 function monSetPeriod(v){ ST.mon.period = v; renderMonitoring(); }
 function monSetTyp(v){ ST.mon.typ = v; renderMonitoring(); }
-function monBack(){ ST.mon.view = ST.mon.view==='trick' ? 'athlete' : 'team'; renderMonitoring(); window.scrollTo({top:0}); }
+function monBack(){ if (ST.mon.view==='athlete') ST.mon.src = 'youth'; ST.mon.view = ST.mon.view==='trick' ? 'athlete' : 'team'; renderMonitoring(); window.scrollTo({top:0}); }
 function monOpenAthlete(id){ Object.assign(ST.mon, {view:'athlete', athleteId:id}); renderMonitoring(); window.scrollTo({top:0}); }
-function monOpenTrick(i){ Object.assign(ST.mon, {view:'trick', key:MON_KEYS[i]}); renderMonitoring(); window.scrollTo({top:0}); }
+function monOpenTrick(i, src){ if (src) ST.mon.src = src; Object.assign(ST.mon, {view:'trick', key:(MON_KEYS_BY[monSrc()] || MON_KEYS)[i]}); renderMonitoring(); window.scrollTo({top:0}); }
 let MON_KEYS = [];
 function monHeader(title, sub, back){
   const m = ST.mon;
@@ -3698,7 +3722,7 @@ function monHeader(title, sub, back){
   return `<div class="mon-head">
     <div class="row" style="gap:12px">${back ? '<button class="btn ghost sm" onclick="monBack()">← Back</button>' : ''}
       <div class="grow"><div class="mon-title">${esc(title)}</div><div class="muted small">${sub}</div></div>
-      <select style="width:auto" onchange="monSetPeriod(this.value)">${opts([['season','Current season'],['last','Last season'],['all','All time'],['custom','Custom period…']], m.period)}</select>${srcSelect(m.src, 'ST.mon.src')}</div>
+      <select style="width:auto" onchange="monSetPeriod(this.value)">${opts([['season','Current season'],['last','Last season'],['all','All time'],['custom','Custom period…']], m.period)}</select>${hasElite() && m.view==='team' ? `<select style="width:auto" onchange="ST.mon.src=this.value;render()">${opts([['youth','Youth app'],['elite','Elite app']], monSrc())}</select>` : ''}</div>
     ${m.period==='custom' ? `<div class="row" style="margin-top:10px;gap:8px"><input type="date" value="${m.from||''}" onchange="ST.mon.from=this.value;renderMonitoring()" style="width:auto"> – <input type="date" value="${m.to||''}" onchange="ST.mon.to=this.value;renderMonitoring()" style="width:auto"></div>` : ''}
     <div class="typechips">${chip('', 'All')}${SESS_TYPES.map(([t]) => chip(t, t)).join('')}</div>
   </div>`;
@@ -3715,7 +3739,7 @@ function renderMonitoring(){
   if (m.view==='trick' && !(prof(m.athleteId) && m.key)) m.view = prof(m.athleteId) ? 'athlete' : 'team';
   if (m.view==='athlete' && !prof(m.athleteId)) m.view = 'team';
   if (m.view==='team') return renderMonTeam(root, all);
-  if (m.view==='athlete') return renderMonAthlete(root, all);
+  if (m.view==='athlete') return renderMonAthlete(root);
   return renderMonTrick(root, all);
 }
 
@@ -3723,20 +3747,21 @@ function renderMonTeam(root, all){
   const aths = [...visibleAthleteIds(ST.me, ST.profiles)].map(prof).filter(Boolean).sort((a,b) => a.name.localeCompare(b.name));
   const groups = [...ST.groups.filter(g => aths.some(a => a.group_id===g.id)), ...(aths.some(a => !a.group_id) ? [{id:null, name:'No group yet'}] : [])];
   const tile = a => {
-    const l = all.filter(x => x.athlete_id===a.id), c = monCounts(l), st = monStatus(c.n, c.s);
+    const l = all.filter(x => x.athlete_id===a.id), M = monMetric(l), c = M.c, st = M.st;
     const cnt = {ready:0, building:0, critical:0};
-    monTrickAgg(l).forEach(t => { const k = monCounts(t.list), s = monStatus(k.n, k.s); if (cnt[s] != null) cnt[s]++; });
+    monTrickAgg(l).forEach(t => { const s = monMetric(t.list).st; if (cnt[s] != null) cnt[s]++; });
     return `<div class="mon-tile" onclick="monOpenAthlete('${a.id}')">
       <div class="row" style="gap:10px;flex-wrap:nowrap"><span class="avatar sm">${initials(a.name)}</span><div style="min-width:0"><div class="t">${esc(a.name)}</div><div class="tiny muted">${a.level || '–'}${a.gender ? ' · ' + a.gender : ''}</div></div></div>
-      <div class="ringwrap">${monRing(c.n ? c.s / c.n : 0, MON_ST[st].c)}<div class="ringlbl"><b>${c.n ? pctR(c.s, c.n) + '%' : '–'}</b><span>stomp rate</span></div></div>
+      <div class="ringwrap">${monRing(c.n ? M.v / 100 : 0, MON_ST[st].c)}<div class="ringlbl"><b>${c.n ? M.v + '%' : '–'}</b><span>${M.lbl}</span></div></div>
       <div class="tri"><div><b style="color:${MON_ST.ready.c}">${cnt.ready}</b><span>Ready</span></div><div><b style="color:${MON_ST.building.c}">${cnt.building}</b><span>Building</span></div><div><b style="color:${MON_ST.critical.c}">${cnt.critical}</b><span>Critical</span></div></div>
       <div class="more">View details →</div></div>`;
   };
-  root.innerHTML = `<div class="card">${monHeader('Team Monitoring', `${all.length} attempts · ${monPeriodLabel()}`, false)}
-    <div class="status-key"><span class="status-key-t">Trick status (stomp rate)</span>
-      ${[['ready','≥ 70%'],['building','40–69%'],['critical','< 40%'],['lowdata','< 5 attempts']].map(([k, r]) => `<span class="status-pill" style="--c:${MON_ST[k].c}"><i></i><b>${MON_ST[k].l}</b><span>${r}</span></span>`).join('')}
-      <span class="status-key-n">Stomped = all criteria met</span></div>
-    ${groups.map(g => { const list = aths.filter(a => (a.group_id || null)===g.id);
+  const [skT, skR] = monStatusKey();
+  root.innerHTML = `<div class="card">${monHeader(monSrc()==='elite' ? 'Team Monitoring · Elite app' : 'Team Monitoring', `${all.length} attempts · ${monPeriodLabel()}`, false)}
+    <div class="status-key"><span class="status-key-t">${skT}</span>
+      ${skR.map(([k, r]) => `<span class="status-pill" style="--c:${MON_ST[k].c}"><i></i><b>${MON_ST[k].l}</b><span>${r}</span></span>`).join('')}
+      <span class="status-key-n">${monSrc()==='elite' ? 'Stomped = overall rating «perfect» in the Elite app' : 'Stomped = all criteria met'}</span></div>
+    ${groups.map(g => { const list = aths.filter(a => (a.group_id || null)===g.id && (monSrc()==='youth' || hasEliteFor(a.id)));
       return `<div class="sec-lbl">${esc(g.name)}</div><div class="mon-tiles">${list.map(tile).join('')}</div>`; }).join('') || '<div class="empty">No athletes.</div>'}
     <div class="row" style="justify-content:center;gap:10px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)">
       <button class="btn ghost sm" style="border-color:#C96A1F;color:#C96A1F;background:#FAEEDF" onclick="realityCheck()">🔍 Reality Check</button>
@@ -3744,28 +3769,37 @@ function renderMonTeam(root, all){
   </div>`;
 }
 
-function renderMonAthlete(root, all){
-  const ath = prof(ST.mon.athleteId), mine = all.filter(a => a.athlete_id===ath.id), c = monCounts(mine);
+function renderMonAthlete(root){
+  const ath = prof(ST.mon.athleteId), keep = ST.mon.src;
+  if (!hasEliteFor(ath.id)){ ST.mon.src = 'youth'; root.innerHTML = monAthleteBlock(ath, true, ''); return; }
+  const html = ['elite', 'youth'].map((src, i) => { ST.mon.src = src; return monAthleteBlock(ath, i === 0, src==='elite' ? 'Evaluation Elite app (as in the Elite app)' : 'Evaluation Youth app'); }).join('');
+  ST.mon.src = keep; root.innerHTML = html;
+}
+let MON_KEYS_BY = {};
+function monAthleteBlock(ath, first, title){
+  const src = monSrc(), all = monAttempts(), mine = all.filter(a => a.athlete_id===ath.id), M0 = monMetric(mine), c = M0.c;
   const tricks = monTrickAgg(mine);
-  MON_KEYS = tricks.map(t => t.key);
+  MON_KEYS = MON_KEYS_BY[src] = tricks.map(t => t.key);
   const byDir = {};
   mine.forEach(a => { const d = monDir(a); byDir[d] = (byDir[d] || 0) + 1; });
   const dirs = MON_DIR_ORDER.filter(d => byDir[d]);
   const card = t => {
-    const k = monCounts(t.list), st = monStatus(k.n, k.s), i = MON_KEYS.indexOf(t.key);
-    return `<div class="mon-card ${st==='critical'?'is-crit':''}" onclick="monOpenTrick(${i})">
+    const M = monMetric(t.list), k = M.c, st = M.st, i = MON_KEYS_BY[src].indexOf(t.key);
+    return `<div class="mon-card ${st==='critical'?'is-crit':''}" onclick="monOpenTrick(${i},'${src}')">
       <div class="t">${esc(t.label)}</div>
-      <div class="row" style="flex-wrap:nowrap;gap:12px;margin-top:6px"><div class="big" style="color:${st==='lowdata' ? '#8a8a8f' : MON_ST[st].c}">${pctR(k.s, k.n)}%</div>
+      <div class="row" style="flex-wrap:nowrap;gap:12px;margin-top:6px"><div class="big" style="color:${st==='lowdata' ? '#8a8a8f' : MON_ST[st].c}" title="${M.lbl}">${M.v}%</div>
         <div class="mini">Total <b>${k.n}</b><br><span style="color:${OC.stomped}">Stomped <b>${k.s}</b></span><br><span style="color:${OC.landed}">Landed <b>${k.l}</b></span><br><span style="color:${OC.failed}">Fail <b>${k.f}</b></span></div></div>
       <div class="row tiny" style="margin-top:8px">${monTrendHtml(monTrend(t.list, isStomp))}<span class="grow"></span><b style="color:${MON_ST[st].c}">${MON_ST[st].l}</b></div></div>`;
   };
-  root.innerHTML = `<div class="card">${monHeader(ath.name, `${c.n} attempts · ${c.s} stomped · <b>${pctR(c.s, c.n)}% stomp rate</b> · ${monPeriodLabel()}`, true)}
+  const sub = `${c.n} attempts · ${c.s} stomped · <b>${M0.v}% ${M0.lbl}</b> · ${monPeriodLabel()}`;
+  return `<div class="card">${first ? monHeader(ath.name, title ? '' : sub, true) : ''}
+    ${title ? `<div class="mon-src-h ${src}"><b>${title}</b><span class="muted small">${sub}</span></div>` : ''}
     ${c.n ? `<div class="dirbox"><div class="tiny muted" style="font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Direction balance: session data only</div>
       <div class="dirbar">${dirs.map(d => `<i style="width:${byDir[d] / c.n * 100}%;background:${MON_DIR_COL[d]}" title="${esc(d)}"></i>`).join('')}</div>
       <div class="legend" style="margin-top:8px">${dirs.map(d => `<span><i class="dot" style="background:${MON_DIR_COL[d]}"></i>${esc(d)} <b style="color:${MON_DIR_COL[d]}">${pctR(byDir[d], c.n)}%</b></span>`).join('')}</div></div>` : '<div class="empty">No session data in this period.</div>'}
     ${MON_DIR_ORDER.map(d => { const ts = tricks.filter(t => t.dir===d).sort((a,b) => b.rot - a.rot || b.list.length - a.list.length); if (!ts.length) return '';
       return `<div class="sec-lbl" style="color:${MON_DIR_COL[d]}">${esc(d)}</div><div class="mon-cards">${ts.map(card).join('')}</div>`; }).join('')}
-    <div class="row" style="justify-content:center;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)"><button class="btn ghost sm" onclick="athletePdf('${ath.id}')">📄 Athlete Report (PDF)</button></div>
+    ${src==='youth' ? `<div class="row" style="justify-content:center;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)"><button class="btn ghost sm" onclick="athletePdf('${ath.id}')">📄 Athlete Report (PDF)</button></div>` : ''}
   </div>`;
 }
 
@@ -3776,9 +3810,9 @@ function monCritRates(list, disc){
 function renderMonTrick(root, all){
   const ath = prof(ST.mon.athleteId), key = ST.mon.key;
   const list = all.filter(a => a.athlete_id===ath.id && coreOf(a).key===key).sort((a,b) => sessDate(a).localeCompare(sessDate(b)) || a.created_at.localeCompare(b.created_at));
-  if (!list.length){ ST.mon.view = 'athlete'; return renderMonAthlete(root, all); }
+  if (!list.length){ ST.mon.view = 'athlete'; return renderMonAthlete(root); }
   const disc = list[0].discipline, label = coreOf(list[0]).label;
-  const c = monCounts(list), st = monStatus(c.n, c.s), cr = monCritRates(list, disc);
+  const MT = monMetric(list), c = MT.c, st = MT.st, cr = monCritRates(list, disc);
   // häufigster Fail-Grund + Tendenz (erste vs. zweite Hälfte der Fails)
   const fails = list.filter(a => a.fell), tagc = {};
   fails.forEach(a => parseTags(a.note).forEach(t => tagc[t] = (tagc[t] || 0) + 1));
@@ -3795,17 +3829,18 @@ function renderMonTrick(root, all){
   const varRows = Object.entries(vars).sort((a,b) => b[1].length - a[1].length);
   const grabOf = l => l.trick?.grab || (disc==='Rail' ? l.label : 'no grab');
   const badge = st==='ready' ? `<span class="pill" style="border-color:${MON_ST.ready.c};color:${MON_ST.ready.c}">Comp Ready</span>` : `<span class="pill" style="border-color:${MON_ST[st].c};color:${MON_ST[st].c}">${MON_ST[st].l}</span>`;
-  root.innerHTML = `<div class="card">${monHeader(label, esc(ath.name), true)}</div>
+  root.innerHTML = `<div class="card">${monHeader(label, esc(ath.name) + (monSrc()==='elite' ? ' · <span class="chip elite">Elite app</span>' : ''), true)}</div>
     <div class="card">
       <div class="row" style="justify-content:flex-end">${badge}</div>
       <div class="row" style="gap:22px;align-items:center;flex-wrap:wrap">
         <div class="ringwrap" style="width:130px;height:130px">${monDonut(c.s, c.l, c.f)}<div class="ringlbl"><b style="font-size:26px">${c.n}</b><span>attempts</span></div></div>
         <table class="legtbl">
-          <tr><td><i class="sq" style="background:${OC.stomped}"></i>Stomped (all criteria)</td><td><b>${c.s}</b></td></tr>
+          <tr><td><i class="sq" style="background:${OC.stomped}"></i>${monSrc()==='elite' ? 'Stomped (overall «perfect»)' : 'Stomped (all criteria)'}</td><td><b>${c.s}</b></td></tr>
           <tr><td><i class="sq" style="background:${OC.landed}"></i>Landed</td><td><b>${c.l}</b></td></tr>
           <tr class="bb"><td><i class="sq" style="background:${OC.failed}"></i>Failed</td><td><b>${c.f}</b></td></tr>
           <tr><td>Landed rate (Landed+Stomped)</td><td><b style="color:${OC.landed}">${pctR(c.s + c.l, c.n)}%</b> ${monTrendHtml(monTrend(list, isLanded))}</td></tr>
-          <tr><td>Stomp rate</td><td><b style="color:${MON_ST[st].c}">${pctR(c.s, c.n)}%</b> ${monTrendHtml(monTrend(list, isStomp))}</td></tr>
+          <tr><td>Stomp rate</td><td><b style="color:${monQoeMode() ? OC.stomped : MON_ST[st].c}">${pctR(c.s, c.n)}%</b> ${monTrendHtml(monTrend(list, isStomp))}</td></tr>
+          ${monQoeMode() ? `<tr><td>Ø QoE (status as in the Elite app)</td><td><b style="color:${MON_ST[st].c}">${MT.v}%</b></td></tr>` : ''}
         </table>
       </div>
       <div class="sub-h">Criteria fulfillment (Landed + Stomped)</div>

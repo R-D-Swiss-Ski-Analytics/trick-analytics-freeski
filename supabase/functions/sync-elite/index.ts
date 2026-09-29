@@ -6,7 +6,8 @@
 // - Assessment (standort): jeder Trick (pro Grab) als Ziel. Erst mit Video wird er in Youth eingereicht und bewertet.
 // - Versuche (tricks): pro Tag und Session-Typ eine Session «aus Elite-App», nur lesbar.
 //   Bewertung Freeski (miss / okay / perfect pro Kriterium): perfect = 1 Punkt, okay = ½ Punkt, miss = 0, abgerundet.
-//   Alles okay = 2/4, Stomped nur mit 4× perfect (wie in Youth: alle Kriterien erfüllt). Als «erfüllt» gilt nur perfect.
+//   Alles okay = 2/4. Stomped = Gesamturteil «perfect» der Elite-App (gesamt 10), damit die Zahlen gleich sind wie dort.
+//   Als «erfüllt» (Kriterien-Quote) gilt nur perfect.
 //   Snowboard (KPI erfüllt / nicht erfüllt) wird direkt übernommen. Die Originalbewertung bleibt in ext_rating erhalten.
 //
 // Secrets (Dashboard → Edge Functions → Secrets): ELITE_FS_KEY, ELITE_SB_KEY (Secret Keys der Elite-Projekte), SYNC_TOKEN
@@ -102,7 +103,7 @@ function rating(sport: string, r: Row, disc: string) {
         const cats = disc === "Halfpipe" ? ["Takeoff", "Trick", "Grab", "Landing", "Amplitude"] : ["Takeoff", "Trick", "Grab", "Landing"];
         const keys: Record<string, string> = { Takeoff: "takeoff", Trick: "trick", Grab: "grab", Landing: "landing", Amplitude: "amplitude" };
         crit = Object.fromEntries(cats.map((c) => [keys[c], lvl(c) === "perfect"]));
-        pts = Math.floor(cats.reduce((n, c) => n + (lvl(c) === "perfect" ? 1 : lvl(c) === "okay" ? 0.5 : 0), 0));
+        pts = +r.gesamt >= 10 ? cats.length : Math.min(cats.length - 1, Math.floor(cats.reduce((n, c) => n + (lvl(c) === "perfect" ? 1 : lvl(c) === "okay" ? 0.5 : 0), 0)));
       }
     }
   }
