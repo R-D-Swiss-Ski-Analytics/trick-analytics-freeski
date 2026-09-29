@@ -42,6 +42,8 @@ const FLIPS: Record<string, number> = { Single: 1, Double: 2, Triple: 3, Quad: 4
 const TYPES = ["Landing Bag", "Big Air Training", "Big Air Competition", "Slopestyle Training", "Slopestyle Competition", "Halfpipe Training", "Halfpipe Competition"];
 const GRAB_FIX: Record<string, string> = { "Weddle (Mute)": "Mute", "Truck Driver": "Truckdriver" };
 
+// Vergleich unabhängig von der Reihenfolge der Felder (jsonb sortiert sie um)
+const same = (o: Row) => JSON.stringify(Object.keys(o ?? {}).sort().map((k) => [k, o[k]]));
 const clean = (v: any) => (v === null || v === undefined || v === "" || v === "None" ? null : String(v).trim());
 const grabName = (g: string | null) => (g ? GRAB_FIX[g] ?? g : "");
 
@@ -164,7 +166,7 @@ async function syncSport(youth: SupabaseClient, sport: keyof typeof SPORTS) {
   for (const [k, w] of want) {
     const h = haveBy.get(k);
     if (!h) ins.push(w);
-    else if (h.status === "goal" && !h.video_path && (h.label !== w.label || JSON.stringify(h.trick) !== JSON.stringify(w.trick))) upd.push({ id: h.id, trick: w.trick, label: w.label, discipline: w.discipline });
+    else if (h.status === "goal" && !h.video_path && (h.label !== w.label || h.discipline !== w.discipline || same(h.trick) !== same(w.trick))) upd.push({ id: h.id, trick: w.trick, label: w.label, discipline: w.discipline });
   }
   for (const h of have) if (!want.has(h.ext_id) && h.status === "goal" && !h.video_path) del.push(h.id);
   if (ins.length) { const { error } = await youth.from("entries").insert(ins); if (error) throw error; }
