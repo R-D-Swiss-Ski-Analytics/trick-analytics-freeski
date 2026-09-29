@@ -545,6 +545,14 @@ main svg text{font-size:var(--fs-label)}
   .sport-bar .sport-sw button{flex:1;padding:7px 8px;font-size:12px}
 }
 .gate a{color:var(--cyan);font-weight:600;text-decoration:none}.gate a:hover{text-decoration:underline}
+.rv-log ul{list-style:none;padding:0;margin:8px 0 0}
+.rv-log li{padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;background:#fff}
+.rv-log li.cur{border-color:var(--green);background:var(--green-bg)}
+.lg-h{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.lg-cs{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:4px;font-size:var(--fs-meta)}
+.lg-c.ok{color:var(--green)} .lg-c.no{color:var(--muted)}
+.lg-n{margin-top:4px;color:var(--muted);font-size:var(--fs-meta)}
+.lg-note{margin-top:6px;font-size:var(--fs-meta);color:#C96A1F;font-weight:600}
 </style>
 </head>
 <body>
@@ -781,6 +789,7 @@ const I18N = {
   'As soon as the requirements are defined, all existing tricks are matched automatically':['Sobald die Vorgaben stehen, werden alle erfassten Tricks automatisch abgeglichen','Dès que les exigences seront définies, tous les tricks saisis seront comparés automatiquement','Appena i requisiti saranno definiti, tutti i trick registrati verranno abbinati automaticamente'],
   'The Snowboard ranking needs the Snowboard Skills-Check. It will be available as soon as the requirements are defined.':['Die Snowboard-Rangliste braucht den Skills-Check Snowboard. Sie ist verfügbar, sobald die Vorgaben stehen.','Le classement snowboard nécessite le Skills-Check snowboard. Il sera disponible dès que les exigences seront définies.','La classifica snowboard richiede lo Skills-Check snowboard. Sarà disponibile appena i requisiti saranno definiti.'],
   'Trick Analyses Snowboard Youth':['Trick Analyses Snowboard Youth','Trick Analyses Snowboard Youth','Trick Analyses Snowboard Youth'],
+  'Rated by several people.':['Von mehreren Personen bewertet.','Évalué par plusieurs personnes.','Valutato da più persone.'], 'Rated several times.':['Mehrfach bewertet.','Évalué plusieurs fois.','Valutato più volte.'], 'The latest rating counts.':['Es zählt die neueste Bewertung.','La dernière évaluation compte.','Conta la valutazione più recente.'], 'Counts':['Zählt','Compte','Conta'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
@@ -1692,7 +1701,7 @@ const DemoStore = {
   async deleteSession(id){ this.data.sessions = this.data.sessions.filter(s => s.id!==id); this.data.attempts = this.data.attempts.filter(a => a.session_id!==id); this.save(); },
   async saveAttempt(me, a){ return this._upsert(this.data.attempts, {...a}, me); },
   async deleteAttempt(id){ this.data.attempts = this.data.attempts.filter(a => a.id!==id); this.save(); },
-  async entryLog(){ return null; },
+  async entryLog(opts={}){ return (this.data.log || []).filter(r => (!opts.entryId || r.entry_id===opts.entryId) && (!opts.until || r.changed_at <= opts.until)); },
   async removeVideos(paths){ for (const p of paths) delete this.videos[p]; },
   async listComments(athId, key){ return (this.data.comments || []).filter(c => c.athlete_id===athId && c.trick_key===key).sort((a,b) => b.created_at.localeCompare(a.created_at)); },
   async addComment(me, athId, key, text){ (this.data.comments ||= []).push({id:Date.now(), athlete_id:athId, trick_key:key, comment:text, created_by:me.id, created_at:nowIso()}); this.save(); },
@@ -1714,6 +1723,7 @@ const DemoStore = {
   async deleteEntry(id){ this.data.entries = this.data.entries.filter(e => e.id!==id); this.data.notes = this.data.notes.filter(n => n.entry_id!==id); this.save(); },
   async review(me, id, patch){
     const e = this.data.entries.find(x => x.id===id); Object.assign(e, patch, {reviewed_by:me.id, reviewed_at:nowIso()});
+    (this.data.log ||= []).push({entry_id:e.id, athlete_id:e.athlete_id, label:e.label, discipline:e.discipline, status:e.status, crit:e.crit, score:e.score, review_note:e.review_note, video_path:e.video_path, changed_by:me.id, changed_at:nowIso(), action:'update'});   // Verlauf wie Update 4
     if (e.athlete_id !== me.id) this.notify(e.athlete_id, e, patch.status==='rework' ? 'rework' : 'reviewed', patch.status==='rework' ? `New video requested: ${e.label}` : `Rated ${patch.score}/${maxFor(e.discipline)}: ${e.label}`);
     this.save(); return e;
   },
@@ -2718,7 +2728,12 @@ const selFrozen = () => Date.now() > selectionDeadline().getTime();
 function logHtml(log){
   const nm = id => prof(id)?.name || '–';
   const lab = r => r.status==='reviewed' ? `${r.score}/${maxFor(r.discipline)}` : r.status==='rework' ? 'New video requested' : r.status==='pending' ? 'Submitted' : r.status==='goal' ? 'Goal' : r.action==='delete' ? 'Deleted' : r.status;
-  return `<details class="rv-log"><summary>History (${log.length})</summary><ul>${log.slice().reverse().map(r => `<li><span class="tiny muted">${fmtDate(r.changed_at)} ${new Date(r.changed_at).toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'})}</span> <b>${esc(lab(r))}</b> <span class="muted">· ${esc(nm(r.changed_by))}</span></li>`).join('')}</ul></details>`;
+  const crits = r => r.status==='reviewed' && r.crit ? critSetFor(r.discipline).map(c => `<span class="lg-c ${r.crit[c.k] ? 'ok' : 'no'}">${r.crit[c.k] ? '✓' : '✗'} ${esc(c.name.replace(/ \(.*\)/, ''))}</span>`).join('') : '';
+  const rated = log.filter(r => r.status==='reviewed'), people = new Set(rated.map(r => r.changed_by));
+  return `<details class="rv-log" ${rated.length > 1 ? 'open' : ''}><summary>History (${log.length})</summary>
+    ${rated.length > 1 ? `<div class="lg-note"><span>${people.size > 1 ? 'Rated by several people.' : 'Rated several times.'}</span> <span>The latest rating counts.</span></div>` : ''}
+    <ul>${log.slice().reverse().map((r, i) => `<li class="${i===0 ? 'cur' : ''}"><div class="lg-h"><b>${esc(lab(r))}</b><span>${esc(nm(r.changed_by))}</span><span class="tiny muted">${fmtDate(r.changed_at)} ${new Date(r.changed_at).toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'})}</span>${i===0 && r.status==='reviewed' ? '<span class="chip green">Counts</span>' : ''}</div>
+      ${crits(r) ? `<div class="lg-cs">${crits(r)}</div>` : ''}${r.review_note ? `<div class="lg-n">${esc(r.review_note)}</div>` : ''}</li>`).join('')}</ul></details>`;
 }
 async function loadSelectionSnapshot(){
   const dl = selectionDeadline();
