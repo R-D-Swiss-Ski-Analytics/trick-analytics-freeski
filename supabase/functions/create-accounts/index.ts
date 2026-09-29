@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     if (me?.role !== "dvlp") return json({ error: "admins only" }, 403);
 
     const body = await req.json().catch(() => ({}));
-    let q = admin.from("profiles").select("id,name,email,role,sport,level,group_id").is("user_id", null).not("email", "is", null).in("role", ["athlete", "coach"]);
+    let q = admin.from("profiles").select("id,name,email,role,sport,level,group_id").is("user_id", null).not("email", "is", null).in("role", Array.isArray(body.roles) && body.roles.length ? body.roles.filter((r: string) => ["athlete", "coach"].includes(r)) : ["athlete", "coach"]);
     if (Array.isArray(body.ids) && body.ids.length) q = q.in("id", body.ids);
     const { data: profs, error } = await q;
     if (error) throw error;
