@@ -790,6 +790,8 @@ const I18N = {
   'The Snowboard ranking needs the Snowboard Skills-Check. It will be available as soon as the requirements are defined.':['Die Snowboard-Rangliste braucht den Skills-Check Snowboard. Sie ist verfügbar, sobald die Vorgaben stehen.','Le classement snowboard nécessite le Skills-Check snowboard. Il sera disponible dès que les exigences seront définies.','La classifica snowboard richiede lo Skills-Check snowboard. Sarà disponibile appena i requisiti saranno definiti.'],
   'Trick Analyses Snowboard Youth':['Trick Analyses Snowboard Youth','Trick Analyses Snowboard Youth','Trick Analyses Snowboard Youth'],
   'Rated by several people.':['Von mehreren Personen bewertet.','Évalué par plusieurs personnes.','Valutato da più persone.'], 'Rated several times.':['Mehrfach bewertet.','Évalué plusieurs fois.','Valutato più volte.'], 'The latest rating counts.':['Es zählt die neueste Bewertung.','La dernière évaluation compte.','Conta la valutazione più recente.'], 'Counts':['Zählt','Compte','Conta'],
+  'New attempt':['Neuer Versuch','Nouvelle tentative','Nuovo tentativo'], '⬆ New attempt':['⬆ Neuer Versuch','⬆ Nouvelle tentative','⬆ Nuovo tentativo'], '⬆ Replace video':['⬆ Video ersetzen','⬆ Remplacer la vidéo','⬆ Sostituisci video'],
+  'Show that you improved: upload a new video, your coach rates it again':['Zeig deine Fortschritte: neues Video hochladen, dein Coach bewertet nochmals','Montre tes progrès : télécharge une nouvelle vidéo, ton coach évalue à nouveau','Mostra i tuoi progressi: carica un nuovo video, il tuo coach valuta di nuovo'],
   'Uploading video…':['Video wird hochgeladen…','Téléchargement de la vidéo…','Caricamento video…'], 'Sent to your coach':['An deinen Coach gesendet','Envoyé à ton coach','Inviato al tuo coach'],
   'Saved as goal':['Als Ziel gespeichert','Enregistré comme objectif','Salvato come obiettivo'], 'Saved to review inbox':['In der Review-Inbox gespeichert','Enregistré dans la boîte d’évaluation','Salvato nella casella valutazioni'],
   'Moved to learned: in the review inbox':['Zu «gelernt» verschoben: in der Review-Inbox','Déplacé vers acquis: dans la boîte d’évaluation','Spostato in imparati: nella casella valutazioni'],
@@ -2372,6 +2374,24 @@ function uploadDone(staff){
   modal(`<h3>✓ Video uploaded</h3><p class="muted" style="margin:8px 0 0">${staff ? 'The video is attached to the trick.' : 'Your coach can now watch it.'}</p>
     <div class="btnrow"><button class="btn red" onclick="closeModal()">OK</button></div>`);
 }
+// Neuer Versuch zu einem bereits bewerteten Trick: neuer Eintrag mit Video, geht zur Bewertung.
+// Die alte Bewertung bleibt gültig; im Skills-Check zählt pro Vorgabe die beste Bewertung.
+function newAttempt(id){
+  const old = ST.entries.find(x => x.id===id); if (!old) return;
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
+  inp.onchange = async () => {
+    const file = inp.files[0]; if (!file) return;
+    if (!(await videoOk(file))) return;
+    uploadModal(0);
+    try {
+      let e = await Store.saveEntry(ST.me, {id:uid(), athlete_id:old.athlete_id, discipline:old.discipline, trick:old.trick, label:old.label, status:'pending', note:trString('New attempt')});
+      upsertLocal(e);
+      const path = await Store.uploadVideo(ST.me, e, file, p => uploadModal(p));
+      e = await Store.saveEntry(ST.me, {...e, video_path:path}); upsertLocal(e); render(); uploadDone(isStaff());
+    } catch (err){ console.error(err); closeModal(); toast('Upload failed: ' + (err.message||err), true); }
+  };
+  inp.click();
+}
 function pickVideo(id, submit){
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
   inp.onchange = async () => {
@@ -2420,7 +2440,7 @@ function entryRow(e, opts2={}){
     <div class="acts">
       ${staff ? `<button class="btn ${e.status==='pending'?'red':'ghost'} sm" onclick="openReview('${e.id}')">${e.status==='reviewed'?'Edit rating':'Rate'}</button>` : ''}
       ${!staff && e.status==='goal' ? `<button class="btn red sm" onclick="submitGoal('${e.id}')">Submit for review</button>` : ''}
-      ${(!e.video_path || e.status==='rework') && (staff || e.status!=='reviewed') ? `<button class="btn ${!staff && e.status==='rework'?'red':'ghost'} sm" onclick="pickVideo('${e.id}')">⬆ ${e.video_path?'New video':'Upload video'}</button>` : ''}
+      ${e.status==='reviewed' && e.discipline ? `<button class="btn ghost sm" onclick="newAttempt('${e.id}')" title="Show that you improved: upload a new video, your coach rates it again">⬆ New attempt</button>` : `<button class="btn ${!staff && e.status==='rework'?'red':'ghost'} sm" onclick="pickVideo('${e.id}')">⬆ ${e.video_path ? (e.status==='rework' ? 'New video' : 'Replace video') : 'Upload video'}</button>`}
       ${canEdit ? `<button class="btn ghost sm" onclick="openForm('${e.id}')">Edit</button><button class="btn ghost sm" onclick="deleteEntry('${e.id}')" title="Delete">🗑</button>` : ''}
     </div>
   </div>`;
@@ -2449,7 +2469,7 @@ function asRow(e){
         ${staff && e.status!=='goal' ? `<button class="btn ${e.status==='pending'?'red':'ghost'} xs" onclick="openReview('${e.id}')">${e.status==='reviewed'?'Edit rating':'Rate'}</button>` : ''}
         ${!staff && e.status==='goal' ? `<button class="btn red xs" onclick="submitGoal('${e.id}')">✓ Learned · submit</button>` : ''}
         ${staff && e.status==='goal' ? `<button class="btn ghost xs" onclick="submitGoal('${e.id}')">Move to learned</button>` : ''}
-        ${(!e.video_path || e.status==='rework') && (staff || e.status!=='reviewed') ? `<button class="btn ${!staff && e.status==='rework'?'red':'ghost'} xs" onclick="pickVideo('${e.id}')">⬆ ${e.video_path?'Replace video':'Video'}</button>` : ''}
+        ${e.status==='reviewed' ? `<button class="btn ghost xs" onclick="newAttempt('${e.id}')" title="Show that you improved: upload a new video, your coach rates it again">⬆ New attempt</button>` : `<button class="btn ${!staff && e.status==='rework'?'red':'ghost'} xs" onclick="pickVideo('${e.id}')">⬆ ${e.video_path ? (e.status==='rework' ? 'New video' : 'Replace video') : 'Video'}</button>`}
       </div>
     </div>
     ${canEdit ? `<button class="icon-btn" onclick="openForm('${e.id}')" title="Edit">✏️</button><button class="icon-btn del" onclick="deleteEntry('${e.id}')" title="Remove">✕</button>` : ''}
