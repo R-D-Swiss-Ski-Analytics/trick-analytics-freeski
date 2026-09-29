@@ -3349,7 +3349,7 @@ function eliteRating(a){
 }
 function attemptRow(a, o={}){
   const mx = a.max || maxFor(a.discipline), oc = outcomeOf(a);
-  const missed = a.crit && !a.fell ? critSetFor(a.discipline).filter(c => a.crit[c.k] === false) : [];
+  const missed = a.crit && !a.fell && !a.ext_rating ? critSetFor(a.discipline).filter(c => a.crit[c.k] === false) : [];   // Elite: Details stehen in der Originalbewertung
   const res = oc==='failed' ? '<span class="chip red">✗ Failed</span>' + parseTags(a.note).map(t => `<span class="chip">${esc(t)}</span>`).join('')
     : oc==='stomped' ? `<span class="chip green">⭐ Stomped${a.crit ? ` · ${mx}/${mx}` : ''}</span>`
     : `<span class="chip green">✓ Landed${a.crit ? ` · ${stars(a.score, mx)} ${a.score}/${mx}` : ''}</span>`;

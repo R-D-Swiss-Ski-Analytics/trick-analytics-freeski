@@ -5,8 +5,9 @@
 // Was übernommen wird:
 // - Assessment (standort): jeder Trick (pro Grab) als Ziel. Erst mit Video wird er in Youth eingereicht und bewertet.
 // - Versuche (tricks): pro Tag und Session-Typ eine Session «aus Elite-App», nur lesbar.
-//   Bewertung: nur «perfect» (Freeski) bzw. erfüllte KPI (Snowboard) zählt als erfülltes Kriterium,
-//   damit «Stomped» in beiden Apps dasselbe heisst. Die Originalbewertung bleibt in ext_rating erhalten.
+//   Bewertung Freeski (miss / okay / perfect pro Kriterium): perfect = 1 Punkt, okay = ½ Punkt, miss = 0, abgerundet.
+//   Alles okay = 2/4, Stomped nur mit 4× perfect (wie in Youth: alle Kriterien erfüllt). Als «erfüllt» gilt nur perfect.
+//   Snowboard (KPI erfüllt / nicht erfüllt) wird direkt übernommen. Die Originalbewertung bleibt in ext_rating erhalten.
 //
 // Secrets (Dashboard → Edge Functions → Secrets): ELITE_FS_KEY, ELITE_SB_KEY (Secret Keys der Elite-Projekte), SYNC_TOKEN
 // Einstellung der Function: «Enforce JWT verification» AUS (Schutz über den Header x-sync-token).
@@ -85,7 +86,7 @@ function rating(sport: string, r: Row, disc: string) {
     const tags = r.fail_grund ? `Tags: ${r.fail_grund}` : /^Tags:/.test(r.kommentar ?? "") ? r.kommentar : null;
     return { crit: null, score: 0, max, fell: true, outcome: "failed", note: tags, ext };
   }
-  let crit: Row | null = null;
+  let crit: Row | null = null, pts: number | null = null;
   if (disc !== "Rail") {
     if (sport === "snowboard" && r.kpis) {
       const k = r.kpis;
@@ -94,14 +95,17 @@ function rating(sport: string, r: Row, disc: string) {
     } else if (sport === "freeski") {
       const K: Row = {}; for (const [, c, v] of String(r.kommentar ?? "").matchAll(/(Takeoff|Trick|Grab|Landing|Amplitude):(\w+)/g)) K[c] = v;
       if (Object.keys(K).length) {
-        const ok = (c: string) => (K[c] ? K[c] === "perfect" : +r.gesamt >= 10);   // fehlende Kategorie: wie Gesamturteil
-        crit = { takeoff: ok("Takeoff"), trick: ok("Trick"), grab: ok("Grab"), landing: ok("Landing") };
-        if (disc === "Halfpipe") crit.amplitude = ok("Amplitude");
+        // fehlende Kategorie: wie Gesamturteil (10 = perfect, 7 = okay, 3 = miss)
+        const lvl = (c: string) => K[c] ?? (+r.gesamt >= 10 ? "perfect" : +r.gesamt >= 7 ? "okay" : "miss");
+        const cats = disc === "Halfpipe" ? ["Takeoff", "Trick", "Grab", "Landing", "Amplitude"] : ["Takeoff", "Trick", "Grab", "Landing"];
+        const keys: Record<string, string> = { Takeoff: "takeoff", Trick: "trick", Grab: "grab", Landing: "landing", Amplitude: "amplitude" };
+        crit = Object.fromEntries(cats.map((c) => [keys[c], lvl(c) === "perfect"]));
+        pts = Math.floor(cats.reduce((n, c) => n + (lvl(c) === "perfect" ? 1 : lvl(c) === "okay" ? 0.5 : 0), 0));
       }
     }
   }
   if (!/^(Takeoff|Trick|Grab|Landing|Tags):/.test(r.kommentar ?? "") && clean(r.kommentar)) note = r.kommentar;
-  if (crit) { const score = Object.values(crit).filter(Boolean).length; return { crit, score, max, fell: false, outcome: null, note, ext }; }
+  if (crit) { const score = pts ?? Object.values(crit).filter(Boolean).length; return { crit, score, max, fell: false, outcome: null, note, ext }; }
   const stomped = r.outcome ? r.outcome === "stomped" : +r.gesamt >= 10;
   return { crit: null, score: null, max, fell: false, outcome: stomped ? "stomped" : "landed", note, ext };
 }
