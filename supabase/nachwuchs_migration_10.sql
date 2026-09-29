@@ -13,7 +13,7 @@ language sql stable security definer set search_path = public as $$
       or a = me.id
       or (me.role = 'coach' and me.group_id is not null
           and public.in_my_groups((select group_id from profiles where id = a)))
-      or (me.role = 'coach' and me.id = any ((select extra_coach_ids from profiles where id = a)))
+      or (me.role = 'coach' and exists (select 1 from profiles x where x.id = a and me.id = any (x.extra_coach_ids)))
     )
   )
 $$;
