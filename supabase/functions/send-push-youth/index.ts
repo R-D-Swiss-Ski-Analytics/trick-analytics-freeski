@@ -30,6 +30,14 @@ const T: Record<string, Record<Lang, (x: string) => [string, string]>> = {
     it: () => ["Pulizia video", "Da oggi puoi eliminare i video non più richiesti nella scheda «Selezione»."],
     en: () => ["Video clean-up", "From today you can delete videos that are no longer required in the «Selection» tab."],
   },
+  kudos: {
+    de: (x) => ["Stark! Kudos von deinem Coach", x], fr: (x) => ["Bravo ! Ton coach te félicite", x],
+    it: (x) => ["Grande! Complimenti dal tuo coach", x], en: (x) => ["Well done! Kudos from your coach", x],
+  },
+  review: {
+    de: () => ["Dein Saison-Rückblick ist da", "Schau, was du diese Saison erreicht hast."], fr: () => ["Ton bilan de saison est là", "Découvre ce que tu as accompli cette saison."],
+    it: () => ["Il tuo riepilogo della stagione è pronto", "Guarda cosa hai raggiunto questa stagione."], en: () => ["Your season review is here", "See what you achieved this season."],
+  },
   reminder: {
     de: (x) => ["Selektions-Stichtag 30. April", `Noch ${x} ${x === "1" ? "Tag" : "Tage"}: lade deine Tricks mit Video hoch.`],
     fr: (x) => ["Date limite de sélection : 30 avril", `Encore ${x} jour${x === "1" ? "" : "s"} : télécharge tes tricks avec vidéo.`],
