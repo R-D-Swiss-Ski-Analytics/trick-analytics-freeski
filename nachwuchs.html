@@ -1920,10 +1920,12 @@ const Store = DEMO ? DemoStore : SupaStore;
    ══════════════════════════════════════════════════════════════════════ */
 const ST = {me:null, profiles:[], groups:[], entries:[], notes:[], sessions:[], attempts:[], rep:{sel:null, type:'', athlete:'', period:'season', raw:''}, mon:{view:'team', athleteId:null, key:null, period:'season', typ:'', from:'', to:''}, page:'assessment', athleteId:null, level:null, disc:'Jump', groupFilter:'', entryFilter:'all', form:null, pendingFile:null};
 
+// Gruppe des Coaches in der aktuellen Sportart (gleicher Name wie die eigene Gruppe)
+function myGid(me = ST.me){ return (ST.myGroupName && ST.groups.find(g => g.name===ST.myGroupName)?.id) || me?.group_id; }
 function visibleAthleteIds(me, profiles){
   const ath = profiles.filter(p => p.role==='athlete');
   if (me.role==='dvlp') return new Set(ath.map(p => p.id));
-  if (me.role==='coach') return new Set(ath.filter(p => p.group_id && p.group_id===me.group_id).map(p => p.id));
+  if (me.role==='coach'){ const gid = myGid(me); return new Set(ath.filter(p => p.group_id && p.group_id===gid).map(p => p.id)); }
   return new Set([me.id]);
 }
 const isStaff = () => ST.me && ST.me.role !== 'athlete';
@@ -2043,7 +2045,7 @@ function renderPushBanner(){
 function pushLater(){ try { localStorage.setItem('nw-push-later', '1'); } catch {} renderPushBanner(); }
 
 function sportSwitch(){
-  if (DEMO || ST.me?.role !== 'dvlp') return '';
+  if (DEMO || !(ST.me?.role === 'dvlp' || (ST.mySports||[]).length > 1)) return '';
   return `<span class="sport-sw">${[['freeski','Freeski'],['snowboard','Snowboard']].map(([k, l]) => `<button class="${SPORT===k?'on':''}" onclick="switchSport('${k}')">${l}</button>`).join('')}</span>`;
 }
 function switchSport(k){ if (k === SPORT) return; try { localStorage.setItem('nw-sport', k); } catch {} location.href = location.pathname + '?sport=' + k; }
@@ -2719,7 +2721,7 @@ function renderTeam(){
       <select onchange="setTeamFilter('sort',this.value)">${opts([['name','Sort: name A–Z'],['total_desc','Total: strongest first'],['total_asc','Total: weakest first'],['jump','Jumps: strongest first'],['rail','Rails: strongest first'],['hp','Halfpipe: strongest first']], TF.sort)}</select>
       ${filtered || TF.sort!=='name' ? `<button class="btn ghost sm" onclick="ST.teamFilter=null;renderTeam()">Reset filters</button>` : ''}
       <span class="grow"></span><button class="btn ghost" onclick="teamSkillsPdf()">📄 PDF</button><button class="btn red" onclick="openAddAthlete()">+ Add athlete</button></div>
-    <div class="card"><h2>${dv ? 'All athletes' : esc(groupName(ST.me.group_id))} <span class="muted" style="letter-spacing:0;font-weight:600">${filtered ? `${aths.length} / ${all.length}` : aths.length}</span></h2>
+    <div class="card"><h2>${dv ? 'All athletes' : esc(groupName(myGid()))} <span class="muted" style="letter-spacing:0;font-weight:600">${filtered ? `${aths.length} / ${all.length}` : aths.length}</span></h2>
       <ul class="hints"><li>Skills-Check at each athlete's own level</li><li>Total = Jumps, Rails and Halfpipe, ⅓ each</li><li>From T4: focus possible (Halfpipe only, or Jumps & Rails only)</li><li>Click a row to open the Skills-Check</li></ul>
       <div class="scroll-x"><table class="tbl team-tbl"><thead><tr><th>Athlete</th><th>Sex</th><th>Level</th><th>Focus</th>${dv?'<th>Group</th>':''}<th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th><th></th></tr></thead>
       <tbody>${rows || `<tr><td colspan="10" class="empty">${filtered ? 'No athletes match the filter.' : 'No athletes.'}</td></tr>`}</tbody></table></div></div>
@@ -2896,7 +2898,7 @@ async function addAthlete(){
   const y = +$('#aa-year').value;
   const row = {name, role:'athlete', gender:$('#aa-sex').value || null, level:$('#aa-level').value || null,
     birthdate: y ? `${y}-01-01` : null,
-    group_id: ST.me.role==='dvlp' ? ($('#aa-group').value || null) : ST.me.group_id,
+    group_id: ST.me.role==='dvlp' ? ($('#aa-group').value || null) : myGid(),
     email: ST.me.role==='dvlp' ? ($('#aa-mail').value.trim().toLowerCase() || null) : null, ...(SB ? {sport:'snowboard'} : {})};
   try { const p = await Store.addProfile(row); if (!ST.profiles.includes(p)) ST.profiles.push(p); closeModal(); toast(`${name} added`); render(); }
   catch (err){ toast('Could not add: ' + (err.message||err), true); }
@@ -3090,7 +3092,7 @@ function sxSetupAll(){ const aths = visibleAthletes(), a = SX.setup.ath; if (ath
 
 async function startSession(){
   const su = SX.setup, ids = [...su.ath];
-  const gid = ST.me.role==='coach' ? ST.me.group_id : (ST.groupFilter || prof(ids[0])?.group_id || null);
+  const gid = ST.me.role==='coach' ? myGid() : (ST.groupFilter || prof(ids[0])?.group_id || null);
   const s = {id:uid(), group_id:gid, date:su.date, type:su.type, location:su.location.trim() || null, athlete_ids:ids, athlete_notes:{}, started_at:nowIso(), ended_at:null, created_by:ST.me.id, ...(SB ? {sport:'snowboard'} : {})};
   try {
     upsertIn(ST.sessions, await Store.saveSession(ST.me, s));
@@ -4143,9 +4145,12 @@ async function loadData(){
   const d = await Store.loadAll(ST.me);
   const me0 = d.profiles.find(p => p.id===ST.me.id) || ST.me;
   // Athlet:innen und Coaches landen immer in ihrer eigenen Sportart
+  // Coaches: gleichnamige Gruppe in beiden Sportarten (z.B. RLZ Ski Valais) = gleiche Trägerschaft → beide Sportarten
+  const g0 = d.groups.find(g => g.id===me0?.group_id);
+  ST.myGroupName = g0?.name || null;
+  ST.mySports = me0?.role==='coach' && g0 ? [...new Set(d.groups.filter(g => g.name===g0.name && d.profiles.some(p => p.role==='athlete' && p.group_id===g.id)).map(g => g.sport || 'freeski'))] : [];
   if (!DEMO && me0 && me0.role !== 'dvlp'){
-    const g0 = d.groups.find(g => g.id===me0.group_id);
-    const own = me0.sport || g0?.sport || 'freeski';
+    const own = ST.mySports.includes(SPORT) ? SPORT : me0.role==='coach' && g0 ? (g0.sport || 'freeski') : (me0.sport || g0?.sport || 'freeski');
     if (own !== SPORT){ location.replace(location.pathname + '?sport=' + own); await new Promise(() => {}); }
   }
   const sp = x => DEMO || (x?.sport || 'freeski') === SPORT;
