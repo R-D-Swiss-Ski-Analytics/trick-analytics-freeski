@@ -538,6 +538,7 @@ main svg text{font-size:var(--fs-label)}
 .sport-sw button.on{background:var(--red);color:#fff}
 @media (max-width:768px){.sport-sw button{padding:4px 8px;font-size:11px}}
 .sport-bar{display:none}
+.chip.elite{background:#eef3fb;color:#2c5a8f;border-color:#cddcf0}
 @media (max-width:768px){
   #who .sport-sw{display:none}
   .sport-bar:not([hidden]){display:flex;justify-content:center;margin:10px 16px 0}
@@ -666,7 +667,7 @@ const I18N = {
   '✓ Learned · submit':['✓ Gelernt · senden','✓ Acquis · envoyer','✓ Imparato · invia'], 'Move to learned':['Zu «gelernt» verschieben','Déplacer vers acquis','Sposta in imparati'],
   'Video':['Video','Vidéo','Video'], 'New video':['Neues Video','Nouvelle vidéo','Nuovo video'], 'Upload video':['Video hochladen','Télécharger une vidéo','Carica video'], '▶ Video':['▶ Video','▶ Vidéo','▶ Video'],
   'Edit':['Bearbeiten','Modifier','Modifica'], 'Remove':['Entfernen','Supprimer','Rimuovi'], 'Delete':['Löschen','Supprimer','Elimina'], 'Close':['Schliessen','Fermer','Chiudi'],
-  'Coach:':['Coach:','Coach :','Coach:'], 'Athlete:':['Athlet:in:','Athlète :','Atleta:'], 'submitted':['eingereicht','envoyé','inviato'], 'Progress: Goals Achieved':['Fortschritt: erreichte Ziele','Progrès: objectifs atteints','Progressi: obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
+  'Coach:':['Coach:','Coach :','Coach:'], 'Season':['Saison','Saison','Stagione'], 'Last 30 days':['Letzte 30 Tage','30 derniers jours','Ultimi 30 giorni'], 'Elite app':['Elite-App','App Elite','App Elite'], 'Elite app · learned there':['Elite-App · dort gelernt','App Elite · acquis là-bas','App Elite · imparato lì'], 'All sources':['Alle Quellen','Toutes les sources','Tutte le fonti'], 'Rated in the Elite app:':['Bewertung Elite-App:','Évaluation app Elite :','Valutazione app Elite:'], 'Read only: this session comes from the Elite app and is changed there.':['Nur lesbar: Diese Session stammt aus der Elite-App und wird dort geändert.','Lecture seule : cette session vient de l’app Elite et se modifie là-bas.','Solo lettura: questa sessione proviene dall’app Elite e si modifica lì.'], 'Athlete:':['Athlet:in:','Athlète :','Atleta:'], 'submitted':['eingereicht','envoyé','inviato'], 'Progress: Goals Achieved':['Fortschritt: erreichte Ziele','Progrès: objectifs atteints','Progressi: obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
   'Please keep the app open until the upload is finished.':['Bitte die App offen lassen, bis der Upload fertig ist.','Merci de laisser l’app ouverte jusqu’à la fin du téléchargement.','Tieni aperta l’app finché il caricamento non è terminato.'],
   'Your coach can now watch it.':['Dein Coach kann es jetzt anschauen.','Ton coach peut maintenant la regarder.','Il tuo coach ora può guardarlo.'],
   'The video is attached to the trick.':['Das Video ist beim Trick gespeichert.','La vidéo est enregistrée avec le trick.','Il video è salvato con il trick.'],
@@ -2426,13 +2427,13 @@ function entryRow(e, opts2={}){
   const mine = assignedSlots(e);
   const ownMatch = m.some(x => x.level===ath.level);
   const covered = !mine.length && m.some(x => x.level===ath.level);
-  const canEdit = staff || e.status!=='reviewed';
+  const canEdit = (staff || e.status!=='reviewed') && !(isElite(e) && e.status==='goal');   // Elite-Ziele ändert die Elite-App
   const reviewer = e.reviewed_by ? prof(e.reviewed_by)?.name : null;
   return `<div class="item" id="en-${e.id}">
     <div class="main">
       <div class="t">${esc(e.label)}</div>
       <div class="m">${opts2.showName ? esc(ath?.name) + ' · ' : ''}${DISC_LABEL[e.discipline]} · ${fmtDate(e.created_at)}${e.status==='reviewed' && reviewer ? ` · rated by ${esc(reviewer)}` : ''}</div>
-      <div class="chips">${statusChip(e)}${e.video_path ? `<button class="chip" style="cursor:pointer" onclick="playVideo('${e.id}')">▶ Video</button>` : ''}
+      <div class="chips">${statusChip(e)}${eliteChip(e)}${e.video_path ? `<button class="chip" style="cursor:pointer" onclick="playVideo('${e.id}')">▶ Video</button>` : ''}
         ${mine.map(x => `<span class="chip dark">✓ ${x.level} · ${esc(x.text)}</span>`).join('')}${covered ? `<span class="chip">${ath.level} · already covered by another trick</span>` : ''}${!(staff ? m.length : ownMatch) ? (HAS_SC ? '<span class="chip">Free trick</span>' : '') : ''}</div>
       ${e.note ? `<div class="small" style="margin-top:6px">💬 ${esc(e.note)}</div>` : ''}
       ${e.review_note ? `<div class="small" style="margin-top:6px;color:var(--char)"><b>Coach:</b> ${esc(e.review_note)}</div>` : ''}
@@ -2454,12 +2455,12 @@ function asRow(e){
   const ath = prof(e.athlete_id), staff = isStaff();
   const mine = assignedSlots(e);
   const m = ath?.gender ? directMatches(e.discipline, ath.gender, e.trick).filter(x => staff || x.level===ath.level) : [];
-  const canEdit = staff || e.status!=='reviewed';
+  const canEdit = (staff || e.status!=='reviewed') && !(isElite(e) && e.status==='goal');   // Elite-Ziele ändert die Elite-App
   return `<div class="sb-trick-row" id="en-${e.id}">
     <div class="sb-trick-name">
       <div style="font-weight:600;color:var(--char)">${esc(e.label)}</div>
       <div class="row" style="gap:6px;margin-top:4px">
-        <span class="tiny muted">${fmtDate(e.created_at)}</span>${e.status!=='goal' ? statusChip(e) : goalLandedHint(e)}
+        <span class="tiny muted">${fmtDate(e.created_at)}</span>${e.status!=='goal' ? statusChip(e) : goalLandedHint(e)}${eliteChip(e)}
         ${mine.map(x => `<span class="chip dark">✓ ${x.level} · ${esc(x.text)}</span>`).join('')}${!mine.length && m.some(x => x.level===ath?.level) ? `<span class="chip">${ath.level} · already covered</span>` : ''}${!m.length ? (HAS_SC ? '<span class="chip">Free trick</span>' : '') : ''}
         ${e.video_path ? `<button class="chip" style="cursor:pointer;background:#e6f6ec;color:#1f7a3f;border-color:#bfe5cc" onclick="playVideo('${e.id}')"><span>✓ Video uploaded</span> ▶</button>` : ''}
       </div>
@@ -3332,6 +3333,20 @@ async function logAttempt(fell){
     toast(o==='failed' ? 'Failed logged' : o==='stomped' ? '⭐ Stomped!' : `Landed ${a.score}/${a.max}`); renderSession();
   } catch (err){ console.error(err); toast('Could not save attempt: ' + (err.message||err), true); }
 }
+// Daten aus den Elite-Apps (DVLP-Athlet:innen): nur Elite → Youth, in Youth nur lesbar
+const isElite = x => x?.source === 'elite';
+const hasElite = () => ST.sessions.some(isElite);
+const srcOk = (s, f) => !f || (f==='elite' ? isElite(s) : !isElite(s));
+const srcSelect = (val, set) => hasElite() ? `<select style="width:auto" onchange="${set}=this.value;render()">${opts([['','All sources'],['youth','Youth'],['elite','Elite app']], val||'')}</select>` : '';
+const eliteChip = e => isElite(e) ? `<span class="chip elite">${e.trick?.elite_status==='mastered' ? 'Elite app · learned there' : 'Elite app'}</span>` : '';
+function eliteRating(a){
+  const r = a.ext_rating; if (!r || a.fell) return '';
+  const K = {Takeoff:'Take-Off', Trick:'Trick', Grab:'Grab', Landing:'Landing', Amplitude:'Amplitude'};
+  let parts = [...String(r.kommentar||'').matchAll(/(Takeoff|Trick|Grab|Landing|Amplitude):(\w+)/g)].map(([, c, v]) => `${K[c]} ${v}`);
+  if (!parts.length && r.kpis) parts = [['axis','Take-Off'],['control','Control'],['grab','Grab'],['quality_landing','Quality Landing'],['amplitude','Amplitude']].filter(([k]) => k in r.kpis).map(([k, l]) => `${l} ${r.kpis[k] ? '✓' : '✗'}`);
+  if (!parts.length && r.gesamt) parts = [r.gesamt >= 10 ? 'perfect' : r.gesamt >= 7 ? 'okay' : 'miss'];
+  return parts.length ? `<div class="tiny muted" style="margin-top:6px"><b>Rated in the Elite app:</b> ${esc(parts.join(' · '))}</div>` : '';
+}
 function attemptRow(a, o={}){
   const mx = a.max || maxFor(a.discipline), oc = outcomeOf(a);
   const missed = a.crit && !a.fell ? critSetFor(a.discipline).filter(c => a.crit[c.k] === false) : [];
@@ -3342,8 +3357,8 @@ function attemptRow(a, o={}){
     <div class="main"><div class="t">${esc(a.label)}</div>
       <div class="m">${o.noName ? '' : esc(prof(a.athlete_id)?.name) + ' · '}${o.withDate ? fmtDate(sessDate(a)) + ' · ' : ''}${new Date(a.created_at).toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'})}${a.run_no ? ` · Run ${a.run_no}` : ''}</div>
       <div class="chips">${res}${missed.map(c => `<span class="chip">✗ ${esc(c.name)}</span>`).join('')}${a.entry_id ? '<span class="chip dark">✓ in Skills-Check</span>' : ''}</div>
-      ${noteText(a.note) ? `<div class="small" style="margin-top:6px">💬 ${esc(noteText(a.note))}</div>` : ''}</div>
-    <div class="acts noprint">${!a.fell && a.crit && !a.entry_id ? `<button class="btn ghost sm" onclick="attemptToSkills('${a.id}')" title="Use this rating in the athlete's Skills-Check">→ Skills-Check</button>` : ''}<button class="btn ghost sm" onclick="editAttempt('${a.id}')" title="Edit attempt">✏️</button><button class="btn ghost sm" onclick="deleteAttempt('${a.id}')" title="Delete attempt">🗑</button></div>
+      ${noteText(a.note) ? `<div class="small" style="margin-top:6px">💬 ${esc(noteText(a.note))}</div>` : ''}${eliteRating(a)}</div>
+    ${isElite(a) ? '' : `<div class="acts noprint">${!a.fell && a.crit && !a.entry_id ? `<button class="btn ghost sm" onclick="attemptToSkills('${a.id}')" title="Use this rating in the athlete's Skills-Check">→ Skills-Check</button>` : ''}<button class="btn ghost sm" onclick="editAttempt('${a.id}')" title="Edit attempt">✏️</button><button class="btn ghost sm" onclick="deleteAttempt('${a.id}')" title="Delete attempt">🗑</button></div>`}
   </div>`;
 }
 
@@ -3466,13 +3481,13 @@ async function endSession(){
 function reportSessions(){
   const vis = visGroupAthleteIds(), f = ST.rep, from = periodStart(f.period);
   return ST.sessions.filter(s => s.ended_at && s.athlete_ids.some(id => vis.has(id))
-    && (!f.type || normType(s.type)===f.type) && (!f.athlete || s.athlete_ids.includes(f.athlete)) && (!from || s.date >= from))
+    && srcOk(s, f.src) && (!f.type || normType(s.type)===f.type) && (!f.athlete || s.athlete_ids.includes(f.athlete)) && (!from || s.date >= from))
     .sort((a,b) => b.date.localeCompare(a.date) || b.started_at.localeCompare(a.started_at));
 }
 function sessionListRow(s){
   const atts = sessAttempts(s.id);
   return `<div class="item click" onclick="ST.rep.sel='${s.id}';go('reports')">
-    <div class="main"><div class="t">${fmtDate(s.date)} · ${esc(normType(s.type))}${s.jump_size ? ' · ' + esc(s.jump_size) : ''}</div>
+    <div class="main"><div class="t">${fmtDate(s.date)} · ${esc(normType(s.type))}${s.jump_size ? ' · ' + esc(s.jump_size) : ''} ${eliteChip(s)}</div>
       <div class="m">${s.location ? esc(s.location) + ' · ' : ''}${s.duration_min ? s.duration_min + ' min · ' : ''}${s.athlete_ids.map(id => esc(prof(id)?.name?.split(' ')[0] || '?')).join(', ')}</div></div>
     <div class="acts">${qChip(avg(atts.map(qa)))}<span class="chip">${atts.length} att.</span><span class="chip">${landedPct(atts) ?? '–'}% landed</span></div></div>`;
 }
@@ -3487,7 +3502,7 @@ function renderReports(){
     <div class="row noprint" style="margin-bottom:18px">${groupFilterSelect()}
       <select style="width:auto" onchange="ST.rep.type=this.value;renderReports()"><option value="">All types</option>${opts(SESS_TYPES.map(t => t[0]), f.type)}</select>
       <select style="width:auto;max-width:240px" onchange="ST.rep.athlete=this.value;renderReports()"><option value="">All athletes</option>${opts(aths.map(a => [a.id, a.name]), f.athlete)}</select>
-      <select style="width:auto" onchange="ST.rep.period=this.value;renderReports()">${opts(PERIODS, f.period)}</select>
+      <select style="width:auto" onchange="ST.rep.period=this.value;renderReports()">${opts(PERIODS, f.period)}</select>${srcSelect(f.src, 'ST.rep.src')}
     </div>
     <div class="card"><h2>Session reports <span class="muted" style="letter-spacing:0;font-weight:600">${list.length}</span></h2>
       <div class="list">${list.length ? list.map(sessionListRow).join('') : '<div class="empty">No sessions in this filter. Start one in the Session tab.</div>'}</div></div>
@@ -3515,7 +3530,8 @@ function renderReport(root, s){
   const ids = s.athlete_ids.filter(id => vis.has(id) && (!ST.rep.athlete || ST.rep.athlete===id));
   root.innerHTML = `
     <div class="row noprint" style="margin-bottom:18px"><button class="btn ghost sm" onclick="ST.rep.sel=null;renderReports()">← All reports</button><span class="grow"></span>
-      <button class="btn ghost sm" onclick="reportPdf('${s.id}')">📄 PDF</button><button class="btn ghost sm" onclick="deleteReport('${s.id}')">🗑 Delete report</button></div>
+      <button class="btn ghost sm" onclick="reportPdf('${s.id}')">📄 PDF</button>${isElite(s) ? '' : `<button class="btn ghost sm" onclick="deleteReport('${s.id}')">🗑 Delete report</button>`}</div>
+    ${isElite(s) ? '<div class="rule" style="margin-bottom:14px">Read only: this session comes from the Elite app and is changed there.</div>' : ''}
     <div class="card"><h2>${fmtDate(s.date)} · ${esc(normType(s.type))}<span class="rt muted">${[s.location, s.jump_size ? 'Jump size ' + s.jump_size : ''].filter(Boolean).map(esc).join(' · ')}</span></h2>
       <div class="kpis" style="margin-bottom:0">
         <div class="kpi"><div class="k">Attempts</div><div class="v">${atts.length}</div></div>
@@ -3577,7 +3593,7 @@ function monPeriodLabel(){
 function monAttempts(){
   const vis = visibleAthleteIds(ST.me, ST.profiles), [from, to] = monBounds(), typ = ST.mon.typ;
   return ST.attempts.filter(a => vis.has(a.athlete_id) && (!from || sessDate(a) >= from) && (!to || sessDate(a) <= to)
-    && (!typ || normType(sessById(a.session_id)?.type)===typ));
+    && (!typ || normType(sessById(a.session_id)?.type)===typ) && srcOk(sessById(a.session_id), ST.mon.src));
 }
 // Sessions = Trainingstage (wie Snowboard), aufsteigend
 function monDates(list){ return [...new Set(list.map(sessDate))].sort(); }
@@ -3622,7 +3638,7 @@ function monHeader(title, sub, back){
   return `<div class="mon-head">
     <div class="row" style="gap:12px">${back ? '<button class="btn ghost sm" onclick="monBack()">← Back</button>' : ''}
       <div class="grow"><div class="mon-title">${esc(title)}</div><div class="muted small">${sub}</div></div>
-      <select style="width:auto" onchange="monSetPeriod(this.value)">${opts([['season','Current season'],['last','Last season'],['all','All time'],['custom','Custom period…']], m.period)}</select></div>
+      <select style="width:auto" onchange="monSetPeriod(this.value)">${opts([['season','Current season'],['last','Last season'],['all','All time'],['custom','Custom period…']], m.period)}</select>${srcSelect(m.src, 'ST.mon.src')}</div>
     ${m.period==='custom' ? `<div class="row" style="margin-top:10px;gap:8px"><input type="date" value="${m.from||''}" onchange="ST.mon.from=this.value;renderMonitoring()" style="width:auto"> – <input type="date" value="${m.to||''}" onchange="ST.mon.to=this.value;renderMonitoring()" style="width:auto"></div>` : ''}
     <div class="typechips">${chip('', 'All')}${SESS_TYPES.map(([t]) => chip(t, t)).join('')}</div>
   </div>`;
