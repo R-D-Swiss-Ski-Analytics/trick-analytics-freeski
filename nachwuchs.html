@@ -1804,6 +1804,7 @@ const DemoStore = {
   },
   async videoUrl(path){ return this.videos[path] || null; },
   async markRead(ids){ this.data.notes.forEach(n => { if (ids.includes(n.id)) n.read_at = nowIso(); }); this.save(); },
+  async pushSnapshots(){},
   async updateProfile(id, patch){ Object.assign(this.data.profiles.find(p => p.id===id), patch); this.save(); },
   async addProfile(row){ const p = {id:uid(), user_id:null, ...row}; this.data.profiles.push(p); this.save(); return p; },
 };
@@ -1978,11 +1979,13 @@ const SupaStore = {
   },
   async videoUrl(path){ const { data, error } = await db.storage.from(VIDEO_BUCKET).createSignedUrl(path, 3600); if (error) throw error; return data.signedUrl; },
   async markRead(ids){ if (ids.length) await db.from('notifications').update({read_at:nowIso()}).in('id', ids); },
+  // Skills-Check-Stand für die PISTE App (Update 14); fehlt die Tabelle, passiert nichts
+  async pushSnapshots(rows){ if (!rows.length) return; const { error } = await db.from('skills_snapshot').upsert(rows, {onConflict:'athlete_id,season'}); if (error) console.warn('skills_snapshot', error.message); },
   async updateProfile(id, patch){ const { error } = await db.from('profiles').update(patch).eq('id', id); if (error) throw error; },
   async addProfile(row){ const { data, error } = await db.from('profiles').insert(row).select().single(); if (error) throw error; return data; },
 };
 // Admin-Vorschau («Ansicht als …»): nur lesen, damit nichts im Namen einer anderen Person gespeichert wird
-const STORE_WRITES = new Set(['setKudos','saveSession','deleteSession','saveAttempt','deleteAttempt','addComment','saveEntry','removeVideos','deleteEntry','review','uploadVideo','markRead','updateProfile','addProfile','refreshStatus']);
+const STORE_WRITES = new Set(['pushSnapshots','setKudos','saveSession','deleteSession','saveAttempt','deleteAttempt','addComment','saveEntry','removeVideos','deleteEntry','review','uploadVideo','markRead','updateProfile','addProfile','refreshStatus']);
 const Store = new Proxy(DEMO ? DemoStore : SupaStore, {get(t, k){
   const v = t[k];
   if (typeof v !== 'function') return v;
@@ -2751,6 +2754,19 @@ function levelTotals(ath, level, ents = entriesOf(ath.id)){
   return r;
 }
 const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+/* PISTE App: Skills-Check-Prozente pro Athlet:in ablegen, PISTE holt sie ab (Update 14).
+   Zählt wie die Selektion: nur Bewertungen mit Video. Nach dem Stichtag 30.4. bleibt der Stand eingefroren. */
+const pisteSeason = () => { const e = selectionDeadline().getUTCFullYear(); return `${e - 1}/${String(e).slice(2)}`; };
+function snapshotOf(a){
+  if (!HAS_SC || !a?.level || !a.gender) return null;
+  const t = levelTotals(a, a.level, entriesOf(a.id).filter(e => e.status!=='reviewed' || e.video_path)); if (!t) return null;
+  const dp = d => t.by[d] && t.incl.includes(d) && t.by[d].max ? pct(t.by[d].pts, t.by[d].max) : null;
+  return {athlete_id:a.id, season:pisteSeason(), level:a.level, jumps:dp('Jump'), rails:dp('Rail'), hp:dp('Halfpipe'), total:t.pct, updated_at:nowIso()};
+}
+async function pushSnapshots(aths){
+  if (DEMO || isPreview() || !HAS_SC || selFrozen() || !['coach','dvlp'].includes(ST.me?.role)) return;
+  try { await Store.pushSnapshots(aths.filter(Boolean).map(snapshotOf).filter(Boolean)); } catch (err){ console.warn('PISTE snapshot', err); }
+}
 function progressBar(ev){
   const part = Object.values(ev.out).filter(o => o.state==='partial').reduce((s, o) => s + o.pts, 0);
   const full = ev.pts - part;
@@ -3041,6 +3057,7 @@ async function saveReview(kind){
     : {status:'reviewed', crit:{...RV.crit}, score:Object.values(RV.crit).filter(v => v===true).length, review_note:note || null};
   try {
     upsertLocal(await Store.review(ST.me, RV.id, patch));
+    pushSnapshots([prof(ST.entries.find(x => x.id===RV.id)?.athlete_id)]);
     closeModal(); toast(kind==='rework' ? 'Athlete asked for a new video' : `Rated ${patch.score}/${Object.keys(patch.crit).length}: athlete notified`); render();
   } catch (err){ console.error(err); toast('Could not save: ' + (err.message||err), true); }
 }
@@ -3335,7 +3352,8 @@ async function addAthlete(){
   catch (err){ toast('Could not add: ' + (err.message||err), true); }
 }
 async function setProfile(id, k, v){
-  try { await Store.updateProfile(id, {[k]:v || null}); Object.assign(prof(id), {[k]:v || null}); toast('Saved'); render(); }
+  try { await Store.updateProfile(id, {[k]:v || null}); Object.assign(prof(id), {[k]:v || null}); toast('Saved'); render();
+    if (['level','gender','focus'].includes(k)) pushSnapshots([prof(id)]); }
   catch (err){ toast('Could not save: ' + (err.message||err), true); render(); }
 }
 
@@ -4644,6 +4662,8 @@ async function loadData(){
   const vis = visibleAthletes();
   if (ST.me.role==='athlete') ST.athleteId = ST.me.id;
   else if (!vis.some(a => a.id===ST.athleteId)) ST.athleteId = vis[0]?.id || null;
+  try { const k = 'nw-piste-at-' + SPORT, last = +localStorage.getItem(k) || 0;
+    if (Date.now() - last > 30 * 60000){ localStorage.setItem(k, Date.now()); pushSnapshots(vis); } } catch(e){}
 }
 
 async function startApp(){
