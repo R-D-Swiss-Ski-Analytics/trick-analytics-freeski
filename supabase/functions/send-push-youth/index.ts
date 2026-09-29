@@ -36,10 +36,10 @@ const T: Record<string, Record<Lang, (x: string) => [string, string]>> = {
     en: () => ["Video clean-up", "From today you can delete videos that are no longer required in the «Selection» tab."],
   },
   kudos: {
-    de: (x) => kudos(x, { well_done: "Stark!", progress: "Riesenfortschritt!", style: "Toller Style!" }, "Kudos von deinem Coach"),
-    fr: (x) => kudos(x, { well_done: "Bravo !", progress: "Énorme progrès !", style: "Super style !" }, "Ton coach te félicite"),
-    it: (x) => kudos(x, { well_done: "Grande!", progress: "Enorme progresso!", style: "Stile fantastico!" }, "Complimenti dal tuo coach"),
-    en: (x) => kudos(x, { well_done: "Well done!", progress: "Huge progress!", style: "Great style!" }, "Kudos from your coach"),
+    de: (x) => kudos(x, { well_done: "Stark!", progress: "Riesenfortschritt!", style: "Toller Style!" }, "Shout-out von deinem Coach"),
+    fr: (x) => kudos(x, { well_done: "Bravo !", progress: "Énorme progrès !", style: "Super style !" }, "Shout-out de ton coach"),
+    it: (x) => kudos(x, { well_done: "Grande!", progress: "Enorme progresso!", style: "Stile fantastico!" }, "Shout-out dal tuo coach"),
+    en: (x) => kudos(x, { well_done: "Well done!", progress: "Huge progress!", style: "Great style!" }, "Shout-out from your coach"),
   },
   review: {
     de: () => ["Dein Saison-Rückblick ist da", "Schau, was du diese Saison erreicht hast."], fr: () => ["Ton bilan de saison est là", "Découvre ce que tu as accompli cette saison."],
