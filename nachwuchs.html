@@ -2311,8 +2311,10 @@ async function submitForm(mode){
       uploadModal(0);
       try {
         const path = await Store.uploadVideo(ST.me, saved, ST.pendingFile, p => uploadModal(p));
+        const oldPath = saved.video_path;
         saved = await Store.saveEntry(ST.me, {...saved, video_path:path});
         upsertLocal(saved); uploaded = true;
+        dropOldVideo(saved.id, oldPath);
       } catch (err){
         console.error(err); closeModal(); toast('Trick saved, but the video upload failed: try again via «Upload video».', true);
       }
@@ -2383,6 +2385,7 @@ function pickVideo(id, submit){
       if (!isStaff() && e.status==='rework') next.status = 'pending';
       if (submit){ next.status = 'pending'; if (e.status==='goal') next.achieved_at = nowIso(); }
       upsertLocal(await Store.saveEntry(ST.me, next)); render(); uploadDone(isStaff());
+      dropOldVideo(e.id, e.video_path);
     } catch (err){ console.error(err); closeModal(); toast('Upload failed: ' + (err.message||err), true); }
   };
   inp.click();
@@ -2806,10 +2809,30 @@ function cleanupCard(){
 }
 // Automatisch: ab 31. Mai bis Ende Juli bei jedem App-Start von DVLP/Admin (ohne Rückfrage).
 // Gelöscht werden nur Videos, die vor dem 31. Mai hochgeladen wurden: neue Uploads bleiben.
+// Altes Video nach dem Ersetzen: sofort löschen, wenn damit nie bewertet wurde.
+// Wurde damit bewertet, bleibt es als Nachweis (Selektion, Rekurs) und wird beim Aufräumen ab 31. Mai entfernt.
+async function dropOldVideo(entryId, oldPath){
+  if (!oldPath || DEMO) return;
+  try {
+    const log = await Store.entryLog({entryId});
+    if (log === null) return;   // Verlauf nicht verfügbar: sicherheitshalber behalten
+    if (!log.some(r => r.video_path === oldPath && r.status === 'reviewed')) await Store.removeVideos([oldPath]);
+  } catch (e){ console.warn('old video', e); }
+}
 async function autoVideoCleanup(){
   if (DEMO || !ST.me || ST.me.role !== 'dvlp') return;
   const cd = cleanupDate().getTime(), now = Date.now(), end = Date.UTC(new Date(cd).getUTCFullYear(), 7, 1);
   if (now < cd || now >= end) return;
+  // höchstens einmal pro Tag und Gerät
+  const key = 'nw-cleanup-' + new Date().toISOString().slice(0, 10);
+  try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch {}
+  // ersetzte Videos (alte Versionen aus dem Verlauf), die vor dem 31. Mai hochgeladen wurden
+  try {
+    const log = await Store.entryLog({until:new Date(cd).toISOString()});
+    const cur = new Map(ST.entries.map(e => [e.id, e.video_path]));
+    const old = [...new Set((log || []).filter(r => cur.has(r.entry_id) && r.video_path && r.video_path !== cur.get(r.entry_id) && videoTs(r.video_path) && videoTs(r.video_path) < cd).map(r => r.video_path))];
+    if (old.length) await Store.removeVideos(old);
+  } catch (err){ console.warn('old versions clean-up', err); }
   const list = cleanupCandidates(cd);
   if (!list.length) return;
   try {
