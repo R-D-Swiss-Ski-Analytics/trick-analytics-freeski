@@ -538,6 +538,7 @@ main svg text{font-size:var(--fs-label)}
 .sport-sw button.on{background:var(--red);color:#fff}
 @media (max-width:768px){.sport-sw button{padding:4px 8px;font-size:11px}}
 .sport-bar{display:none}
+.chip .x{border:0;background:none;padding:0 0 0 4px;cursor:pointer;color:inherit;font-size:11px}
 .chip.elite{background:#eef3fb;color:#2c5a8f;border-color:#cddcf0}
 @media (max-width:768px){
   #who .sport-sw{display:none}
@@ -667,7 +668,7 @@ const I18N = {
   '✓ Learned · submit':['✓ Gelernt · senden','✓ Acquis · envoyer','✓ Imparato · invia'], 'Move to learned':['Zu «gelernt» verschieben','Déplacer vers acquis','Sposta in imparati'],
   'Video':['Video','Vidéo','Video'], 'New video':['Neues Video','Nouvelle vidéo','Nuovo video'], 'Upload video':['Video hochladen','Télécharger une vidéo','Carica video'], '▶ Video':['▶ Video','▶ Vidéo','▶ Video'],
   'Edit':['Bearbeiten','Modifier','Modifica'], 'Remove':['Entfernen','Supprimer','Rimuovi'], 'Delete':['Löschen','Supprimer','Elimina'], 'Close':['Schliessen','Fermer','Chiudi'],
-  'Coach:':['Coach:','Coach :','Coach:'], 'Season':['Saison','Saison','Stagione'], 'Last 30 days':['Letzte 30 Tage','30 derniers jours','Ultimi 30 giorni'], 'Elite app':['Elite-App','App Elite','App Elite'], 'Elite app · learned there':['Elite-App · dort gelernt','App Elite · acquis là-bas','App Elite · imparato lì'], 'All sources':['Alle Quellen','Toutes les sources','Tutte le fonti'], 'Rated in the Elite app:':['Bewertung Elite-App:','Évaluation app Elite :','Valutazione app Elite:'], 'Read only: this session comes from the Elite app and is changed there.':['Nur lesbar: Diese Session stammt aus der Elite-App und wird dort geändert.','Lecture seule : cette session vient de l’app Elite et se modifie là-bas.','Solo lettura: questa sessione proviene dall’app Elite e si modifica lì.'], 'Athlete:':['Athlet:in:','Athlète :','Atleta:'], 'submitted':['eingereicht','envoyé','inviato'], 'Progress: Goals Achieved':['Fortschritt: erreichte Ziele','Progrès: objectifs atteints','Progressi: obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
+  'Coach:':['Coach:','Coach :','Coach:'], 'Season':['Saison','Saison','Stagione'], 'Extra athletes':['Zusätzliche Athlet:innen','Athlètes supplémentaires','Atleti aggiuntivi'], '+ athlete':['+ Athlet:in','+ athlète','+ atleta'], 'Last 30 days':['Letzte 30 Tage','30 derniers jours','Ultimi 30 giorni'], 'Elite app':['Elite-App','App Elite','App Elite'], 'Elite app · learned there':['Elite-App · dort gelernt','App Elite · acquis là-bas','App Elite · imparato lì'], 'All sources':['Alle Quellen','Toutes les sources','Tutte le fonti'], 'Rated in the Elite app:':['Bewertung Elite-App:','Évaluation app Elite :','Valutazione app Elite:'], 'Read only: this session comes from the Elite app and is changed there.':['Nur lesbar: Diese Session stammt aus der Elite-App und wird dort geändert.','Lecture seule : cette session vient de l’app Elite et se modifie là-bas.','Solo lettura: questa sessione proviene dall’app Elite e si modifica lì.'], 'Athlete:':['Athlet:in:','Athlète :','Atleta:'], 'submitted':['eingereicht','envoyé','inviato'], 'Progress: Goals Achieved':['Fortschritt: erreichte Ziele','Progrès: objectifs atteints','Progressi: obiettivi raggiunti'], '✓ Achieved':['✓ Erreicht','✓ Atteint','✓ Raggiunto'],
   'Please keep the app open until the upload is finished.':['Bitte die App offen lassen, bis der Upload fertig ist.','Merci de laisser l’app ouverte jusqu’à la fin du téléchargement.','Tieni aperta l’app finché il caricamento non è terminato.'],
   'Your coach can now watch it.':['Dein Coach kann es jetzt anschauen.','Ton coach peut maintenant la regarder.','Il tuo coach ora può guardarlo.'],
   'The video is attached to the trick.':['Das Video ist beim Trick gespeichert.','La vidéo est enregistrée avec le trick.','Il video è salvato con il trick.'],
@@ -1925,7 +1926,7 @@ function myGid(me = ST.me){ return (ST.myGroupName && ST.groups.find(g => g.name
 function visibleAthleteIds(me, profiles){
   const ath = profiles.filter(p => p.role==='athlete');
   if (me.role==='dvlp') return new Set(ath.map(p => p.id));
-  if (me.role==='coach'){ const gid = myGid(me); return new Set(ath.filter(p => p.group_id && p.group_id===gid).map(p => p.id)); }
+  if (me.role==='coach'){ const gid = myGid(me); return new Set(ath.filter(p => (p.group_id && p.group_id===gid) || (p.extra_coach_ids||[]).includes(me.id)).map(p => p.id)); }
   return new Set([me.id]);
 }
 const isStaff = () => ST.me && ST.me.role !== 'athlete';
@@ -2725,12 +2726,27 @@ function renderTeam(){
       <ul class="hints"><li>Skills-Check at each athlete's own level</li><li>Total = Jumps, Rails and Halfpipe, ⅓ each</li><li>From T4: focus possible (Halfpipe only, or Jumps & Rails only)</li><li>Click a row to open the Skills-Check</li></ul>
       <div class="scroll-x"><table class="tbl team-tbl"><thead><tr><th>Athlete</th><th>Sex</th><th>Level</th><th>Focus</th>${dv?'<th>Group</th>':''}<th class="num">Jumps</th><th class="num">Rails</th><th class="num">HP</th><th class="num">Total</th><th></th></tr></thead>
       <tbody>${rows || `<tr><td colspan="10" class="empty">${filtered ? 'No athletes match the filter.' : 'No athletes.'}</td></tr>`}</tbody></table></div></div>
-    ${dv ? `<div class="card"><h2>Coaches & staff</h2><div class="scroll-x"><table class="tbl staff-tbl"><thead><tr><th>Name</th><th>Role</th><th>Group</th></tr></thead><tbody>
+    ${dv ? `<div class="card"><h2>Coaches & staff</h2><div class="scroll-x"><table class="tbl staff-tbl"><thead><tr><th>Name</th><th>Role</th><th>Group</th><th>Extra athletes</th></tr></thead><tbody>
       ${staffList.map(p => `<tr><td class="c-name"><input type="text" class="name-in" value="${esc(p.name)}" onchange="setProfile('${p.id}','name',this.value.trim())" title="Edit name"><div class="tiny muted">${esc(p.email||'')}</div></td>
         <td class="c-sel" data-l="Role"><select onchange="setProfile('${p.id}','role',this.value)" ${p.id===ST.me.id?'disabled':''}>${opts([['athlete','Athlete'],['coach','Coach'],['dvlp', ADMIN_IDS.includes(p.id) ? 'Admin' : 'DVLP']], p.role)}</select></td>
-        <td class="c-sel" data-l="Group">${p.role==='coach' ? `<select onchange="setProfile('${p.id}','group_id',this.value)"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${p.group_id===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>` : '<span class="muted">all</span>'}</td></tr>`).join('')}
+        <td class="c-sel" data-l="Group">${p.role==='coach' ? `<select onchange="setProfile('${p.id}','group_id',this.value)"><option value="">–</option>${ST.groups.map(g => `<option value="${g.id}" ${p.group_id===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}</select>` : '<span class="muted">all</span>'}</td>
+        <td class="c-extra" data-l="Extra athletes">${p.role==='coach' ? extraAthletesCell(p) : ''}</td></tr>`).join('')}
       </tbody></table></div>
       <p class="tiny muted" style="margin-top:12px">${DEMO ? 'Demo mode: accounts are fixed demo users.' : 'Logins: enter the e-mail here first, then create the account in Supabase → Authentication → Users → «Create new user» with the same e-mail: it links automatically. Staff without a profile appear here after their first login.'}</p></div>` : ''}`;
+}
+// Einzelne Athlet:innen aus einem anderen Club zusätzlich für einen Coach freigeben (nur Admins)
+function extraAthletesCell(c){
+  const club = ST.groups.find(g => g.id===c.group_id)?.name;
+  const inClub = a => ST.groups.find(g => g.id===a.group_id)?.name === club;
+  const ath = ST.profiles.filter(a => a.role==='athlete');
+  const mine = ath.filter(a => (a.extra_coach_ids||[]).includes(c.id));
+  const cand = ath.filter(a => !inClub(a) && !mine.includes(a)).sort((a,b) => a.name.localeCompare(b.name));
+  return `<div class="row" style="gap:6px;flex-wrap:wrap">${mine.map(a => `<span class="chip">${esc(a.name)} <button class="x" onclick="setExtraCoach('${a.id}','${c.id}',false)" title="Remove">✕</button></span>`).join('')}
+    <select style="width:auto;max-width:210px" onchange="if(this.value)setExtraCoach(this.value,'${c.id}',true)"><option value="">+ athlete</option>${cand.map(a => `<option value="${a.id}">${esc(a.name)} · ${esc(groupName(a.group_id))}</option>`).join('')}</select></div>`;
+}
+function setExtraCoach(aid, cid, on){
+  const cur = prof(aid)?.extra_coach_ids || [];
+  setProfile(aid, 'extra_coach_ids', on ? [...new Set([...cur, cid])] : cur.filter(x => x !== cid));
 }
 function teamSkillsPdf(){
   const TF = ST.teamFilter || {}, rows = ST._teamView || [];
@@ -4148,7 +4164,9 @@ async function loadData(){
   // Coaches: gleichnamige Gruppe in beiden Sportarten (z.B. RLZ Ski Valais) = gleiche Trägerschaft → beide Sportarten
   const g0 = d.groups.find(g => g.id===me0?.group_id);
   ST.myGroupName = g0?.name || null;
-  ST.mySports = me0?.role==='coach' && g0 ? [...new Set(d.groups.filter(g => g.name===g0.name && d.profiles.some(p => p.role==='athlete' && p.group_id===g.id)).map(g => g.sport || 'freeski'))] : [];
+  ST.mySports = me0?.role==='coach' && g0 ? [...new Set([
+    ...d.groups.filter(g => g.name===g0.name && d.profiles.some(p => p.role==='athlete' && p.group_id===g.id)).map(g => g.sport || 'freeski'),
+    ...d.profiles.filter(p => p.role==='athlete' && (p.extra_coach_ids||[]).includes(me0.id)).map(p => p.sport || 'freeski')])] : [];
   if (!DEMO && me0 && me0.role !== 'dvlp'){
     const own = ST.mySports.includes(SPORT) ? SPORT : me0.role==='coach' && g0 ? (g0.sport || 'freeski') : (me0.sport || g0?.sport || 'freeski');
     if (own !== SPORT){ location.replace(location.pathname + '?sport=' + own); await new Promise(() => {}); }
