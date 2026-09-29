@@ -6,12 +6,14 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const WORDS = ["Kite", "Rail", "Pipe", "Grab", "Spin", "Flip", "Park", "Snow", "Berg", "Tal", "Sonne", "Wind", "Blau", "Rot", "Gelb", "Gruen",
-  "Adler", "Fuchs", "Luchs", "Wolf", "Baer", "Gams", "Dachs", "Hase", "Eis", "Firn", "Pulver", "Gipfel", "Hang", "Kante", "Sprung", "Welle",
-  "Stern", "Mond", "Wolke", "Blitz", "Nebel", "Regen", "Feuer", "Stein", "Fels", "Grat", "Pass", "See", "Fluss", "Wald", "Tanne", "Birke",
-  "Kicker", "Box", "Tube", "Drop", "Air", "Cork", "Misty", "Butter", "Press", "Slide", "Carve", "Pop", "Style", "Flow", "Line", "Session"];
-const pick = (n: number) => crypto.getRandomValues(new Uint32Array(1))[0] % n;
-const password = () => `${WORDS[pick(64)]}-${WORDS[pick(64)]}-${WORDS[pick(64)]}-${10 + pick(90)}`;
+// Startpasswort: 12 zufällige Zeichen in 3 Blöcken, z.B. «Kx7m-Qp4t-Wz9r»
+// ohne leicht verwechselbare Zeichen (0/O, 1/l/I), damit man es gut abtippen kann
+const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+const password = () => {
+  const r = crypto.getRandomValues(new Uint32Array(12));
+  const s = [...r].map((x) => CHARS[x % CHARS.length]).join("");
+  return `${s.slice(0, 4)}-${s.slice(4, 8)}-${s.slice(8)}`;
+};
 
 Deno.serve(async (req) => {
   const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
