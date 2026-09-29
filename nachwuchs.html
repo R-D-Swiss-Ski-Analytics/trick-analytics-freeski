@@ -2422,7 +2422,7 @@ function formCard(){
     </div>
     ${fm.fromSlot ? `<div class="from-slot"><b>${esc(fm.fromSlot)}</b><span>Trick is filled in. Check it and add what is missing (e.g. grab, video).</span></div>` : ''}
     ${fm.id || fm.mode==='own' || fm.fromSlot ? `<div class="form-grid" id="f-fields"></div>
-    <div class="preview" id="f-preview"></div>
+    <div class="preview" id="f-preview" ${fm.fromSlot && !fm.id ? 'hidden' : ''}></div>
     <div class="form-grid" style="margin-top:12px">
       <div class="form-group full"><label>${staff ? 'Video (optional)' : 'Video (required for learned tricks)'}</label>
         <div class="filebox">

@@ -37,6 +37,8 @@ function updateFwdSwBtn(prefix) {
     wrap.style.cssText = 'display:flex;gap:8px;margin-top:2px;';
     const isSideflip = achse === 'Sideflip';
     const btnLabels = isSideflip ? ['Right','Left'] : ['Forward','Switch'];
+    // Werte müssen in der (versteckten) Liste existieren, sonst speichert ein Tipp auf den Knopf nichts
+    btnLabels.forEach(v => { if (![...dirSelect.options].some(o => o.value === v)) dirSelect.add(new Option(v, v)); });
     btnLabels.forEach(val => {
       const btn = document.createElement('button');
       btn.type = 'button'; btn.textContent = val;

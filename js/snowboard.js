@@ -26,6 +26,8 @@ function updateFwdSwBtn(prefix) {
   if (isClassic) {
     dirSelect.style.display = 'none';
     const dirOptions = achse === 'Underflip' ? ['Frontside','Switch Frontside'] : ['Forward','Switch'];
+    // Werte müssen in der (versteckten) Liste existieren, sonst speichert ein Tipp auf den Knopf nichts
+    dirOptions.forEach(v => { if (![...dirSelect.options].some(o => o.value === v)) dirSelect.add(new Option(v, v)); });
     if (btnWrap) btnWrap.remove();
     {
       const wrap = document.createElement('div');
